@@ -1,4 +1,3 @@
-// app/(tabs)/index.tsx
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -7,29 +6,23 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { apiService } from "../../src/services/api";
-import { Exam } from "../../src/types";
+import { Exam, StudentStats } from "../../src/types";
 import { Ionicons } from "@expo/vector-icons";
-
-interface DashboardStats {
-  averageScore: number;
-  examsCompleted: number;
-  upcomingExams: number;
-  totalPoints: number;
-}
 
 export default function StudentDashboard() {
   const { user } = useAuth();
   const [upcomingExams, setUpcomingExams] = useState<Exam[]>([]);
-  const [stats, setStats] = useState<DashboardStats>({
+  const [stats, setStats] = useState<StudentStats>({
     averageScore: 0,
     examsCompleted: 0,
     upcomingExams: 0,
     totalPoints: 0,
+    rank: 0,
+    improvement: 0
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -38,37 +31,69 @@ export default function StudentDashboard() {
     loadDashboardData();
   }, []);
 
-  // app/(tabs)/index.tsx - Updated loadDashboardData function
   const loadDashboardData = async () => {
     try {
       setLoading(true);
 
-      console.log("🔄 Loading dashboard data...");
+      // Mock data for demo
+      setStats({
+        averageScore: 85,
+        examsCompleted: 12,
+        upcomingExams: 3,
+        totalPoints: 480,
+        rank: 5,
+        improvement: 8
+      });
 
-      // Load student stats from real API
-      const statsResponse = await apiService.getStudentStats();
-      console.log("📊 Stats API response:", statsResponse.data);
-
-      if (statsResponse.data.success) {
-        const statsData = statsResponse.data.data;
-        setStats({
-          averageScore: statsData.averageScore || 0,
-          examsCompleted: statsData.examsCompleted || 0,
-          upcomingExams: statsData.upcomingExams || 0,
-          totalPoints: statsData.totalPoints || 0,
-        });
-      }
-
-      // Load upcoming exams
-      const examsResponse = await apiService.getExams();
-      if (examsResponse.data.success) {
-        const exams = examsResponse.data.data || [];
-        // Filter to show only exams not yet taken (you might want to add a "taken" flag)
-        setUpcomingExams(exams.slice(0, 3));
-      }
+      const mockExams: Exam[] = [
+        {
+          id: '1',
+          title: 'Mathematics Midterm',
+          subject: 'Mathematics',
+          class: '10A',
+          teacher_id: '1',
+          settings: {
+            timed: true,
+            duration: 90,
+            allow_retake: false,
+            random_order: true,
+            shuffleQuestions: true,
+            showResults: true
+          },
+          is_active: true,
+          created_at: '2024-01-01',
+          updated_at: '2024-01-01',
+          teacher: {
+            id: '1',
+            profile: { name: 'Dr. Smith' }
+          }
+        },
+        {
+          id: '2',
+          title: 'Science Quiz',
+          subject: 'Science',
+          class: '10A',
+          teacher_id: '2',
+          settings: {
+            timed: true,
+            duration: 45,
+            allow_retake: true,
+            random_order: true,
+            shuffleQuestions: true,
+            showResults: true
+          },
+          is_active: true,
+          created_at: '2024-01-01',
+          updated_at: '2024-01-01',
+          teacher: {
+            id: '2',
+            profile: { name: 'Dr. Johnson' }
+          }
+        }
+      ];
+      setUpcomingExams(mockExams.slice(0, 3));
     } catch (error) {
-      console.error("❌ Failed to load dashboard data:", error);
-      Alert.alert("Error", "Failed to load dashboard data");
+      console.error('Failed to load dashboard data:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -87,12 +112,17 @@ export default function StudentDashboard() {
     return "text-red-600";
   };
 
+  const getImprovementColor = (improvement: number) => {
+    if (improvement > 0) return "text-green-600";
+    if (improvement < 0) return "text-red-600";
+    return "text-gray-600";
+  };
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-slate-50">
-        <ActivityIndicator size="large" color="#0f172a" />
-        <Text className="text-slate-600 mt-4 text-base">
+      <View className="flex-1 justify-center items-center bg-gray-50">
+        <ActivityIndicator size="large" color="#3b82f6" />
+        <Text className="text-gray-600 mt-4 text-base">
           Loading your dashboard...
         </Text>
       </View>
@@ -101,7 +131,7 @@ export default function StudentDashboard() {
 
   return (
     <ScrollView
-      className="flex-1 bg-slate-50"
+      className="flex-1 bg-gray-50"
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -110,22 +140,22 @@ export default function StudentDashboard() {
       <View className="p-6">
         {/* Header */}
         <View className="mb-8">
-          <Text className="text-3xl font-bold text-slate-900">
+          <Text className="text-3xl font-bold text-gray-900">
             Welcome back
           </Text>
-          <Text className="text-slate-600 mt-2 text-base">
+          <Text className="text-gray-600 mt-2 text-base">
             {user?.profile.name} • {user?.profile.class} • {user?.student_id}
           </Text>
         </View>
 
         {/* Stats Grid */}
         <View className="grid grid-cols-2 gap-4 mb-8">
-          <View className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+          <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
             <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-slate-500 text-sm font-medium">
+              <Text className="text-gray-500 text-sm font-medium">
                 Average
               </Text>
-              <Ionicons name="trending-up" size={16} color="#64748b" />
+              <Ionicons name="trending-up" size={20} color="#3b82f6" />
             </View>
             <Text
               className={`text-2xl font-bold ${getGradeColor(
@@ -134,77 +164,84 @@ export default function StudentDashboard() {
             >
               {stats.averageScore}%
             </Text>
-            <Text className="text-slate-400 text-xs mt-1">
-              Overall performance
-            </Text>
+            <View className="flex-row items-center mt-1">
+              <Ionicons 
+                name={stats.improvement > 0 ? "chevron-up" : "chevron-down"} 
+                size={16} 
+                color={getImprovementColor(stats.improvement)} 
+              />
+              <Text className={`text-xs ${getImprovementColor(stats.improvement)}`}>
+                {stats.improvement > 0 ? '+' : ''}{stats.improvement}%
+              </Text>
+            </View>
           </View>
 
-          <View className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+          <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
             <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-slate-500 text-sm font-medium">
+              <Text className="text-gray-500 text-sm font-medium">
                 Completed
               </Text>
-              <Ionicons name="checkmark-circle" size={16} color="#64748b" />
+              <Ionicons name="checkmark-circle" size={20} color="#10b981" />
             </View>
-            <Text className="text-2xl font-bold text-slate-900">
+            <Text className="text-2xl font-bold text-gray-900">
               {stats.examsCompleted}
             </Text>
-            <Text className="text-slate-400 text-xs mt-1">Exams taken</Text>
+            <Text className="text-gray-400 text-xs mt-1">Exams taken</Text>
           </View>
 
-          <View className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+          <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
             <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-slate-500 text-sm font-medium">
+              <Text className="text-gray-500 text-sm font-medium">
                 Upcoming
               </Text>
-              <Ionicons name="calendar" size={16} color="#64748b" />
+              <Ionicons name="calendar" size={20} color="#f59e0b" />
             </View>
-            <Text className="text-2xl font-bold text-slate-900">
+            <Text className="text-2xl font-bold text-gray-900">
               {stats.upcomingExams}
             </Text>
-            <Text className="text-slate-400 text-xs mt-1">Scheduled exams</Text>
+            <Text className="text-gray-400 text-xs mt-1">Scheduled exams</Text>
           </View>
 
-          <View className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+          <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
             <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-slate-500 text-sm font-medium">Points</Text>
-              <Ionicons name="star" size={16} color="#64748b" />
+              <Text className="text-gray-500 text-sm font-medium">Rank</Text>
+              <Ionicons name="trophy" size={20} color="#8b5cf6" />
             </View>
-            <Text className="text-2xl font-bold text-slate-900">
-              {stats.totalPoints}
+            <Text className="text-2xl font-bold text-gray-900">
+              #{stats.rank}
             </Text>
-            <Text className="text-slate-400 text-xs mt-1">Total earned</Text>
+            <Text className="text-gray-400 text-xs mt-1">In class</Text>
           </View>
         </View>
 
         {/* Upcoming Exams Section */}
         <View className="mb-8">
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-xl font-semibold text-slate-900">
+            <Text className="text-xl font-semibold text-gray-900">
               Upcoming Exams
             </Text>
             <TouchableOpacity
               onPress={() => router.push("/(tabs)/exams")}
               className="flex-row items-center"
             >
-              <Text className="text-slate-600 text-sm font-medium mr-1">
+              <Text className="text-blue-600 text-sm font-medium mr-1">
                 View all
               </Text>
-              <Ionicons name="chevron-forward" size={16} color="#64748b" />
+              <Ionicons name="chevron-forward" size={16} color="#3b82f6" />
             </TouchableOpacity>
           </View>
 
           {upcomingExams.length === 0 ? (
-            <View className="bg-white rounded-xl p-8 items-center border border-slate-200">
+            <View className="bg-white rounded-2xl p-8 items-center border border-gray-200">
               <Ionicons
                 name="document-text-outline"
                 size={48}
-                color="#cbd5e1"
+                color="#d1d5db"
               />
-              <Text className="text-slate-500 text-lg mt-4 font-medium">
+              <Text className="text-gray-500 text-lg mt-4 font-medium">
                 No upcoming exams
               </Text>
-              <Text className="text-slate-400 text-sm mt-2 text-center">
+              <Text className="text-gray-400 text-sm mt-2 text-center">
                 You&apos;re all caught up for now
               </Text>
             </View>
@@ -213,20 +250,20 @@ export default function StudentDashboard() {
               {upcomingExams.map((exam) => (
                 <TouchableOpacity
                   key={exam.id}
-                  className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm active:bg-slate-50"
+                  className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm active:bg-gray-50"
                   onPress={() => router.push(`/exam/${exam.id}`)}
                 >
                   <View className="flex-row items-start justify-between mb-2">
                     <View className="flex-1">
-                      <Text className="text-lg font-semibold text-slate-900 mb-1">
+                      <Text className="text-lg font-semibold text-gray-900 mb-1">
                         {exam.title}
                       </Text>
-                      <Text className="text-slate-600 text-sm">
+                      <Text className="text-gray-600 text-sm">
                         {exam.subject} • {exam.class}
                       </Text>
                     </View>
-                    <View className="bg-slate-100 px-2 py-1 rounded">
-                      <Text className="text-slate-700 text-xs font-medium">
+                    <View className="bg-blue-100 px-2 py-1 rounded">
+                      <Text className="text-blue-700 text-xs font-medium">
                         {exam.settings.timed
                           ? `${exam.settings.duration}m`
                           : "Untimed"}
@@ -235,7 +272,7 @@ export default function StudentDashboard() {
                   </View>
 
                   <View className="flex-row justify-between items-center">
-                    <Text className="text-slate-500 text-xs">
+                    <Text className="text-gray-500 text-xs">
                       By {exam.teacher?.profile?.name || "Teacher"}
                     </Text>
                     <View className="flex-row items-center">
@@ -245,7 +282,7 @@ export default function StudentDashboard() {
                       <Ionicons
                         name="arrow-forward"
                         size={14}
-                        color="#2563eb"
+                        color="#3b82f6"
                       />
                     </View>
                   </View>
@@ -257,24 +294,32 @@ export default function StudentDashboard() {
 
         {/* Quick Actions */}
         <View className="mb-6">
-          <Text className="text-xl font-semibold text-slate-900 mb-4">
+          <Text className="text-xl font-semibold text-gray-900 mb-4">
             Quick Actions
           </Text>
           <View className="flex-row gap-3">
             <TouchableOpacity
-              className="flex-1 bg-slate-900 rounded-xl p-4 flex-row items-center justify-center shadow-sm"
+              className="flex-1 bg-white rounded-2xl p-4 flex-row items-center justify-center border border-gray-200 shadow-sm active:bg-gray-50"
               onPress={() => router.push("/(tabs)/exams")}
             >
-              <Ionicons name="document-text" size={20} color="white" />
-              <Text className="text-white font-semibold ml-2">Take Exam</Text>
+              <Ionicons name="document-text" size={20} color="#3b82f6" />
+              <Text className="text-gray-900 font-semibold ml-2">Take Exam</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              className="flex-1 bg-white rounded-xl p-4 flex-row items-center justify-center border border-slate-200 shadow-sm"
+              className="flex-1 bg-white rounded-2xl p-4 flex-row items-center justify-center border border-gray-200 shadow-sm active:bg-gray-50"
               onPress={() => router.push("/(tabs)/results")}
             >
-              <Ionicons name="bar-chart" size={20} color="#0f172a" />
-              <Text className="text-slate-900 font-semibold ml-2">Results</Text>
+              <Ionicons name="bar-chart" size={20} color="#10b981" />
+              <Text className="text-gray-900 font-semibold ml-2">Results</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className="flex-1 bg-white rounded-2xl p-4 flex-row items-center justify-center border border-gray-200 shadow-sm active:bg-gray-50"
+              onPress={() => router.push("/(tabs)/homework")}
+            >
+              <Ionicons name="book" size={20} color="#f59e0b" />
+              <Text className="text-gray-900 font-semibold ml-2">Homework</Text>
             </TouchableOpacity>
           </View>
         </View>

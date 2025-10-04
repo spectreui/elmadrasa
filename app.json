@@ -10,10 +10,17 @@
       "typedRoutes": true
     },
     "android": {
-      "package": "com.webeleavte.elmadrasa"
+      "package": "com.webeleavte.elmadrasa",
+      "versionCode": 3
     },
     "ios": {
       "bundleIdentifier": "com.webeleavte.elmadrasa"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "01e5f25e-d1af-4d02-abb4-dac6931d1764"
+      }
     }
   }
 }

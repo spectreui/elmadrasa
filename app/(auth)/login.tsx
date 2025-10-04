@@ -10,10 +10,13 @@ import {
   Platform,
   ScrollView,
   StatusBar,
+  Dimensions,
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
+
+const { width } = Dimensions.get('window');
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -22,9 +25,27 @@ export default function LoginScreen() {
   const { login, isLoading } = useAuth();
 
   const demoLogins = [
-    { role: "Student", email: "student@school.com", password: "student123" },
-    { role: "Teacher", email: "teacher@school.com", password: "teacher123" },
-    { role: "Admin", email: "admin@school.com", password: "admin123" },
+    { 
+      role: "Student", 
+      email: "student@school.com", 
+      password: "student123",
+      color: "#10b981",
+      icon: "school"
+    },
+    { 
+      role: "Teacher", 
+      email: "teacher@school.com", 
+      password: "teacher123",
+      color: "#3b82f6",
+      icon: "person"
+    },
+    { 
+      role: "Admin", 
+      email: "admin@school.com", 
+      password: "admin123",
+      color: "#8b5cf6",
+      icon: "shield"
+    },
   ];
 
   const fillDemoCredentials = (demoEmail: string, demoPassword: string) => {
@@ -40,15 +61,10 @@ export default function LoginScreen() {
 
     try {
       await login(email, password);
-      // Expo Router will handle the navigation automatically via the root index.tsx
-      // No need for manual navigation here
-      console.log("✅ Login successful, waiting for automatic redirect...");
-    router.replace('/(tabs)');
+      console.log("✅ Login successful");
+      router.replace("/(tabs)");
     } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.error ||
-        error.message ||
-        "Something went wrong. Please try again.";
+      const errorMessage = error.response?.data?.error || error.message || "Something went wrong. Please try again.";
       Alert.alert("Login Failed", errorMessage);
     }
   };
@@ -62,15 +78,16 @@ export default function LoginScreen() {
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
+        bounces={false}
       >
-        <View className="flex-1 justify-center px-6 py-8">
+        <View className="flex-1 justify-center px-6">
           {/* Header */}
-          <View className="items-center mb-8">
-            <View className="w-20 h-20 bg-blue-500 rounded-2xl items-center justify-center mb-4">
-              <Ionicons name="school" size={40} color="white" />
+          <View className="items-center mb-12">
+            <View className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl items-center justify-center mb-6 shadow-lg">
+              <Ionicons name="school" size={48} color="white" />
             </View>
-            <Text className="text-4xl font-bold text-blue-600 mb-2">
-              School App
+            <Text className="text-4xl font-bold text-gray-900 mb-2">
+              ElMadrasa
             </Text>
             <Text className="text-lg text-gray-600 text-center">
               Learn. Grow. Succeed.
@@ -78,36 +95,50 @@ export default function LoginScreen() {
           </View>
 
           {/* Login Form */}
-          <View className="space-y-4 mb-6">
+          <View className="space-y-6 mb-8">
             <View>
-              <Text className="text-sm font-medium text-gray-700 mb-2">
+              <Text className="text-sm font-medium text-gray-700 mb-3">
                 Email or Student ID
               </Text>
-              <TextInput
-                className="border border-gray-300 rounded-xl p-4 bg-white text-base"
-                placeholder="Enter your email or student ID"
-                placeholderTextColor="#9ca3af"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                autoComplete="email"
-              />
+              <View className="relative">
+                <TextInput
+                  className="border border-gray-300 rounded-2xl p-4 bg-white text-base pl-12 text-gray-900"
+                  placeholder="Enter your email or student ID"
+                  placeholderTextColor="#9ca3af"
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  autoComplete="email"
+                />
+                <Ionicons 
+                  name="mail" 
+                  size={20} 
+                  color="#6b7280" 
+                  style={{ position: 'absolute', left: 16, top: 14 }}
+                />
+              </View>
             </View>
 
             <View>
-              <Text className="text-sm font-medium text-gray-700 mb-2">
+              <Text className="text-sm font-medium text-gray-700 mb-3">
                 Password
               </Text>
               <View className="relative">
                 <TextInput
-                  className="border border-gray-300 rounded-xl p-4 bg-white text-base pr-12"
+                  className="border border-gray-300 rounded-2xl p-4 bg-white text-base pl-12 pr-12 text-gray-900"
                   placeholder="Enter your password"
                   placeholderTextColor="#9ca3af"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                   autoComplete="password"
+                />
+                <Ionicons 
+                  name="lock-closed" 
+                  size={20} 
+                  color="#6b7280" 
+                  style={{ position: 'absolute', left: 16, top: 14 }}
                 />
                 <TouchableOpacity
                   className="absolute right-3 top-3"
@@ -123,7 +154,7 @@ export default function LoginScreen() {
             </View>
 
             <TouchableOpacity
-              className="bg-blue-600 rounded-xl p-4 flex-row justify-center items-center shadow-sm mt-4"
+              className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-4 flex-row justify-center items-center shadow-lg mt-2"
               onPress={handleLogin}
               disabled={isLoading}
             >
@@ -142,35 +173,43 @@ export default function LoginScreen() {
 
           {/* Demo Accounts */}
           <View className="mb-8">
-            <Text className="text-center text-gray-500 text-sm mb-4">
-              Demo Accounts (Click to fill)
+            <Text className="text-center text-gray-500 text-sm mb-4 font-medium">
+              Demo Accounts
             </Text>
-            <View className="space-y-2">
+            <View className="space-y-3">
               {demoLogins.map((demo, index) => (
                 <TouchableOpacity
                   key={index}
-                  className="border border-gray-300 rounded-xl p-3 flex-row items-center"
+                  className="bg-white rounded-2xl p-4 flex-row items-center border border-gray-200 shadow-sm active:bg-gray-50"
                   onPress={() => fillDemoCredentials(demo.email, demo.password)}
                 >
-                  <View
-                    className={`w-3 h-3 rounded-full mr-3 ${
-                      demo.role === "Student"
-                        ? "bg-green-500"
-                        : demo.role === "Teacher"
-                        ? "bg-blue-500"
-                        : "bg-purple-500"
-                    }`}
-                  />
+                  <View 
+                    className="w-10 h-10 rounded-xl items-center justify-center mr-3"
+                    style={{ backgroundColor: `${demo.color}20` }}
+                  >
+                    <Ionicons name={demo.icon as any} size={20} color={demo.color} />
+                  </View>
                   <View className="flex-1">
-                    <Text className="font-medium text-gray-900">
+                    <Text className="font-semibold text-gray-900">
                       {demo.role}
                     </Text>
                     <Text className="text-gray-500 text-sm">{demo.email}</Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
+                  <View className="bg-gray-100 px-3 py-1 rounded-full">
+                    <Text className="text-gray-600 text-xs font-medium">
+                      Tap to fill
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>
+          </View>
+
+          {/* Footer */}
+          <View className="items-center">
+            <Text className="text-gray-400 text-sm">
+              Secure login with modern encryption
+            </Text>
           </View>
         </View>
       </ScrollView>

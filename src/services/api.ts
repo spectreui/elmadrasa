@@ -13,107 +13,48 @@ class ApiService {
       headers: {
         "Content-Type": "application/json",
       },
-      timeout: 10000,
+      timeout: 15000,
     });
 
     this.setupInterceptors();
   }
 
   private setupInterceptors(): void {
+    // Request interceptor
     this.api.interceptors.request.use(
       (config) => {
-        console.log("🚀 Making API Request:");
-        console.log("   URL:", (config.baseURL || "") + (config.url || ""));
-        console.log("   Method:", config.method);
-        console.log("   Headers:", config.headers);
+        if (this.token) {
+          config.headers.Authorization = `Bearer ${this.token}`;
+        }
         return config;
       },
       (error) => {
-        console.error("❌ Request Error:", error);
         return Promise.reject(error);
       }
     );
 
+    // Response interceptor
     this.api.interceptors.response.use(
-      (response) => {
-        console.log(
-          "✅ Response Success:",
-          response.status,
-          response.config.url
-        );
-        return response;
-      },
+      (response) => response,
       (error) => {
-        console.error("❌ Response Error Details:");
-        console.error("   Message:", error.message);
-        console.error("   Code:", error.code);
-        console.error("   URL:", error.config?.baseURL + error.config?.url);
-        console.error("   Full Error:", error);
-
-        if (error.response) {
-          console.error("   Response Status:", error.response.status);
-          console.error("   Response Data:", error.response.data);
+        if (error.response?.status === 401) {
+          this.clearToken();
         }
-
         return Promise.reject(error);
       }
     );
   }
 
-  public async testConnection(): Promise<boolean> {
-    try {
-      console.log(
-        "🔗 Testing connection to:",
-        this.api.defaults.baseURL + "/health"
-      );
-      const response = await this.api.get("/health");
-      console.log("✅ Connection test successful:", response.data);
-      return true;
-    } catch (error: any) {
-      console.error("❌ Connection test failed:", error.message);
-      throw error;
-    }
+  // Auth methods
+  public async login(credentials: LoginRequest): Promise<AxiosResponse<ApiResponse<AuthResponse>>> {
+    return this.api.post("/auth/login", credentials);
   }
 
-  // Add these methods to the ApiService class
-  public async getExams(): Promise<AxiosResponse<ApiResponse<Exam[]>>> {
-    return this.api.get("/exams");
+  public async getCurrentUser(): Promise<AxiosResponse<ApiResponse<User>>> {
+    return this.api.get("/auth/me");
   }
 
-  public async getExamById(
-    id: string
-  ): Promise<AxiosResponse<ApiResponse<Exam>>> {
-    return this.api.get(`/exams/${id}`);
-  }
-
-  public async createExam(
-    examData: any
-  ): Promise<AxiosResponse<ApiResponse<Exam>>> {
-    return this.api.post("/exams", examData);
-  }
-
-  public async submitExam(
-    submission: any
-  ): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.post("/exams/submit", submission);
-  }
-
-  // In your api.ts, update the token methods
-  public setToken(token: string): void {
-    this.token = token;
-    // Set the token in axios headers
-    this.api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  }
-
-  public clearToken(): void {
-    this.token = null;
-    delete this.api.defaults.headers.common["Authorization"];
-  }
-
-  public getToken(): string | null {
-    return this.token;
-  }
-
+  // Student methods
   public async getStudentStats(): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.get("/students/stats");
   }
@@ -122,23 +63,28 @@ class ApiService {
     return this.api.get("/students/results");
   }
 
-  public async getSubjectPerformance(): Promise<
-    AxiosResponse<ApiResponse<any>>
-  > {
+  public async getSubjectPerformance(): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.get("/students/subject-performance");
   }
 
-  public async login(
-    credentials: LoginRequest
-  ): Promise<AxiosResponse<ApiResponse<AuthResponse>>> {
-    return this.api.post("/auth/login", credentials);
+  // Exam methods
+  public async getExams(): Promise<AxiosResponse<ApiResponse<Exam[]>>> {
+    return this.api.get("/exams");
   }
 
-  public async getCurrentUser(): Promise<AxiosResponse<ApiResponse<User>>> {
-    return this.api.get("/auth/me");
+  public async getExamById(id: string): Promise<AxiosResponse<ApiResponse<Exam>>> {
+    return this.api.get(`/exams/${id}`);
   }
-  // Add to your api.ts
-  // In your src/services/api.ts - Add these methods
+
+  public async createExam(examData: any): Promise<AxiosResponse<ApiResponse<Exam>>> {
+    return this.api.post("/exams", examData);
+  }
+
+  public async submitExam(submission: any): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.post("/exams/submit", submission);
+  }
+
+  // Teacher methods
   public async getTeacherStats(): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.get("/teachers/stats");
   }
@@ -151,30 +97,45 @@ class ApiService {
     return this.api.get("/teachers/classes");
   }
 
-  public async createHomework(
-    homeworkData: any
-  ): Promise<AxiosResponse<ApiResponse<any>>> {
+  public async createHomework(homeworkData: any): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.post("/homework", homeworkData);
   }
 
-  // Add to your api.ts
-  public async getExamSubmissions(
-    examId: string
-  ): Promise<AxiosResponse<ApiResponse<any>>> {
+  public async getExamSubmissions(examId: string): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.get(`/exams/${examId}/submissions`);
   }
 
-  public async deleteExam(
-    examId: string
-  ): Promise<AxiosResponse<ApiResponse<any>>> {
+  public async deleteExam(examId: string): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.delete(`/exams/${examId}`);
   }
 
-  public async updateExam(
-    examId: string,
-    data: any
-  ): Promise<AxiosResponse<ApiResponse<any>>> {
+  public async updateExam(examId: string, data: any): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.put(`/exams/${examId}`, data);
+  }
+
+  // Token management
+  public setToken(token: string): void {
+    this.token = token;
+    this.api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  }
+
+  public clearToken(): void {
+    this.token = null;
+    delete this.api.defaults.headers.common["Authorization"];
+  }
+
+  public getToken(): string | null {
+    return this.token;
+  }
+
+  // Health check
+  public async testConnection(): Promise<boolean> {
+    try {
+      await this.api.get("/health");
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 }
 

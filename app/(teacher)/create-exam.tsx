@@ -96,7 +96,7 @@ export default function CreateExamScreen() {
         router.back();
       }
     } catch (error) {
-      Alert.alert("Error", "Failed to create exam");
+      Alert.alert("Error", "Failed to create exam"); 
     } finally {
       setLoading(false);
     }
