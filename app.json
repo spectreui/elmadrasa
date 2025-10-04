@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "School App",
+    "slug": "school-app",
+    "scheme": "schoolapp",
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "android": {
+      "package": "com.webeleavte.elmadrasa"
+    },
+    "ios": {
+      "bundleIdentifier": "com.webeleavte.elmadrasa"
+    }
+  }
+}
