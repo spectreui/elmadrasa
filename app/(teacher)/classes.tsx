@@ -4,19 +4,11 @@ import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'rea
 import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
-
-interface ClassInfo {
-  id: string;
-  name: string;
-  subject: string;
-  studentCount: number;
-  averageScore: number;
-  upcomingExams: number;
-}
+import { ClassStats } from '../../src/types';
 
 export default function ClassesScreen() {
   const { user } = useAuth();
-  const [classes, setClasses] = useState<ClassInfo[]>([]);
+  const [classes, setClasses] = useState<ClassStats[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,40 +17,15 @@ export default function ClassesScreen() {
 
   const loadClasses = async () => {
     try {
-      const response = await apiService.getTeacherClasses();
+      const response = await apiService.getTeacherClassesWithStats();
       if (response.data.success) {
-        setClasses(response.data.data);
+        setClasses(response.data.data || []);
       } else {
-        // Mock data for demo
-        setClasses([
-          {
-            id: '1',
-            name: '10A Mathematics',
-            subject: 'Mathematics',
-            studentCount: 32,
-            averageScore: 78,
-            upcomingExams: 2
-          },
-          {
-            id: '2', 
-            name: '10B Science',
-            subject: 'Science',
-            studentCount: 28,
-            averageScore: 82,
-            upcomingExams: 1
-          },
-          {
-            id: '3',
-            name: '11A Advanced Math',
-            subject: 'Mathematics',
-            studentCount: 24,
-            averageScore: 85,
-            upcomingExams: 3
-          }
-        ]);
+        setClasses([]); // Empty array instead of mock data
       }
     } catch (error) {
       console.error('Failed to load classes:', error);
+      setClasses([]); // Empty array instead of mock data
     } finally {
       setLoading(false);
     }
@@ -87,7 +54,7 @@ export default function ClassesScreen() {
               <View className="flex-row justify-between items-start mb-3">
                 <View className="flex-1">
                   <Text className="text-xl font-semibold text-slate-900 mb-1">
-                    {classInfo.name}
+                    {classInfo.subject}
                   </Text>
                   <Text className="text-slate-600 text-sm">
                     {classInfo.subject} • {classInfo.studentCount} students

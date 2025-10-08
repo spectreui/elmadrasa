@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react'; // Add useCallback
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native'; // Remove unused Alert
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';
@@ -7,24 +7,71 @@ import { Exam } from '../../src/types';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ExamsScreen() {
-  const { user } = useAuth(); // Keep this for future use
+  const { user } = useAuth();
   const [exams, setExams] = useState<Exam[]>([]);
+  const [upcomingExams, setUpcomingExams] = useState<Exam[]>([]);
+  const [takenExams, setTakenExams] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [stats, setStats] = useState({
+    completed: 0,
+    available: 0,
+    upcoming: 0
+  });
 
-  // Use useCallback to fix the useEffect dependency
   const loadExams = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await apiService.getExams();
       
-      if (response.data.success) {
-        setExams(response.data.data || []);
+      console.log("🔄 Loading exams for student...");
+      
+      // Load exams data
+      const examsResponse = await apiService.getExams();
+      console.log("📊 Exams response:", examsResponse.data);
+
+      if (examsResponse.data.success) {
+        const allExams = examsResponse.data.data || [];
+        console.log("✅ Loaded exams:", allExams.length);
+        setExams(allExams);
+        
+        // Check which exams have been taken
+        const takenStatuses = await Promise.all(
+          allExams.map(async (exam) => {
+            try {
+              const status = await apiService.checkExamTaken(exam.id);
+              return { examId: exam.id, taken: status };
+            } catch (error) {
+              console.error(`Error checking status for exam ${exam.id}:`, error);
+              return { examId: exam.id, taken: false };
+            }
+          })
+        );
+        
+        const takenSet = new Set<string>();
+        takenStatuses.forEach(({ examId, taken }) => {
+          if (taken) {
+            takenSet.add(examId);
+          }
+        });
+        setTakenExams(takenSet);
+        
+        // Calculate stats
+        const completed = takenSet.size;
+        const available = allExams.filter(exam => !takenSet.has(exam.id)).length;
+        
+        setStats({
+          completed,
+          available,
+          upcoming: upcomingExams.length
+        });
       } else {
-        console.error('Failed to load exams:', response.data.error);
+        console.error("❌ Failed to load exams:", examsResponse.data.error);
+        Alert.alert('Error', 'Failed to load exams data');
       }
+
     } catch (error) {
-      console.error('Failed to load exams:', error);
+      console.error('❌ Failed to load exams:', error);
+      Alert.alert('Error', 'Failed to load exams. Please try again.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -33,24 +80,35 @@ export default function ExamsScreen() {
 
   useEffect(() => {
     loadExams();
-  }, [loadExams]); // Add loadExams to dependencies
+  }, [loadExams]);
 
   const onRefresh = () => {
     setRefreshing(true);
     loadExams();
   };
 
-  const getExamStatus = (exam: Exam) => {
-    // In a real app, you'd check if the student has taken this exam
-    return 'available'; // available, taken, upcoming
+  const getExamStatus = (exam: Exam): 'available' | 'taken' | 'upcoming' => {
+    if (takenExams.has(exam.id)) {
+      return 'taken';
+    }
+    return 'available';
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'available': return 'bg-green-100 text-green-800';
-      case 'taken': return 'bg-blue-100 text-blue-800';
-      case 'upcoming': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'available': return 'bg-green-100 border-green-200';
+      case 'taken': return 'bg-blue-100 border-blue-200';
+      case 'upcoming': return 'bg-yellow-100 border-yellow-200';
+      default: return 'bg-gray-100 border-gray-200';
+    }
+  };
+
+  const getStatusTextColor = (status: string) => {
+    switch (status) {
+      case 'available': return 'text-green-800';
+      case 'taken': return 'text-blue-800';
+      case 'upcoming': return 'text-yellow-800';
+      default: return 'text-gray-800';
     }
   };
 
@@ -60,6 +118,15 @@ export default function ExamsScreen() {
       case 'taken': return 'Completed';
       case 'upcoming': return 'Upcoming';
       default: return 'Unknown';
+    }
+  };
+
+  const handleExamPress = (exam: Exam) => {
+    const status = getExamStatus(exam);
+    if (status === 'taken') {
+      router.push(`/exam/results/${exam.id}`);
+    } else if (status === 'available') {
+      router.push(`/exam/${exam.id}`);
     }
   };
 
@@ -81,17 +148,45 @@ export default function ExamsScreen() {
       }
     >
       <View className="p-6">
-        <Text className="text-3xl font-bold text-slate-900 mb-2">Available Exams</Text>
+        <Text className="text-3xl font-bold text-slate-900 mb-2">Exams</Text>
         <Text className="text-slate-600 mb-6">
           Take your exams and track your progress
         </Text>
+
+        {/* Quick Stats */}
+        <View className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm mb-6">
+          <Text className="text-lg font-semibold text-slate-900 mb-4">Your Progress</Text>
+          <View className="grid grid-cols-3 gap-4">
+            <View className="items-center">
+              <Text className="text-2xl font-bold text-slate-900">
+                {stats.completed}
+              </Text>
+              <Text className="text-slate-500 text-xs text-center">Completed</Text>
+            </View>
+            <View className="items-center">
+              <Text className="text-2xl font-bold text-slate-900">
+                {stats.available}
+              </Text>
+              <Text className="text-slate-500 text-xs text-center">Available</Text>
+            </View>
+            <View className="items-center">
+              <Text className="text-2xl font-bold text-slate-900">
+                {stats.upcoming}
+              </Text>
+              <Text className="text-slate-500 text-xs text-center">Upcoming</Text>
+            </View>
+          </View>
+        </View>
 
         {exams.length === 0 ? (
           <View className="bg-white rounded-xl p-8 items-center border border-slate-200">
             <Ionicons name="document-text-outline" size={64} color="#cbd5e1" />
             <Text className="text-slate-500 text-lg mt-4 font-medium">No exams available</Text>
             <Text className="text-slate-400 text-sm mt-2 text-center">
-              Check back later for new assignments
+              {user?.profile?.class 
+                ? `No exams found for Class ${user.profile.class}. Check back later.`
+                : 'Please check your class assignment.'
+              }
             </Text>
           </View>
         ) : (
@@ -101,8 +196,8 @@ export default function ExamsScreen() {
               return (
                 <TouchableOpacity
                   key={exam.id}
-                  className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm active:bg-slate-50"
-                  onPress={() => router.push(`/exam/${exam.id}`)}
+                  className={`bg-white rounded-xl p-5 border-2 ${getStatusColor(status)} shadow-sm active:opacity-80`}
+                  onPress={() => handleExamPress(exam)}
                 >
                   <View className="flex-row justify-between items-start mb-3">
                     <View className="flex-1">
@@ -110,11 +205,11 @@ export default function ExamsScreen() {
                         {exam.title}
                       </Text>
                       <Text className="text-slate-600 text-sm">
-                        {exam.subject} • {exam.class}
+                        {exam.subject} • Class {exam.class}
                       </Text>
                     </View>
                     <View className={`px-3 py-1 rounded-full ${getStatusColor(status)}`}>
-                      <Text className="text-xs font-medium">
+                      <Text className={`text-xs font-medium ${getStatusTextColor(status)}`}>
                         {getStatusText(status)}
                       </Text>
                     </View>
@@ -130,7 +225,7 @@ export default function ExamsScreen() {
                     <View className="flex-row items-center">
                       <Ionicons name="time" size={16} color="#64748b" />
                       <Text className="text-slate-600 text-sm ml-1">
-                        {exam.settings.timed ? `${exam.settings.duration}m` : 'Untimed'}
+                        {exam.settings?.timed ? `${exam.settings.duration}m` : 'Untimed'}
                       </Text>
                     </View>
                   </View>
@@ -151,31 +246,6 @@ export default function ExamsScreen() {
             })}
           </View>
         )}
-
-        {/* Quick Stats */}
-        <View className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm mt-6">
-          <Text className="text-lg font-semibold text-slate-900 mb-4">Your Progress</Text>
-          <View className="grid grid-cols-3 gap-4">
-            <View className="items-center">
-              <Text className="text-2xl font-bold text-slate-900">
-                {exams.filter(e => getExamStatus(e) === 'taken').length}
-              </Text>
-              <Text className="text-slate-500 text-xs text-center">Completed</Text>
-            </View>
-            <View className="items-center">
-              <Text className="text-2xl font-bold text-slate-900">
-                {exams.filter(e => getExamStatus(e) === 'available').length}
-              </Text>
-              <Text className="text-slate-500 text-xs text-center">Available</Text>
-            </View>
-            <View className="items-center">
-              <Text className="text-2xl font-bold text-slate-900">
-                {exams.filter(e => getExamStatus(e) === 'upcoming').length}
-              </Text>
-              <Text className="text-slate-500 text-xs text-center">Upcoming</Text>
-            </View>
-          </View>
-        </View>
       </View>
     </ScrollView>
   );

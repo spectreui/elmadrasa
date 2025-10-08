@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,76 +10,112 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { ProfileStats, Achievement, ProfileSettings } from '../../src/types';
+
+interface ProfileStats {
+  examsTaken: number;
+  averageScore: number;
+  totalPoints: number;
+  rank: number;
+  streak: number;
+  attendance: number;
+  upcomingExams?: number;
+  pendingHomework?: number;
+}
+
+interface SubjectPerformance {
+  subject: string;
+  averageScore: number;
+  examsTaken: number;
+  trend: 'up' | 'down' | 'stable';
+}
+
+interface RecentActivity {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  date: string;
+  status: string;
+}
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<'profile' | 'achievements' | 'settings'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'settings'>('profile');
   const [loading, setLoading] = useState(false);
-
-  // Mock profile stats
-  const [profileStats] = useState<ProfileStats>({
-    examsTaken: 24,
-    averageScore: 85,
-    totalPoints: 1240,
-    rank: 5,
-    streak: 7,
-    attendance: 96,
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileStats, setProfileStats] = useState<ProfileStats>({
+    examsTaken: 0,
+    averageScore: 0,
+    totalPoints: 0,
+    rank: 0,
+    streak: 0,
+    attendance: 0,
+    upcomingExams: 0,
+    pendingHomework: 0,
   });
-
-  // Mock achievements
-  const [achievements] = useState<Achievement[]>([
-    {
-      id: '1',
-      title: 'Perfect Score',
-      description: 'Score 100% on any exam',
-      icon: 'trophy',
-      unlocked: true,
-      unlockedAt: '2024-01-10',
-    },
-    {
-      id: '2',
-      title: 'Exam Master',
-      description: 'Complete 20 exams',
-      icon: 'school',
-      unlocked: true,
-      unlockedAt: '2024-01-15',
-    },
-    {
-      id: '3',
-      title: 'Perfect Attendance',
-      description: '100% attendance for a month',
-      icon: 'calendar',
-      unlocked: false,
-      progress: 85,
-    },
-    {
-      id: '4',
-      title: 'Speed Runner',
-      description: 'Complete an exam in half the time',
-      icon: 'speedometer',
-      unlocked: false,
-      progress: 40,
-    },
-    {
-      id: '5',
-      title: 'Subject Expert',
-      description: 'Master 5 different subjects',
-      icon: 'library',
-      unlocked: true,
-      unlockedAt: '2024-01-20',
-    },
-  ]);
+  const [subjectPerformance, setSubjectPerformance] = useState<SubjectPerformance[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
 
   // Settings state
-  const [settings, setSettings] = useState<ProfileSettings>({
+  const [settings, setSettings] = useState({
     notifications: true,
     darkMode: false,
-    language: 'English',
     autoSave: true,
     dataSaver: false,
   });
+
+  useEffect(() => {
+    loadProfileData();
+  }, []);
+
+  const loadProfileData = async () => {
+    try {
+      setProfileLoading(true);
+      
+      // Load all profile data in parallel
+      const [statsResponse, performanceResponse, dashboardResponse] = await Promise.all([
+        apiService.getStudentStats(),
+        apiService.getSubjectPerformance(),
+        apiService.getStudentDashboardStats()
+      ]);
+
+      if (statsResponse.data.success) {
+        const stats = statsResponse.data.data;
+        setProfileStats(prev => ({
+          ...prev,
+          examsTaken: stats?.examsCompleted || 0,
+          averageScore: stats?.averageScore || 0,
+          totalPoints: stats?.totalPoints || 0,
+          upcomingExams: stats?.upcomingExams || 0,
+        }));
+      }
+
+      if (dashboardResponse.data.success) {
+        const dashboardData = dashboardResponse.data.data;
+        setProfileStats(prev => ({
+          ...prev,
+          pendingHomework: dashboardData?.pendingHomework || 0,
+          examsTaken: dashboardData?.examsCompleted || prev.examsTaken,
+          averageScore: dashboardData?.averageScore || prev.averageScore,
+          totalPoints: dashboardData?.totalPoints || prev.totalPoints,
+          upcomingExams: dashboardData?.upcomingExams || prev.upcomingExams,
+        }));
+        setRecentActivity(dashboardData?.recentActivity || []);
+      }
+
+      if (performanceResponse.data.success) {
+        setSubjectPerformance(performanceResponse.data.data || []);
+      }
+
+    } catch (error: any) {
+      console.error('Failed to load profile data:', error);
+      Alert.alert('Error', 'Failed to load profile data. Please try again.');
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -94,6 +130,7 @@ export default function ProfileScreen() {
             setLoading(true);
             try {
               await logout();
+              router.push('/(tabs)');
             } catch (error) {
               console.error('Logout error:', error);
             } finally {
@@ -105,7 +142,7 @@ export default function ProfileScreen() {
     );
   };
 
-  const toggleSetting = (key: keyof ProfileSettings) => {
+  const toggleSetting = (key: keyof typeof settings) => {
     setSettings(prev => ({
       ...prev,
       [key]: !prev[key],
@@ -127,6 +164,13 @@ export default function ProfileScreen() {
     return 'text-red-600';
   };
 
+  const getGradeBgColor = (score: number) => {
+    if (score >= 90) return 'bg-green-500';
+    if (score >= 80) return 'bg-blue-500';
+    if (score >= 70) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
   const renderProfileTab = () => (
     <View className="space-y-6">
       {/* Profile Header */}
@@ -134,20 +178,20 @@ export default function ProfileScreen() {
         <View className="flex-row items-center">
           <View className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl items-center justify-center mr-4">
             <Text className="text-white text-2xl font-bold">
-              {getInitials(user?.profile.name || '')}
+              {getInitials(user?.profile?.name || 'Student')}
             </Text>
           </View>
           <View className="flex-1">
             <Text className="text-2xl font-bold text-gray-900 mb-1">
-              {user?.profile.name}
+              {user?.profile?.name || 'Student'}
             </Text>
             <Text className="text-gray-600 text-base mb-2">
-              {user?.profile.class} • {user?.student_id}
+              {user?.profile?.class ? `Class ${user.profile.class}` : 'Class Not Set'} • {user?.student_id || 'ID'}
             </Text>
             <View className="flex-row items-center">
               <Ionicons name="mail" size={16} color="#6b7280" />
               <Text className="text-gray-500 text-sm ml-1">
-                {user?.email}
+                {user?.email || 'email@example.com'}
               </Text>
             </View>
           </View>
@@ -159,168 +203,119 @@ export default function ProfileScreen() {
         <Text className="text-xl font-semibold text-gray-900 mb-4">
           Performance Overview
         </Text>
-        <View className="grid grid-cols-2 gap-4">
-          <View className="items-center p-4 bg-gray-50 rounded-xl">
-            <Text className="text-2xl font-bold text-gray-900">
-              {profileStats.examsTaken}
-            </Text>
-            <Text className="text-gray-500 text-xs text-center mt-1">
-              Exams Taken
-            </Text>
+        {profileLoading ? (
+          <ActivityIndicator size="small" color="#3b82f6" />
+        ) : (
+          <View className="grid grid-cols-2 gap-4">
+            <View className="items-center p-4 bg-gray-50 rounded-xl">
+              <Text className="text-2xl font-bold text-gray-900">
+                {profileStats.examsTaken}
+              </Text>
+              <Text className="text-gray-500 text-xs text-center mt-1">
+                Exams Taken
+              </Text>
+            </View>
+            <View className="items-center p-4 bg-gray-50 rounded-xl">
+              <Text className={`text-2xl font-bold ${getGradeColor(profileStats.averageScore)}`}>
+                {profileStats.averageScore}%
+              </Text>
+              <Text className="text-gray-500 text-xs text-center mt-1">
+                Average Score
+              </Text>
+            </View>
+            <View className="items-center p-4 bg-gray-50 rounded-xl">
+              <Text className="text-2xl font-bold text-gray-900">
+                {profileStats.upcomingExams || 0}
+              </Text>
+              <Text className="text-gray-500 text-xs text-center mt-1">
+                Upcoming Exams
+              </Text>
+            </View>
+            <View className="items-center p-4 bg-gray-50 rounded-xl">
+              <Text className="text-2xl font-bold text-gray-900">
+                {profileStats.pendingHomework || 0}
+              </Text>
+              <Text className="text-gray-500 text-xs text-center mt-1">
+                Pending Homework
+              </Text>
+            </View>
           </View>
-          <View className="items-center p-4 bg-gray-50 rounded-xl">
-            <Text className={`text-2xl font-bold ${getGradeColor(profileStats.averageScore)}`}>
-              {profileStats.averageScore}%
-            </Text>
-            <Text className="text-gray-500 text-xs text-center mt-1">
-              Average Score
-            </Text>
-          </View>
-          <View className="items-center p-4 bg-gray-50 rounded-xl">
-            <Text className="text-2xl font-bold text-gray-900">
-              #{profileStats.rank}
-            </Text>
-            <Text className="text-gray-500 text-xs text-center mt-1">
-              Class Rank
-            </Text>
-          </View>
-          <View className="items-center p-4 bg-gray-50 rounded-xl">
-            <Text className="text-2xl font-bold text-gray-900">
-              {profileStats.streak}
-            </Text>
-            <Text className="text-gray-500 text-xs text-center mt-1">
-              Day Streak
-            </Text>
-          </View>
-        </View>
+        )}
       </View>
 
-      {/* Detailed Stats */}
+      {/* Subject Performance */}
       <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
         <Text className="text-xl font-semibold text-gray-900 mb-4">
-          Detailed Statistics
+          Subject Performance
         </Text>
-        <View className="space-y-4">
-          <View>
-            <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-gray-700 font-medium">Total Points</Text>
-              <Text className="text-gray-900 font-semibold">{profileStats.totalPoints}</Text>
-            </View>
-            <View className="w-full bg-gray-200 rounded-full h-2">
-              <View 
-                className="h-2 rounded-full bg-blue-500"
-                style={{ width: `${Math.min(100, (profileStats.totalPoints / 2000) * 100)}%` }}
-              />
-            </View>
-          </View>
-          <View>
-            <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-gray-700 font-medium">Attendance</Text>
-              <Text className="text-gray-900 font-semibold">{profileStats.attendance}%</Text>
-            </View>
-            <View className="w-full bg-gray-200 rounded-full h-2">
-              <View 
-                className="h-2 rounded-full bg-green-500"
-                style={{ width: `${profileStats.attendance}%` }}
-              />
-            </View>
-          </View>
-        </View>
-      </View>
-
-      {/* Subjects */}
-      <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-        <Text className="text-xl font-semibold text-gray-900 mb-4">
-          Subjects
-        </Text>
-        <View className="space-y-3">
-          {user?.profile.subjects?.map((subject, index) => (
-            <View key={index} className="flex-row justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
-              <Text className="text-gray-700 font-medium">{subject}</Text>
-              <View className="flex-row items-center">
-                <Text className="text-gray-900 font-semibold mr-2">88%</Text>
-                <Ionicons name="trending-up" size={16} color="#10b981" />
-              </View>
-            </View>
-          ))}
-        </View>
-      </View>
-    </View>
-  );
-
-  const renderAchievementsTab = () => (
-    <View className="space-y-6">
-      <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-        <Text className="text-xl font-semibold text-gray-900 mb-2">
-          Achievements
-        </Text>
-        <Text className="text-gray-600 text-sm mb-4">
-          {achievements.filter(a => a.unlocked).length} of {achievements.length} unlocked
-        </Text>
-        
-        <View className="space-y-4">
-          {achievements.map((achievement) => (
-            <View
-              key={achievement.id}
-              className={`flex-row items-center p-4 rounded-xl border ${
-                achievement.unlocked
-                  ? 'bg-green-50 border-green-200'
-                  : 'bg-gray-50 border-gray-200'
-              }`}
-            >
-              <View
-                className={`w-12 h-12 rounded-xl items-center justify-center mr-4 ${
-                  achievement.unlocked
-                    ? 'bg-green-100'
-                    : 'bg-gray-200'
-                }`}
-              >
-                <Ionicons
-                  name={achievement.icon as any}
-                  size={24}
-                  color={achievement.unlocked ? '#10b981' : '#9ca3af'}
-                />
-              </View>
-              <View className="flex-1">
-                <Text
-                  className={`font-semibold text-base ${
-                    achievement.unlocked ? 'text-gray-900' : 'text-gray-500'
-                  }`}
-                >
-                  {achievement.title}
-                </Text>
-                <Text
-                  className={`text-sm ${
-                    achievement.unlocked ? 'text-gray-600' : 'text-gray-400'
-                  }`}
-                >
-                  {achievement.description}
-                </Text>
-                {achievement.unlocked && achievement.unlockedAt && (
-                  <Text className="text-green-600 text-xs mt-1">
-                    Unlocked {new Date(achievement.unlockedAt).toLocaleDateString()}
+        {profileLoading ? (
+          <ActivityIndicator size="small" color="#3b82f6" />
+        ) : subjectPerformance.length > 0 ? (
+          <View className="space-y-4">
+            {subjectPerformance.map((subject, index) => (
+              <View key={index} className="space-y-2">
+                <View className="flex-row justify-between items-center">
+                  <Text className="text-gray-700 font-medium capitalize">
+                    {subject.subject}
                   </Text>
-                )}
-                {!achievement.unlocked && achievement.progress && (
-                  <View className="mt-2">
-                    <View className="w-full bg-gray-200 rounded-full h-1">
-                      <View
-                        className="h-1 rounded-full bg-blue-500"
-                        style={{ width: `${achievement.progress}%` }}
-                      />
-                    </View>
-                    <Text className="text-gray-500 text-xs mt-1">
-                      {achievement.progress}% complete
-                    </Text>
-                  </View>
-                )}
+                  <Text className={`font-semibold ${getGradeColor(subject.averageScore)}`}>
+                    {subject.averageScore}%
+                  </Text>
+                </View>
+                <View className="w-full bg-gray-200 rounded-full h-2">
+                  <View 
+                    className={`h-2 rounded-full ${getGradeBgColor(subject.averageScore)}`}
+                    style={{ width: `${Math.min(100, subject.averageScore)}%` }}
+                  />
+                </View>
+                <View className="flex-row justify-between text-xs text-gray-500">
+                  <Text>{subject.examsTaken} exams</Text>
+                  <Text className={`${
+                    subject.trend === 'up' ? 'text-green-600' : 
+                    subject.trend === 'down' ? 'text-red-600' : 'text-gray-600'
+                  }`}>
+                    {subject.trend === 'up' ? '↗ Improving' : 
+                     subject.trend === 'down' ? '↘ Needs work' : '→ Stable'}
+                  </Text>
+                </View>
               </View>
-              {achievement.unlocked && (
-                <Ionicons name="checkmark-circle" size={20} color="#10b981" />
-              )}
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        ) : (
+          <Text className="text-gray-500 text-center py-4">
+            No subject performance data available
+          </Text>
+        )}
+      </View>
+
+      {/* Recent Activity */}
+      <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+        <Text className="text-xl font-semibold text-gray-900 mb-4">
+          Recent Activity
+        </Text>
+        {recentActivity.length > 0 ? (
+          <View className="space-y-3">
+            {recentActivity.slice(0, 5).map((activity, index) => (
+              <View key={index} className="flex-row items-center py-2 border-b border-gray-100 last:border-b-0">
+                <View className={`w-2 h-2 rounded-full mr-3 ${
+                  activity.type === 'exam' ? 'bg-blue-500' : 
+                  activity.type === 'homework' ? 'bg-green-500' : 'bg-gray-500'
+                }`} />
+                <View className="flex-1">
+                  <Text className="text-gray-700 font-medium">{activity.title}</Text>
+                  <Text className="text-gray-500 text-sm">{activity.description}</Text>
+                </View>
+                <Text className="text-gray-400 text-xs">
+                  {new Date(activity.date).toLocaleDateString()}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <Text className="text-gray-500 text-center py-4">
+            No recent activity
+          </Text>
+        )}
       </View>
     </View>
   );
@@ -449,7 +444,6 @@ export default function ProfileScreen() {
         <View className="flex-row">
           {[
             { key: 'profile' as const, label: 'Profile', icon: 'person' },
-            { key: 'achievements' as const, label: 'Achievements', icon: 'trophy' },
             { key: 'settings' as const, label: 'Settings', icon: 'settings' },
           ].map((tab) => (
             <TouchableOpacity
@@ -486,7 +480,6 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         {activeTab === 'profile' && renderProfileTab()}
-        {activeTab === 'achievements' && renderAchievementsTab()}
         {activeTab === 'settings' && renderSettingsTab()}
 
         {/* Logout Button */}

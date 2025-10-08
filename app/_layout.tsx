@@ -14,7 +14,7 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(teacher)" />
-        <Stack.Screen name="exam/[id]" />
+        <Stack.Screen name="exams/[id]" />
       </Stack>
     </SafeAreaView>
     </AuthProvider>

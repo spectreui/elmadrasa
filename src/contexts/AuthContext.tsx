@@ -1,13 +1,16 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+// src/contexts/AuthContext.tsx
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { apiService } from '../services/api';
 import { User, AuthState } from '../types';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, ActivityIndicator } from 'react-native';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
+  clearError: () => void;
+  refreshAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,64 +25,84 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
+  // Refresh authentication state
+  const refreshAuth = useCallback(async () => {
+    console.log('🔄 Refreshing authentication...');
 
-  const checkAuthStatus = async () => {
-    try {
-      const token = await AsyncStorage.getItem('authToken');
-      if (token) {
-        apiService.setToken(token);
-        const response = await apiService.getCurrentUser();
-        if (response.data.success && response.data.data) {
-          setAuthState({
-            user: response.data.data,
-            token,
-            isAuthenticated: true,
-            loading: false,
-          });
-          return;
-        }
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      await AsyncStorage.removeItem('authToken');
-      apiService.clearToken();
+    if (!apiService.isAuthenticated()) {
+      console.log('🚫 No token available');
+      setAuthState({
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        loading: false,
+      });
+      return;
     }
-    
-    setAuthState(prev => ({ 
-      ...prev, 
-      user: null, 
-      token: null, 
-      isAuthenticated: false, 
-      loading: false 
-    }));
-  };
 
-  const login = async (email: string, password: string) => {
-    setIsLoading(true);
-    setError(null);
-    
     try {
-      const response = await apiService.login({ email, password });
-      
+      console.log('👤 Fetching current user...');
+      const response = await apiService.getCurrentUser();
+
       if (response.data.success && response.data.data) {
-        const { user, token } = response.data.data;
-        
-        await AsyncStorage.setItem('authToken', token);
-        apiService.setToken(token);
-        
+        const user = response.data.data;
+        console.log('✅ User authenticated:', user.email);
+
         setAuthState({
           user,
-          token,
+          token: apiService.getToken(),
           isAuthenticated: true,
           loading: false,
         });
       } else {
-        throw new Error(response.data.error || 'Login failed');
+        throw new Error('Invalid user data');
       }
     } catch (error: any) {
+      console.error('❌ Auth refresh failed:', error);
+      await apiService.clearToken();
+      setAuthState({
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        loading: false,
+      });
+    }
+  }, []);
+
+  // Initial auth check
+  useEffect(() => {
+    const initializeAuth = async () => {
+      console.log('🎯 Initializing authentication...');
+      await refreshAuth();
+    };
+
+    initializeAuth();
+  }, [refreshAuth]);
+
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      console.log('🔐 Starting login process...');
+      const response = await apiService.login({ email, password });
+
+      if (response.data.success && response.data.data) {
+        const { user } = response.data.data;
+        console.log('✅ Login successful for:', user.email);
+
+        // Refresh auth state to get the latest user data
+        await refreshAuth();
+      } else {
+        const errorMsg = response.data.error || 'Login failed';
+        throw new Error(errorMsg);
+      }
+    } catch (error: any) {
+      console.error('💥 Login error:', error);
+
+      // Clear any potentially corrupted token
+      await apiService.clearToken();
+
       const errorMessage = error.response?.data?.error || error.message || 'Login failed';
       setError(errorMessage);
       throw error;
@@ -90,8 +113,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await AsyncStorage.removeItem('authToken');
-      apiService.clearToken();
+      console.log('🚪 Logging out...');
+      setIsLoading(true);
+      await apiService.clearToken();
+
       setAuthState({
         user: null,
         token: null,
@@ -99,10 +124,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading: false,
       });
       setError(null);
+
+      console.log('✅ Logout successful');
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('❌ Logout error:', error);
+      setError('Logout failed');
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const clearError = () => setError(null);
+
+  // Show loading only during initial app load
+  if (authState.loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#0ea5e9" />
+      </View>
+    );
+  }
 
   const value: AuthContextType = {
     ...authState,
@@ -110,6 +151,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     isLoading,
     error,
+    clearError,
+    refreshAuth,
   };
 
   return (

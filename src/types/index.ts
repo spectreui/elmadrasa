@@ -89,11 +89,21 @@ export interface Exam {
   teacher_id: string;
   settings: ExamSettings;
   is_active: boolean;
+  status: 'active' | 'draft' | 'archived'; // Add this
   created_at: string;
   updated_at: string;
   teacher?: Teacher;
   questions?: Question[];
   submissions_count?: number;
+  average_score?: number; // Make this optional
+  total_points?: number; // Make this optional
+}
+
+export interface ExamDetails extends Exam {
+  questions: Question[];
+  submissions_count: number;
+  average_score: number;
+  total_points: number;
 }
 
 export interface Question {
@@ -178,4 +188,39 @@ export interface HomeworkSubmission {
   submitted_at: string;
   grade?: number;
   feedback?: string;
+}
+
+// Add these interfaces to your existing types
+export interface PerformanceTrend {
+  month: string;
+  averageScore: number;
+  students: number;
+}
+
+export interface ClassStats {
+  id: string;
+  className: string;
+  subject: string;
+  studentCount: number;
+  averageScore: number;
+  upcomingExams: number; // Changed back to upcomingExams for clarity
+  completedExams?: number; // Add this for completed exams if needed
+  improvement?: number;
+}
+
+export interface TeacherDashboardStats {
+  activeExams: number;
+  totalStudents: number;
+  averageScore: number;
+  pendingGrading: number;
+  classesCount: number;
+}
+
+export interface RecentActivity {
+  id: string;
+  title: string;
+  description: string;
+  type: 'exam' | 'homework' | 'announcement';
+  date: string;
+  status: 'completed' | 'pending' | 'grading';
 }

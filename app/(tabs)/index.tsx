@@ -12,6 +12,7 @@ import { useAuth } from "../../src/contexts/AuthContext";
 import { apiService } from "../../src/services/api";
 import { Exam, StudentStats } from "../../src/types";
 import { Ionicons } from "@expo/vector-icons";
+import { handleApiError, showErrorAlert } from "../../src/utils/errorHandler";
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -26,6 +27,7 @@ export default function StudentDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -35,65 +37,51 @@ export default function StudentDashboard() {
     try {
       setLoading(true);
 
-      // Mock data for demo
-      setStats({
-        averageScore: 85,
-        examsCompleted: 12,
-        upcomingExams: 3,
-        totalPoints: 480,
-        rank: 5,
-        improvement: 8
-      });
+      console.log("🔄 Loading real dashboard data...");
 
-      const mockExams: Exam[] = [
-        {
-          id: '1',
-          title: 'Mathematics Midterm',
-          subject: 'Mathematics',
-          class: '10A',
-          teacher_id: '1',
-          settings: {
-            timed: true,
-            duration: 90,
-            allow_retake: false,
-            random_order: true,
-            shuffleQuestions: true,
-            showResults: true
-          },
-          is_active: true,
-          created_at: '2024-01-01',
-          updated_at: '2024-01-01',
-          teacher: {
-            id: '1',
-            profile: { name: 'Dr. Smith' }
-          }
-        },
-        {
-          id: '2',
-          title: 'Science Quiz',
-          subject: 'Science',
-          class: '10A',
-          teacher_id: '2',
-          settings: {
-            timed: true,
-            duration: 45,
-            allow_retake: true,
-            random_order: true,
-            shuffleQuestions: true,
-            showResults: true
-          },
-          is_active: true,
-          created_at: '2024-01-01',
-          updated_at: '2024-01-01',
-          teacher: {
-            id: '2',
-            profile: { name: 'Dr. Johnson' }
-          }
-        }
-      ];
-      setUpcomingExams(mockExams.slice(0, 3));
-    } catch (error) {
-      console.error('Failed to load dashboard data:', error);
+      // Use Promise.all to load data in parallel
+      const [statsResponse, examsResponse] = await Promise.all([
+        apiService.getStudentStats(),
+        apiService.getExams()
+      ]);
+
+      console.log("📊 Stats response:", statsResponse.data);
+      console.log("📝 Exams response:", examsResponse.data);
+
+      // Handle stats response
+      if (statsResponse.data.success) {
+        const statsData = statsResponse.data.data;
+        setStats({
+          averageScore: statsData.averageScore || 0,
+          examsCompleted: statsData.examsCompleted || 0,
+          upcomingExams: statsData.upcomingExams || 0,
+          totalPoints: statsData.totalPoints || 0,
+          rank: statsData.rank || 0,
+          improvement: statsData.improvement || 0
+        });
+      } else {
+        throw new Error(statsResponse.data.error || 'Failed to load statistics');
+      }
+
+      // Handle exams response
+      if (examsResponse.data.success) {
+        const allExams: Exam[] = examsResponse.data.data || [];
+        
+        // Filter for upcoming exams (active exams that student hasn't taken)
+        const upcoming = allExams
+          .filter(exam => exam.is_active === true)
+          .slice(0, 3);
+        
+        setUpcomingExams(upcoming);
+      } else {
+        throw new Error(examsResponse.data.error || 'Failed to load exams');
+      }
+
+      setLastUpdated(new Date());
+
+    } catch (error: any) {
+      console.error("❌ Failed to load dashboard data:", error);
+      showErrorAlert(error, "Failed to load dashboard data");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -118,7 +106,18 @@ export default function StudentDashboard() {
     return "text-gray-600";
   };
 
-  if (loading) {
+  const getImprovementIcon = (improvement: number) => {
+    if (improvement > 0) return "trending-up";
+    if (improvement < 0) return "trending-down";
+    return "remove";
+  };
+
+  const formatLastUpdated = (date: Date | null) => {
+    if (!date) return '';
+    return `Last updated: ${date.toLocaleTimeString()}`;
+  };
+
+  if (loading && !refreshing) {
     return (
       <View className="flex-1 justify-center items-center bg-gray-50">
         <ActivityIndicator size="large" color="#3b82f6" />
@@ -146,10 +145,16 @@ export default function StudentDashboard() {
           <Text className="text-gray-600 mt-2 text-base">
             {user?.profile.name} • {user?.profile.class} • {user?.student_id}
           </Text>
+          {lastUpdated && (
+            <Text className="text-gray-400 text-xs mt-1">
+              {formatLastUpdated(lastUpdated)}
+            </Text>
+          )}
         </View>
 
         {/* Stats Grid */}
         <View className="grid grid-cols-2 gap-4 mb-8">
+          {/* Average Score */}
           <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
             <View className="flex-row items-center justify-between mb-2">
               <Text className="text-gray-500 text-sm font-medium">
@@ -158,24 +163,25 @@ export default function StudentDashboard() {
               <Ionicons name="trending-up" size={20} color="#3b82f6" />
             </View>
             <Text
-              className={`text-2xl font-bold ${getGradeColor(
-                stats.averageScore
-              )}`}
+              className={`text-2xl font-bold ${getGradeColor(stats.averageScore)}`}
             >
               {stats.averageScore}%
             </Text>
-            <View className="flex-row items-center mt-1">
-              <Ionicons 
-                name={stats.improvement > 0 ? "chevron-up" : "chevron-down"} 
-                size={16} 
-                color={getImprovementColor(stats.improvement)} 
-              />
-              <Text className={`text-xs ${getImprovementColor(stats.improvement)}`}>
-                {stats.improvement > 0 ? '+' : ''}{stats.improvement}%
-              </Text>
-            </View>
+            {stats.improvement && stats.improvement !== 0 && (
+              <View className="flex-row items-center mt-1">
+                <Ionicons 
+                  name={getImprovementIcon(stats.improvement)} 
+                  size={16} 
+                  color={getImprovementColor(stats.improvement)} 
+                />
+                <Text className={`text-xs ${getImprovementColor(stats.improvement)} ml-1`}>
+                  {stats.improvement > 0 ? '+' : ''}{stats.improvement}%
+                </Text>
+              </View>
+            )}
           </View>
 
+          {/* Completed Exams */}
           <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
             <View className="flex-row items-center justify-between mb-2">
               <Text className="text-gray-500 text-sm font-medium">
@@ -189,6 +195,7 @@ export default function StudentDashboard() {
             <Text className="text-gray-400 text-xs mt-1">Exams taken</Text>
           </View>
 
+          {/* Upcoming Exams */}
           <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
             <View className="flex-row items-center justify-between mb-2">
               <Text className="text-gray-500 text-sm font-medium">
@@ -202,13 +209,14 @@ export default function StudentDashboard() {
             <Text className="text-gray-400 text-xs mt-1">Scheduled exams</Text>
           </View>
 
+          {/* Rank */}
           <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
             <View className="flex-row items-center justify-between mb-2">
               <Text className="text-gray-500 text-sm font-medium">Rank</Text>
               <Ionicons name="trophy" size={20} color="#8b5cf6" />
             </View>
             <Text className="text-2xl font-bold text-gray-900">
-              #{stats.rank}
+              #{stats.rank || "N/A"}
             </Text>
             <Text className="text-gray-400 text-xs mt-1">In class</Text>
           </View>
@@ -242,7 +250,7 @@ export default function StudentDashboard() {
                 No upcoming exams
               </Text>
               <Text className="text-gray-400 text-sm mt-2 text-center">
-                You&apos;re all caught up for now
+                You're all caught up for now
               </Text>
             </View>
           ) : (

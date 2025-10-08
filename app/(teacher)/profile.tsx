@@ -54,6 +54,7 @@ export default function TeacherProfileScreen() {
             setLoading(true);
             try {
               await logout();
+              router.push('/(tabs)');
             } catch (error) {
               console.error('Logout error:', error);
             } finally {
@@ -160,7 +161,7 @@ export default function TeacherProfileScreen() {
               <Text className="text-gray-900 font-semibold">{teacherStats.averageClassScore}%</Text>
             </View>
             <View className="w-full bg-gray-200 rounded-full h-2">
-              <View 
+              <View
                 className="h-2 rounded-full bg-green-500"
                 style={{ width: `${teacherStats.averageClassScore}%` }}
               />
@@ -172,7 +173,7 @@ export default function TeacherProfileScreen() {
               <Text className="text-gray-900 font-semibold">92%</Text>
             </View>
             <View className="w-full bg-gray-200 rounded-full h-2">
-              <View 
+              <View
                 className="h-2 rounded-full bg-blue-500"
                 style={{ width: '92%' }}
               />
@@ -187,14 +188,14 @@ export default function TeacherProfileScreen() {
           Quick Actions
         </Text>
         <View className="grid grid-cols-2 gap-3">
-          <TouchableOpacity 
+          <TouchableOpacity
             className="bg-blue-50 rounded-xl p-4 flex-row items-center justify-center border border-blue-200"
             onPress={() => router.push('/(teacher)/create-exam')}
           >
             <Ionicons name="add-circle" size={20} color="#3b82f6" />
             <Text className="text-blue-700 font-medium ml-2 text-sm">New Exam</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             className="bg-green-50 rounded-xl p-4 flex-row items-center justify-center border border-green-200"
             onPress={() => router.push('/(teacher)/create-homework')}
           >
@@ -313,11 +314,10 @@ export default function TeacherProfileScreen() {
           ].map((tab) => (
             <TouchableOpacity
               key={tab.key}
-              className={`flex-1 py-4 flex-row justify-center items-center border-b-2 ${
-                activeTab === tab.key
+              className={`flex-1 py-4 flex-row justify-center items-center border-b-2 ${activeTab === tab.key
                   ? 'border-blue-500'
                   : 'border-transparent'
-              }`}
+                }`}
               onPress={() => setActiveTab(tab.key)}
             >
               <Ionicons
@@ -326,11 +326,10 @@ export default function TeacherProfileScreen() {
                 color={activeTab === tab.key ? '#3b82f6' : '#6b7280'}
               />
               <Text
-                className={`ml-2 font-medium ${
-                  activeTab === tab.key
+                className={`ml-2 font-medium ${activeTab === tab.key
                     ? 'text-blue-600'
                     : 'text-gray-600'
-                }`}
+                  }`}
               >
                 {tab.label}
               </Text>
@@ -340,7 +339,7 @@ export default function TeacherProfileScreen() {
       </View>
 
       {/* Content */}
-      <ScrollView 
+      <ScrollView
         className="flex-1 p-6"
         showsVerticalScrollIndicator={false}
       >

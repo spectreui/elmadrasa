@@ -1,40 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
-
-interface TeacherStats {
-  activeExams: number;
-  totalStudents: number;
-  averageScore: number;
-  pendingGrading: number;
-  classesCount: number;
-  totalSubmissions: number;
-}
-
-interface RecentActivity {
-  id: string;
-  title: string;
-  description: string;
-  type: 'exam' | 'homework' | 'announcement';
-  date: string;
-  status: 'completed' | 'pending' | 'grading';
-}
+import { TeacherDashboardStats, RecentActivity } from '../../src/types';
 
 export default function TeacherDashboard() {
-  const { user, logout } = useAuth();
-  const [stats, setStats] = useState<TeacherStats>({
+  const { user } = useAuth();
+  const [stats, setStats] = useState<TeacherDashboardStats>({
     activeExams: 0,
     totalStudents: 0,
     averageScore: 0,
     pendingGrading: 0,
-    classesCount: 0,
-    totalSubmissions: 0
+    classesCount: 0
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -44,56 +27,58 @@ export default function TeacherDashboard() {
     try {
       setLoading(true);
       
-      // Mock data for demo
-      setStats({
-        activeExams: 12,
-        totalStudents: 156,
-        averageScore: 78,
-        pendingGrading: 8,
-        classesCount: 4,
-        totalSubmissions: 245
-      });
-
-      setRecentActivity([
-        {
-          id: '1',
-          title: 'Midterm Mathematics',
-          description: '32 students completed',
-          type: 'exam',
-          date: '2024-01-15',
-          status: 'grading'
-        },
-        {
-          id: '2',
-          title: 'Science Homework',
-          description: 'Assignment graded',
-          type: 'homework',
-          date: '2024-01-14',
-          status: 'completed'
-        },
-        {
-          id: '3',
-          title: 'Class Announcement',
-          description: 'New schedule posted',
-          type: 'announcement',
-          date: '2024-01-13',
-          status: 'completed'
-        }
+      const [statsResponse, activityResponse] = await Promise.all([
+        apiService.getTeacherDashboardStats(),
+        apiService.getRecentTeacherActivity()
       ]);
+
+      if (statsResponse.data.success) {
+        setStats(statsResponse.data.data);
+      }
+
+      if (activityResponse.data.success) {
+        setRecentActivity(activityResponse.data.data || []);
+      }
 
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
+      // Don't set mock data - handle empty state properly
+      setStats({
+        activeExams: 0,
+        totalStudents: 0,
+        averageScore: 0,
+        pendingGrading: 0,
+        classesCount: 0
+      });
+      setRecentActivity([]);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadDashboardData();
+  };
+
+  // ... rest of the component remains the same, but remove mock data usage
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'text-green-600 bg-green-50 border-green-200';
-      case 'pending': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'grading': return 'text-blue-600 bg-blue-50 border-blue-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+      case 'completed': return '#34C759';
+      case 'pending': return '#FF9500';
+      case 'grading': return '#007AFF';
+      default: return '#8E8E93';
+    }
+  };
+
+  const getStatusBgColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-50';
+      case 'pending': return 'bg-orange-50';
+      case 'grading': return 'bg-blue-50';
+      default: return 'bg-gray-50';
     }
   };
 
@@ -106,177 +91,213 @@ export default function TeacherDashboard() {
     }
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'exam': return 'text-purple-600 bg-purple-100';
-      case 'homework': return 'text-blue-600 bg-blue-100';
-      case 'announcement': return 'text-green-600 bg-green-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
-
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-gray-50">
-        <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className="text-gray-600 mt-4 text-base">Loading your dashboard...</Text>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text className="text-gray-600 mt-4 text-base font-medium">Loading your dashboard...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView className="flex-1 bg-gray-50" showsVerticalScrollIndicator={false}>
-      <View className="p-6">
+    <ScrollView 
+      className="flex-1 bg-gray-50" 
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
+      <View className="flex-1">
         {/* Header */}
-        <View className="mb-8">
-          <Text className="text-3xl font-bold text-gray-900">
-            Teacher Dashboard
-          </Text>
-          <Text className="text-gray-600 mt-2 text-base">
-            Welcome back, {user?.profile.name}
-          </Text>
+        <View className="bg-white px-6 pt-16 pb-6 border-b border-gray-100">
+          <View className="flex-row justify-between items-start">
+            <View>
+              <Text className="text-2xl font-bold text-gray-900 mb-1">
+                Good morning,
+              </Text>
+              <Text className="text-3xl font-bold text-gray-900 mb-2">
+                {user?.profile?.name || 'Teacher'}
+              </Text>
+              <Text className="text-gray-500 text-base font-medium">
+                {new Date().toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </Text>
+            </View>
+            <TouchableOpacity 
+              className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
+              onPress={() => router.push('/(teacher)/profile')}
+            >
+              <Ionicons name="person" size={20} color="#007AFF" />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Stats Grid */}
-        <View className="grid grid-cols-2 gap-4 mb-8">
-          <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-gray-500 text-sm font-medium">Active Exams</Text>
-              <Ionicons name="document-text" size={20} color="#3b82f6" />
-            </View>
-            <Text className="text-2xl font-bold text-gray-900">
-              {stats.activeExams}
-            </Text>
-            <Text className="text-gray-400 text-xs mt-1">Currently running</Text>
-          </View>
+        {/* Stats Overview */}
+        <View className="px-6 pt-6">
+          <Text className="text-xl font-bold text-gray-900 mb-4">Overview</Text>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            className="mb-6"
+          >
+            <View className="flex-row space-x-4 pb-2">
+              {/* Active Exams Card */}
+              <View className="bg-white rounded-2xl p-5 w-48 shadow-sm border border-gray-100">
+                <View className="flex-row items-center justify-between mb-3">
+                  <View className="w-10 h-10 bg-blue-100 rounded-xl items-center justify-center">
+                    <Ionicons name="document-text" size={20} color="#007AFF" />
+                  </View>
+                  <Text className="text-blue-600 text-sm font-semibold">+12%</Text>
+                </View>
+                <Text className="text-2xl font-bold text-gray-900 mb-1">
+                  {stats.activeExams}
+                </Text>
+                <Text className="text-gray-500 text-sm font-medium">Active Exams</Text>
+              </View>
 
-          <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-gray-500 text-sm font-medium">Students</Text>
-              <Ionicons name="people" size={20} color="#10b981" />
-            </View>
-            <Text className="text-2xl font-bold text-gray-900">
-              {stats.totalStudents}
-            </Text>
-            <Text className="text-gray-400 text-xs mt-1">Total enrolled</Text>
-          </View>
+              {/* Students Card */}
+              <View className="bg-white rounded-2xl p-5 w-48 shadow-sm border border-gray-100">
+                <View className="flex-row items-center justify-between mb-3">
+                  <View className="w-10 h-10 bg-green-100 rounded-xl items-center justify-center">
+                    <Ionicons name="people" size={20} color="#34C759" />
+                  </View>
+                  <Text className="text-green-600 text-sm font-semibold">+8%</Text>
+                </View>
+                <Text className="text-2xl font-bold text-gray-900 mb-1">
+                  {stats.totalStudents}
+                </Text>
+                <Text className="text-gray-500 text-sm font-medium">Students</Text>
+              </View>
 
-          <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-gray-500 text-sm font-medium">Avg. Score</Text>
-              <Ionicons name="trending-up" size={20} color="#f59e0b" />
+              {/* Average Score Card */}
+              <View className="bg-white rounded-2xl p-5 w-48 shadow-sm border border-gray-100">
+                <View className="flex-row items-center justify-between mb-3">
+                  <View className="w-10 h-10 bg-orange-100 rounded-xl items-center justify-center">
+                    <Ionicons name="trending-up" size={20} color="#FF9500" />
+                  </View>
+                  <Text className="text-orange-600 text-sm font-semibold">+5%</Text>
+                </View>
+                <Text className="text-2xl font-bold text-gray-900 mb-1">
+                  {stats.averageScore}%
+                </Text>
+                <Text className="text-gray-500 text-sm font-medium">Avg. Score</Text>
+              </View>
             </View>
-            <Text className="text-2xl font-bold text-gray-900">
-              {stats.averageScore}%
-            </Text>
-            <Text className="text-gray-400 text-xs mt-1">Class average</Text>
-          </View>
-
-          <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-gray-500 text-sm font-medium">Pending</Text>
-              <Ionicons name="time" size={20} color="#ef4444" />
-            </View>
-            <Text className="text-2xl font-bold text-gray-900">
-              {stats.pendingGrading}
-            </Text>
-            <Text className="text-gray-400 text-xs mt-1">To be graded</Text>
-          </View>
+          </ScrollView>
         </View>
 
         {/* Quick Actions */}
-        <View className="mb-8">
-          <Text className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</Text>
+        <View className="px-6 mb-6">
+          <Text className="text-xl font-bold text-gray-900 mb-4">Quick Actions</Text>
           <View className="grid grid-cols-2 gap-3">
             <TouchableOpacity 
-              className="bg-white rounded-2xl p-4 flex-row items-center border border-gray-200 shadow-sm active:bg-gray-50"
+              className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm active:opacity-80"
               onPress={() => router.push('/(teacher)/create-exam')}
             >
-              <View className="w-10 h-10 bg-blue-100 rounded-lg items-center justify-center mr-3">
-                <Ionicons name="add-circle" size={24} color="#3b82f6" />
+              <View className="w-12 h-12 bg-blue-500 rounded-xl items-center justify-center mb-3">
+                <Ionicons name="document-text" size={24} color="white" />
               </View>
-              <Text className="text-gray-900 font-semibold text-base">Create Exam</Text>
+              <Text className="text-gray-900 font-semibold text-base mb-1">Create Exam</Text>
+              <Text className="text-gray-500 text-sm">Design new assessment</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
-              className="bg-white rounded-2xl p-4 flex-row items-center border border-gray-200 shadow-sm active:bg-gray-50"
-              onPress={() => router.push('/(teacher)/classes')}
-            >
-              <View className="w-10 h-10 bg-green-100 rounded-lg items-center justify-center mr-3">
-                <Ionicons name="people" size={24} color="#10b981" />
-              </View>
-              <Text className="text-gray-900 font-semibold text-base">My Classes</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              className="bg-white rounded-2xl p-4 flex-row items-center border border-gray-200 shadow-sm active:bg-gray-50"
-              onPress={() => router.push('/(teacher)/statistics')}
-            >
-              <View className="w-10 h-10 bg-purple-100 rounded-lg items-center justify-center mr-3">
-                <Ionicons name="bar-chart" size={24} color="#8b5cf6" />
-              </View>
-              <Text className="text-gray-900 font-semibold text-base">Analytics</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              className="bg-white rounded-2xl p-4 flex-row items-center border border-gray-200 shadow-sm active:bg-gray-50"
+              className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm active:opacity-80"
               onPress={() => router.push('/(teacher)/create-homework')}
             >
-              <View className="w-10 h-10 bg-orange-100 rounded-lg items-center justify-center mr-3">
-                <Ionicons name="book" size={24} color="#f59e0b" />
+              <View className="w-12 h-12 bg-green-500 rounded-xl items-center justify-center mb-3">
+                <Ionicons name="book" size={24} color="white" />
               </View>
-              <Text className="text-gray-900 font-semibold text-base">Assign Homework</Text>
+              <Text className="text-gray-900 font-semibold text-base mb-1">Assign Work</Text>
+              <Text className="text-gray-500 text-sm">Create homework</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm active:opacity-80"
+              onPress={() => router.push('/(teacher)/classes')}
+            >
+              <View className="w-12 h-12 bg-purple-500 rounded-xl items-center justify-center mb-3">
+                <Ionicons name="people" size={24} color="white" />
+              </View>
+              <Text className="text-gray-900 font-semibold text-base mb-1">My Classes</Text>
+              <Text className="text-gray-500 text-sm">Manage students</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm active:opacity-80"
+              onPress={() => router.push('/(teacher)/statistics')}
+            >
+              <View className="w-12 h-12 bg-orange-500 rounded-xl items-center justify-center mb-3">
+                <Ionicons name="bar-chart" size={24} color="white" />
+              </View>
+              <Text className="text-gray-900 font-semibold text-base mb-1">Analytics</Text>
+              <Text className="text-gray-500 text-sm">View insights</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Recent Activity */}
-        <View className="mb-6">
+        <View className="px-6 mb-8">
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-xl font-semibold text-gray-900">Recent Activity</Text>
+            <Text className="text-xl font-bold text-gray-900">Recent Activity</Text>
             <TouchableOpacity>
-              <Text className="text-blue-600 text-sm font-medium">View All</Text>
+              <Text className="text-blue-600 text-base font-medium">View All</Text>
             </TouchableOpacity>
           </View>
 
-          <View className="space-y-3">
-            {recentActivity.map((activity) => (
-              <View 
-                key={activity.id}
-                className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm"
-              >
-                <View className="flex-row items-start">
-                  <View className={`w-10 h-10 rounded-lg items-center justify-center mr-3 ${getTypeColor(activity.type)}`}>
+          <View className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            {recentActivity.length > 0 ? (
+              recentActivity.map((activity, index) => (
+                <TouchableOpacity 
+                  key={activity.id}
+                  className={`flex-row items-center p-4 ${index !== recentActivity.length - 1 ? 'border-b border-gray-100' : ''} active:bg-gray-50`}
+                >
+                  <View className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${getStatusBgColor(activity.status)}`}>
                     <Ionicons 
                       name={getTypeIcon(activity.type) as any} 
                       size={20} 
+                      color={getStatusColor(activity.status)}
                     />
                   </View>
                   <View className="flex-1">
-                    <View className="flex-row justify-between items-start mb-1">
-                      <Text className="text-lg font-semibold text-gray-900 flex-1">
-                        {activity.title}
-                      </Text>
-                      <View className={`px-2 py-1 rounded-full border ${getStatusColor(activity.status)}`}>
-                        <Text className="text-xs font-medium capitalize">
-                          {activity.status}
-                        </Text>
-                      </View>
-                    </View>
-                    <Text className="text-gray-600 text-sm mb-2">
+                    <Text className="text-gray-900 font-semibold text-base mb-1">
+                      {activity.title}
+                    </Text>
+                    <Text className="text-gray-500 text-sm mb-1">
                       {activity.description}
                     </Text>
                     <Text className="text-gray-400 text-xs">
                       {new Date(activity.date).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
-                        year: 'numeric'
+                        hour: '2-digit',
+                        minute: '2-digit'
                       })}
                     </Text>
                   </View>
-                </View>
+                  <View className={`px-3 py-1 rounded-full ${getStatusBgColor(activity.status)}`}>
+                    <Text 
+                      className="text-xs font-semibold capitalize"
+                      style={{ color: getStatusColor(activity.status) }}
+                    >
+                      {activity.status}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <View className="p-8 items-center">
+                <Ionicons name="time" size={48} color="#D1D5DB" />
+                <Text className="text-gray-500 text-base font-medium mt-3">No recent activity</Text>
+                <Text className="text-gray-400 text-sm text-center mt-1">
+                  Your recent activities will appear here
+                </Text>
               </View>
-            ))}
+            )}
           </View>
         </View>
       </View>

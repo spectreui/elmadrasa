@@ -11,7 +11,10 @@
     },
     "android": {
       "package": "com.webeleavte.elmadrasa",
-      "versionCode": 3
+      "versionCode": 19,
+      "jsEngine": "hermes",
+      "enableProguardInReleaseBuilds": true,
+      "enableShrinkResourcesInReleaseBuilds": true
     },
     "ios": {
       "bundleIdentifier": "com.webeleavte.elmadrasa"

@@ -1,10 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';
-import { Homework } from '../../src/types';
 import { Ionicons } from '@expo/vector-icons';
+
+interface Homework {
+  id: string;
+  title: string;
+  description: string;
+  subject: string;
+  class: string;
+  due_date: string;
+  points: number;
+  attachments: boolean;
+  teacher_id: string;
+  created_at: string;
+  updated_at: string;
+  submitted: boolean;
+  submission_date?: string;
+  grade?: number;
+  teacher?: {
+    id: string;
+    profile: {
+      name: string;
+    };
+  };
+}
 
 export default function StudentHomeworkScreen() {
   const { user } = useAuth();
@@ -12,74 +34,62 @@ export default function StudentHomeworkScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadHomework();
-  }, []);
-
   const loadHomework = async () => {
     try {
       setLoading(true);
-      // Mock data - replace with actual API call
-      const mockHomework: Homework[] = [
-        {
-          id: '1',
-          title: 'Algebra Practice Problems',
-          description: 'Complete exercises 1-20 from chapter 3',
-          subject: 'Mathematics',
-          class: '10A',
-          due_date: '2024-12-25',
-          points: 20,
-          attachments: true,
-          teacher_id: '1',
-          created_at: '2024-01-01',
-          updated_at: '2024-01-01',
-          teacher: {
-            id: '1',
-            profile: { name: 'Dr. Smith' }
-          }
-        },
-        {
-          id: '2',
-          title: 'Science Lab Report',
-          description: 'Write a report on the chemical reactions experiment',
-          subject: 'Science',
-          class: '10A',
-          due_date: '2024-12-20',
-          points: 25,
-          attachments: false,
-          teacher_id: '2',
-          created_at: '2024-01-01',
-          updated_at: '2024-01-01',
-          teacher: {
-            id: '2',
-            profile: { name: 'Dr. Johnson' }
-          }
-        }
-      ];
-      setHomework(mockHomework);
-    } catch (error) {
+      
+      // Use the real getHomework API call
+      const response = await apiService.getHomework();
+      
+      if (response.data.success) {
+        setHomework(response.data.data || []);
+      } else {
+        throw new Error(response.data.error || 'Failed to load homework');
+      }
+
+    } catch (error: any) {
       console.error('Failed to load homework:', error);
+      Alert.alert('Error', error.message || 'Failed to load homework assignments. Please try again.');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
+  useEffect(() => {
+    loadHomework();
+  }, []);
+
   const onRefresh = () => {
     setRefreshing(true);
     loadHomework();
   };
 
-  const getDueStatus = (dueDate: string) => {
+  const getDueStatus = (dueDate: string, submitted: boolean) => {
+    if (submitted) {
+      return { status: 'submitted', color: 'bg-blue-100 border-blue-200', text: 'Submitted' };
+    }
+
     const today = new Date();
     const due = new Date(dueDate);
     const diffTime = due.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    if (diffDays < 0) return { status: 'overdue', color: 'bg-red-100 text-red-800', text: 'Overdue' };
-    if (diffDays === 0) return { status: 'due', color: 'bg-orange-100 text-orange-800', text: 'Due Today' };
-    if (diffDays <= 2) return { status: 'soon', color: 'bg-yellow-100 text-yellow-800', text: 'Due Soon' };
-    return { status: 'pending', color: 'bg-green-100 text-green-800', text: 'Pending' };
+    if (diffDays < 0) return { status: 'overdue', color: 'bg-red-100 border-red-200', text: 'Overdue' };
+    if (diffDays === 0) return { status: 'due', color: 'bg-orange-100 border-orange-200', text: 'Due Today' };
+    if (diffDays <= 2) return { status: 'soon', color: 'bg-yellow-100 border-yellow-200', text: 'Due Soon' };
+    return { status: 'pending', color: 'bg-green-100 border-green-200', text: 'Pending' };
+  };
+
+  const getStatusTextColor = (status: string) => {
+    switch (status) {
+      case 'submitted': return 'text-blue-800';
+      case 'overdue': return 'text-red-800';
+      case 'due': return 'text-orange-800';
+      case 'soon': return 'text-yellow-800';
+      case 'pending': return 'text-green-800';
+      default: return 'text-gray-800';
+    }
   };
 
   const formatDueDate = (dateString: string) => {
@@ -88,6 +98,23 @@ export default function StudentHomeworkScreen() {
       day: 'numeric',
       year: 'numeric'
     });
+  };
+
+  const handleHomeworkPress = (homeworkItem: Homework) => {
+    if (homeworkItem.submitted) {
+      router.push(`/homework/${homeworkItem.id}/results`);
+    } else {
+      router.push(`/homework/${homeworkItem.id}`);
+    }
+  };
+
+  const getButtonText = (homeworkItem: Homework) => {
+    if (homeworkItem.submitted) {
+      return homeworkItem.grade ? `View Grade: ${homeworkItem.grade}/${homeworkItem.points}` : 'View Submission';
+    }
+    
+    const status = getDueStatus(homeworkItem.due_date, homeworkItem.submitted);
+    return status.status === 'overdue' ? 'Submit Now' : 'Start Assignment';
   };
 
   if (loading) {
@@ -114,21 +141,21 @@ export default function StudentHomeworkScreen() {
 
         {homework.length === 0 ? (
           <View className="bg-white rounded-2xl p-8 items-center border border-gray-200 mt-8">
-            <Ionicons name="book-outline" size={64} color="#d1d5db" />
+            <Ionicons name="checkmark-circle" size={64} color="#d1d5db" />
             <Text className="text-gray-500 text-lg mt-4 font-medium">No homework assigned</Text>
             <Text className="text-gray-400 text-sm mt-2 text-center">
-              You&apos;re all caught up! Check back later for new assignments.
+              You're all caught up! Check back later for new assignments.
             </Text>
           </View>
         ) : (
           <View className="space-y-4">
             {homework.map((item) => {
-              const dueStatus = getDueStatus(item.due_date);
+              const dueStatus = getDueStatus(item.due_date, item.submitted);
               return (
                 <TouchableOpacity
                   key={item.id}
-                  className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm active:bg-gray-50"
-                  onPress={() => router.push(`/homework/${item.id}`)}
+                  className={`bg-white rounded-2xl p-5 border-2 ${dueStatus.color} shadow-sm active:opacity-80`}
+                  onPress={() => handleHomeworkPress(item)}
                 >
                   <View className="flex-row justify-between items-start mb-3">
                     <View className="flex-1">
@@ -139,11 +166,11 @@ export default function StudentHomeworkScreen() {
                         {item.description}
                       </Text>
                       <Text className="text-gray-500 text-sm">
-                        {item.subject} • {item.class}
+                        {item.subject} • {item.class} • {item.points} points
                       </Text>
                     </View>
                     <View className={`px-3 py-1 rounded-full ${dueStatus.color}`}>
-                      <Text className="text-xs font-medium">
+                      <Text className={`text-xs font-medium ${getStatusTextColor(dueStatus.status)}`}>
                         {dueStatus.text}
                       </Text>
                     </View>
@@ -154,7 +181,7 @@ export default function StudentHomeworkScreen() {
                       <View className="flex-row items-center">
                         <Ionicons name="person" size={16} color="#6b7280" />
                         <Text className="text-gray-600 text-sm ml-1">
-                          {item.teacher?.profile.name}
+                          {item.teacher?.profile?.name || 'Teacher'}
                         </Text>
                       </View>
                       <View className="flex-row items-center">
@@ -174,7 +201,7 @@ export default function StudentHomeworkScreen() {
                     </View>
                     <View className="flex-row items-center">
                       <Text className="text-blue-600 font-medium mr-2">
-                        View Details
+                        {getButtonText(item)}
                       </Text>
                       <Ionicons name="chevron-forward" size={16} color="#3b82f6" />
                     </View>
@@ -197,15 +224,15 @@ export default function StudentHomeworkScreen() {
             </View>
             <View className="items-center">
               <Text className="text-2xl font-bold text-gray-900">
-                {homework.filter(h => getDueStatus(h.due_date).status === 'pending').length}
+                {homework.filter(h => !h.submitted).length}
               </Text>
               <Text className="text-gray-500 text-xs text-center">Pending</Text>
             </View>
             <View className="items-center">
               <Text className="text-2xl font-bold text-gray-900">
-                {homework.filter(h => getDueStatus(h.due_date).status === 'overdue').length}
+                {homework.filter(h => h.submitted).length}
               </Text>
-              <Text className="text-gray-500 text-xs text-center">Overdue</Text>
+              <Text className="text-gray-500 text-xs text-center">Submitted</Text>
             </View>
           </View>
         </View>
