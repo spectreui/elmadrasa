@@ -154,7 +154,7 @@ export default function ExamsScreen() {
         </Text>
 
         {/* Quick Stats */}
-        <View className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm mb-6">
+        <View className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-slate-200 shadow-sm mb-6">
           <Text className="text-lg font-semibold text-slate-900 mb-4">Your Progress</Text>
           <View className="grid grid-cols-3 gap-4">
             <View className="items-center">
@@ -179,7 +179,7 @@ export default function ExamsScreen() {
         </View>
 
         {exams.length === 0 ? (
-          <View className="bg-white rounded-xl p-8 items-center border border-slate-200">
+          <View className="bg-white dark:bg-gray-800 rounded-xl p-8 items-center border border-slate-200">
             <Ionicons name="document-text-outline" size={64} color="#cbd5e1" />
             <Text className="text-slate-500 text-lg mt-4 font-medium">No exams available</Text>
             <Text className="text-slate-400 text-sm mt-2 text-center">
@@ -196,7 +196,7 @@ export default function ExamsScreen() {
               return (
                 <TouchableOpacity
                   key={exam.id}
-                  className={`bg-white rounded-xl p-5 border-2 ${getStatusColor(status)} shadow-sm active:opacity-80`}
+                  className={`bg-white dark:bg-gray-800 rounded-xl p-5 border-2 ${getStatusColor(status)} shadow-sm active:opacity-80`}
                   onPress={() => handleExamPress(exam)}
                 >
                   <View className="flex-row justify-between items-start mb-3">

@@ -254,7 +254,7 @@ export default function CreateExamScreen() {
         contentContainerStyle={{ paddingBottom: 100 }}
       >
         {/* Header */}
-        <View className="bg-white px-6 pt-16 pb-6 border-b border-gray-100">
+        <View className="bg-white dark:bg-gray-800 px-6 pt-16 pb-6 border-b border-gray-100">
           <View className="flex-row justify-between items-center mb-4">
             <View className="flex-1">
               <Text className="text-2xl font-bold text-gray-900 mb-1">
@@ -274,7 +274,7 @@ export default function CreateExamScreen() {
         </View>
 
         <View className="p-6">
-          <View className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-6">
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm space-y-6">
             {/* Basic Info */}
             <View className="space-y-4">
               <Text className="text-xl font-semibold text-gray-900">Exam Details</Text>
@@ -282,7 +282,7 @@ export default function CreateExamScreen() {
               <View>
                 <Text className="text-sm font-semibold text-gray-700 mb-2">Title *</Text>
                 <TextInput
-                  className="border border-gray-200 rounded-xl p-4 bg-white text-gray-900 text-base"
+                  className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base"
                   placeholder="Enter exam title"
                   placeholderTextColor="#8E8E93"
                   value={form.title}
@@ -293,7 +293,7 @@ export default function CreateExamScreen() {
               <View>
                 <Text className="text-sm font-semibold text-gray-700 mb-2">Description</Text>
                 <TextInput
-                  className="border border-gray-200 rounded-xl p-4 bg-white text-gray-900 text-base h-24"
+                  className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base h-24"
                   placeholder="Enter exam description and instructions..."
                   placeholderTextColor="#8E8E93"
                   value={form.description}
@@ -307,7 +307,7 @@ export default function CreateExamScreen() {
                 <View>
                   <Text className="text-sm font-semibold text-gray-700 mb-2">Subject *</Text>
                   <TextInput
-                    className="border border-gray-200 rounded-xl p-4 bg-white text-gray-900 text-base"
+                    className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base"
                     placeholder="e.g., Mathematics"
                     placeholderTextColor="#8E8E93"
                     value={form.subject}
@@ -318,7 +318,7 @@ export default function CreateExamScreen() {
                 <View>
                   <Text className="text-sm font-semibold text-gray-700 mb-2">Class *</Text>
                   <TextInput
-                    className="border border-gray-200 rounded-xl p-4 bg-white text-gray-900 text-base"
+                    className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base"
                     placeholder="e.g., 10A"
                     placeholderTextColor="#8E8E93"
                     value={form.class}
@@ -355,7 +355,7 @@ export default function CreateExamScreen() {
                   <View>
                     <Text className="text-sm font-semibold text-gray-700 mb-2">Duration (minutes)</Text>
                     <TextInput
-                      className="border border-gray-200 rounded-xl p-4 bg-white text-gray-900 text-base"
+                      className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base"
                       placeholder="60"
                       keyboardType="numeric"
                       value={form.settings.duration.toString()}
@@ -459,7 +459,7 @@ export default function CreateExamScreen() {
                   {form.questions.map((question, index) => (
                     <View
                       key={question.id}
-                      className="border border-gray-200 rounded-xl p-4 bg-white"
+                      className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800"
                     >
                       <View className="flex-row justify-between items-start mb-3">
                         <View className="flex-1">
@@ -659,9 +659,9 @@ function QuestionModal({ visible, question, onSave, onClose }: QuestionModalProp
       animationType="slide"
       presentationStyle="pageSheet"
     >
-      <View className="flex-1 bg-white">
+      <View className="flex-1 bg-white dark:bg-gray-800">
         {/* Header */}
-        <View className="bg-white px-6 pt-16 pb-4 border-b border-gray-100">
+        <View className="bg-white dark:bg-gray-800 px-6 pt-16 pb-4 border-b border-gray-100">
           <View className="flex-row justify-between items-center">
             <Text className="text-xl font-bold text-gray-900">
               {question ? "Edit Question" : "Add Question"}
@@ -678,7 +678,7 @@ function QuestionModal({ visible, question, onSave, onClose }: QuestionModalProp
             <View>
               <Text className="text-sm font-semibold text-gray-700 mb-2">Question *</Text>
               <TextInput
-                className="border border-gray-200 rounded-xl p-4 bg-white text-gray-900 text-base h-32"
+                className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base h-32"
                 placeholder="Enter your question..."
                 placeholderTextColor="#8E8E93"
                 value={form.question}
@@ -700,7 +700,7 @@ function QuestionModal({ visible, question, onSave, onClose }: QuestionModalProp
                     key={type.key}
                     className={`flex-1 py-3 rounded-xl border-2 flex-row justify-center items-center ${form.type === type.key
                         ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 bg-white"
+                        : "border-gray-200 bg-white dark:bg-gray-800"
                       }`}
                     onPress={() => setForm(prev => ({ ...prev, type: type.key }))}
                   >
@@ -724,7 +724,7 @@ function QuestionModal({ visible, question, onSave, onClose }: QuestionModalProp
             <View>
               <Text className="text-sm font-semibold text-gray-700 mb-2">Points</Text>
               <TextInput
-                className="border border-gray-200 rounded-xl p-4 bg-white text-gray-900 text-base"
+                className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base"
                 placeholder="1"
                 keyboardType="numeric"
                 value={form.points.toString()}
@@ -762,7 +762,7 @@ function QuestionModal({ visible, question, onSave, onClose }: QuestionModalProp
                       </TouchableOpacity>
 
                       <TextInput
-                        className="flex-1 border border-gray-200 rounded-xl p-3 bg-white text-gray-900 text-base"
+                        className="flex-1 border border-gray-200 rounded-xl p-3 bg-white dark:bg-gray-800 text-gray-900 text-base"
                         placeholder={`Option ${index + 1}`}
                         placeholderTextColor="#8E8E93"
                         value={option}
@@ -787,7 +787,7 @@ function QuestionModal({ visible, question, onSave, onClose }: QuestionModalProp
             <View>
               <Text className="text-sm font-semibold text-gray-700 mb-2">Explanation (Optional)</Text>
               <TextInput
-                className="border border-gray-200 rounded-xl p-4 bg-white text-gray-900 text-base h-24"
+                className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base h-24"
                 placeholder="Add explanation for the correct answer..."
                 placeholderTextColor="#8E8E93"
                 value={form.explanation}

@@ -8,10 +8,10 @@ export default function Index() {
   const { isAuthenticated, loading, user } = useAuth();
   const router = useRouter();
 
-  console.log('🔐 Auth State:', { 
-    isAuthenticated, 
-    loading, 
-    userRole: user?.role 
+  console.log('🔐 Auth State:', {
+    isAuthenticated,
+    loading,
+    userRole: user?.role
   });
 
   // Handle navigation based on auth state changes
@@ -20,9 +20,12 @@ export default function Index() {
       if (!isAuthenticated) {
         console.log('➡️ Redirecting to login');
         router.replace('/(auth)/login');
-      } else if (user?.role === 'teacher' || user?.role === 'admin') {
+      } else if (user?.role === 'teacher') {
         console.log('➡️ Redirecting teacher to teacher dashboard');
         router.replace('/(teacher)');
+      } else if (user?.role === 'admin') {
+        console.log('➡️ Redirecting teacher to teacher dashboard');
+        router.replace('/(admin)');
       } else {
         console.log('➡️ Redirecting student to tabs');
         router.replace('/(tabs)');

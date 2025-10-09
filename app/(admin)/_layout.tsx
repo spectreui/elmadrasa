@@ -5,10 +5,8 @@ import { useAuth } from "../../src/contexts/AuthContext";
 export default function TabLayout() {
   const { user } = useAuth();
 
-  if (user?.role === "teacher") {
-    return <Redirect href="/(teacher)" />;
-  } else  if (user?.role === "admin") {
-    return <Redirect href="/(admin)" />;
+  if (user?.role !== "admin") {
+    return <Redirect href="/(auth)/login" />;
   }
 
   return (
@@ -44,49 +42,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="exams"
+        name="teachers"
         options={{
-          title: "Exams",
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "document-text" : "document-text-outline"}
-              size={size}
-              color={color}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="homework"
-        options={{
-          title: "Homework",
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "book" : "book-outline"}
-              size={size}
-              color={color}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="results"
-        options={{
-          title: "Results",
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "bar-chart" : "bar-chart-outline"}
-              size={size}
-              color={color}
-            />
-          ),
-        }}
-      />
-  
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
+          title: "Teachers",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "person" : "person-outline"}
@@ -96,6 +54,78 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="students"
+        options={{
+          title: "Students",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "people" : "people-outline"}
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="classes"
+        options={{
+          title: "Classes",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "albums" : "albums-outline"}
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "settings" : "settings-outline"}
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="approvals"
+        options={{
+          title: "Approve",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "checkmark-circle" : "checkmark-circle-outline"}
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="assign-teachers"
+        options={{
+          title: "Assign",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "link" : "link-outline"}
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="users"
+        options={{
+          href: null
+        }}
+      />
+  
     </Tabs>
   );
 }

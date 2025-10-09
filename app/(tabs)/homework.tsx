@@ -140,7 +140,7 @@ export default function StudentHomeworkScreen() {
         </View>
 
         {homework.length === 0 ? (
-          <View className="bg-white rounded-2xl p-8 items-center border border-gray-200 mt-8">
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-8 items-center border border-gray-200 mt-8">
             <Ionicons name="checkmark-circle" size={64} color="#d1d5db" />
             <Text className="text-gray-500 text-lg mt-4 font-medium">No homework assigned</Text>
             <Text className="text-gray-400 text-sm mt-2 text-center">
@@ -154,7 +154,7 @@ export default function StudentHomeworkScreen() {
               return (
                 <TouchableOpacity
                   key={item.id}
-                  className={`bg-white rounded-2xl p-5 border-2 ${dueStatus.color} shadow-sm active:opacity-80`}
+                  className={`bg-white dark:bg-gray-800 rounded-2xl p-5 border-2 ${dueStatus.color} shadow-sm active:opacity-80`}
                   onPress={() => handleHomeworkPress(item)}
                 >
                   <View className="flex-row justify-between items-start mb-3">
@@ -213,7 +213,7 @@ export default function StudentHomeworkScreen() {
         )}
 
         {/* Stats Card */}
-        <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm mt-6">
+        <View className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 shadow-sm mt-6">
           <Text className="text-lg font-semibold text-gray-900 mb-4">Summary</Text>
           <View className="grid grid-cols-3 gap-4">
             <View className="items-center">

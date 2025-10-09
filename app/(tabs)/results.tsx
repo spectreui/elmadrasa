@@ -187,7 +187,7 @@ const loadResults = async () => {
               {subjectPerformance.map((subject, index) => (
                 <View
                   key={index}
-                  className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm min-w-[140px]"
+                  className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-slate-200 shadow-sm min-w-[140px]"
                 >
                   <Text className="text-slate-900 font-semibold text-sm mb-2">
                     {subject.subject}
@@ -233,7 +233,7 @@ const loadResults = async () => {
             <TouchableOpacity
               key={filter.key}
               className={`flex-1 py-2 rounded-md ${
-                selectedFilter === filter.key ? "bg-white shadow-sm" : ""
+                selectedFilter === filter.key ? "bg-white dark:bg-gray-800 shadow-sm" : ""
               }`}
               onPress={() => setSelectedFilter(filter.key as any)}
             >
@@ -261,7 +261,7 @@ const loadResults = async () => {
           </Text>
 
           {filteredResults.length === 0 ? (
-            <View className="bg-white rounded-xl p-8 items-center border border-slate-200">
+            <View className="bg-white dark:bg-gray-800 rounded-xl p-8 items-center border border-slate-200">
               <Ionicons name="stats-chart" size={48} color="#cbd5e1" />
               <Text className="text-slate-500 text-lg mt-4 font-medium">
                 No results found
@@ -277,7 +277,7 @@ const loadResults = async () => {
               {filteredResults.map((result) => (
                 <View
                   key={result.id}
-                  className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm"
+                  className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-slate-200 shadow-sm"
                 >
                   <View className="flex-row justify-between items-start mb-3">
                     <View className="flex-1">
@@ -348,7 +348,7 @@ const loadResults = async () => {
         </View>
 
         {/* Overall Stats */}
-        <View className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+        <View className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-slate-200 shadow-sm">
           <Text className="text-lg font-semibold text-slate-900 mb-4">
             Summary
           </Text>

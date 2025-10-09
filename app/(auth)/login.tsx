@@ -27,7 +27,7 @@ export default function LoginScreen() {
   const demoLogins = [
     { 
       role: "Student", 
-      email: "student@school.com", 
+      email: "student1@school.com", 
       password: "student123",
       color: "#10b981",
       icon: "school"
@@ -91,7 +91,7 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-white"
+      className="flex-1 bg-white dark:bg-gray-800"
     >
       <StatusBar barStyle="dark-content" backgroundColor="white" />
       <ScrollView
@@ -103,7 +103,7 @@ export default function LoginScreen() {
         <View className="flex-1 justify-center px-6">
           {/* Header */}
           <View className="items-center mb-12">
-            <View className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl items-center justify-center mb-6 shadow-lg">
+            <View className="w-24 h-24 bg-purple dark:bg-black rounded-3xl items-center justify-center mb-6 shadow-lg">
               <Ionicons name="school" size={48} color="white" />
             </View>
             <Text className="text-4xl font-bold text-gray-900 mb-2">
@@ -134,7 +134,7 @@ export default function LoginScreen() {
               </Text>
               <View className="relative">
                 <TextInput
-                  className="border border-gray-300 rounded-2xl p-4 bg-white text-base pl-12 text-gray-900"
+                  className="border border-gray-300 rounded-2xl p-4 bg-white dark:bg-gray-800 dark:bg-black text-base pl-12 text-gray-900"
                   placeholder="Enter your email or student ID"
                   placeholderTextColor="#9ca3af"
                   value={email}
@@ -163,7 +163,7 @@ export default function LoginScreen() {
               </Text>
               <View className="relative">
                 <TextInput
-                  className="border border-gray-300 rounded-2xl p-4 bg-white text-base pl-12 pr-12 text-gray-900"
+                  className="border border-gray-300 rounded-2xl p-4 bg-white dark:bg-gray-800 text-base pl-12 pr-12 text-gray-900"
                   placeholder="Enter your password"
                   placeholderTextColor="#9ca3af"
                   value={password}
@@ -241,7 +241,7 @@ export default function LoginScreen() {
               {demoLogins.map((demo, index) => (
                 <TouchableOpacity
                   key={index}
-                  className="bg-white rounded-2xl p-4 flex-row items-center border border-gray-200 shadow-sm active:bg-gray-50"
+                  className="bg-white dark:bg-gray-800 rounded-2xl p-4 flex-row items-center border border-gray-200 shadow-sm active:bg-gray-50"
                   onPress={() => fillDemoCredentials(demo.email, demo.password)}
                   disabled={isLoading}
                 >

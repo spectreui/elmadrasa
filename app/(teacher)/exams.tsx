@@ -137,15 +137,15 @@ export default function TeacherExamsScreen() {
   const getStatusBadge = (exam: TeacherExam) => {
     // ✅ FIX: Better status detection based on actual data
     if (exam.status === "draft" || exam.is_active === false) {
-      return { text: "Draft", color: "bg-gray-100", textColor: "text-gray-600" };
+      return { text: "Draft", color: "bg-gray-100 dark:bg-gray-700", textColor: "text-gray-600 dark:text-gray-400" };
     }
     
     if (exam.status === "archived") {
-      return { text: "Archived", color: "bg-gray-100", textColor: "text-gray-600" };
+      return { text: "Archived", color: "bg-gray-100 dark:bg-gray-700", textColor: "text-gray-600 dark:text-gray-400" };
     }
     
     // Default to active
-    return { text: "Active", color: "bg-green-50", textColor: "text-green-600" };
+    return { text: "Active", color: "bg-green-50 dark:bg-green-900/20", textColor: "text-green-600 dark:text-green-400" };
   };
 
   const getTabCounts = () => {
@@ -173,27 +173,27 @@ export default function TeacherExamsScreen() {
 
   if (loading && !refreshing) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
+      <View className="flex-1 justify-center items-center bg-gray-50 dark:bg-gray-900">
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text className="text-gray-600 mt-4 text-base font-medium">Loading exams...</Text>
+        <Text className="text-gray-600 dark:text-gray-400 mt-4 text-base font-medium">Loading exams...</Text>
       </View>
     );
   }
 
   return (
     <ScrollView
-      className="flex-1 bg-gray-50"
+      className="flex-1 bg-gray-50 dark:bg-gray-900"
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
       {/* Header */}
-      <View className="bg-white px-6 pt-16 pb-6 border-b border-gray-100">
+      <View className="bg-white dark:bg-gray-800 px-6 pt-16 pb-6 border-b border-gray-100 dark:border-gray-700">
         <View className="flex-row justify-between items-center mb-6">
           <View>
-            <Text className="text-2xl font-bold text-gray-900 mb-1">My Exams</Text>
-            <Text className="text-gray-500 text-base font-medium">
+            <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-1">My Exams</Text>
+            <Text className="text-gray-500 dark:text-gray-400 text-base font-medium">
               {allExams.length} total exams • Manage your assessments
             </Text>
           </View>
@@ -207,14 +207,14 @@ export default function TeacherExamsScreen() {
         </View>
 
         {/* Debug Info - Remove in production */}
-        <View className="bg-yellow-50 p-3 rounded-lg mb-4">
-          <Text className="text-yellow-800 text-sm">
+        <View className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg mb-4">
+          <Text className="text-yellow-800 dark:text-yellow-200 text-sm">
             📊 Debug: {allExams.length} exams loaded • Showing {exams.length} in {activeTab} tab
           </Text>
         </View>
 
         {/* Tabs */}
-        <View className="flex-row bg-gray-100 rounded-xl p-1">
+        <View className="flex-row bg-gray-100 dark:bg-gray-700 rounded-xl p-1">
           {[
             { key: "active" as const, label: "Active", icon: "play", count: tabCounts.active },
             { key: "draft" as const, label: "Drafts", icon: "document", count: tabCounts.draft },
@@ -223,7 +223,7 @@ export default function TeacherExamsScreen() {
             <TouchableOpacity
               key={tab.key}
               className={`flex-1 py-3 rounded-lg flex-row justify-center items-center ${
-                activeTab === tab.key ? "bg-white shadow-sm" : ""
+                activeTab === tab.key ? "bg-white dark:bg-gray-600 shadow-sm" : ""
               }`}
               onPress={() => setActiveTab(tab.key)}
             >
@@ -234,17 +234,17 @@ export default function TeacherExamsScreen() {
               />
               <Text
                 className={`ml-2 text-sm font-semibold ${
-                  activeTab === tab.key ? "text-blue-600" : "text-gray-500"
+                  activeTab === tab.key ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"
                 }`}
               >
                 {tab.label}
               </Text>
               {tab.count > 0 && (
                 <View className={`ml-2 px-2 py-1 rounded-full ${
-                  activeTab === tab.key ? "bg-blue-100" : "bg-gray-200"
+                  activeTab === tab.key ? "bg-blue-100 dark:bg-blue-900/30" : "bg-gray-200 dark:bg-gray-600"
                 }`}>
                   <Text className={`text-xs font-semibold ${
-                    activeTab === tab.key ? "text-blue-600" : "text-gray-600"
+                    activeTab === tab.key ? "text-blue-600 dark:text-blue-300" : "text-gray-600 dark:text-gray-300"
                   }`}>
                     {tab.count}
                   </Text>
@@ -258,7 +258,7 @@ export default function TeacherExamsScreen() {
       {/* Exams List */}
       <View className="p-6">
         {exams.length === 0 ? (
-          <View className="bg-white rounded-2xl p-12 items-center border border-gray-100">
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-12 items-center border border-gray-100 dark:border-gray-700">
             <Ionicons 
               name={
                 activeTab === "active" ? "document-text-outline" :
@@ -266,13 +266,14 @@ export default function TeacherExamsScreen() {
               } 
               size={64} 
               color="#D1D5DB" 
+              className="dark:text-gray-600"
             />
-            <Text className="text-gray-500 text-lg font-medium mt-4">
+            <Text className="text-gray-500 dark:text-gray-400 text-lg font-medium mt-4">
               {activeTab === "active" && "No active exams"}
               {activeTab === "draft" && "No draft exams"} 
               {activeTab === "archived" && "No archived exams"}
             </Text>
-            <Text className="text-gray-400 text-sm text-center mt-2">
+            <Text className="text-gray-400 dark:text-gray-500 text-sm text-center mt-2">
               {activeTab === "active" && allExams.length > 0 
                 ? "All exams are in draft or archived status" 
                 : "Create your first exam to get started"}
@@ -295,29 +296,29 @@ export default function TeacherExamsScreen() {
               return (
                 <View
                   key={exam.id}
-                  className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm"
+                  className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm"
                 >
                   <View className="flex-row justify-between items-start mb-4">
                     <View className="flex-1">
-                      <Text className="text-lg font-semibold text-gray-900 mb-2">
+                      <Text className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                         {exam.title}
                       </Text>
                       <View className="flex-row items-center space-x-3">
                         <View className="flex-row items-center">
-                          <Ionicons name="book" size={14} color="#8E8E93" />
-                          <Text className="text-gray-500 text-sm font-medium ml-1">
+                          <Ionicons name="book" size={14} color="#8E8E93" className="dark:text-gray-400" />
+                          <Text className="text-gray-500 dark:text-gray-400 text-sm font-medium ml-1">
                             {exam.subject}
                           </Text>
                         </View>
                         <View className="flex-row items-center">
-                          <Ionicons name="people" size={14} color="#8E8E93" />
-                          <Text className="text-gray-500 text-sm font-medium ml-1">
+                          <Ionicons name="people" size={14} color="#8E8E93" className="dark:text-gray-400" />
+                          <Text className="text-gray-500 dark:text-gray-400 text-sm font-medium ml-1">
                             {exam.class}
                           </Text>
                         </View>
                         <View className="flex-row items-center">
-                          <Ionicons name="time" size={14} color="#8E8E93" />
-                          <Text className="text-gray-500 text-sm font-medium ml-1">
+                          <Ionicons name="time" size={14} color="#8E8E93" className="dark:text-gray-400" />
+                          <Text className="text-gray-500 dark:text-gray-400 text-sm font-medium ml-1">
                             {exam.settings?.timed ? `${exam.settings.duration}m` : "Untimed"}
                           </Text>
                         </View>
@@ -335,20 +336,20 @@ export default function TeacherExamsScreen() {
                     <View className="flex-row items-center space-x-4">
                       <View className="flex-row items-center">
                         <Ionicons name="person" size={16} color="#007AFF" />
-                        <Text className="text-gray-700 text-sm font-medium ml-1">
+                        <Text className="text-gray-700 dark:text-gray-300 text-sm font-medium ml-1">
                           {exam.submissions_count || 0} submissions
                         </Text>
                       </View>
                       {exam.average_score !== undefined && exam.average_score > 0 && (
                         <View className="flex-row items-center">
                           <Ionicons name="trophy" size={16} color="#FF9500" />
-                          <Text className="text-gray-700 text-sm font-medium ml-1">
+                          <Text className="text-gray-700 dark:text-gray-300 text-sm font-medium ml-1">
                             {exam.average_score}% avg
                           </Text>
                         </View>
                       )}
                     </View>
-                    <Text className="text-gray-400 text-sm">
+                    <Text className="text-gray-400 dark:text-gray-500 text-sm">
                       {exam.created_at ? new Date(exam.created_at).toLocaleDateString() : "Unknown"}
                     </Text>
                   </View>
@@ -357,22 +358,22 @@ export default function TeacherExamsScreen() {
                   <View className="flex-row justify-between items-center">
                     <View className="flex-row space-x-2">
                       <TouchableOpacity
-                        className="bg-blue-50 px-4 py-2 rounded-lg flex-row items-center"
+                        className="bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-lg flex-row items-center"
                         onPress={() => router.push(`/(teacher)/exams/${exam.id}`)}
                       >
                         <Ionicons name="eye" size={16} color="#007AFF" />
-                        <Text className="text-blue-600 font-semibold text-sm ml-1">
+                        <Text className="text-blue-600 dark:text-blue-400 font-semibold text-sm ml-1">
                           View
                         </Text>
                       </TouchableOpacity>
                       
                       {(exam.submissions_count || 0) > 0 && (
                         <TouchableOpacity
-                          className="bg-green-50 px-4 py-2 rounded-lg flex-row items-center"
+                          className="bg-green-50 dark:bg-green-900/20 px-4 py-2 rounded-lg flex-row items-center"
                           onPress={() => router.push(`/(teacher)/exam-results/${exam.id}`)}
                         >
                           <Ionicons name="bar-chart" size={16} color="#34C759" />
-                          <Text className="text-green-600 font-semibold text-sm ml-1">
+                          <Text className="text-green-600 dark:text-green-400 font-semibold text-sm ml-1">
                             Results
                           </Text>
                         </TouchableOpacity>
@@ -380,13 +381,13 @@ export default function TeacherExamsScreen() {
                     </View>
                     <View className="flex-row space-x-2">
                       <TouchableOpacity
-                        className="w-10 h-10 bg-gray-100 rounded-lg items-center justify-center"
+                        className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg items-center justify-center"
                         onPress={() => Alert.alert("Info", "Duplicate feature coming soon")}
                       >
-                        <Ionicons name="copy" size={18} color="#8E8E93" />
+                        <Ionicons name="copy" size={18} color="#8E8E93" className="dark:text-gray-400" />
                       </TouchableOpacity>
                       <TouchableOpacity
-                        className="w-10 h-10 bg-red-50 rounded-lg items-center justify-center"
+                        className="w-10 h-10 bg-red-50 dark:bg-red-900/20 rounded-lg items-center justify-center"
                         onPress={() => deleteExam(exam.id, exam.title)}
                       >
                         <Ionicons name="trash" size={18} color="#FF3B30" />
@@ -402,19 +403,19 @@ export default function TeacherExamsScreen() {
         {/* Quick Stats */}
         {exams.length > 0 && (
           <View className="grid grid-cols-3 gap-4 mt-6">
-            <View className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-              <Text className="text-gray-500 text-sm font-medium mb-1">Showing</Text>
-              <Text className="text-2xl font-bold text-gray-900">{exams.length}</Text>
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+              <Text className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">Showing</Text>
+              <Text className="text-2xl font-bold text-gray-900 dark:text-white">{exams.length}</Text>
             </View>
-            <View className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-              <Text className="text-gray-500 text-sm font-medium mb-1">Submissions</Text>
-              <Text className="text-2xl font-bold text-gray-900">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+              <Text className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">Submissions</Text>
+              <Text className="text-2xl font-bold text-gray-900 dark:text-white">
                 {exams.reduce((sum, exam) => sum + (exam.submissions_count || 0), 0)}
               </Text>
             </View>
-            <View className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-              <Text className="text-gray-500 text-sm font-medium mb-1">Active</Text>
-              <Text className="text-2xl font-bold text-gray-900">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+              <Text className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">Active</Text>
+              <Text className="text-2xl font-bold text-gray-900 dark:text-white">
                 {tabCounts.active}
               </Text>
             </View>

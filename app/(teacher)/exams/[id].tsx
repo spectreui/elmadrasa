@@ -158,7 +158,7 @@ export default function ExamDetailScreen() {
       }
     >
       {/* Header */}
-      <View className="bg-white px-6 pt-16 pb-6 border-b border-gray-100">
+      <View className="bg-white dark:bg-gray-800 px-6 pt-16 pb-6 border-b border-gray-100">
         <View className="flex-row justify-between items-start mb-4">
           <View className="flex-1">
             <TouchableOpacity
@@ -224,7 +224,7 @@ export default function ExamDetailScreen() {
           ].map((tab) => (
             <TouchableOpacity
               key={tab.key}
-              className={`flex-1 py-3 rounded-lg flex-row justify-center items-center ${activeTab === tab.key ? 'bg-white shadow-sm' : ''
+              className={`flex-1 py-3 rounded-lg flex-row justify-center items-center ${activeTab === tab.key ? 'bg-white dark:bg-gray-800 shadow-sm' : ''
                 }`}
               onPress={() => setActiveTab(tab.key)}
             >
@@ -249,7 +249,7 @@ export default function ExamDetailScreen() {
         {activeTab === 'overview' && (
           <View className="space-y-6">
             {/* Exam Stats */}
-            <View className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm">
               <Text className="text-xl font-semibold text-gray-900 mb-4">Exam Overview</Text>
 
               <View className="grid grid-cols-2 gap-4 mb-6">
@@ -306,7 +306,7 @@ export default function ExamDetailScreen() {
             </View>
 
             {/* Quick Actions */}
-            <View className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm">
               <Text className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</Text>
               <View className="grid grid-cols-2 gap-3">
                 <TouchableOpacity
@@ -353,7 +353,7 @@ export default function ExamDetailScreen() {
 
         {activeTab === 'questions' && (
           <View className="space-y-4">
-            <View className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm">
               <View className="flex-row justify-between items-center mb-4">
                 <Text className="text-xl font-semibold text-gray-900">Questions</Text>
                 <Text className="text-gray-500 text-sm">
@@ -426,7 +426,7 @@ export default function ExamDetailScreen() {
 
         {activeTab === 'submissions' && (
           <View className="space-y-4">
-            <View className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm">
               <View className="flex-row justify-between items-center mb-4">
                 <Text className="text-xl font-semibold text-gray-900">Submissions</Text>
                 <Text className="text-gray-500 text-sm">

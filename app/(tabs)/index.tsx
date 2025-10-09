@@ -155,7 +155,7 @@ export default function StudentDashboard() {
         {/* Stats Grid */}
         <View className="grid grid-cols-2 gap-4 mb-8">
           {/* Average Score */}
-          <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 shadow-sm">
             <View className="flex-row items-center justify-between mb-2">
               <Text className="text-gray-500 text-sm font-medium">
                 Average
@@ -182,7 +182,7 @@ export default function StudentDashboard() {
           </View>
 
           {/* Completed Exams */}
-          <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 shadow-sm">
             <View className="flex-row items-center justify-between mb-2">
               <Text className="text-gray-500 text-sm font-medium">
                 Completed
@@ -196,7 +196,7 @@ export default function StudentDashboard() {
           </View>
 
           {/* Upcoming Exams */}
-          <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 shadow-sm">
             <View className="flex-row items-center justify-between mb-2">
               <Text className="text-gray-500 text-sm font-medium">
                 Upcoming
@@ -210,7 +210,7 @@ export default function StudentDashboard() {
           </View>
 
           {/* Rank */}
-          <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 shadow-sm">
             <View className="flex-row items-center justify-between mb-2">
               <Text className="text-gray-500 text-sm font-medium">Rank</Text>
               <Ionicons name="trophy" size={20} color="#8b5cf6" />
@@ -240,7 +240,7 @@ export default function StudentDashboard() {
           </View>
 
           {upcomingExams.length === 0 ? (
-            <View className="bg-white rounded-2xl p-8 items-center border border-gray-200">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-8 items-center border border-gray-200">
               <Ionicons
                 name="document-text-outline"
                 size={48}
@@ -258,7 +258,7 @@ export default function StudentDashboard() {
               {upcomingExams.map((exam) => (
                 <TouchableOpacity
                   key={exam.id}
-                  className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm active:bg-gray-50"
+                  className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 shadow-sm active:bg-gray-50"
                   onPress={() => router.push(`/exam/${exam.id}`)}
                 >
                   <View className="flex-row items-start justify-between mb-2">
@@ -307,7 +307,7 @@ export default function StudentDashboard() {
           </Text>
           <View className="flex-row gap-3">
             <TouchableOpacity
-              className="flex-1 bg-white rounded-2xl p-4 flex-row items-center justify-center border border-gray-200 shadow-sm active:bg-gray-50"
+              className="flex-1 bg-white dark:bg-gray-800 rounded-2xl p-4 flex-row items-center justify-center border border-gray-200 shadow-sm active:bg-gray-50"
               onPress={() => router.push("/(tabs)/exams")}
             >
               <Ionicons name="document-text" size={20} color="#3b82f6" />
@@ -315,7 +315,7 @@ export default function StudentDashboard() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              className="flex-1 bg-white rounded-2xl p-4 flex-row items-center justify-center border border-gray-200 shadow-sm active:bg-gray-50"
+              className="flex-1 bg-white dark:bg-gray-800 rounded-2xl p-4 flex-row items-center justify-center border border-gray-200 shadow-sm active:bg-gray-50"
               onPress={() => router.push("/(tabs)/results")}
             >
               <Ionicons name="bar-chart" size={20} color="#10b981" />
@@ -323,7 +323,7 @@ export default function StudentDashboard() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              className="flex-1 bg-white rounded-2xl p-4 flex-row items-center justify-center border border-gray-200 shadow-sm active:bg-gray-50"
+              className="flex-1 bg-white dark:bg-gray-800 rounded-2xl p-4 flex-row items-center justify-center border border-gray-200 shadow-sm active:bg-gray-50"
               onPress={() => router.push("/(tabs)/homework")}
             >
               <Ionicons name="book" size={20} color="#f59e0b" />

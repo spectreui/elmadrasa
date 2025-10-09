@@ -313,7 +313,7 @@ const loadExamResults = async () => {
   return (
     <View className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="bg-white px-6 pt-16 pb-6 border-b border-gray-100">
+      <View className="bg-white dark:bg-gray-800 px-6 pt-16 pb-6 border-b border-gray-100">
         <View className="flex-row items-center justify-between mb-4">
           <TouchableOpacity 
             className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
@@ -362,7 +362,7 @@ const loadExamResults = async () => {
             <TouchableOpacity
               key={tab.key}
               className={`flex-1 py-3 rounded-lg flex-row justify-center items-center ${
-                activeTab === tab.key ? 'bg-white shadow-sm' : ''
+                activeTab === tab.key ? 'bg-white dark:bg-gray-800 shadow-sm' : ''
               }`}
               onPress={() => setActiveTab(tab.key as any)}
             >
@@ -409,7 +409,7 @@ const loadExamResults = async () => {
 
             {/* Statistics Cards */}
             <View className="grid grid-cols-2 gap-4 mb-6">
-              <View className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+              <View className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 shadow-sm">
                 <View className="flex-row items-center justify-between mb-3">
                   <Text className="text-gray-500 text-sm font-medium">Submissions</Text>
                   <Ionicons name="people" size={20} color="#007AFF" />
@@ -422,7 +422,7 @@ const loadExamResults = async () => {
                 </Text>
               </View>
 
-              <View className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+              <View className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 shadow-sm">
                 <View className="flex-row items-center justify-between mb-3">
                   <Text className="text-gray-500 text-sm font-medium">Avg. Score</Text>
                   <Ionicons name="trophy" size={20} color="#34C759" />
@@ -433,7 +433,7 @@ const loadExamResults = async () => {
                 <Text className="text-gray-400 text-xs mt-1">Class average</Text>
               </View>
 
-              <View className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+              <View className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 shadow-sm">
                 <View className="flex-row items-center justify-between mb-3">
                   <Text className="text-gray-500 text-sm font-medium">Highest</Text>
                   <Ionicons name="trending-up" size={20} color="#FF9500" />
@@ -444,7 +444,7 @@ const loadExamResults = async () => {
                 <Text className="text-gray-400 text-xs mt-1">Top score</Text>
               </View>
 
-              <View className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+              <View className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 shadow-sm">
                 <View className="flex-row items-center justify-between mb-3">
                   <Text className="text-gray-500 text-sm font-medium">Lowest</Text>
                   <Ionicons name="trending-down" size={20} color="#FF3B30" />
@@ -457,7 +457,7 @@ const loadExamResults = async () => {
             </View>
 
             {/* Score Distribution */}
-            <View className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm mb-6">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm mb-6">
               <Text className="text-lg font-semibold text-gray-900 mb-4">Score Distribution</Text>
               <View className="space-y-3">
                 {results.scoreDistribution.map((item, index) => (
@@ -482,7 +482,7 @@ const loadExamResults = async () => {
             </View>
 
             {/* Top Performers */}
-            <View className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm">
               <View className="flex-row justify-between items-center mb-4">
                 <Text className="text-lg font-semibold text-gray-900">Top Performers</Text>
                 <Text className="text-gray-500 text-sm">
@@ -522,7 +522,7 @@ const loadExamResults = async () => {
         ) : activeTab === 'submissions' ? (
           <View className="p-6">
             {/* Submissions List */}
-            <View className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               {results.submissions.length > 0 ? (
                 results.submissions
                   .sort((a, b) => b.percentage - a.percentage)
@@ -569,7 +569,7 @@ const loadExamResults = async () => {
             {/* Analytics Tab */}
             <View className="space-y-6">
               {/* Performance Trends */}
-              <View className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+              <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm">
                 <Text className="text-lg font-semibold text-gray-900 mb-4">Performance Analysis</Text>
                 <View className="space-y-3">
                   <View className="flex-row justify-between items-center py-2">
@@ -596,7 +596,7 @@ const loadExamResults = async () => {
               </View>
 
               {/* Question Analysis */}
-              <View className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+              <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm">
                 <Text className="text-lg font-semibold text-gray-900 mb-4">Question Analysis</Text>
                 <Text className="text-gray-500 text-sm mb-4">
                   Detailed question-by-question analysis coming soon...
@@ -607,7 +607,7 @@ const loadExamResults = async () => {
               </View>
 
               {/* Action Recommendations */}
-              <View className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+              <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm">
                 <Text className="text-lg font-semibold text-gray-900 mb-4">Recommended Actions</Text>
                 <View className="space-y-3">
                   {performanceInsights.map((insight, index) => (
@@ -634,7 +634,7 @@ const loadExamResults = async () => {
       >
         <View className="flex-1 bg-gray-50">
           {/* Modal Header */}
-          <View className="bg-white px-6 pt-16 pb-4 border-b border-gray-100">
+          <View className="bg-white dark:bg-gray-800 px-6 pt-16 pb-4 border-b border-gray-100">
             <View className="flex-row items-center justify-between mb-4">
               <TouchableOpacity 
                 className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
@@ -654,7 +654,7 @@ const loadExamResults = async () => {
 
           {selectedSubmission && (
             <ScrollView className="flex-1 p-6">
-              <View className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm mb-6">
+              <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm mb-6">
                 <View className="flex-row items-center justify-between mb-4">
                   <View className="flex-1">
                     <Text className="text-lg font-semibold text-gray-900">
@@ -692,7 +692,7 @@ const loadExamResults = async () => {
               </View>
 
               {/* Answers Section */}
-              <View className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+              <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm">
                 <Text className="text-lg font-semibold text-gray-900 mb-4">Question Analysis</Text>
                 <View className="space-y-4">
                   {selectedSubmission.answers.map((answer: any, index: number) => (
@@ -751,7 +751,7 @@ const loadExamResults = async () => {
         transparent={true}
       >
         <View className="flex-1 justify-center items-center bg-black/50 p-6">
-          <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm">
             <Text className="text-xl font-bold text-gray-900 mb-2">Send Feedback</Text>
             <Text className="text-gray-500 text-sm mb-4">
               Send personalized feedback to {selectedSubmission?.student.name}

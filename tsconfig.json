@@ -12,10 +12,11 @@
     "baseUrl": ".",
     "paths": {
       "@/*": [
-        "./src/*"
+        "./src/*",
+        "./*"
       ],
       "@components/*": [
-        "./src/components/*"
+        "./app/components/*"
       ],
       "@screens/*": [
         "./src/screens/*"
@@ -28,6 +29,9 @@
       ],
       "@services/*": [
         "./src/services/*"
+      ],
+      "tailwind.config": [
+        "./tailwind.config.js"
       ]
     }
   },
@@ -36,7 +40,8 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "nativewind-env.d.ts"
+    "nativewind-env.d.ts",
+    "components/GlassCard.tsx"
   ],
   "exclude": [
     "node_modules"

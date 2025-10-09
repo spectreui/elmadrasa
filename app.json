@@ -3,6 +3,7 @@
     "name": "School App",
     "slug": "school-app",
     "scheme": "schoolapp",
+    "userInterfaceStyle": "automatic",
     "plugins": [
       "expo-router"
     ],
@@ -12,9 +13,7 @@
     "android": {
       "package": "com.webeleavte.elmadrasa",
       "versionCode": 19,
-      "jsEngine": "hermes",
-      "enableProguardInReleaseBuilds": true,
-      "enableShrinkResourcesInReleaseBuilds": true
+      "jsEngine": "hermes"
     },
     "ios": {
       "bundleIdentifier": "com.webeleavte.elmadrasa"

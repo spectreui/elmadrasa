@@ -118,7 +118,7 @@ export default function StatisticsScreen() {
             <TouchableOpacity
               key={period.key}
               className={`flex-1 py-2 rounded-md ${
-                selectedPeriod === period.key ? 'bg-white shadow-sm' : ''
+                selectedPeriod === period.key ? 'bg-white dark:bg-gray-800 shadow-sm' : ''
               }`}
               onPress={() => setSelectedPeriod(period.key as any)}
             >
@@ -139,7 +139,7 @@ export default function StatisticsScreen() {
           <View className="space-y-4">
             {classStats.length > 0 ? (
               classStats.map((stats, index) => (
-                <View key={stats.id || index} className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                <View key={stats.id || index} className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-slate-200 shadow-sm">
                   <View className="flex-row justify-between items-start mb-3">
                     <Text className="text-lg font-semibold text-slate-900">{stats.className}</Text>
                     <View className="flex-row items-center">
@@ -171,7 +171,7 @@ export default function StatisticsScreen() {
                 </View>
               ))
             ) : (
-              <View className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm items-center">
+              <View className="bg-white dark:bg-gray-800 rounded-xl p-8 border border-slate-200 shadow-sm items-center">
                 <Ionicons name="stats-chart" size={48} color="#cbd5e1" />
                 <Text className="text-slate-500 text-lg font-medium mt-4">No class data available</Text>
                 <Text className="text-slate-400 text-sm text-center mt-2">
@@ -183,7 +183,7 @@ export default function StatisticsScreen() {
         </View>
 
         {/* Performance Trend */}
-        <View className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm mb-6">
+        <View className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-slate-200 shadow-sm mb-6">
           <Text className="text-xl font-semibold text-slate-900 mb-4">Performance Trend</Text>
           
           {performanceTrend.length > 0 ? (
@@ -220,19 +220,19 @@ export default function StatisticsScreen() {
 
         {/* Quick Stats */}
         <View className="grid grid-cols-2 gap-4">
-          <View className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+          <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-slate-200 shadow-sm">
             <Text className="text-slate-500 text-sm font-medium mb-1">Total Exams</Text>
             <Text className="text-2xl font-bold text-slate-900">{quickStats.totalExams}</Text>
           </View>
-          <View className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+          <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-slate-200 shadow-sm">
             <Text className="text-slate-500 text-sm font-medium mb-1">Avg. Completion</Text>
             <Text className="text-2xl font-bold text-slate-900">{quickStats.avgCompletion}%</Text>
           </View>
-          <View className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+          <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-slate-200 shadow-sm">
             <Text className="text-slate-500 text-sm font-medium mb-1">Active Students</Text>
             <Text className="text-2xl font-bold text-slate-900">{quickStats.activeStudents}</Text>
           </View>
-          <View className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+          <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-slate-200 shadow-sm">
             <Text className="text-slate-500 text-sm font-medium mb-1">Pending Grading</Text>
             <Text className="text-2xl font-bold text-slate-900">{quickStats.pendingGrading}</Text>
           </View>

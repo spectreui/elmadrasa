@@ -63,7 +63,7 @@ export default function HomeworkDetailScreen() {
     <ScrollView className="flex-1 bg-gray-50">
       <View className="p-6">
         {/* Header */}
-        <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mb-6">
+        <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 shadow-sm mb-6">
           <Text className="text-2xl font-bold text-gray-900 mb-2">
             {homework.title}
           </Text>
@@ -99,7 +99,7 @@ export default function HomeworkDetailScreen() {
         </View>
 
         {/* Description */}
-        <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mb-6">
+        <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 shadow-sm mb-6">
           <Text className="text-lg font-semibold text-gray-900 mb-3">
             Description
           </Text>
@@ -109,7 +109,7 @@ export default function HomeworkDetailScreen() {
         </View>
 
         {/* Instructions */}
-        <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mb-6">
+        <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 shadow-sm mb-6">
           <Text className="text-lg font-semibold text-gray-900 mb-3">
             Instructions
           </Text>
@@ -119,12 +119,12 @@ export default function HomeworkDetailScreen() {
         </View>
 
         {/* Submission */}
-        <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+        <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 shadow-sm">
           <Text className="text-lg font-semibold text-gray-900 mb-3">
             Your Submission
           </Text>
           <TextInput
-            className="border border-gray-300 rounded-xl p-4 bg-white text-gray-900 h-32 text-base leading-5"
+            className="border border-gray-300 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 h-32 text-base leading-5"
             placeholder="Type your answer here...\n\nYou can include:\n• Text answers\n• Code snippets\n• Math equations\n• Explanations"
             placeholderTextColor="#9ca3af"
             value={submission}

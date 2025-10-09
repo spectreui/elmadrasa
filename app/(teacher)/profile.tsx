@@ -1,3 +1,4 @@
+// app/(teacher)/profile.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -84,7 +85,7 @@ export default function TeacherProfileScreen() {
   const renderProfileTab = () => (
     <View className="space-y-6">
       {/* Profile Header */}
-      <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+      <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
         <View className="flex-row items-center">
           <View className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl items-center justify-center mr-4">
             <Text className="text-white text-2xl font-bold">
@@ -92,15 +93,15 @@ export default function TeacherProfileScreen() {
             </Text>
           </View>
           <View className="flex-1">
-            <Text className="text-2xl font-bold text-gray-900 mb-1">
+            <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
               {user?.profile.name}
             </Text>
-            <Text className="text-gray-600 text-base mb-2 capitalize">
+            <Text className="text-gray-600 dark:text-gray-400 text-base mb-2 capitalize">
               {user?.role} • {user?.profile.class || 'All Classes'}
             </Text>
             <View className="flex-row items-center">
-              <Ionicons name="mail" size={16} color="#6b7280" />
-              <Text className="text-gray-500 text-sm ml-1">
+              <Ionicons name="mail" size={16} color="#6b7280" className="dark:text-gray-400" />
+              <Text className="text-gray-500 dark:text-gray-400 text-sm ml-1">
                 {user?.email}
               </Text>
             </View>
@@ -109,40 +110,40 @@ export default function TeacherProfileScreen() {
       </View>
 
       {/* Teacher Stats */}
-      <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-        <Text className="text-xl font-semibold text-gray-900 mb-4">
+      <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <Text className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Teaching Overview
         </Text>
         <View className="grid grid-cols-2 gap-4">
-          <View className="items-center p-4 bg-blue-50 rounded-xl">
-            <Text className="text-2xl font-bold text-blue-600">
+          <View className="items-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+            <Text className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {teacherStats.totalStudents}
             </Text>
-            <Text className="text-blue-600 text-xs text-center mt-1">
+            <Text className="text-blue-600 dark:text-blue-400 text-xs text-center mt-1">
               Students
             </Text>
           </View>
-          <View className="items-center p-4 bg-green-50 rounded-xl">
-            <Text className="text-2xl font-bold text-green-600">
+          <View className="items-center p-4 bg-green-50 dark:bg-green-900/20 rounded-xl">
+            <Text className="text-2xl font-bold text-green-600 dark:text-green-400">
               {teacherStats.examsCreated}
             </Text>
-            <Text className="text-green-600 text-xs text-center mt-1">
+            <Text className="text-green-600 dark:text-green-400 text-xs text-center mt-1">
               Exams Created
             </Text>
           </View>
-          <View className="items-center p-4 bg-yellow-50 rounded-xl">
-            <Text className="text-2xl font-bold text-yellow-600">
+          <View className="items-center p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl">
+            <Text className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
               {teacherStats.activeExams}
             </Text>
-            <Text className="text-yellow-600 text-xs text-center mt-1">
+            <Text className="text-yellow-600 dark:text-yellow-400 text-xs text-center mt-1">
               Active Exams
             </Text>
           </View>
-          <View className="items-center p-4 bg-purple-50 rounded-xl">
-            <Text className="text-2xl font-bold text-purple-600">
+          <View className="items-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+            <Text className="text-2xl font-bold text-purple-600 dark:text-purple-400">
               {teacherStats.pendingGrading}
             </Text>
-            <Text className="text-purple-600 text-xs text-center mt-1">
+            <Text className="text-purple-600 dark:text-purple-400 text-xs text-center mt-1">
               To Grade
             </Text>
           </View>
@@ -150,17 +151,17 @@ export default function TeacherProfileScreen() {
       </View>
 
       {/* Class Performance */}
-      <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-        <Text className="text-xl font-semibold text-gray-900 mb-4">
+      <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <Text className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Class Performance
         </Text>
         <View className="space-y-4">
           <View>
             <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-gray-700 font-medium">Average Class Score</Text>
-              <Text className="text-gray-900 font-semibold">{teacherStats.averageClassScore}%</Text>
+              <Text className="text-gray-700 dark:text-gray-300 font-medium">Average Class Score</Text>
+              <Text className="text-gray-900 dark:text-white font-semibold">{teacherStats.averageClassScore}%</Text>
             </View>
-            <View className="w-full bg-gray-200 rounded-full h-2">
+            <View className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <View
                 className="h-2 rounded-full bg-green-500"
                 style={{ width: `${teacherStats.averageClassScore}%` }}
@@ -169,10 +170,10 @@ export default function TeacherProfileScreen() {
           </View>
           <View>
             <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-gray-700 font-medium">Student Engagement</Text>
-              <Text className="text-gray-900 font-semibold">92%</Text>
+              <Text className="text-gray-700 dark:text-gray-300 font-medium">Student Engagement</Text>
+              <Text className="text-gray-900 dark:text-white font-semibold">92%</Text>
             </View>
-            <View className="w-full bg-gray-200 rounded-full h-2">
+            <View className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <View
                 className="h-2 rounded-full bg-blue-500"
                 style={{ width: '92%' }}
@@ -183,24 +184,24 @@ export default function TeacherProfileScreen() {
       </View>
 
       {/* Quick Actions */}
-      <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-        <Text className="text-xl font-semibold text-gray-900 mb-4">
+      <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <Text className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Quick Actions
         </Text>
         <View className="grid grid-cols-2 gap-3">
           <TouchableOpacity
-            className="bg-blue-50 rounded-xl p-4 flex-row items-center justify-center border border-blue-200"
+            className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 flex-row items-center justify-center border border-blue-200 dark:border-blue-800"
             onPress={() => router.push('/(teacher)/create-exam')}
           >
-            <Ionicons name="add-circle" size={20} color="#3b82f6" />
-            <Text className="text-blue-700 font-medium ml-2 text-sm">New Exam</Text>
+            <Ionicons name="add-circle" size={20} color="#3b82f6" className="dark:text-blue-400" />
+            <Text className="text-blue-700 dark:text-blue-400 font-medium ml-2 text-sm">New Exam</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className="bg-green-50 rounded-xl p-4 flex-row items-center justify-center border border-green-200"
+            className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 flex-row items-center justify-center border border-green-200 dark:border-green-800"
             onPress={() => router.push('/(teacher)/create-homework')}
           >
-            <Ionicons name="book" size={20} color="#10b981" />
-            <Text className="text-green-700 font-medium ml-2 text-sm">Homework</Text>
+            <Ionicons name="book" size={20} color="#10b981" className="dark:text-green-400" />
+            <Text className="text-green-700 dark:text-green-400 font-medium ml-2 text-sm">Homework</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -209,13 +210,13 @@ export default function TeacherProfileScreen() {
 
   const renderSettingsTab = () => (
     <View className="space-y-6">
-      <View className="bg-white rounded-2xl border border-gray-200 shadow-sm">
+      <View className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
         {/* Notifications */}
-        <View className="p-4 border-b border-gray-100">
+        <View className="p-4 border-b border-gray-100 dark:border-gray-700">
           <View className="flex-row justify-between items-center">
             <View className="flex-1">
-              <Text className="text-gray-900 font-medium text-base">Notifications</Text>
-              <Text className="text-gray-500 text-sm">General app notifications</Text>
+              <Text className="text-gray-900 dark:text-white font-medium text-base">Notifications</Text>
+              <Text className="text-gray-500 dark:text-gray-400 text-sm">General app notifications</Text>
             </View>
             <Switch
               value={settings.notifications}
@@ -227,11 +228,11 @@ export default function TeacherProfileScreen() {
         </View>
 
         {/* Exam Notifications */}
-        <View className="p-4 border-b border-gray-100">
+        <View className="p-4 border-b border-gray-100 dark:border-gray-700">
           <View className="flex-row justify-between items-center">
             <View className="flex-1">
-              <Text className="text-gray-900 font-medium text-base">Exam Alerts</Text>
-              <Text className="text-gray-500 text-sm">Exam completion alerts</Text>
+              <Text className="text-gray-900 dark:text-white font-medium text-base">Exam Alerts</Text>
+              <Text className="text-gray-500 dark:text-gray-400 text-sm">Exam completion alerts</Text>
             </View>
             <Switch
               value={settings.examNotifications}
@@ -243,11 +244,11 @@ export default function TeacherProfileScreen() {
         </View>
 
         {/* Grading Reminders */}
-        <View className="p-4 border-b border-gray-100">
+        <View className="p-4 border-b border-gray-100 dark:border-gray-700">
           <View className="flex-row justify-between items-center">
             <View className="flex-1">
-              <Text className="text-gray-900 font-medium text-base">Grading Reminders</Text>
-              <Text className="text-gray-500 text-sm">Pending grading alerts</Text>
+              <Text className="text-gray-900 dark:text-white font-medium text-base">Grading Reminders</Text>
+              <Text className="text-gray-500 dark:text-gray-400 text-sm">Pending grading alerts</Text>
             </View>
             <Switch
               value={settings.gradingReminders}
@@ -262,8 +263,8 @@ export default function TeacherProfileScreen() {
         <View className="p-4">
           <View className="flex-row justify-between items-center">
             <View className="flex-1">
-              <Text className="text-gray-900 font-medium text-base">Dark Mode</Text>
-              <Text className="text-gray-500 text-sm">Use dark theme</Text>
+              <Text className="text-gray-900 dark:text-white font-medium text-base">Dark Mode</Text>
+              <Text className="text-gray-500 dark:text-gray-400 text-sm">Use dark theme</Text>
             </View>
             <Switch
               value={settings.darkMode}
@@ -276,22 +277,22 @@ export default function TeacherProfileScreen() {
       </View>
 
       {/* App Information */}
-      <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-        <Text className="text-xl font-semibold text-gray-900 mb-4">
+      <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <Text className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Teacher Tools
         </Text>
         <View className="space-y-3">
-          <TouchableOpacity className="flex-row justify-between items-center py-3 border-b border-gray-100">
-            <Text className="text-blue-600 font-medium">Export Student Data</Text>
-            <Ionicons name="download" size={16} color="#3b82f6" />
+          <TouchableOpacity className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+            <Text className="text-blue-600 dark:text-blue-400 font-medium">Export Student Data</Text>
+            <Ionicons name="download" size={16} color="#3b82f6" className="dark:text-blue-400" />
           </TouchableOpacity>
-          <TouchableOpacity className="flex-row justify-between items-center py-3 border-b border-gray-100">
-            <Text className="text-blue-600 font-medium">Class Analytics</Text>
-            <Ionicons name="bar-chart" size={16} color="#3b82f6" />
+          <TouchableOpacity className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+            <Text className="text-blue-600 dark:text-blue-400 font-medium">Class Analytics</Text>
+            <Ionicons name="bar-chart" size={16} color="#3b82f6" className="dark:text-blue-400" />
           </TouchableOpacity>
           <TouchableOpacity className="flex-row justify-between items-center py-3">
-            <Text className="text-blue-600 font-medium">Teaching Resources</Text>
-            <Ionicons name="library" size={16} color="#3b82f6" />
+            <Text className="text-blue-600 dark:text-blue-400 font-medium">Teaching Resources</Text>
+            <Ionicons name="library" size={16} color="#3b82f6" className="dark:text-blue-400" />
           </TouchableOpacity>
         </View>
       </View>
@@ -299,14 +300,14 @@ export default function TeacherProfileScreen() {
   );
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <View className="bg-white border-b border-gray-200 px-6 py-4">
-        <Text className="text-2xl font-bold text-gray-900">Profile</Text>
+      <View className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+        <Text className="text-2xl font-bold text-gray-900 dark:text-white">Profile</Text>
       </View>
 
       {/* Tab Navigation */}
-      <View className="bg-white border-b border-gray-200 px-6">
+      <View className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6">
         <View className="flex-row">
           {[
             { key: 'profile' as const, label: 'Profile', icon: 'person' },
@@ -324,11 +325,12 @@ export default function TeacherProfileScreen() {
                 name={tab.icon as any}
                 size={16}
                 color={activeTab === tab.key ? '#3b82f6' : '#6b7280'}
+                className={activeTab !== tab.key ? 'dark:text-gray-400' : ''}
               />
               <Text
                 className={`ml-2 font-medium ${activeTab === tab.key
                     ? 'text-blue-600'
-                    : 'text-gray-600'
+                    : 'text-gray-600 dark:text-gray-400'
                   }`}
               >
                 {tab.label}
@@ -348,7 +350,7 @@ export default function TeacherProfileScreen() {
 
         {/* Logout Button */}
         <TouchableOpacity
-          className="bg-white rounded-2xl p-4 border border-red-200 shadow-sm mt-6 mb-8"
+          className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-red-200 dark:border-red-800 shadow-sm mt-6 mb-8"
           onPress={handleLogout}
           disabled={loading}
         >
@@ -358,7 +360,7 @@ export default function TeacherProfileScreen() {
             ) : (
               <>
                 <Ionicons name="log-out-outline" size={20} color="#ef4444" />
-                <Text className="text-red-600 font-semibold text-lg ml-2">
+                <Text className="text-red-600 dark:text-red-400 font-semibold text-lg ml-2">
                   Sign Out
                 </Text>
               </>

@@ -7,6 +7,7 @@ import {
   Switch,
   Alert,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -57,6 +58,7 @@ export default function ProfileScreen() {
   });
   const [subjectPerformance, setSubjectPerformance] = useState<SubjectPerformance[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [studentSubjects, setStudentSubjects] = useState<any[]>([]);
 
   // Settings state
   const [settings, setSettings] = useState({
@@ -75,10 +77,11 @@ export default function ProfileScreen() {
       setProfileLoading(true);
       
       // Load all profile data in parallel
-      const [statsResponse, performanceResponse, dashboardResponse] = await Promise.all([
+      const [statsResponse, performanceResponse, dashboardResponse, subjectsResponse] = await Promise.all([
         apiService.getStudentStats(),
         apiService.getSubjectPerformance(),
-        apiService.getStudentDashboardStats()
+        apiService.getStudentDashboardStats(),
+        apiService.getStudentSubjects() // Load enrolled subjects
       ]);
 
       if (statsResponse.data.success) {
@@ -109,6 +112,10 @@ export default function ProfileScreen() {
         setSubjectPerformance(performanceResponse.data.data || []);
       }
 
+      if (subjectsResponse.data.success) {
+        setStudentSubjects(subjectsResponse.data.data || []);
+      }
+
     } catch (error: any) {
       console.error('Failed to load profile data:', error);
       Alert.alert('Error', 'Failed to load profile data. Please try again.');
@@ -130,7 +137,7 @@ export default function ProfileScreen() {
             setLoading(true);
             try {
               await logout();
-              router.push('/(tabs)');
+              router.push('/(auth)/login');
             } catch (error) {
               console.error('Logout error:', error);
             } finally {
@@ -171,10 +178,22 @@ export default function ProfileScreen() {
     return 'bg-red-500';
   };
 
+  const handleJoinSubject = () => {
+    router.push('/(tabs)/join-subject');
+  };
+
+  const handleAssignClass = () => {
+    Alert.alert(
+      'Change Class',
+      'To change your class, please contact your administrator.',
+      [{ text: 'OK' }]
+    );
+  };
+
   const renderProfileTab = () => (
     <View className="space-y-6">
       {/* Profile Header */}
-      <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+      <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 shadow-sm">
         <View className="flex-row items-center">
           <View className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl items-center justify-center mr-4">
             <Text className="text-white text-2xl font-bold">
@@ -194,12 +213,60 @@ export default function ProfileScreen() {
                 {user?.email || 'email@example.com'}
               </Text>
             </View>
+            
+            {/* Class Management Buttons */}
+            <View className="flex-row space-x-2 mt-3">
+              <TouchableOpacity 
+                onPress={handleJoinSubject}
+                className="bg-blue-500 px-3 py-1 rounded-full flex-row items-center"
+              >
+                <Ionicons name="add" size={14} color="white" />
+                <Text className="text-white text-xs font-medium ml-1">Join Subject</Text>
+              </TouchableOpacity>
+              
+              {!user?.profile?.class && (
+                <TouchableOpacity 
+                  onPress={handleAssignClass}
+                  className="bg-orange-500 px-3 py-1 rounded-full flex-row items-center"
+                >
+                  <Ionicons name="school" size={14} color="white" />
+                  <Text className="text-white text-xs font-medium ml-1">Set Class</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </View>
       </View>
 
+      {/* Enrolled Subjects */}
+      {studentSubjects.length > 0 && (
+        <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 shadow-sm">
+          <Text className="text-xl font-semibold text-gray-900 mb-4">
+            Enrolled Subjects ({studentSubjects.length})
+          </Text>
+          <View className="space-y-3">
+            {studentSubjects.map((subject, index) => (
+              <View key={index} className="flex-row items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <View className="flex-row items-center space-x-3">
+                  <View className="w-8 h-8 bg-blue-100 rounded-lg items-center justify-center">
+                    <Ionicons name="book" size={16} color="#3b82f6" />
+                  </View>
+                  <View>
+                    <Text className="text-gray-700 font-medium">{subject.name}</Text>
+                    <Text className="text-gray-500 text-xs">Teacher: {subject.teacher}</Text>
+                  </View>
+                </View>
+                <Text className="text-gray-500 text-xs">
+                  Joined: {new Date(subject.joined_at).toLocaleDateString()}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
       {/* Quick Stats */}
-      <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+      <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 shadow-sm">
         <Text className="text-xl font-semibold text-gray-900 mb-4">
           Performance Overview
         </Text>
@@ -244,7 +311,7 @@ export default function ProfileScreen() {
       </View>
 
       {/* Subject Performance */}
-      <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+      <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 shadow-sm">
         <Text className="text-xl font-semibold text-gray-900 mb-4">
           Subject Performance
         </Text>
@@ -283,16 +350,21 @@ export default function ProfileScreen() {
           </View>
         ) : (
           <Text className="text-gray-500 text-center py-4">
-            No subject performance data available
+            No subject performance data available. Complete some exams to see your progress.
           </Text>
         )}
       </View>
 
       {/* Recent Activity */}
-      <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-        <Text className="text-xl font-semibold text-gray-900 mb-4">
-          Recent Activity
-        </Text>
+      <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 shadow-sm">
+        <View className="flex-row justify-between items-center mb-4">
+          <Text className="text-xl font-semibold text-gray-900">
+            Recent Activity
+          </Text>
+          <TouchableOpacity onPress={loadProfileData}>
+            <Ionicons name="refresh" size={20} color="#3b82f6" />
+          </TouchableOpacity>
+        </View>
         {recentActivity.length > 0 ? (
           <View className="space-y-3">
             {recentActivity.slice(0, 5).map((activity, index) => (
@@ -312,9 +384,15 @@ export default function ProfileScreen() {
             ))}
           </View>
         ) : (
-          <Text className="text-gray-500 text-center py-4">
-            No recent activity
-          </Text>
+          <View className="items-center py-4">
+            <Ionicons name="time-outline" size={48} color="#9ca3af" />
+            <Text className="text-gray-500 text-center mt-2">
+              No recent activity
+            </Text>
+            <Text className="text-gray-400 text-xs text-center mt-1">
+              Complete exams or homework to see activity here
+            </Text>
+          </View>
         )}
       </View>
     </View>
@@ -322,7 +400,7 @@ export default function ProfileScreen() {
 
   const renderSettingsTab = () => (
     <View className="space-y-6">
-      <View className="bg-white rounded-2xl border border-gray-200 shadow-sm">
+      <View className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 shadow-sm">
         {/* Notifications */}
         <View className="p-4 border-b border-gray-100">
           <View className="flex-row justify-between items-center">
@@ -388,8 +466,37 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+      {/* Student Information */}
+      <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 shadow-sm">
+        <Text className="text-xl font-semibold text-gray-900 mb-4">
+          Student Information
+        </Text>
+        <View className="space-y-3">
+          <View className="flex-row justify-between items-center py-2">
+            <Text className="text-gray-700">Student ID</Text>
+            <Text className="text-gray-900 font-medium">{user?.student_id || 'Not set'}</Text>
+          </View>
+          <View className="flex-row justify-between items-center py-2">
+            <Text className="text-gray-700">Class</Text>
+            <Text className="text-gray-900 font-medium">{user?.profile?.class || 'Not assigned'}</Text>
+          </View>
+          <View className="flex-row justify-between items-center py-2">
+            <Text className="text-gray-700">Email</Text>
+            <Text className="text-gray-900 font-medium">{user?.email}</Text>
+          </View>
+          <View className="flex-row justify-between items-center py-2">
+            <Text className="text-gray-700">Account Status</Text>
+            <View className="bg-green-100 px-2 py-1 rounded-full">
+              <Text className="text-green-800 text-xs font-medium">
+                {user?.is_approved ? 'Active' : 'Pending Approval'}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
       {/* App Information */}
-      <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+      <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 shadow-sm">
         <Text className="text-xl font-semibold text-gray-900 mb-4">
           App Information
         </Text>
@@ -410,7 +517,7 @@ export default function ProfileScreen() {
       </View>
 
       {/* Support */}
-      <View className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+      <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 shadow-sm">
         <Text className="text-xl font-semibold text-gray-900 mb-4">
           Support
         </Text>
@@ -435,12 +542,12 @@ export default function ProfileScreen() {
   return (
     <View className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="bg-white border-b border-gray-200 px-6 py-4">
+      <View className="bg-white dark:bg-gray-800 border-b border-gray-200 px-6 py-4">
         <Text className="text-2xl font-bold text-gray-900">Profile</Text>
       </View>
 
       {/* Tab Navigation */}
-      <View className="bg-white border-b border-gray-200 px-6">
+      <View className="bg-white dark:bg-gray-800 border-b border-gray-200 px-6">
         <View className="flex-row">
           {[
             { key: 'profile' as const, label: 'Profile', icon: 'person' },
@@ -478,13 +585,21 @@ export default function ProfileScreen() {
       <ScrollView 
         className="flex-1 p-6"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={profileLoading}
+            onRefresh={loadProfileData}
+            colors={['#3b82f6']}
+            tintColor="#3b82f6"
+          />
+        }
       >
         {activeTab === 'profile' && renderProfileTab()}
         {activeTab === 'settings' && renderSettingsTab()}
 
         {/* Logout Button */}
         <TouchableOpacity
-          className="bg-white rounded-2xl p-4 border border-red-200 shadow-sm mt-6 mb-8"
+          className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-red-200 shadow-sm mt-6 mb-8"
           onPress={handleLogout}
           disabled={loading}
         >

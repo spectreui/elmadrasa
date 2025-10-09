@@ -70,7 +70,7 @@ export default function CreateHomeworkScreen() {
         contentContainerStyle={{ flexGrow: 1 }}
       >
         {/* Header */}
-        <View className="bg-white px-6 pt-16 pb-6 border-b border-gray-100">
+        <View className="bg-white dark:bg-gray-800 px-6 pt-16 pb-6 border-b border-gray-100">
           <View className="flex-row justify-between items-center">
             <View>
               <Text className="text-2xl font-bold text-gray-900 mb-1">New Assignment</Text>
@@ -86,7 +86,7 @@ export default function CreateHomeworkScreen() {
         </View>
 
         <View className="flex-1 p-6">
-          <View className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm">
             {/* Basic Info */}
             <View className="space-y-6">
               <View>
@@ -96,7 +96,7 @@ export default function CreateHomeworkScreen() {
                   <View>
                     <Text className="text-sm font-semibold text-gray-700 mb-2">Title *</Text>
                     <TextInput
-                      className="border border-gray-200 rounded-xl p-4 bg-white text-gray-900 text-base"
+                      className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base"
                       placeholder="Enter homework title"
                       placeholderTextColor="#8E8E93"
                       value={form.title}
@@ -107,7 +107,7 @@ export default function CreateHomeworkScreen() {
                   <View>
                     <Text className="text-sm font-semibold text-gray-700 mb-2">Description</Text>
                     <TextInput
-                      className="border border-gray-200 rounded-xl p-4 bg-white text-gray-900 text-base h-32"
+                      className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base h-32"
                       placeholder="Enter homework description and instructions..."
                       placeholderTextColor="#8E8E93"
                       value={form.description}
@@ -120,7 +120,7 @@ export default function CreateHomeworkScreen() {
                   <View>
                     <Text className="text-sm font-semibold text-gray-700 mb-2">Subject *</Text>
                     <TextInput
-                      className="border border-gray-200 rounded-xl p-4 bg-white text-gray-900 text-base"
+                      className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base"
                       placeholder="e.g., Mathematics, Science"
                       placeholderTextColor="#8E8E93"
                       value={form.subject}
@@ -131,7 +131,7 @@ export default function CreateHomeworkScreen() {
                   <View>
                     <Text className="text-sm font-semibold text-gray-700 mb-2">Class *</Text>
                     <TextInput
-                      className="border border-gray-200 rounded-xl p-4 bg-white text-gray-900 text-base"
+                      className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base"
                       placeholder="e.g., 10A, 11B"
                       placeholderTextColor="#8E8E93"
                       value={form.class}
@@ -149,7 +149,7 @@ export default function CreateHomeworkScreen() {
                   <View>
                     <Text className="text-sm font-semibold text-gray-700 mb-2">Due Date *</Text>
                     <TextInput
-                      className="border border-gray-200 rounded-xl p-4 bg-white text-gray-900 text-base"
+                      className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base"
                       placeholder="YYYY-MM-DD"
                       placeholderTextColor="#8E8E93"
                       value={form.due_date}
@@ -163,7 +163,7 @@ export default function CreateHomeworkScreen() {
                   <View>
                     <Text className="text-sm font-semibold text-gray-700 mb-2">Points</Text>
                     <TextInput
-                      className="border border-gray-200 rounded-xl p-4 bg-white text-gray-900 text-base"
+                      className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base"
                       placeholder="10"
                       keyboardType="numeric"
                       value={form.points.toString()}

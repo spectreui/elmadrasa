@@ -20,9 +20,12 @@ export default function TeacherLayout() {
       if (!isAuthenticated) {
         console.log('➡️ Redirecting to login');
         router.replace('/(auth)/login');
-      } else if (user?.role === 'teacher' || user?.role === 'admin') {
+      } else if (user?.role === 'teacher') {
         console.log('➡️ Redirecting teacher to teacher dashboard');
         router.replace('/(teacher)');
+      } else if (user?.role === 'admin') {
+        console.log('➡️ Redirecting teacher to teacher dashboard');
+        router.replace('/(admin)');
       } else {
         console.log('➡️ Redirecting student to tabs');
         router.replace('/(tabs)');
