@@ -39,27 +39,16 @@ export default function TeacherLayout() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: "#ffffff",
-          borderTopColor: "#e5e5e7",
-          borderTopWidth: 0.5,
-          height: 88,
-          paddingBottom: 34,
+          borderTopColor: "#e5e7eb",
+          height: 90,
+          paddingBottom: 20,
           paddingTop: 8,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -1 },
-          shadowOpacity: 0.05,
-          shadowRadius: 3,
-          elevation: 2,
         },
-        tabBarActiveTintColor: "#007AFF",
-        tabBarInactiveTintColor: "#8E8E93",
+        tabBarActiveTintColor: "#3b82f6",
+        tabBarInactiveTintColor: "#6b7280",
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: "500",
-          letterSpacing: -0.24,
-          marginTop: 6,
-        },
-        tabBarIconStyle: {
-          marginTop: 4,
         },
       }}
     >
@@ -94,7 +83,7 @@ export default function TeacherLayout() {
         }}
       />
       <Tabs.Screen
-        name="create-homework"
+        name="homework/index"
         options={{
           title: "Assign",
           tabBarIcon: ({ color, size, focused }) => (
@@ -109,7 +98,7 @@ export default function TeacherLayout() {
         }}
       />
       <Tabs.Screen
-        name="classes"
+        name="my-classes"
         options={{
           title: "Classes",
           tabBarIcon: ({ color, size, focused }) => (
@@ -162,6 +151,42 @@ export default function TeacherLayout() {
       />
       <Tabs.Screen
         name="create-exam"
+        options={{
+          href: null, // This hides it from tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="create-homework"
+        options={{
+          href: null, // This hides it from tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="classes"
+        options={{
+          href: null, // This hides it from tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="homework/[id]"
+        options={{
+          href: null, // This hides it from tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="homework/create"
+        options={{
+          href: null, // This hides it from tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="exams/[id]"
+        options={{
+          href: null, // This hides it from tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="homework/[id]/submissions"
         options={{
           href: null, // This hides it from tab bar
         }}

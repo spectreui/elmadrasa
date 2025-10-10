@@ -163,7 +163,7 @@ export interface SubjectPerformance {
 }
 
 // Homework Types
-export interface Homework {
+interface Homework {
   id: string;
   title: string;
   description: string;
@@ -172,11 +172,19 @@ export interface Homework {
   due_date: string;
   points: number;
   attachments: boolean;
-  teacher_id: string;
+  teacher_id: string; // Make sure this property exists
   created_at: string;
   updated_at: string;
-  teacher?: Teacher;
-  submissions_count?: number;
+  submitted?: boolean;
+  submission_date?: string;
+  grade?: number;
+  feedback?: string;
+  teacher?: {
+    id: string;
+    profile: {
+      name: string;
+    };
+  };
 }
 
 export interface HomeworkSubmission {

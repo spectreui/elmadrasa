@@ -276,20 +276,12 @@ class ApiService {
     return this.api.get("/teachers/activity");
   }
 
-  public async createHomework(homeworkData: any): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.post("/homework", homeworkData);
-  }
-
   public async getExamResults(examId: string): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.get(`/exams/${examId}/results`);
   }
 
   public async getExamSubmissions(examId: string): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.get(`/exams/${examId}/submissions`);
-  }
-
-  public async gradeSubmission(submissionId: string, grade: number, feedback?: string): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.post(`/submissions/${submissionId}/grade`, { grade, feedback });
   }
 
   async getStudentDashboardStats() {
@@ -336,18 +328,6 @@ class ApiService {
 
   public async getRecentTeacherActivity(): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.get("/teachers/activity");
-  }
-
-  public async getHomework(): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.get("/homework");
-  }
-
-  public async getHomeworkById(id: string): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.get(`/homework/${id}`);
-  }
-
-  public async submitHomework(submission: any): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.post("/homework/submit", submission);
   }
 
   public async deleteExam(examId: string): Promise<AxiosResponse<ApiResponse<any>>> {
@@ -502,33 +482,94 @@ class ApiService {
     return this.api.delete(`/admin/users/${userId}`);
   }
 
-  async updateStudentClass(studentId: string, className: string): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.put(`/admin/students/${studentId}/class`, { class_name: className });
-  }
-
   // src/services/api.ts - Add this method
   async removeTeacherAssignment(assignmentId: string): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.delete(`/admin/teacher-assignments/${assignmentId}`);
   }
 
   // src/services/api.ts - Update the methods
-// Subjects and classes should use /admin/ prefix
-async getSubjects(levelId?: string): Promise<AxiosResponse<ApiResponse<any[]>>> {
-  const url = levelId ? `/admin/subjects?level_id=${levelId}` : "/admin/subjects";
-  return this.api.get(url);
+  // Subjects and classes should use /admin/ prefix
+  async getSubjects(levelId?: string): Promise<AxiosResponse<ApiResponse<any[]>>> {
+    const url = levelId ? `/admin/subjects?level_id=${levelId}` : "/admin/subjects";
+    return this.api.get(url);
+  }
+
+  async getClasses(levelId?: string): Promise<AxiosResponse<ApiResponse<any[]>>> {
+    const url = levelId ? `/admin/classes?level_id=${levelId}` : "/admin/classes";
+    return this.api.get(url);
+  }
+
+  async getTeacherAssignments(): Promise<AxiosResponse<ApiResponse<any[]>>> {
+    return this.api.get("/admin/teacher-assignments");
+  }
+
+  async getLevels(): Promise<AxiosResponse<ApiResponse<any[]>>> {
+    return this.api.get("/admin/levels");
+  }
+
+  // src/services/api.ts - Add this method
+  async getTeacherClassesAndSubjects(): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.get("/teachers/classes-subjects");
+  }
+  // src/services/api.ts - Update homework methods
+  async getHomework(): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.get("/homework/student");
+  }
+
+  async getHomeworkById(id: string): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.get(`/homework/${id}`);
+  }
+
+  async submitHomework(homeworkId: string, content: string, attachments?: any[]): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.post("/homework/submit", {
+      homework_id: homeworkId,
+      content,
+      attachments
+    });
+  }
+
+  async createHomework(homeworkData: any): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.post("/homework", homeworkData);
+  }
+
+  async getStudents(): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.get('/admin/students');
+  }
+
+  async createStudent(data: any): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.post('/admin/students', data);
+  }
+
+  async updateStudent(studentId: string, data: any): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.put(`/admin/students/${studentId}`, data);
+  }
+
+
+  // src/services/api.ts - Add these methods if missing
+
+// Teacher homework methods
+async getTeacherHomework(): Promise<AxiosResponse<ApiResponse<any>>> {
+  return this.api.get("/homework/teacher/all");
 }
 
-async getClasses(levelId?: string): Promise<AxiosResponse<ApiResponse<any[]>>> {
-  const url = levelId ? `/admin/classes?level_id=${levelId}` : "/admin/classes";
-  return this.api.get(url);
+async getHomeworkSubmissions(homeworkId: string): Promise<AxiosResponse<ApiResponse<any>>> {
+  return this.api.get(`/homework/${homeworkId}/submissions`);
 }
 
-async getTeacherAssignments(): Promise<AxiosResponse<ApiResponse<any[]>>> {
-  return this.api.get("/admin/teacher-assignments");
+async gradeSubmission(submissionId: string, grade: number, feedback?: string): Promise<AxiosResponse<ApiResponse<any>>> {
+  return this.api.post(`/homework/submissions/${submissionId}/grade`, { 
+    grade, 
+    feedback 
+  });
 }
 
-async getLevels(): Promise<AxiosResponse<ApiResponse<any[]>>> {
-  return this.api.get("/admin/levels");
+// In api.ts - ensure these methods exist
+async updateUserProfile(userId: string, data: any): Promise<AxiosResponse<ApiResponse<any>>> {
+  return this.api.put(`/users/${userId}/profile`, data);
+}
+
+async updateStudentClass(studentId: string, className: string): Promise<AxiosResponse<ApiResponse<any>>> {
+  return this.api.put(`/admin/students/${studentId}/class`, { class_name: className });
 }
 }
 

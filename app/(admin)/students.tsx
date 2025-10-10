@@ -1,4 +1,4 @@
-// app/(admin)/students.tsx - Updated with proper scroll
+// app/(admin)/students.tsx - Fixed version
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, Modal, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
@@ -71,9 +71,46 @@ export default function StudentsManagementScreen() {
 
       console.log(`🎯 Assigning ${selectedStudent.profile?.name} to ${classObj.name}`);
 
-      // Update student's class using the teacher profile update (as a temporary solution)
-      await apiService.updateTeacherProfile({
-        name: selectedStudent.profile?.name,
+      // Create or update student record with class assignment
+      const studentData = {
+        user_id: selectedStudent.id,
+        full_name: selectedStudent.profile?.name || selectedStudent.email,
+        class_id: classObj.id,
+        level_id: classObj.level_id,
+        metadata: {
+          class_name: classObj.name,
+          grade: classObj.grade,
+          section: classObj.section
+        }
+      };
+
+      console.log('📦 Student data to create:', studentData);
+
+      // First, check if student record already exists
+      const existingStudentsRes = await apiService.getStudents();
+      const existingStudent = existingStudentsRes.data.data?.find(
+        (s: any) => s.user_id === selectedStudent.id
+      );
+
+      if (existingStudent) {
+        // Update existing student
+        await apiService.updateStudent(existingStudent.id, {
+          class_id: classObj.id,
+          level_id: classObj.level_id,
+          metadata: {
+            ...existingStudent.metadata,
+            class_name: classObj.name,
+            grade: classObj.grade,
+            section: classObj.section
+          }
+        });
+      } else {
+        // Create new student record
+        await apiService.createStudent(studentData);
+      }
+
+      // Also update user profile with class info
+      await apiService.updateUserProfile(selectedStudent.id, {
         class: classObj.name
       });
 
@@ -93,6 +130,46 @@ export default function StudentsManagementScreen() {
     }
   };
 
+  // Alternative simpler approach if the above doesn't work
+  // In students.tsx - replace the handleAssignClassSimple function
+const handleAssignClassSimple = async () => {
+  if (!selectedStudent || !selectedClass) {
+    Alert.alert('Error', 'Please select a class');
+    return;
+  }
+
+  setAssigning(true);
+  try {
+    const classObj = classes.find(c => c.id === selectedClass);
+    if (!classObj) {
+      Alert.alert('Error', 'Invalid class selected');
+      return;
+    }
+
+    console.log(`🎯 Assigning ${selectedStudent.profile?.name} to ${classObj.name}`);
+
+    // Use the admin endpoint to update student class
+    const response = await apiService.updateStudentClass(selectedStudent.id, classObj.name);
+    
+    console.log('✅ Assignment response:', response.data);
+
+    Alert.alert('Success', `Assigned ${selectedStudent.profile?.name} to ${classObj.name}`);
+    setShowClassModal(false);
+    setSelectedStudent(null);
+    setSelectedClass('');
+    await loadData(); // Refresh the data
+  } catch (error: any) {
+    console.error('❌ Assign class error:', error);
+    
+    Alert.alert(
+      'Error', 
+      error.response?.data?.error || error.message || 'Failed to assign class'
+    );
+  } finally {
+    setAssigning(false);
+  }
+};
+
   const handleDeleteStudent = (student: any) => {
     Alert.alert(
       'Delete Student',
@@ -110,16 +187,16 @@ export default function StudentsManagementScreen() {
 
   const deleteStudent = async (studentId: string) => {
     try {
+      // Use the correct API method for deleting users
+      await apiService.deleteUser(studentId);
+      Alert.alert('Success', 'Student deleted successfully');
+      loadData();
+    } catch (error: any) {
+      console.error('Delete student error:', error);
       Alert.alert(
-        'Info', 
-        'Delete functionality requires a backend endpoint. Would you like to refresh the data instead?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Refresh', onPress: loadData }
-        ]
+        'Error', 
+        error.response?.data?.error || error.message || 'Failed to delete student'
       );
-    } catch (error) {
-      Alert.alert('Error', 'Failed to delete student');
     }
   };
 
@@ -151,188 +228,224 @@ export default function StudentsManagementScreen() {
   return (
     <View className={cn('flex-1', Theme.background)}>
       {/* Header - Fixed */}
-      <View className={cn('p-6 border-b', Theme.background, Theme.border)}>
-        <View className="flex-row items-center space-x-4">
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#3b82f6" />
-          </TouchableOpacity>
-          <View className="flex-1">
-            <Text className={cn('text-2xl font-bold', Theme.text.primary)}>
+      <View className={cn('px-6 pt-12 pb-6 border-b', Theme.background, Theme.border)}>
+        <View className="flex-row items-center justify-between mb-4">
+          <View>
+            <Text className={cn('text-3xl font-bold tracking-tight', Theme.text.primary)}>
               Student Management
             </Text>
-            <Text className={cn('text-base', Theme.text.secondary)}>
-              {students.length} student(s) found
+            <Text className={cn('text-lg opacity-70 mt-1', Theme.text.secondary)}>
+              Manage student assignments and classes
             </Text>
           </View>
-          <TouchableOpacity onPress={loadData} className="bg-blue-500 p-2 rounded-lg">
-            <Ionicons name="refresh" size={20} color="white" />
+          <TouchableOpacity 
+            onPress={loadData} 
+            className={cn('w-10 h-10 rounded-full items-center justify-center', Theme.elevated)}
+          >
+            <Ionicons name="refresh" size={20} className={Theme.text.secondary} />
           </TouchableOpacity>
+        </View>
+
+        {/* Stats */}
+        <View className="flex-row space-x-4">
+          <View className={cn('flex-1 p-4 rounded-2xl border', Theme.elevated, Theme.border)}>
+            <Text className={cn('text-2xl font-bold mb-1', Theme.text.primary)}>
+              {students.length}
+            </Text>
+            <Text className={cn('text-sm', Theme.text.secondary)}>Total Students</Text>
+          </View>
+          <View className={cn('flex-1 p-4 rounded-2xl border', Theme.elevated, Theme.border)}>
+            <Text className={cn('text-2xl font-bold mb-1', Theme.text.primary)}>
+              {students.filter(s => s.is_approved).length}
+            </Text>
+            <Text className={cn('text-sm', Theme.text.secondary)}>Approved</Text>
+          </View>
+          <View className={cn('flex-1 p-4 rounded-2xl border', Theme.elevated, Theme.border)}>
+            <Text className={cn('text-2xl font-bold mb-1', Theme.text.primary)}>
+              {students.filter(s => s.profile?.class).length}
+            </Text>
+            <Text className={cn('text-sm', Theme.text.secondary)}>Assigned</Text>
+          </View>
         </View>
       </View>
 
       {/* Scrollable Content */}
-      <View className="flex-1">
-        <ScrollView 
-          className="flex-1"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ flexGrow: 1 }}
-        >
-          <View className="p-6 space-y-4">
-            {students.map(student => (
-              <View
-                key={student.id}
-                className={cn(
-                  'p-4 rounded-xl border',
-                  Theme.elevated,
-                  Theme.border
-                )}
-              >
-                <View className="flex-row items-start justify-between">
-                  <View className="flex-row items-start space-x-3 flex-1">
-                    <View className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full items-center justify-center">
-                      <Ionicons name="person" size={20} color="#3b82f6" />
-                    </View>
-                    <View className="flex-1">
-                      <Text className={cn('font-semibold text-lg', Theme.text.primary)}>
-                        {student.profile?.name || 'No Name'}
-                      </Text>
-                      <Text className={cn('text-sm', Theme.text.secondary)}>
-                        {student.email}
-                      </Text>
-                      <Text className="text-sm text-gray-500 mt-1">
-                        Student ID: {student.student_id || 'N/A'}
-                      </Text>
-                      <Text className="text-sm text-gray-500">
-                        Class: {student.profile?.class || 'Not assigned'}
-                      </Text>
-                      
-                      <View className="flex-row items-center space-x-2 mt-2">
-                        <View className={`px-2 py-1 rounded-full ${student.is_approved ? 'bg-green-100' : 'bg-orange-100'}`}>
-                          <Text className={`text-xs font-medium ${student.is_approved ? 'text-green-800' : 'text-orange-800'}`}>
-                            {student.is_approved ? '✓ Approved' : 'Pending Approval'}
-                          </Text>
-                        </View>
-                        
-                        {!student.is_approved && (
-                          <TouchableOpacity 
-                            onPress={() => approveStudent(student)}
-                            className="bg-green-500 px-3 py-1 rounded-full"
-                          >
-                            <Text className="text-white text-xs font-medium">Approve</Text>
-                          </TouchableOpacity>
-                        )}
+      <ScrollView 
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="p-6 space-y-4">
+          {students.map(student => (
+            <View
+              key={student.id}
+              className={cn(
+                'p-5 rounded-2xl border',
+                Theme.elevated,
+                Theme.border
+              )}
+            >
+              <View className="flex-row items-start justify-between">
+                <View className="flex-row items-start space-x-4 flex-1">
+                  <View className="w-12 h-12 bg-blue-500/10 rounded-xl items-center justify-center">
+                    <Ionicons name="person" size={24} color="#3b82f6" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className={cn('text-lg font-semibold mb-1', Theme.text.primary)}>
+                      {student.profile?.name || 'No Name'}
+                    </Text>
+                    <Text className={cn('text-sm mb-2', Theme.text.secondary)}>
+                      {student.email}
+                    </Text>
+                    
+                    <View className="flex-row flex-wrap gap-2 mb-3">
+                      <View className="px-3 py-1 bg-blue-500/10 rounded-full">
+                        <Text className="text-blue-600 text-xs font-medium">
+                          ID: {student.student_id || 'N/A'}
+                        </Text>
+                      </View>
+                      <View className={`px-3 py-1 rounded-full ${
+                        student.profile?.class ? 'bg-green-500/10' : 'bg-gray-500/10'
+                      }`}>
+                        <Text className={`text-xs font-medium ${
+                          student.profile?.class ? 'text-green-600' : 'text-gray-600'
+                        }`}>
+                          {student.profile?.class || 'No class'}
+                        </Text>
+                      </View>
+                      <View className={`px-3 py-1 rounded-full ${
+                        student.is_approved ? 'bg-emerald-500/10' : 'bg-amber-500/10'
+                      }`}>
+                        <Text className={`text-xs font-medium ${
+                          student.is_approved ? 'text-emerald-600' : 'text-amber-600'
+                        }`}>
+                          {student.is_approved ? 'Approved' : 'Pending'}
+                        </Text>
                       </View>
                     </View>
-                  </View>
 
-                  <View className="flex-row space-x-2">
-                    <TouchableOpacity
-                      onPress={() => openClassModal(student)}
-                      className="bg-blue-500 p-2 rounded-lg"
-                      disabled={!student.is_approved}
-                    >
-                      <Ionicons name="school" size={16} color="white" />
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity
-                      onPress={() => handleDeleteStudent(student)}
-                      className="bg-red-500 p-2 rounded-lg"
-                    >
-                      <Ionicons name="trash" size={16} color="white" />
-                    </TouchableOpacity>
+                    {!student.is_approved && (
+                      <TouchableOpacity 
+                        onPress={() => approveStudent(student)}
+                        className="bg-emerald-500 px-4 py-2 rounded-xl self-start"
+                      >
+                        <Text className="text-white font-medium text-sm">Approve Student</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </View>
-              </View>
-            ))}
 
-            {students.length === 0 && (
-              <View className={cn('items-center py-12', Theme.background)}>
-                <Ionicons name="people" size={64} color="#9ca3af" />
-                <Text className={cn('text-lg font-semibold mt-4', Theme.text.secondary)}>
-                  No students found
-                </Text>
-                <Text className={cn('text-sm text-center mt-2', Theme.text.tertiary)}>
-                  Students will appear here once they register.
-                </Text>
-                <TouchableOpacity onPress={loadData} className="bg-blue-500 px-4 py-2 rounded-lg mt-4">
-                  <Text className="text-white font-semibold">Refresh</Text>
-                </TouchableOpacity>
+                <View className="flex-row space-x-2">
+                  <TouchableOpacity
+                    onPress={() => openClassModal(student)}
+                    className={cn(
+                      'w-10 h-10 rounded-xl items-center justify-center',
+                      student.is_approved ? 'bg-blue-500' : 'bg-gray-400'
+                    )}
+                    disabled={!student.is_approved}
+                  >
+                    <Ionicons name="school" size={18} color="white" />
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    onPress={() => handleDeleteStudent(student)}
+                    className="w-10 h-10 rounded-xl bg-rose-500 items-center justify-center"
+                  >
+                    <Ionicons name="trash" size={18} color="white" />
+                  </TouchableOpacity>
+                </View>
               </View>
-            )}
-          </View>
-        </ScrollView>
-      </View>
+            </View>
+          ))}
+
+          {students.length === 0 && (
+            <View className={cn('items-center py-16 rounded-2xl border-2 border-dashed', Theme.border)}>
+              <Ionicons name="people-outline" size={64} className="opacity-30 mb-4" />
+              <Text className={cn('text-2xl font-bold mb-2', Theme.text.primary)}>
+                No Students
+              </Text>
+              <Text className={cn('text-center opacity-70 text-lg mb-6', Theme.text.secondary)}>
+                Students will appear here once they register
+              </Text>
+              <TouchableOpacity onPress={loadData} className="bg-blue-500 px-6 py-3 rounded-2xl">
+                <Text className="text-white font-semibold text-lg">Refresh</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </ScrollView>
 
       {/* Class Assignment Modal */}
       <Modal visible={showClassModal} animationType="slide" presentationStyle="pageSheet">
         <View className={cn('flex-1', Theme.background)}>
-          <View className={cn('p-6 border-b', Theme.background, Theme.border)}>
-            <View className="flex-row items-center justify-between">
-              <Text className={cn('text-xl font-semibold', Theme.text.primary)}>
-                Assign Class
-              </Text>
-              <TouchableOpacity onPress={() => setShowClassModal(false)}>
-                <Ionicons name="close" size={24} color="#6b7280" />
+          <View className={cn('px-6 pt-8 pb-6 border-b', Theme.background, Theme.border)}>
+            <View className="flex-row items-center justify-between mb-4">
+              <View className="flex-1">
+                <Text className={cn('text-2xl font-bold', Theme.text.primary)}>
+                  Assign Class
+                </Text>
+                <Text className={cn('text-lg mt-2', Theme.text.secondary)}>
+                  {selectedStudent?.profile?.name || selectedStudent?.email}
+                </Text>
+              </View>
+              <TouchableOpacity 
+                onPress={() => setShowClassModal(false)}
+                className="w-10 h-10 rounded-full items-center justify-center bg-gray-100 dark:bg-gray-800"
+              >
+                <Ionicons name="close" size={20} className={Theme.text.secondary} />
               </TouchableOpacity>
             </View>
-            <Text className={cn('text-sm mt-2', Theme.text.secondary)}>
-              Assign class to {selectedStudent?.profile?.name}
-            </Text>
           </View>
 
-          <View className="flex-1">
-            <ScrollView 
-              className="flex-1"
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ flexGrow: 1 }}
-            >
-              <View className="p-6 space-y-3">
-                {classes.map(classItem => (
-                  <TouchableOpacity
-                    key={classItem.id}
-                    onPress={() => setSelectedClass(classItem.id)}
-                    className={cn(
-                      'p-4 rounded-xl border flex-row items-center justify-between',
-                      selectedClass === classItem.id 
-                        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300' 
-                        : Theme.elevated,
-                      Theme.border
-                    )}
-                  >
-                    <View className="flex-row items-center space-x-3">
-                      <View className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg items-center justify-center">
-                        <Ionicons name="school" size={20} color="#3b82f6" />
-                      </View>
-                      <View>
-                        <Text className={cn('text-lg font-semibold', Theme.text.primary)}>
-                          {classItem.name}
-                        </Text>
-                        <Text className={cn('text-sm', Theme.text.secondary)}>
-                          {classItem.level?.name} • Grade {classItem.grade} {classItem.section}
-                        </Text>
-                      </View>
+          <ScrollView className="flex-1">
+            <View className="p-6 space-y-3">
+              {classes.map(classItem => (
+                <TouchableOpacity
+                  key={classItem.id}
+                  onPress={() => setSelectedClass(classItem.id)}
+                  className={cn(
+                    'p-4 rounded-2xl border flex-row items-center justify-between',
+                    selectedClass === classItem.id 
+                      ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300' 
+                      : Theme.elevated,
+                    Theme.border
+                  )}
+                >
+                  <View className="flex-row items-center space-x-4">
+                    <View className="w-12 h-12 bg-blue-500/10 rounded-xl items-center justify-center">
+                      <Ionicons name="school" size={24} color="#3b82f6" />
                     </View>
-                    
-                    {selectedClass === classItem.id && (
-                      <Ionicons name="checkmark-circle" size={24} color="#10b981" />
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
-          </View>
+                    <View>
+                      <Text className={cn('text-lg font-semibold', Theme.text.primary)}>
+                        {classItem.name}
+                      </Text>
+                      <Text className={cn('text-sm', Theme.text.secondary)}>
+                        {classItem.level?.name} • Grade {classItem.grade} • Section {classItem.section}
+                      </Text>
+                    </View>
+                  </View>
+                  
+                  {selectedClass === classItem.id && (
+                    <Ionicons name="checkmark-circle" size={24} color="#10b981" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
 
           <View className={cn('p-6 border-t', Theme.background, Theme.border)}>
             <TouchableOpacity
-              className="bg-blue-500 rounded-xl p-4 flex-row justify-center items-center shadow-sm active:opacity-80 disabled:opacity-50"
-              onPress={handleAssignClass}
+              className={cn(
+                'w-full py-4 rounded-2xl items-center',
+                !selectedClass || assigning ? 'bg-blue-400' : 'bg-blue-500'
+              )}
+              onPress={handleAssignClassSimple}
               disabled={!selectedClass || assigning}
             >
               {assigning ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
                 <Text className="text-white font-semibold text-lg">
-                  Assign Class
+                  Assign to Class
                 </Text>
               )}
             </TouchableOpacity>
