@@ -1,18 +1,19 @@
 {
   "expo": {
-    "name": "School App",
-    "slug": "school-app",
-    "scheme": "schoolapp",
+    "name": "Elmadrasa",
+    "slug": "elmadrasa-app",
+    "scheme": "elmadrasaapp",
     "userInterfaceStyle": "automatic",
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
     },
     "android": {
       "package": "com.webeleavte.elmadrasa",
-      "versionCode": 19,
+      "versionCode": 20,
       "jsEngine": "hermes"
     },
     "ios": {
