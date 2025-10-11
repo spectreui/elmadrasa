@@ -280,10 +280,12 @@ export default function StudentHomeworkScreen() {
         showsVerticalScrollIndicator={false}
         entering={FadeIn.duration(600)} // Smooth fade-in when screen loads
         refreshControl={
-          <AnimatedRefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-          />
+          <RefreshControl
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      tintColor={colors.primary}
+      colors={[colors.primary]}
+    />
         }
       >
         <View style={styles.content}>

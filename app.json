@@ -13,11 +13,15 @@
     },
     "android": {
       "package": "com.webeleavte.elmadrasa",
-      "versionCode": 29,
+      "versionCode": 31,
       "jsEngine": "hermes"
     },
     "ios": {
-      "bundleIdentifier": "com.webeleavte.elmadrasa"
+      "bundleIdentifier": "com.webeleavte.elmadrasa",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "buildNumber": "2"
     },
     "extra": {
       "router": {},

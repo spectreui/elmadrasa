@@ -34,7 +34,7 @@ export default function RootLayout() {
                 <Stack.Screen name="(admin)" />
                 <Stack.Screen name="index" />
               </Stack>
-              <Toast /> {/* This is crucial for displaying toasts */}
+              {/* <Toast /> This is crucial for displaying toasts */}
             </AuthProvider>
           </ThemeWrapper>
         </ThemedSafeAreaView>
