@@ -3,10 +3,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { View, Text } from "react-native";
 import { useEffect } from "react";
+import { useThemeContext } from "@/contexts/ThemeContext";
 
 export default function TeacherLayout() {
   const { isAuthenticated, loading, user } = useAuth();
   const router = useRouter();
+  const { isDark, colors, toggleTheme } = useThemeContext();
 
   console.log('🔐 Auth State:', { 
     isAuthenticated, 
@@ -28,7 +30,7 @@ export default function TeacherLayout() {
         router.replace('/(admin)');
       } else {
         console.log('➡️ Redirecting student to tabs');
-        router.replace('/(tabs)');
+        router.replace('/(student)');
       }
     }
   }, [isAuthenticated, loading, user, router]);
@@ -38,10 +40,10 @@ export default function TeacherLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#ffffff",
-          borderTopColor: "#e5e7eb",
-          height: 90,
-          paddingBottom: 20,
+          backgroundColor: colors.backgroundElevated,
+          borderTopColor: colors.border,
+          height: 70,
+          paddingBottom: 0,
           paddingTop: 8,
         },
         tabBarActiveTintColor: "#3b82f6",

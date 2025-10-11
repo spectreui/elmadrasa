@@ -1,815 +1,1064 @@
 // app/(teacher)/create-exam.tsx
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  Alert,
-  Switch,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Modal,
-} from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
-import { useAuth } from "../../src/contexts/AuthContext";
-import { apiService } from "../../src/services/api";
-import { Ionicons } from "@expo/vector-icons";
-import { Question, Exam } from "../../src/types";
-
-interface QuestionForm {
-  id: string;
-  question: string;
-  type: "mcq" | "text" | "multiple";
-  options: string[];
-  correct_answer: string;
-  points: number;
-  explanation?: string;
-}
-
-interface ExamForm {
-  title: string;
-  description: string;
-  subject: string;
-  class: string;
-  settings: {
-    timed: boolean;
-    duration: number;
-    allow_retake: boolean;
-    random_order: boolean;
-    shuffle_questions: boolean;
-    show_results: boolean;
-  };
-  questions: QuestionForm[];
-}
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Switch, Modal, FlatList, ActivityIndicator } from 'react-native';
+import { router } from 'expo-router';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { apiService } from '../../src/services/api';
+import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useThemeContext } from '../../src/contexts/ThemeContext';
+import { designTokens } from '../../src/utils/designTokens';
 
 export default function CreateExamScreen() {
-  const { id } = useLocalSearchParams();
+  const { colors } = useThemeContext();
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [showQuestionModal, setShowQuestionModal] = useState(false);
-  const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
-
-  const [form, setForm] = useState<ExamForm>({
-    title: "",
-    description: "",
-    subject: "",
-    class: user?.profile.class || "",
-    settings: {
-      timed: false,
-      duration: 60,
-      allow_retake: false,
-      random_order: false,
-      shuffle_questions: false,
-      show_results: true,
-    },
-    questions: [],
-  });
-
-  useEffect(() => {
-    if (id) {
-      loadExamForEditing();
+  const [title, setTitle] = useState('');
+  const [subject, setSubject] = useState('');
+  const [classLevel, setClassLevel] = useState('');
+  const [dueDate, setDueDate] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [timed, setTimed] = useState(false);
+  const [duration, setDuration] = useState('60');
+  const [allowRetake, setAllowRetake] = useState(false);
+  const [randomOrder, setRandomOrder] = useState(false);
+  const [questions, setQuestions] = useState<any[]>([
+    { 
+      question: '', 
+      type: 'multiple_choice', 
+      options: ['', ''], 
+      correct_answer: '', 
+      points: '1' 
     }
-  }, [id]);
+  ]);
+  const [loading, setLoading] = useState(false);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [showClassPicker, setShowClassPicker] = useState(false);
+  const [showSubjectPicker, setShowSubjectPicker] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
 
-  const loadExamForEditing = async () => {
+  // Load teacher's classes
+  useEffect(() => {
+    const loadTeacherData = async () => {
+      try {
+        setLoadingData(true);
+        const classesResponse = await apiService.getTeacherClasses();
+        
+        if (classesResponse.data.success) {
+          // Transform the complex structure to simple array with name property
+          const transformedClasses = (classesResponse.data.data || []).map((cls: any) => ({
+            id: cls.class_id,
+            name: cls.class_name
+          }));
+          setClasses(transformedClasses);
+        }
+      } catch (error) {
+        console.error('Failed to load teacher classes:', error);
+        Alert.alert('Error', 'Failed to load classes');
+      } finally {
+        setLoadingData(false);
+      }
+    };
+    
+    loadTeacherData();
+  }, []);
+
+  // Load subjects when class is selected
+  useEffect(() => {
+    const loadSubjects = async () => {
+      if (!classLevel) {
+        setSubjects([]);
+        setSubject('');
+        return;
+      }
+
+      try {
+        setLoadingSubjects(true);
+        // Find the selected class to get its subjects
+        const selectedClass = classes.find(cls => cls.name === classLevel);
+        if (selectedClass) {
+          const classesResponse = await apiService.getTeacherClasses();
+          if (classesResponse.data.success) {
+            const classData = classesResponse.data.data || [];
+            const currentClass = classData.find((cls: any) => cls.class_name === classLevel);
+            if (currentClass) {
+              // Transform subjects to have name property
+              const transformedSubjects = currentClass.subjects.map((subj: any) => ({
+                id: subj.id,
+                name: subj.name
+              }));
+              setSubjects(transformedSubjects);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load subjects:', error);
+        Alert.alert('Error', 'Failed to load subjects');
+      } finally {
+        setLoadingSubjects(false);
+      }
+    };
+    
+    loadSubjects();
+  }, [classLevel, classes]);
+
+  const addQuestion = () => {
+    setQuestions([
+      ...questions,
+      { 
+        question: '', 
+        type: 'multiple_choice', 
+        options: ['', ''], 
+        correct_answer: '', 
+        points: '1' 
+      }
+    ]);
+  };
+
+  const updateQuestion = (index: number, field: string, value: any) => {
+    const updatedQuestions = [...questions];
+    updatedQuestions[index] = { ...updatedQuestions[index], [field]: value };
+    setQuestions(updatedQuestions);
+  };
+
+  const addOption = (questionIndex: number) => {
+    const updatedQuestions = [...questions];
+    updatedQuestions[questionIndex].options.push('');
+    setQuestions(updatedQuestions);
+  };
+
+  const updateOption = (questionIndex: number, optionIndex: number, value: string) => {
+    const updatedQuestions = [...questions];
+    updatedQuestions[questionIndex].options[optionIndex] = value;
+    setQuestions(updatedQuestions);
+  };
+
+  const removeQuestion = (index: number) => {
+    if (questions.length > 1) {
+      const updatedQuestions = questions.filter((_, i) => i !== index);
+      setQuestions(updatedQuestions);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!title || !subject || !classLevel) {
+      Alert.alert('Error', 'Please fill in all required fields');
+      return;
+    }
+
+    if (questions.some(q => !q.question || 
+      (q.type === 'multiple_choice' && (!q.options.some((opt: string) => opt) || !q.correct_answer)) || 
+      (q.type === 'text' && !q.correct_answer))) {
+      Alert.alert('Error', 'Please complete all questions');
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await apiService.getExamById(id as string);
+      
+      const examData = {
+        title,
+        subject,
+        class: classLevel,
+        due_date: dueDate ? dueDate.toISOString() : null,
+        questions: questions.map(q => ({
+          ...q,
+          points: parseInt(q.points) || 1
+        })),
+        settings: {
+          timed,
+          duration: timed ? parseInt(duration) || 60 : 60,
+          allow_retake: allowRetake,
+          random_order: randomOrder
+        }
+      };
 
-      if (response.data.success && response.data.data) { // Add null check
-        const exam: Exam = response.data.data;
-        setIsEditing(true);
-
-        setForm({
-          title: exam.title,
-          description: exam.description || "",
-          subject: exam.subject,
-          class: exam.class,
-          settings: {
-            timed: exam.settings.timed,
-            duration: exam.settings.duration || 60,
-            allow_retake: exam.settings.allow_retake,
-            random_order: exam.settings.random_order,
-            shuffle_questions: exam.settings.shuffleQuestions || false,
-            show_results: exam.settings.showResults || true,
-          },
-          questions: exam.questions?.map((q: Question) => ({
-            id: q.id,
-            question: q.question,
-            type: q.type,
-            options: q.options || [],
-            correct_answer: q.correct_answer,
-            points: q.points,
-            explanation: q.explanation,
-          })) || [],
-        });
+      const response = await apiService.createExam(examData);
+      
+      if (response.data.success) {
+        Alert.alert('Success', 'Exam created successfully!', [
+          { text: 'OK', onPress: () => router.back() }
+        ]);
       } else {
-        Alert.alert('Error', 'Exam not found');
-        router.back();
+        Alert.alert('Error', response.data.error || 'Failed to create exam');
       }
-    } catch (error) {
-      console.error('Failed to load exam for editing:', error);
-      Alert.alert('Error', 'Failed to load exam data');
-      router.back();
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to create exam');
     } finally {
       setLoading(false);
     }
   };
 
-  const validateForm = (): boolean => {
-    if (!form.title.trim()) {
-      Alert.alert("Validation Error", "Please enter an exam title");
-      return false;
-    }
-    if (!form.subject.trim()) {
-      Alert.alert("Validation Error", "Please enter a subject");
-      return false;
-    }
-    if (!form.class.trim()) {
-      Alert.alert("Validation Error", "Please enter a class");
-      return false;
-    }
-    if (form.questions.length === 0) {
-      Alert.alert("Validation Error", "Please add at least one question");
-      return false;
-    }
+  const PickerModal = ({ 
+    visible, 
+    onClose, 
+    data, 
+    onSelect, 
+    selectedValue,
+    title,
+    displayKey = 'name',
+    loading = false
+  }: {
+    visible: boolean;
+    onClose: () => void;
+    data: any[];
+    onSelect: (item: any) => void;
+    selectedValue: string;
+    title: string;
+    displayKey?: string;
+    loading?: boolean;
+  }) => (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={{
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        justifyContent: 'flex-end'
+      }}>
+        <View style={{
+          backgroundColor: colors.backgroundElevated,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          paddingTop: 16,
+          maxHeight: '50%'
+        }}>
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingHorizontal: 20,
+            paddingBottom: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border
+          }}>
+            <Text style={{
+              fontSize: designTokens.typography.title3.fontSize,
+              fontWeight: designTokens.typography.title3.fontWeight,
+              color: colors.textPrimary
+            } as any}>
+              {title}
+            </Text>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close" size={24} color={colors.textTertiary} />
+            </TouchableOpacity>
+          </View>
+          
+          {loading ? (
+            <View style={{ padding: 30, alignItems: 'center' }}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={{
+                color: colors.textSecondary,
+                marginTop: 10,
+                fontSize: designTokens.typography.body.fontSize
+              }}>
+                Loading...
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={data}
+              keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() => {
+                    onSelect(item);
+                    onClose();
+                  }}
+                  style={{
+                    padding: 16,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.border
+                  }}
+                >
+                  <Text style={{
+                    fontSize: designTokens.typography.body.fontSize,
+                    color: selectedValue === item[displayKey] ? colors.primary : colors.textPrimary
+                  }}>
+                    {item[displayKey]}
+                  </Text>
+                  {selectedValue === item[displayKey] && (
+                    <Ionicons 
+                      name="checkmark" 
+                      size={20} 
+                      color={colors.primary} 
+                      style={{ position: 'absolute', right: 16, top: 16 }}
+                    />
+                  )}
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={
+                <View style={{ padding: 30, alignItems: 'center' }}>
+                  <Text style={{
+                    color: colors.textSecondary,
+                    fontSize: designTokens.typography.body.fontSize
+                  }}>
+                    No items available
+                  </Text>
+                </View>
+              }
+            />
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
 
-    for (const question of form.questions) {
-      if (!question.question.trim()) {
-        Alert.alert("Validation Error", "Please fill in all questions");
-        return false;
-      }
-      if (question.type === "mcq" && question.options.some(opt => !opt.trim())) {
-        Alert.alert("Validation Error", "Please fill in all options for multiple choice questions");
-        return false;
-      }
-      if (question.type === "mcq" && !question.correct_answer.trim()) {
-        Alert.alert("Validation Error", "Please select a correct answer for multiple choice questions");
-        return false;
-      }
-    }
-
-    return true;
-  };
-
-  const handleSaveExam = async () => {
-    if (!validateForm()) return;
-
-    setSaving(true);
-    try {
-      if (isEditing) {
-        const response = await apiService.updateExam(id as string, form);
-        if (response.data.success) {
-          Alert.alert("Success", "Exam updated successfully!");
-          router.back();
-        }
-      } else {
-        const response = await apiService.createExam(form);
-        if (response.data.success) {
-          Alert.alert("Success", "Exam created successfully!");
-          router.back();
-        }
-      }
-    } catch (error: any) {
-      console.error('Exam save error:', error);
-      Alert.alert("Error", error.message || `Failed to ${isEditing ? 'update' : 'create'} exam`);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const addQuestion = () => {
-    setEditingQuestionIndex(null);
-    setShowQuestionModal(true);
-  };
-
-  const editQuestion = (index: number) => {
-    setEditingQuestionIndex(index);
-    setShowQuestionModal(true);
-  };
-
-  const deleteQuestion = (index: number) => {
-    Alert.alert(
-      "Delete Question",
-      "Are you sure you want to delete this question?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            setForm(prev => ({
-              ...prev,
-              questions: prev.questions.filter((_, i) => i !== index)
-            }));
-          }
-        }
-      ]
-    );
-  };
-
-  const duplicateQuestion = (index: number) => {
-    const questionToDuplicate = form.questions[index];
-    setForm(prev => ({
-      ...prev,
-      questions: [
-        ...prev.questions,
-        {
-          ...questionToDuplicate,
-          id: Date.now().toString(),
-          question: `${questionToDuplicate.question} (Copy)`
-        }
-      ]
-    }));
-  };
-
-  const getTotalPoints = () => {
-    return form.questions.reduce((sum, question) => sum + question.points, 0);
-  };
-
-  if (loading) {
+  if (loadingData) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text className="text-gray-600 mt-4 text-base font-medium">
-          {isEditing ? "Loading exam..." : "Preparing..."}
+      <View style={{
+        flex: 1,
+        backgroundColor: colors.background,
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{
+          color: colors.textSecondary,
+          marginTop: designTokens.spacing.md,
+          fontSize: designTokens.typography.body.fontSize
+        }}>
+          Loading classes...
         </Text>
       </View>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-gray-50"
+    <ScrollView 
+      style={{ flex: 1, backgroundColor: colors.background }} 
+      showsVerticalScrollIndicator={false}
     >
-      <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      >
-        {/* Header */}
-        <View className="bg-white dark:bg-gray-800 px-6 pt-16 pb-6 border-b border-gray-100">
-          <View className="flex-row justify-between items-center mb-4">
-            <View className="flex-1">
-              <Text className="text-2xl font-bold text-gray-900 mb-1">
-                {isEditing ? "Edit Exam" : "Create New Exam"}
-              </Text>
-              <Text className="text-gray-500 text-base font-medium">
-                {isEditing ? "Update your exam details" : "Design a new assessment for your class"}
-              </Text>
-            </View>
-            <TouchableOpacity
-              className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
-              onPress={() => router.back()}
+      <View style={{ padding: designTokens.spacing.xl }}>
+        <Text style={{
+          fontSize: designTokens.typography.title1.fontSize,
+          fontWeight: designTokens.typography.title1.fontWeight,
+          color: colors.textPrimary,
+          marginBottom: designTokens.spacing.lg
+        } as any}>
+          Create New Exam
+        </Text>
+
+        {/* Basic Info Card */}
+        <View style={{
+          backgroundColor: colors.backgroundElevated,
+          borderRadius: designTokens.borderRadius.xl,
+          padding: designTokens.spacing.lg,
+          ...designTokens.shadows.sm,
+          marginBottom: designTokens.spacing.lg
+        }}>
+          <Text style={{
+            fontSize: designTokens.typography.title2.fontSize,
+            fontWeight: designTokens.typography.title2.fontWeight,
+            color: colors.textPrimary,
+            marginBottom: designTokens.spacing.lg
+          } as any}>
+            Exam Details
+          </Text>
+
+          <View style={{ marginBottom: designTokens.spacing.lg }}>
+            <Text style={{
+              fontSize: designTokens.typography.footnote.fontSize,
+              color: colors.textSecondary,
+              marginBottom: designTokens.spacing.xs,
+              fontWeight: '500'
+            }}>
+              Exam Title *
+            </Text>
+            <TextInput
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Enter exam title"
+              placeholderTextColor={colors.textTertiary}
+              style={{
+                backgroundColor: colors.background,
+                borderRadius: designTokens.borderRadius.lg,
+                padding: designTokens.spacing.md,
+                fontSize: designTokens.typography.body.fontSize,
+                color: colors.textPrimary,
+                borderWidth: 1,
+                borderColor: colors.border
+              }}
+            />
+          </View>
+
+          <View style={{ marginBottom: designTokens.spacing.lg }}>
+            <Text style={{
+              fontSize: designTokens.typography.footnote.fontSize,
+              color: colors.textSecondary,
+              marginBottom: designTokens.spacing.xs,
+              fontWeight: '500'
+            }}>
+              Class *
+            </Text>
+            <TouchableOpacity 
+              onPress={() => setShowClassPicker(true)}
+              style={{
+                backgroundColor: colors.background,
+                borderRadius: designTokens.borderRadius.lg,
+                padding: designTokens.spacing.md,
+                borderWidth: 1,
+                borderColor: colors.border,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}
             >
-              <Ionicons name="close" size={20} color="#8E8E93" />
+              <Text style={{
+                fontSize: designTokens.typography.body.fontSize,
+                color: classLevel ? colors.textPrimary : colors.textTertiary
+              }}>
+                {classLevel || 'Select class'}
+              </Text>
+              <Ionicons name="chevron-down" size={20} color={colors.textTertiary} />
             </TouchableOpacity>
+          </View>
+
+          <View style={{ marginBottom: designTokens.spacing.lg }}>
+            <Text style={{
+              fontSize: designTokens.typography.footnote.fontSize,
+              color: colors.textSecondary,
+              marginBottom: designTokens.spacing.xs,
+              fontWeight: '500'
+            }}>
+              Subject *
+            </Text>
+            <TouchableOpacity 
+              onPress={() => classLevel ? setShowSubjectPicker(true) : null}
+              disabled={!classLevel}
+              style={{
+                backgroundColor: colors.background,
+                borderRadius: designTokens.borderRadius.lg,
+                padding: designTokens.spacing.md,
+                borderWidth: 1,
+                borderColor: colors.border,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                opacity: classLevel ? 1 : 0.5
+              }}
+            >
+              <Text style={{
+                fontSize: designTokens.typography.body.fontSize,
+                color: subject && classLevel ? colors.textPrimary : colors.textTertiary
+              }}>
+                {subject && classLevel ? subject : classLevel ? 'Select subject' : 'Select class first'}
+              </Text>
+              <Ionicons name="chevron-down" size={20} color={colors.textTertiary} />
+            </TouchableOpacity>
+            
+            {loadingSubjects && (
+              <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center' }}>
+                <ActivityIndicator size="small" color={colors.primary} />
+                <Text style={{
+                  color: colors.textSecondary,
+                  fontSize: designTokens.typography.caption1.fontSize,
+                  marginLeft: 8
+                }}>
+                  Loading subjects...
+                </Text>
+              </View>
+            )}
+          </View>
+
+          <View>
+            <Text style={{
+              fontSize: designTokens.typography.footnote.fontSize,
+              color: colors.textSecondary,
+              marginBottom: designTokens.spacing.xs,
+              fontWeight: '500'
+            }}>
+              Due Date
+            </Text>
+            <TouchableOpacity 
+              onPress={() => setShowDatePicker(true)}
+              style={{
+                backgroundColor: colors.background,
+                borderRadius: designTokens.borderRadius.lg,
+                padding: designTokens.spacing.md,
+                borderWidth: 1,
+                borderColor: colors.border,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}
+            >
+              <Text style={{
+                fontSize: designTokens.typography.body.fontSize,
+                color: dueDate ? colors.textPrimary : colors.textTertiary
+              }}>
+                {dueDate ? dueDate.toLocaleDateString() : 'Select due date'}
+              </Text>
+              <Ionicons name="calendar" size={20} color={colors.textTertiary} />
+            </TouchableOpacity>
+            
+            {showDatePicker && (
+              <DateTimePicker
+                value={dueDate || new Date()}
+                mode="date"
+                display="default"
+                onChange={(event, selectedDate) => {
+                  setShowDatePicker(false);
+                  if (selectedDate) {
+                    setDueDate(selectedDate);
+                  }
+                }}
+              />
+            )}
           </View>
         </View>
 
-        <View className="p-6">
-          <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm space-y-6">
-            {/* Basic Info */}
-            <View className="space-y-4">
-              <Text className="text-xl font-semibold text-gray-900">Exam Details</Text>
+        {/* Settings Card */}
+        <View style={{
+          backgroundColor: colors.backgroundElevated,
+          borderRadius: designTokens.borderRadius.xl,
+          padding: designTokens.spacing.lg,
+          ...designTokens.shadows.sm,
+          marginBottom: designTokens.spacing.lg
+        }}>
+          <Text style={{
+            fontSize: designTokens.typography.title2.fontSize,
+            fontWeight: designTokens.typography.title2.fontWeight,
+            color: colors.textPrimary,
+            marginBottom: designTokens.spacing.lg
+          } as any}>
+            Exam Settings
+          </Text>
 
-              <View>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">Title *</Text>
-                <TextInput
-                  className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base"
-                  placeholder="Enter exam title"
-                  placeholderTextColor="#8E8E93"
-                  value={form.title}
-                  onChangeText={(text) => setForm({ ...form, title: text })}
-                />
-              </View>
-
-              <View>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">Description</Text>
-                <TextInput
-                  className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base h-24"
-                  placeholder="Enter exam description and instructions..."
-                  placeholderTextColor="#8E8E93"
-                  value={form.description}
-                  onChangeText={(text) => setForm({ ...form, description: text })}
-                  multiline
-                  textAlignVertical="top"
-                />
-              </View>
-
-              <View className="grid grid-cols-2 gap-4">
-                <View>
-                  <Text className="text-sm font-semibold text-gray-700 mb-2">Subject *</Text>
-                  <TextInput
-                    className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base"
-                    placeholder="e.g., Mathematics"
-                    placeholderTextColor="#8E8E93"
-                    value={form.subject}
-                    onChangeText={(text) => setForm({ ...form, subject: text })}
-                  />
-                </View>
-
-                <View>
-                  <Text className="text-sm font-semibold text-gray-700 mb-2">Class *</Text>
-                  <TextInput
-                    className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base"
-                    placeholder="e.g., 10A"
-                    placeholderTextColor="#8E8E93"
-                    value={form.class}
-                    onChangeText={(text) => setForm({ ...form, class: text })}
-                  />
-                </View>
-              </View>
+          <View style={{ 
+            flexDirection: 'row', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            marginBottom: designTokens.spacing.lg
+          }}>
+            <View>
+              <Text style={{
+                fontSize: designTokens.typography.body.fontSize,
+                color: colors.textPrimary,
+                fontWeight: '500'
+              }}>
+                Timed Exam
+              </Text>
+              <Text style={{
+                fontSize: designTokens.typography.footnote.fontSize,
+                color: colors.textSecondary,
+                marginTop: 2
+              }}>
+                Set time limit for exam
+              </Text>
             </View>
+            <Switch
+              value={timed}
+              onValueChange={setTimed}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={timed ? '#fff' : '#f4f3f4'}
+            />
+          </View>
 
-            {/* Settings */}
-            <View className="border-t border-gray-100 pt-6">
-              <Text className="text-xl font-semibold text-gray-900 mb-4">Exam Settings</Text>
+          {timed && (
+            <View style={{ marginBottom: designTokens.spacing.lg }}>
+              <Text style={{
+                fontSize: designTokens.typography.footnote.fontSize,
+                color: colors.textSecondary,
+                marginBottom: designTokens.spacing.xs,
+                fontWeight: '500'
+              }}>
+                Duration (minutes)
+              </Text>
+              <TextInput
+                value={duration}
+                onChangeText={setDuration}
+                keyboardType="numeric"
+                placeholder="60"
+                placeholderTextColor={colors.textTertiary}
+                style={{
+                  backgroundColor: colors.background,
+                  borderRadius: designTokens.borderRadius.lg,
+                  padding: designTokens.spacing.md,
+                  fontSize: designTokens.typography.body.fontSize,
+                  color: colors.textPrimary,
+                  borderWidth: 1,
+                  borderColor: colors.border
+                }}
+              />
+            </View>
+          )}
 
-              <View className="space-y-4">
-                <View className="flex-row justify-between items-center">
-                  <View className="flex-1">
-                    <Text className="text-gray-700 font-semibold">Timed Exam</Text>
-                    <Text className="text-gray-500 text-sm">Set time limit for the exam</Text>
-                  </View>
-                  <Switch
-                    value={form.settings.timed}
-                    onValueChange={(value) =>
-                      setForm({
-                        ...form,
-                        settings: { ...form.settings, timed: value },
-                      })
-                    }
-                    trackColor={{ false: '#f0f0f0', true: '#007AFF' }}
-                    thumbColor="#ffffff"
-                  />
-                </View>
+          <View style={{ 
+            flexDirection: 'row', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            marginBottom: designTokens.spacing.lg
+          }}>
+            <View>
+              <Text style={{
+                fontSize: designTokens.typography.body.fontSize,
+                color: colors.textPrimary,
+                fontWeight: '500'
+              }}>
+                Allow Retake
+              </Text>
+              <Text style={{
+                fontSize: designTokens.typography.footnote.fontSize,
+                color: colors.textSecondary,
+                marginTop: 2
+              }}>
+                Students can retake exam
+              </Text>
+            </View>
+            <Switch
+              value={allowRetake}
+              onValueChange={setAllowRetake}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={allowRetake ? '#fff' : '#f4f3f4'}
+            />
+          </View>
 
-                {form.settings.timed && (
-                  <View>
-                    <Text className="text-sm font-semibold text-gray-700 mb-2">Duration (minutes)</Text>
-                    <TextInput
-                      className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base"
-                      placeholder="60"
-                      keyboardType="numeric"
-                      value={form.settings.duration.toString()}
-                      onChangeText={(text) =>
-                        setForm({
-                          ...form,
-                          settings: {
-                            ...form.settings,
-                            duration: parseInt(text) || 60,
-                          },
-                        })
-                      }
-                    />
-                  </View>
+          <View style={{ 
+            flexDirection: 'row', 
+            justifyContent: 'space-between', 
+            alignItems: 'center'
+          }}>
+            <View>
+              <Text style={{
+                fontSize: designTokens.typography.body.fontSize,
+                color: colors.textPrimary,
+                fontWeight: '500'
+              }}>
+                Random Order
+              </Text>
+              <Text style={{
+                fontSize: designTokens.typography.footnote.fontSize,
+                color: colors.textSecondary,
+                marginTop: 2
+              }}>
+                Shuffle questions order
+              </Text>
+            </View>
+            <Switch
+              value={randomOrder}
+              onValueChange={setRandomOrder}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={randomOrder ? '#fff' : '#f4f3f4'}
+            />
+          </View>
+        </View>
+
+        {/* Questions Card */}
+        <View style={{
+          backgroundColor: colors.backgroundElevated,
+          borderRadius: designTokens.borderRadius.xl,
+          padding: designTokens.spacing.lg,
+          ...designTokens.shadows.sm,
+          marginBottom: designTokens.spacing.lg
+        }}>
+          <View style={{ 
+            flexDirection: 'row', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            marginBottom: designTokens.spacing.lg
+          }}>
+            <Text style={{
+              fontSize: designTokens.typography.title2.fontSize,
+              fontWeight: designTokens.typography.title2.fontWeight,
+              color: colors.textPrimary
+            } as any}>
+              Questions ({questions.length})
+            </Text>
+            <TouchableOpacity 
+              onPress={addQuestion}
+              style={{
+                backgroundColor: colors.primary,
+                borderRadius: designTokens.borderRadius.full,
+                width: 36,
+                height: 36,
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Ionicons name="add" size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
+
+          {questions.map((question, qIndex) => (
+            <View 
+              key={qIndex} 
+              style={{
+                backgroundColor: colors.background,
+                borderRadius: designTokens.borderRadius.lg,
+                padding: designTokens.spacing.md,
+                marginBottom: designTokens.spacing.md,
+                borderWidth: 1,
+                borderColor: colors.border
+              }}
+            >
+              <View style={{ 
+                flexDirection: 'row', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                marginBottom: designTokens.spacing.md
+              }}>
+                <Text style={{
+                  fontSize: designTokens.typography.body.fontSize,
+                  color: colors.textPrimary,
+                  fontWeight: '600'
+                }}>
+                  Question {qIndex + 1}
+                </Text>
+                {questions.length > 1 && (
+                  <TouchableOpacity onPress={() => removeQuestion(qIndex)}>
+                    <Ionicons name="trash" size={20} color="#EF4444" />
+                  </TouchableOpacity>
                 )}
-
-                <View className="flex-row justify-between items-center">
-                  <View className="flex-1">
-                    <Text className="text-gray-700 font-semibold">Allow Retake</Text>
-                    <Text className="text-gray-500 text-sm">Students can retake the exam</Text>
-                  </View>
-                  <Switch
-                    value={form.settings.allow_retake}
-                    onValueChange={(value) =>
-                      setForm({
-                        ...form,
-                        settings: { ...form.settings, allow_retake: value },
-                      })
-                    }
-                    trackColor={{ false: '#f0f0f0', true: '#007AFF' }}
-                    thumbColor="#ffffff"
-                  />
-                </View>
-
-                <View className="flex-row justify-between items-center">
-                  <View className="flex-1">
-                    <Text className="text-gray-700 font-semibold">Random Question Order</Text>
-                    <Text className="text-gray-500 text-sm">Shuffle questions for each student</Text>
-                  </View>
-                  <Switch
-                    value={form.settings.random_order}
-                    onValueChange={(value) =>
-                      setForm({
-                        ...form,
-                        settings: { ...form.settings, random_order: value },
-                      })
-                    }
-                    trackColor={{ false: '#f0f0f0', true: '#007AFF' }}
-                    thumbColor="#ffffff"
-                  />
-                </View>
-
-                <View className="flex-row justify-between items-center">
-                  <View className="flex-1">
-                    <Text className="text-gray-700 font-semibold">Show Results</Text>
-                    <Text className="text-gray-500 text-sm">Show scores to students after completion</Text>
-                  </View>
-                  <Switch
-                    value={form.settings.show_results}
-                    onValueChange={(value) =>
-                      setForm({
-                        ...form,
-                        settings: { ...form.settings, show_results: value },
-                      })
-                    }
-                    trackColor={{ false: '#f0f0f0', true: '#007AFF' }}
-                    thumbColor="#ffffff"
-                  />
-                </View>
               </View>
-            </View>
 
-            {/* Questions Section */}
-            <View className="border-t border-gray-100 pt-6">
-              <View className="flex-row justify-between items-center mb-4">
-                <View>
-                  <Text className="text-xl font-semibold text-gray-900">Questions</Text>
-                  <Text className="text-gray-500 text-sm mt-1">
-                    {form.questions.length} questions • {getTotalPoints()} total points
-                  </Text>
-                </View>
+              {/* Question Type Selector - Modern Pills */}
+              <View style={{ 
+                flexDirection: 'row', 
+                marginBottom: designTokens.spacing.md,
+                backgroundColor: colors.backgroundElevated,
+                borderRadius: designTokens.borderRadius.lg,
+                padding: 4
+              }}>
                 <TouchableOpacity
-                  className="bg-blue-500 px-4 py-3 rounded-xl flex-row items-center shadow-sm"
-                  onPress={addQuestion}
+                  onPress={() => updateQuestion(qIndex, 'type', 'multiple_choice')}
+                  style={{
+                    flex: 1,
+                    backgroundColor: question.type === 'multiple_choice' ? colors.primary : 'transparent',
+                    borderRadius: designTokens.borderRadius.md,
+                    paddingVertical: designTokens.spacing.sm,
+                    alignItems: 'center'
+                  }}
                 >
-                  <Ionicons name="add" size={20} color="white" />
-                  <Text className="text-white font-semibold text-base ml-2">Add Question</Text>
+                  <Text style={{
+                    fontSize: designTokens.typography.footnote.fontSize,
+                    color: question.type === 'multiple_choice' ? '#fff' : colors.textSecondary,
+                    fontWeight: question.type === 'multiple_choice' ? '600' : 'normal'
+                  }}>
+                    Multiple Choice
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => updateQuestion(qIndex, 'type', 'text')}
+                  style={{
+                    flex: 1,
+                    backgroundColor: question.type === 'text' ? colors.primary : 'transparent',
+                    borderRadius: designTokens.borderRadius.md,
+                    paddingVertical: designTokens.spacing.sm,
+                    alignItems: 'center'
+                  }}
+                >
+                  <Text style={{
+                    fontSize: designTokens.typography.footnote.fontSize,
+                    color: question.type === 'text' ? '#fff' : colors.textSecondary,
+                    fontWeight: question.type === 'text' ? '600' : 'normal'
+                  }}>
+                    Text Answer
+                  </Text>
                 </TouchableOpacity>
               </View>
 
-              {form.questions.length === 0 ? (
-                <View className="bg-gray-50 rounded-2xl p-8 items-center border border-gray-200 border-dashed">
-                  <Ionicons name="help-circle" size={48} color="#9CA3AF" />
-                  <Text className="text-gray-500 text-lg font-medium mt-4">No questions yet</Text>
-                  <Text className="text-gray-400 text-sm text-center mt-2">
-                    Add your first question to get started
-                  </Text>
-                </View>
-              ) : (
-                <View className="space-y-3">
-                  {form.questions.map((question, index) => (
-                    <View
-                      key={question.id}
-                      className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800"
-                    >
-                      <View className="flex-row justify-between items-start mb-3">
-                        <View className="flex-1">
-                          <Text className="text-gray-900 font-semibold text-base mb-1">
-                            Q{index + 1}. {question.question}
-                          </Text>
-                          <View className="flex-row items-center space-x-3">
-                            <View className="bg-blue-100 px-2 py-1 rounded-full">
-                              <Text className="text-blue-600 text-xs font-semibold capitalize">
-                                {question.type}
-                              </Text>
-                            </View>
-                            <View className="bg-green-100 px-2 py-1 rounded-full">
-                              <Text className="text-green-600 text-xs font-semibold">
-                                {question.points} pt{question.points !== 1 ? 's' : ''}
-                              </Text>
-                            </View>
-                          </View>
-                        </View>
-                        <View className="flex-row space-x-1">
-                          <TouchableOpacity
-                            className="w-8 h-8 bg-gray-100 rounded-lg items-center justify-center"
-                            onPress={() => editQuestion(index)}
-                          >
-                            <Ionicons name="create" size={16} color="#6B7280" />
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            className="w-8 h-8 bg-gray-100 rounded-lg items-center justify-center"
-                            onPress={() => duplicateQuestion(index)}
-                          >
-                            <Ionicons name="copy" size={16} color="#6B7280" />
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            className="w-8 h-8 bg-red-50 rounded-lg items-center justify-center"
-                            onPress={() => deleteQuestion(index)}
-                          >
-                            <Ionicons name="trash" size={16} color="#EF4444" />
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-
-                      {question.type === "mcq" && (
-                        <View className="mt-2">
-                          <Text className="text-gray-600 text-sm font-medium mb-2">Options:</Text>
-                          {question.options.map((option, optIndex) => (
-                            <View key={optIndex} className="flex-row items-center space-x-2 mb-1">
-                              <View className={`w-4 h-4 rounded-full border-2 ${option === question.correct_answer
-                                  ? 'bg-green-500 border-green-500'
-                                  : 'border-gray-300'
-                                }`} />
-                              <Text className="text-gray-700 text-sm flex-1">
-                                {option}
-                              </Text>
-                            </View>
-                          ))}
-                        </View>
-                      )}
-                    </View>
-                  ))}
-                </View>
-              )}
-            </View>
-
-            {/* Save Button */}
-            <TouchableOpacity
-              className="bg-blue-500 rounded-xl p-4 flex-row justify-center items-center mt-6 shadow-sm"
-              onPress={handleSaveExam}
-              disabled={saving}
-            >
-              {saving ? (
-                <ActivityIndicator color="white" size="small" />
-              ) : (
-                <>
-                  <Ionicons name="checkmark-circle" size={20} color="white" />
-                  <Text className="text-white font-semibold text-lg ml-2">
-                    {isEditing ? "Update Exam" : "Create Exam"}
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* Question Modal */}
-      <QuestionModal
-        visible={showQuestionModal}
-        question={editingQuestionIndex !== null ? form.questions[editingQuestionIndex] : null}
-        onSave={(questionData) => {
-          if (editingQuestionIndex !== null) {
-            // Update existing question
-            setForm(prev => ({
-              ...prev,
-              questions: prev.questions.map((q, i) =>
-                i === editingQuestionIndex ? questionData : q
-              )
-            }));
-          } else {
-            // Add new question
-            setForm(prev => ({
-              ...prev,
-              questions: [...prev.questions, questionData]
-            }));
-          }
-          setShowQuestionModal(false);
-          setEditingQuestionIndex(null);
-        }}
-        onClose={() => {
-          setShowQuestionModal(false);
-          setEditingQuestionIndex(null);
-        }}
-      />
-    </KeyboardAvoidingView>
-  );
-}
-
-// Question Modal Component
-interface QuestionModalProps {
-  visible: boolean;
-  question: QuestionForm | null;
-  onSave: (question: QuestionForm) => void;
-  onClose: () => void;
-}
-
-function QuestionModal({ visible, question, onSave, onClose }: QuestionModalProps) {
-  const [form, setForm] = useState<QuestionForm>({
-    id: Date.now().toString(),
-    question: "",
-    type: "mcq",
-    options: ["", "", "", ""],
-    correct_answer: "",
-    points: 1,
-    explanation: "",
-  });
-
-  useEffect(() => {
-    if (question) {
-      setForm(question);
-    } else {
-      setForm({
-        id: Date.now().toString(),
-        question: "",
-        type: "mcq",
-        options: ["", "", "", ""],
-        correct_answer: "",
-        points: 1,
-        explanation: "",
-      });
-    }
-  }, [question, visible]);
-
-  const handleSave = () => {
-    if (!form.question.trim()) {
-      Alert.alert("Error", "Please enter a question");
-      return;
-    }
-
-    if (form.type === "mcq" && form.options.some(opt => !opt.trim())) {
-      Alert.alert("Error", "Please fill in all options");
-      return;
-    }
-
-    if (form.type === "mcq" && !form.correct_answer.trim()) {
-      Alert.alert("Error", "Please select a correct answer");
-      return;
-    }
-
-    onSave(form);
-  };
-
-  const updateOption = (index: number, value: string) => {
-    const newOptions = [...form.options];
-    newOptions[index] = value;
-    setForm(prev => ({ ...prev, options: newOptions }));
-  };
-
-  const addOption = () => {
-    setForm(prev => ({ ...prev, options: [...prev.options, ""] }));
-  };
-
-  const removeOption = (index: number) => {
-    if (form.options.length <= 2) {
-      Alert.alert("Error", "Multiple choice questions must have at least 2 options");
-      return;
-    }
-    const newOptions = form.options.filter((_, i) => i !== index);
-    setForm(prev => ({
-      ...prev,
-      options: newOptions,
-      correct_answer: prev.correct_answer === prev.options[index] ? "" : prev.correct_answer
-    }));
-  };
-
-  return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-    >
-      <View className="flex-1 bg-white dark:bg-gray-800">
-        {/* Header */}
-        <View className="bg-white dark:bg-gray-800 px-6 pt-16 pb-4 border-b border-gray-100">
-          <View className="flex-row justify-between items-center">
-            <Text className="text-xl font-bold text-gray-900">
-              {question ? "Edit Question" : "Add Question"}
-            </Text>
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color="#8E8E93" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <ScrollView className="flex-1 p-6" showsVerticalScrollIndicator={false}>
-          <View className="space-y-6">
-            {/* Question Text */}
-            <View>
-              <Text className="text-sm font-semibold text-gray-700 mb-2">Question *</Text>
-              <TextInput
-                className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base h-32"
-                placeholder="Enter your question..."
-                placeholderTextColor="#8E8E93"
-                value={form.question}
-                onChangeText={(text) => setForm(prev => ({ ...prev, question: text }))}
-                multiline
-                textAlignVertical="top"
-              />
-            </View>
-
-            {/* Question Type */}
-            <View>
-              <Text className="text-sm font-semibold text-gray-700 mb-2">Question Type</Text>
-              <View className="flex-row space-x-2">
-                {[
-                  { key: "mcq" as const, label: "Multiple Choice", icon: "radio-button-on" },
-                  { key: "text" as const, label: "Text Answer", icon: "document-text" },
-                ].map((type) => (
-                  <TouchableOpacity
-                    key={type.key}
-                    className={`flex-1 py-3 rounded-xl border-2 flex-row justify-center items-center ${form.type === type.key
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 bg-white dark:bg-gray-800"
-                      }`}
-                    onPress={() => setForm(prev => ({ ...prev, type: type.key }))}
-                  >
-                    <Ionicons
-                      name={type.icon as any}
-                      size={16}
-                      color={form.type === type.key ? "#007AFF" : "#6B7280"}
-                    />
-                    <Text
-                      className={`ml-2 text-sm font-semibold ${form.type === type.key ? "text-blue-600" : "text-gray-600"
-                        }`}
-                    >
-                      {type.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+              {/* Question Input */}
+              <View style={{ marginBottom: designTokens.spacing.md }}>
+                <Text style={{
+                  fontSize: designTokens.typography.footnote.fontSize,
+                  color: colors.textSecondary,
+                  marginBottom: designTokens.spacing.xs,
+                  fontWeight: '500'
+                }}>
+                  Question *
+                </Text>
+                <TextInput
+                  value={question.question}
+                  onChangeText={(text) => updateQuestion(qIndex, 'question', text)}
+                  placeholder="Enter your question"
+                  placeholderTextColor={colors.textTertiary}
+                  multiline
+                  style={{
+                    backgroundColor: 'transparent',
+                    borderRadius: designTokens.borderRadius.md,
+                    padding: designTokens.spacing.sm,
+                    fontSize: designTokens.typography.body.fontSize,
+                    color: colors.textPrimary,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    minHeight: 80
+                  }}
+                />
               </View>
-            </View>
 
-            {/* Points */}
-            <View>
-              <Text className="text-sm font-semibold text-gray-700 mb-2">Points</Text>
-              <TextInput
-                className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base"
-                placeholder="1"
-                keyboardType="numeric"
-                value={form.points.toString()}
-                onChangeText={(text) => setForm(prev => ({ ...prev, points: parseInt(text) || 1 }))}
-              />
-            </View>
-
-            {/* MCQ Options */}
-            {form.type === "mcq" && (
-              <View>
-                <View className="flex-row justify-between items-center mb-3">
-                  <Text className="text-sm font-semibold text-gray-700">Options *</Text>
-                  <TouchableOpacity
-                    className="bg-green-500 px-3 py-2 rounded-lg flex-row items-center"
-                    onPress={addOption}
-                  >
-                    <Ionicons name="add" size={16} color="white" />
-                    <Text className="text-white font-semibold text-sm ml-1">Add Option</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View className="space-y-3">
-                  {form.options.map((option, index) => (
-                    <View key={index} className="flex-row items-center space-x-3">
-                      <TouchableOpacity
-                        className={`w-6 h-6 rounded-full border-2 items-center justify-center ${form.correct_answer === option
-                            ? "bg-green-500 border-green-500"
-                            : "border-gray-300"
-                          }`}
-                        onPress={() => setForm(prev => ({ ...prev, correct_answer: option }))}
-                      >
-                        {form.correct_answer === option && (
-                          <Ionicons name="checkmark" size={14} color="white" />
-                        )}
-                      </TouchableOpacity>
-
+              {/* Options for Multiple Choice */}
+              {question.type === 'multiple_choice' && (
+                <View style={{ marginBottom: designTokens.spacing.md }}>
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    marginBottom: designTokens.spacing.xs
+                  }}>
+                    <Text style={{
+                      fontSize: designTokens.typography.footnote.fontSize,
+                      color: colors.textSecondary,
+                      fontWeight: '500'
+                    }}>
+                      Options *
+                    </Text>
+                    <TouchableOpacity 
+                      onPress={() => addOption(qIndex)}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <Ionicons name="add-circle" size={16} color={colors.primary} />
+                      <Text style={{
+                        fontSize: designTokens.typography.caption1.fontSize,
+                        color: colors.primary,
+                        marginLeft: 4
+                      }}>
+                        Add
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  
+                  {question.options.map((option: string, optIndex: number) => (
+                    <View key={optIndex} style={{ 
+                      flexDirection: 'row', 
+                      alignItems: 'center', 
+                      marginBottom: 8 
+                    }}>
+                      <View style={{ 
+                        width: 24, 
+                        height: 24, 
+                        borderRadius: 12, 
+                        backgroundColor: colors.backgroundElevated,
+                        borderWidth: 2,
+                        borderColor: colors.border,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 8
+                      }}>
+                        <Text style={{
+                          fontSize: designTokens.typography.caption2.fontSize,
+                          color: colors.textSecondary
+                        }}>
+                          {String.fromCharCode(65 + optIndex)}
+                        </Text>
+                      </View>
                       <TextInput
-                        className="flex-1 border border-gray-200 rounded-xl p-3 bg-white dark:bg-gray-800 text-gray-900 text-base"
-                        placeholder={`Option ${index + 1}`}
-                        placeholderTextColor="#8E8E93"
                         value={option}
-                        onChangeText={(text) => updateOption(index, text)}
+                        onChangeText={(text) => updateOption(qIndex, optIndex, text)}
+                        placeholder={`Option ${String.fromCharCode(65 + optIndex)}`}
+                        placeholderTextColor={colors.textTertiary}
+                        style={{
+                          flex: 1,
+                          backgroundColor: 'transparent',
+                          borderRadius: designTokens.borderRadius.md,
+                          padding: designTokens.spacing.sm,
+                          fontSize: designTokens.typography.body.fontSize,
+                          color: colors.textPrimary,
+                          borderWidth: 1,
+                          borderColor: colors.border
+                        }}
                       />
-
-                      {form.options.length > 2 && (
-                        <TouchableOpacity
-                          className="w-10 h-10 bg-red-50 rounded-lg items-center justify-center"
-                          onPress={() => removeOption(index)}
+                      {question.options.length > 2 && (
+                        <TouchableOpacity 
+                          onPress={() => {
+                            const updatedQuestions = [...questions];
+                            updatedQuestions[qIndex].options.splice(optIndex, 1);
+                            setQuestions(updatedQuestions);
+                          }}
+                          style={{ marginLeft: 8 }}
                         >
-                          <Ionicons name="trash" size={16} color="#EF4444" />
+                          <Ionicons name="close-circle" size={24} color="#EF4444" />
                         </TouchableOpacity>
                       )}
                     </View>
                   ))}
                 </View>
+              )}
+
+              {/* Correct Answer */}
+              <View style={{ marginBottom: designTokens.spacing.md }}>
+                <Text style={{
+                  fontSize: designTokens.typography.footnote.fontSize,
+                  color: colors.textSecondary,
+                  marginBottom: designTokens.spacing.xs,
+                  fontWeight: '500'
+                }}>
+                  {question.type === 'multiple_choice' ? 'Correct Answer *' : 'Expected Answer *'}
+                </Text>
+                
+                {question.type === 'multiple_choice' ? (
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    flexWrap: 'wrap', 
+                    gap: 8 
+                  }}>
+                    {question.options.map((option: string, optIndex: number) => (
+                      <TouchableOpacity
+                        key={optIndex}
+                        onPress={() => updateQuestion(qIndex, 'correct_answer', option)}
+                        style={{
+                          backgroundColor: question.correct_answer === option ? colors.primary : colors.backgroundElevated,
+                          borderRadius: designTokens.borderRadius.lg,
+                          paddingVertical: designTokens.spacing.xs,
+                          paddingHorizontal: designTokens.spacing.md,
+                          borderWidth: 1,
+                          borderColor: question.correct_answer === option ? colors.primary : colors.border
+                        }}
+                      >
+                        <Text style={{
+                          fontSize: designTokens.typography.footnote.fontSize,
+                          color: question.correct_answer === option ? '#fff' : colors.textPrimary,
+                          fontWeight: question.correct_answer === option ? '600' : 'normal'
+                        }}>
+                          {String.fromCharCode(65 + optIndex)}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                ) : (
+                  <TextInput
+                    value={question.correct_answer}
+                    onChangeText={(text) => updateQuestion(qIndex, 'correct_answer', text)}
+                    placeholder="Enter expected answer"
+                    placeholderTextColor={colors.textTertiary}
+                    multiline
+                    style={{
+                      backgroundColor: 'transparent',
+                      borderRadius: designTokens.borderRadius.md,
+                      padding: designTokens.spacing.sm,
+                      fontSize: designTokens.typography.body.fontSize,
+                      color: colors.textPrimary,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      minHeight: 60
+                    }}
+                  />
+                )}
               </View>
-            )}
 
-            {/* Explanation */}
-            <View>
-              <Text className="text-sm font-semibold text-gray-700 mb-2">Explanation (Optional)</Text>
-              <TextInput
-                className="border border-gray-200 rounded-xl p-4 bg-white dark:bg-gray-800 text-gray-900 text-base h-24"
-                placeholder="Add explanation for the correct answer..."
-                placeholderTextColor="#8E8E93"
-                value={form.explanation}
-                onChangeText={(text) => setForm(prev => ({ ...prev, explanation: text }))}
-                multiline
-                textAlignVertical="top"
-              />
+              {/* Points */}
+              <View>
+                <Text style={{
+                  fontSize: designTokens.typography.footnote.fontSize,
+                  color: colors.textSecondary,
+                  marginBottom: designTokens.spacing.xs,
+                  fontWeight: '500'
+                }}>
+                  Points
+                </Text>
+                <View style={{ 
+                  flexDirection: 'row', 
+                  alignItems: 'center' 
+                }}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      const currentPoints = parseInt(question.points) || 1;
+                      if (currentPoints > 1) {
+                        updateQuestion(qIndex, 'points', (currentPoints - 1).toString());
+                      }
+                    }}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 18,
+                      backgroundColor: colors.backgroundElevated,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <Ionicons name="remove" size={16} color={colors.textPrimary} />
+                  </TouchableOpacity>
+                  
+                  <Text style={{
+                    fontSize: designTokens.typography.body.fontSize,
+                    color: colors.textPrimary,
+                    marginHorizontal: 16,
+                    minWidth: 20,
+                    textAlign: 'center'
+                  }}>
+                    {question.points}
+                  </Text>
+                  
+                  <TouchableOpacity
+                    onPress={() => {
+                      const currentPoints = parseInt(question.points) || 1;
+                      updateQuestion(qIndex, 'points', (currentPoints + 1).toString());
+                    }}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 18,
+                      backgroundColor: colors.backgroundElevated,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <Ionicons name="add" size={16} color={colors.textPrimary} />
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
+          ))}
+        </View>
 
-            {/* Save Button */}
-            <TouchableOpacity
-              className="bg-blue-500 rounded-xl p-4 flex-row justify-center items-center mt-4"
-              onPress={handleSave}
-            >
-              <Ionicons name="checkmark" size={20} color="white" />
-              <Text className="text-white font-semibold text-lg ml-2">
-                {question ? "Update Question" : "Add Question"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+        {/* Submit Button */}
+        <TouchableOpacity
+          onPress={handleSubmit}
+          disabled={loading}
+          style={{
+            backgroundColor: loading ? colors.textTertiary : colors.primary,
+            borderRadius: designTokens.borderRadius.full,
+            padding: designTokens.spacing.lg,
+            alignItems: 'center',
+            marginBottom: designTokens.spacing.xl,
+            ...designTokens.shadows.md
+          }}
+        >
+          <Text style={{
+            fontSize: designTokens.typography.body.fontSize,
+            fontWeight: '600',
+            color: '#fff'
+          }}>
+            {loading ? 'Creating...' : 'Create Exam'}
+          </Text>
+        </TouchableOpacity>
       </View>
-    </Modal>
+
+      {/* Modals */}
+      <PickerModal
+        visible={showClassPicker}
+        onClose={() => setShowClassPicker(false)}
+        data={classes}
+        onSelect={(item) => {
+          setClassLevel(item.name);
+          setSubject(''); // Reset subject when class changes
+        }}
+        selectedValue={classLevel}
+        title="Select Class"
+        displayKey="name"
+      />
+
+      <PickerModal
+        visible={showSubjectPicker}
+        onClose={() => setShowSubjectPicker(false)}
+        data={subjects}
+        onSelect={(item) => setSubject(item.name)}
+        selectedValue={subject}
+        title="Select Subject"
+        displayKey="name"
+        loading={loadingSubjects}
+      />
+    </ScrollView>
   );
 }

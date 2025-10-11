@@ -1,10 +1,11 @@
-// app/(teacher)/homework/index.tsx
+// app/(teacher)/homework/index.tsx - Updated with Full Dark Mode Support
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { useAuth } from '../../../src/contexts/AuthContext';
-import { apiService } from '..../../src/services/api';
+import { apiService } from '../../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { Theme, cn } from '../../../src/utils/themeUtils';
+import { useThemeContext } from '@/contexts/ThemeContext';
+import { designTokens } from '../../../src/utils/designTokens';
 import { router } from 'expo-router';
 
 interface Homework {
@@ -29,11 +30,11 @@ export default function TeacherHomeworkScreen() {
   const [homework, setHomework] = useState<Homework[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const { colors } = useThemeContext();
 
   const loadHomework = async () => {
     try {
       setLoading(true);
-      // Use the new teacher-specific endpoint
       const response = await apiService.getTeacherHomework();
 
       if (response.data.success) {
@@ -76,9 +77,9 @@ export default function TeacherHomeworkScreen() {
   };
 
   const getStatusColor = (submissionRate: number) => {
-    if (submissionRate >= 80) return 'bg-emerald-500';
-    if (submissionRate >= 50) return 'bg-amber-500';
-    return 'bg-red-500';
+    if (submissionRate >= 80) return colors.success;
+    if (submissionRate >= 50) return colors.warning;
+    return colors.error;
   };
 
   const formatDueDate = (dateString: string) => {
@@ -98,94 +99,98 @@ export default function TeacherHomeworkScreen() {
 
   if (loading) {
     return (
-      <View className={cn('flex-1 justify-center items-center', Theme.background)}>
-        <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className={cn('text-lg mt-4', Theme.text.secondary)}>Loading homework...</Text>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading homework...</Text>
       </View>
     );
   }
 
   return (
-    <View className={cn('flex-1', Theme.background)}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View className={cn('px-6 pt-16 pb-6', Theme.background)}>
-        <View className="flex-row items-center justify-between mb-6">
-          <View className="flex-1">
-            <Text className={cn('text-4xl font-bold tracking-tight mb-2', Theme.text.primary)}>
+      <View style={[styles.header, { backgroundColor: colors.background }]}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerText}>
+            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
               Homework
             </Text>
-            <Text className={cn('text-lg opacity-70', Theme.text.secondary)}>
+            <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
               Manage and grade assignments
             </Text>
           </View>
           <TouchableOpacity
+            style={[styles.newButton, { backgroundColor: colors.primary }]}
             onPress={handleCreateHomework}
-            className="bg-blue-500 px-6 py-4 rounded-2xl flex-row items-center space-x-3 shadow-lg shadow-blue-500/25"
           >
-            <Ionicons name="add" size={22} color="#FFFFFF" />
-            <Text className="text-white font-semibold text-base">New</Text>
+            <Ionicons name="add" size={22} color="white" />
+            <Text style={styles.newButtonText}>New</Text>
           </TouchableOpacity>
         </View>
 
         {/* Statistics Overview */}
-        <View className={cn('p-5 rounded-2xl border mb-6', Theme.elevated, Theme.border)}>
-          <Text className={cn('text-xl font-semibold mb-4', Theme.text.primary)}>Overview</Text>
-          <View className="flex-row justify-between">
-            <View className="items-center">
-              <Text className={cn('text-3xl font-bold mb-1', Theme.text.primary)}>
+        <View style={[styles.statsOverview, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+          <Text style={[styles.statsTitle, { color: colors.textPrimary }]}>Overview</Text>
+          <View style={styles.statsGrid}>
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>
                 {homework.length}
               </Text>
-              <Text className={cn('text-sm', Theme.text.secondary)}>Total</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total</Text>
             </View>
-            <View className="items-center">
-              <Text className={cn('text-3xl font-bold mb-1', Theme.text.primary)}>
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>
                 {homework.reduce((acc, hw) => acc + (hw.submissions_count || 0), 0)}
               </Text>
-              <Text className={cn('text-sm', Theme.text.secondary)}>Submissions</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Submissions</Text>
             </View>
-            <View className="items-center">
-              <Text className={cn('text-3xl font-bold mb-1', Theme.text.primary)}>
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>
                 {homework.reduce((acc, hw) => acc + (hw.graded_count || 0), 0)}
               </Text>
-              <Text className={cn('text-sm', Theme.text.secondary)}>Graded</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Graded</Text>
             </View>
-            <View className="items-center">
-              <Text className={cn('text-3xl font-bold mb-1 text-emerald-600')}>
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: colors.success }]}>
                 {homework.length > 0
                   ? Math.round(homework.reduce((acc, hw) => acc + (hw.average_score || 0), 0) / homework.length)
                   : 0}%
               </Text>
-              <Text className={cn('text-sm', Theme.text.secondary)}>Avg. Score</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Avg. Score</Text>
             </View>
           </View>
         </View>
       </View>
 
       <ScrollView
-        className="flex-1"
+        style={styles.content}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+          />
         }
       >
-        <View className="px-6 pb-6">
+        <View style={styles.homeworkList}>
           {homework.length === 0 ? (
-            <View className={cn('items-center py-16 rounded-2xl border-2 border-dashed', Theme.border)}>
-              <Ionicons name="document-text-outline" size={80} className="opacity-20 mb-4" />
-              <Text className={cn('text-2xl font-bold mb-2', Theme.text.primary)}>
+            <View style={[styles.emptyState, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+              <Ionicons name="document-text-outline" size={80} color={colors.textTertiary} />
+              <Text style={[styles.emptyStateTitle, { color: colors.textPrimary }]}>
                 No Homework Yet
               </Text>
-              <Text className={cn('text-center opacity-70 text-lg mb-6', Theme.text.secondary)}>
+              <Text style={[styles.emptyStateSubtitle, { color: colors.textSecondary }]}>
                 Create your first homework assignment to get started
               </Text>
               <TouchableOpacity
+                style={[styles.createButton, { backgroundColor: colors.primary }]}
                 onPress={handleCreateHomework}
-                className="bg-blue-500 px-8 py-4 rounded-2xl shadow-lg shadow-blue-500/25"
               >
-                <Text className="text-white font-semibold text-lg">Create Homework</Text>
+                <Text style={styles.createButtonText}>Create Homework</Text>
               </TouchableOpacity>
             </View>
           ) : (
-            <View className="space-y-4">
+            <View style={styles.homeworkGrid}>
               {homework.map((item) => {
                 const stats = getSubmissionStats(item);
                 const isOverdue = new Date(item.due_date) < new Date();
@@ -193,40 +198,44 @@ export default function TeacherHomeworkScreen() {
                 return (
                   <TouchableOpacity
                     key={item.id}
-                    className={cn(
-                      'rounded-2xl p-5 border-2 transition-all active:scale-95',
-                      isOverdue ? 'border-red-200 bg-red-50 dark:bg-red-900/20' : 'border-blue-200 bg-blue-50 dark:bg-blue-900/20',
-                      Theme.elevated
-                    )}
+                    style={[
+                      styles.homeworkCard,
+                      { 
+                        backgroundColor: colors.backgroundElevated,
+                        borderColor: isOverdue ? colors.error : colors.primary,
+                        ...designTokens.shadows.sm
+                      }
+                    ]}
                     onPress={() => handleHomeworkPress(item)}
+                    activeOpacity={0.8}
                   >
-                    <View className="flex-row justify-between items-start mb-4">
-                      <View className="flex-1">
-                        <Text className={cn('text-xl font-semibold mb-2', Theme.text.primary)}>
+                    <View style={styles.cardHeader}>
+                      <View style={styles.cardTextContainer}>
+                        <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
                           {item.title}
                         </Text>
-                        <Text className={cn('text-base mb-3', Theme.text.secondary)}>
+                        <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
                           {item.description}
                         </Text>
-                        <View className="flex-row flex-wrap gap-2">
-                          <View className="px-3 py-1 bg-gray-500/10 rounded-full">
-                            <Text className="text-gray-600 text-sm font-medium">
+                        <View style={styles.tagContainer}>
+                          <View style={[styles.tag, { backgroundColor: `${colors.textTertiary}20` }]}>
+                            <Text style={[styles.tagText, { color: colors.textSecondary }]}>
                               {item.subject}
                             </Text>
                           </View>
-                          <View className="px-3 py-1 bg-gray-500/10 rounded-full">
-                            <Text className="text-gray-600 text-sm font-medium">
+                          <View style={[styles.tag, { backgroundColor: `${colors.textTertiary}20` }]}>
+                            <Text style={[styles.tagText, { color: colors.textSecondary }]}>
                               {item.class}
                             </Text>
                           </View>
-                          <View className="px-3 py-1 bg-gray-500/10 rounded-full">
-                            <Text className="text-gray-600 text-sm font-medium">
+                          <View style={[styles.tag, { backgroundColor: `${colors.textTertiary}20` }]}>
+                            <Text style={[styles.tagText, { color: colors.textSecondary }]}>
                               {item.points} points
                             </Text>
                           </View>
                           {isOverdue && (
-                            <View className="px-3 py-1 bg-red-500/10 rounded-full">
-                              <Text className="text-red-600 text-sm font-medium">
+                            <View style={[styles.tag, { backgroundColor: `${colors.error}20` }]}>
+                              <Text style={[styles.tagText, { color: colors.error }]}>
                                 Overdue
                               </Text>
                             </View>
@@ -236,68 +245,78 @@ export default function TeacherHomeworkScreen() {
                       <Ionicons
                         name="chevron-forward"
                         size={20}
-                        className={cn(isOverdue ? 'text-red-400' : 'text-blue-400')}
+                        color={isOverdue ? colors.error : colors.primary}
                       />
                     </View>
 
                     {/* Progress Bars */}
-                    <View className="space-y-3">
+                    <View style={styles.progressContainer}>
                       {/* Submission Progress */}
-                      <View>
-                        <View className="flex-row justify-between items-center mb-2">
-                          <Text className={cn('text-sm font-medium', Theme.text.primary)}>
+                      <View style={styles.progressBarContainer}>
+                        <View style={styles.progressHeader}>
+                          <Text style={[styles.progressTitle, { color: colors.textPrimary }]}>
                             Submissions
                           </Text>
-                          <Text className={cn('text-sm', Theme.text.secondary)}>
+                          <Text style={[styles.progressSubtitle, { color: colors.textSecondary }]}>
                             {stats.submitted}/{stats.totalStudents} ({stats.submissionRate}%)
                           </Text>
                         </View>
-                        <View className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <View style={[styles.progressBar, { backgroundColor: colors.background }]}>
                           <View
-                            className={`h-2 rounded-full ${getStatusColor(stats.submissionRate)}`}
-                            style={{ width: `${stats.submissionRate}%` }}
+                            style={[
+                              styles.progressFill,
+                              { 
+                                backgroundColor: getStatusColor(stats.submissionRate),
+                                width: `${stats.submissionRate}%`
+                              }
+                            ]}
                           />
                         </View>
                       </View>
 
                       {/* Grading Progress */}
-                      <View>
-                        <View className="flex-row justify-between items-center mb-2">
-                          <Text className={cn('text-sm font-medium', Theme.text.primary)}>
+                      <View style={styles.progressBarContainer}>
+                        <View style={styles.progressHeader}>
+                          <Text style={[styles.progressTitle, { color: colors.textPrimary }]}>
                             Grading Progress
                           </Text>
-                          <Text className={cn('text-sm', Theme.text.secondary)}>
+                          <Text style={[styles.progressSubtitle, { color: colors.textSecondary }]}>
                             {stats.graded}/{stats.submitted} graded
                           </Text>
                         </View>
-                        <View className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <View style={[styles.progressBar, { backgroundColor: colors.background }]}>
                           <View
-                            className="h-2 rounded-full bg-emerald-500"
-                            style={{ width: `${stats.submitted > 0 ? (stats.graded / stats.submitted) * 100 : 0}%` }}
+                            style={[
+                              styles.progressFill,
+                              { 
+                                backgroundColor: colors.success,
+                                width: `${stats.submitted > 0 ? (stats.graded / stats.submitted) * 100 : 0}%`
+                              }
+                            ]}
                           />
                         </View>
                       </View>
                     </View>
 
                     {/* Footer Info */}
-                    <View className="flex-row justify-between items-center mt-4">
-                      <View className="flex-row items-center space-x-4">
-                        <View className="flex-row items-center">
-                          <Ionicons name="calendar" size={16} className={Theme.text.secondary} />
-                          <Text className={cn('text-sm ml-1', Theme.text.secondary)}>
+                    <View style={styles.cardFooter}>
+                      <View style={styles.footerInfo}>
+                        <View style={styles.footerItem}>
+                          <Ionicons name="calendar" size={16} color={colors.textSecondary} />
+                          <Text style={[styles.footerText, { color: colors.textSecondary }]}>
                             Due: {formatDueDate(item.due_date)}
                           </Text>
                         </View>
                         {stats.averageScore > 0 && (
-                          <View className="flex-row items-center">
-                            <Ionicons name="trophy" size={16} className="text-amber-500" />
-                            <Text className="text-amber-600 text-sm font-medium ml-1">
+                          <View style={styles.footerItem}>
+                            <Ionicons name="trophy" size={16} color={colors.warning} />
+                            <Text style={[styles.footerText, { color: colors.warning }]}>
                               Avg: {stats.averageScore}%
                             </Text>
                           </View>
                         )}
                       </View>
-                      <Text className={cn('font-medium', Theme.text.primary)}>
+                      <Text style={[styles.viewText, { color: colors.primary }]}>
                         View Submissions →
                       </Text>
                     </View>
@@ -311,3 +330,205 @@ export default function TeacherHomeworkScreen() {
     </View>
   );
 }
+
+const styles = {
+  container: {
+    flex: 1,
+  },
+  loadingText: {
+    marginTop: designTokens.spacing.md,
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '500',
+  },
+  header: {
+    paddingHorizontal: designTokens.spacing.xl,
+    paddingTop: designTokens.spacing.xxxl,
+    paddingBottom: designTokens.spacing.lg,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: designTokens.spacing.xl,
+  },
+  headerText: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: designTokens.typography.title1.fontSize,
+    fontWeight: designTokens.typography.title1.fontWeight as any,
+    marginBottom: designTokens.spacing.xs,
+  },
+  headerSubtitle: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '500',
+  },
+  newButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: designTokens.spacing.lg,
+    paddingVertical: designTokens.spacing.sm,
+    borderRadius: designTokens.borderRadius.lg,
+    ...designTokens.shadows.sm,
+  },
+  newButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: designTokens.typography.body.fontSize,
+    marginLeft: designTokens.spacing.xs,
+  },
+  statsOverview: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    borderWidth: 1,
+    ...designTokens.shadows.sm,
+  },
+  statsTitle: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: designTokens.typography.title3.fontWeight as any,
+    marginBottom: designTokens.spacing.md,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: designTokens.typography.title2.fontSize,
+    fontWeight: designTokens.typography.title2.fontWeight as any,
+    marginBottom: designTokens.spacing.xxs,
+  },
+  statLabel: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    fontWeight: '500',
+  },
+  content: {
+    flex: 1,
+  },
+  homeworkList: {
+    paddingHorizontal: designTokens.spacing.xl,
+    paddingBottom: designTokens.spacing.xl,
+  },
+  emptyState: {
+    alignItems: 'center',
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.xxxl,
+    borderWidth: 1,
+  },
+  emptyStateTitle: {
+    fontSize: designTokens.typography.headline.fontSize,
+    fontWeight: '500',
+    marginTop: designTokens.spacing.lg,
+    marginBottom: designTokens.spacing.xs,
+  },
+  emptyStateSubtitle: {
+    fontSize: designTokens.typography.footnote.fontSize,
+    textAlign: 'center',
+    marginBottom: designTokens.spacing.lg,
+    lineHeight: designTokens.typography.footnote.lineHeight,
+  },
+  createButton: {
+    paddingHorizontal: designTokens.spacing.xl,
+    paddingVertical: designTokens.spacing.md,
+    borderRadius: designTokens.borderRadius.lg,
+    ...designTokens.shadows.sm,
+  },
+  createButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: designTokens.typography.body.fontSize,
+  },
+  homeworkGrid: {
+    gap: designTokens.spacing.sm,
+  },
+  homeworkCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    borderWidth: 1,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: designTokens.spacing.md,
+  },
+  cardTextContainer: {
+    flex: 1,
+    marginRight: designTokens.spacing.md,
+  },
+  cardTitle: {
+    fontSize: designTokens.typography.headline.fontSize,
+    fontWeight: '600',
+    marginBottom: designTokens.spacing.xs,
+  },
+  cardDescription: {
+    fontSize: designTokens.typography.body.fontSize,
+    marginBottom: designTokens.spacing.md,
+    lineHeight: designTokens.typography.body.lineHeight,
+  },
+  tagContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap' as 'wrap',
+    gap: designTokens.spacing.xs,
+  },
+  tag: {
+    paddingHorizontal: designTokens.spacing.sm,
+    paddingVertical: designTokens.spacing.xxs,
+    borderRadius: designTokens.borderRadius.full,
+  },
+  tagText: {
+    fontSize: designTokens.typography.caption2.fontSize,
+    fontWeight: '600',
+  },
+  progressContainer: {
+    marginBottom: designTokens.spacing.md,
+    gap: designTokens.spacing.md,
+  },
+  progressBarContainer: {
+    gap: designTokens.spacing.xs,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  progressTitle: {
+    fontSize: designTokens.typography.footnote.fontSize,
+    fontWeight: '600',
+  },
+  progressSubtitle: {
+    fontSize: designTokens.typography.caption1.fontSize,
+  },
+  progressBar: {
+    height: 8,
+    borderRadius: designTokens.borderRadius.full,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: designTokens.borderRadius.full,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  footerInfo: {
+    flexDirection: 'row',
+    gap: designTokens.spacing.md,
+  },
+  footerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    marginLeft: designTokens.spacing.xxs,
+  },
+  viewText: {
+    fontSize: designTokens.typography.footnote.fontSize,
+    fontWeight: '600',
+  },
+};

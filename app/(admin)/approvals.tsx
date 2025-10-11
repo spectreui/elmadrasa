@@ -1,10 +1,11 @@
-// app/(admin)/approvals.tsx
+// app/(admin)/approvals.tsx - Updated to match student design
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, RefreshControl, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { Theme, cn } from '../../src/utils/themeUtils';
+import { designTokens } from '../../src/utils/designTokens';
+import { useThemeContext } from '@/contexts/ThemeContext';
 
 interface PendingUser {
   id: string;
@@ -22,6 +23,7 @@ export default function ApprovalsPage() {
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const { colors, isDark } = useThemeContext();
 
   useEffect(() => {
     loadPendingApprovals();
@@ -48,9 +50,13 @@ export default function ApprovalsPage() {
 
   const handleApprove = async (userId: string, userName: string) => {
     try {
-      await apiService.approveUser(userId);
-      Alert.alert('Success', `${userName} has been approved`);
-      loadPendingApprovals();
+      const response = await apiService.approveUser(userId);
+      if (response.data.success) {
+        Alert.alert('Success', `${userName} has been approved`);
+        loadPendingApprovals();
+      } else {
+        throw new Error(response.data.error || 'Failed to approve user');
+      }
     } catch (error) {
       console.error('Failed to approve user:', error);
       Alert.alert('Error', 'Failed to approve user');
@@ -68,9 +74,13 @@ export default function ApprovalsPage() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await apiService.deleteUser(userId);
-              Alert.alert('Success', 'User rejected successfully');
-              loadPendingApprovals();
+              const response = await apiService.deleteUser(userId);
+              if (response.data.success) {
+                Alert.alert('Success', 'User rejected successfully');
+                loadPendingApprovals();
+              } else {
+                throw new Error(response.data.error || 'Failed to reject user');
+              }
             } catch (error) {
               console.error('Failed to reject user:', error);
               Alert.alert('Error', 'Failed to reject user');
@@ -82,70 +92,151 @@ export default function ApprovalsPage() {
   };
 
   const PendingUserCard = ({ user }: { user: PendingUser }) => (
-    <View className={cn('p-5 rounded-2xl border mb-4', Theme.elevated, Theme.border)}>
-      <View className="flex-row items-start justify-between mb-3">
-        <View className="flex-1">
-          <Text className={cn('text-lg font-semibold mb-1', Theme.text.primary)}>
+    <View style={{
+      padding: designTokens.spacing.lg,
+      borderRadius: designTokens.borderRadius.xl,
+      backgroundColor: colors.backgroundElevated,
+      borderWidth: 1,
+      borderColor: colors.border,
+      ...designTokens.shadows.sm,
+    }}>
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        marginBottom: designTokens.spacing.md,
+      }}>
+        <View style={{ flex: 1 }}>
+          <Text style={{
+            fontSize: designTokens.typography.title3.fontSize,
+            fontWeight: designTokens.typography.title3.fontWeight,
+            color: colors.textPrimary,
+            marginBottom: designTokens.spacing.xs,
+          } as any}>
             {user.profile?.name || 'No Name'}
           </Text>
-          <Text className={cn('text-sm mb-1', Theme.text.secondary)}>
+          <Text style={{
+            fontSize: designTokens.typography.footnote.fontSize,
+            color: colors.textSecondary,
+            marginBottom: designTokens.spacing.xs,
+          }}>
             {user.email}
           </Text>
-          <View className="flex-row items-center space-x-3 mt-2">
-            <View className={cn(
-              'px-3 py-1 rounded-full',
-              user.role === 'student' ? 'bg-blue-500/10' : 'bg-green-500/10'
-            )}>
-              <Text className={cn(
-                'text-xs font-medium',
-                user.role === 'student' ? 'text-blue-600' : 'text-green-600'
-              )}>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: designTokens.spacing.sm,
+            marginTop: designTokens.spacing.sm,
+          }}>
+            <View style={{
+              paddingHorizontal: designTokens.spacing.md,
+              paddingVertical: designTokens.spacing.xs,
+              borderRadius: designTokens.borderRadius.full,
+              backgroundColor: user.role === 'student' ? colors.primary + '15' : '#10b981' + '15',
+            }}>
+              <Text style={{
+                fontSize: designTokens.typography.caption2.fontSize,
+                fontWeight: '600',
+                color: user.role === 'student' ? colors.primary : '#10b981',
+              }}>
                 {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
               </Text>
             </View>
-            <View className="px-3 py-1 rounded-full bg-amber-500/10">
-              <Text className="text-xs font-medium text-amber-600">
+            <View style={{
+              paddingHorizontal: designTokens.spacing.md,
+              paddingVertical: designTokens.spacing.xs,
+              borderRadius: designTokens.borderRadius.full,
+              backgroundColor: '#f59e0b' + '15',
+            }}>
+              <Text style={{
+                fontSize: designTokens.typography.caption2.fontSize,
+                fontWeight: '600',
+                color: '#f59e0b',
+              }}>
                 Pending Approval
               </Text>
             </View>
           </View>
           
           {user.profile?.class && (
-            <Text className={cn('text-sm mt-2', Theme.text.secondary)}>
+            <Text style={{
+              fontSize: designTokens.typography.caption1.fontSize,
+              color: colors.textSecondary,
+              marginTop: designTokens.spacing.sm,
+            }}>
               Class: {user.profile.class}
             </Text>
           )}
           
           {user.profile?.department && (
-            <Text className={cn('text-sm mt-1', Theme.text.secondary)}>
+            <Text style={{
+              fontSize: designTokens.typography.caption1.fontSize,
+              color: colors.textSecondary,
+              marginTop: designTokens.spacing.xs,
+            }}>
               Department: {user.profile.department}
             </Text>
           )}
         </View>
       </View>
       
-      <View className="flex-row justify-between items-center mt-4">
-        <Text className={cn('text-xs', Theme.text.secondary)}>
+      <View style={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: designTokens.spacing.md,
+      }}>
+        <Text style={{
+          fontSize: designTokens.typography.caption2.fontSize,
+          color: colors.textTertiary,
+        }}>
           Requested: {new Date(user.created_at).toLocaleDateString()}
         </Text>
         
-        <View className="flex-row space-x-2">
+        <View style={{
+          flexDirection: 'row',
+          gap: designTokens.spacing.sm,
+        }}>
           <TouchableOpacity
             onPress={() => handleReject(user.id, user.profile?.name || user.email)}
-            className="px-4 py-2 rounded-full bg-gray-200 dark:bg-gray-700 flex-row items-center space-x-2"
+            style={{
+              paddingHorizontal: designTokens.spacing.lg,
+              paddingVertical: designTokens.spacing.sm,
+              borderRadius: designTokens.borderRadius.full,
+              backgroundColor: isDark ? '#374151' : '#e5e7eb',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: designTokens.spacing.xs,
+            }}
           >
-            <Ionicons name="close" size={16} className="text-gray-600 dark:text-gray-400" />
-            <Text className="text-gray-600 dark:text-gray-400 font-medium text-sm">
+            <Ionicons name="close" size={16} color={colors.textSecondary} />
+            <Text style={{
+              fontSize: designTokens.typography.footnote.fontSize,
+              fontWeight: '600',
+              color: colors.textSecondary,
+            }}>
               Reject
             </Text>
           </TouchableOpacity>
           
           <TouchableOpacity
             onPress={() => handleApprove(user.id, user.profile?.name || user.email)}
-            className="px-4 py-2 rounded-full bg-emerald-500 flex-row items-center space-x-2"
+            style={{
+              paddingHorizontal: designTokens.spacing.lg,
+              paddingVertical: designTokens.spacing.sm,
+              borderRadius: designTokens.borderRadius.full,
+              backgroundColor: '#10b981',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: designTokens.spacing.xs,
+            }}
           >
             <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-            <Text className="text-white font-medium text-sm">
+            <Text style={{
+              fontSize: designTokens.typography.footnote.fontSize,
+              fontWeight: '600',
+              color: '#FFFFFF',
+            }}>
               Approve
             </Text>
           </TouchableOpacity>
@@ -156,29 +247,69 @@ export default function ApprovalsPage() {
 
   if (loading) {
     return (
-      <View className={cn('flex-1 items-center justify-center', Theme.background)}>
-        <Text className={cn('text-lg', Theme.text.primary)}>Loading approvals...</Text>
+      <View style={{
+        flex: 1,
+        backgroundColor: colors.background,
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{
+          marginTop: designTokens.spacing.md,
+          fontSize: designTokens.typography.body.fontSize,
+          color: colors.textSecondary,
+        }}>
+          Loading approvals...
+        </Text>
       </View>
     );
   }
 
   return (
-    <View className={cn('flex-1', Theme.background)}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
-      <View className={cn('px-6 pt-12 pb-6 border-b', Theme.background, Theme.border)}>
-        <View className="flex-row items-center justify-between mb-4">
+      <View style={{
+        padding: designTokens.spacing.xl,
+        paddingTop: designTokens.spacing.xxxl,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+        backgroundColor: colors.background,
+      }}>
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: designTokens.spacing.md,
+        }}>
           <View>
-            <Text className={cn('text-3xl font-bold tracking-tight', Theme.text.primary)}>
+            <Text style={{
+              fontSize: designTokens.typography.title1.fontSize,
+              fontWeight: designTokens.typography.title1.fontWeight,
+              color: colors.textPrimary,
+            } as any}>
               Pending Approvals
             </Text>
-            <Text className={cn('text-lg opacity-70 mt-1', Theme.text.secondary)}>
+            <Text style={{
+              fontSize: designTokens.typography.body.fontSize,
+              color: colors.textSecondary,
+              marginTop: designTokens.spacing.xs,
+            }}>
               Review and approve user registrations
             </Text>
           </View>
           
           {pendingUsers.length > 0 && (
-            <View className="px-3 py-1 rounded-full bg-amber-500/10">
-              <Text className="text-amber-600 font-medium text-sm">
+            <View style={{
+              paddingHorizontal: designTokens.spacing.md,
+              paddingVertical: designTokens.spacing.xs,
+              borderRadius: designTokens.borderRadius.full,
+              backgroundColor: '#f59e0b' + '15',
+            }}>
+              <Text style={{
+                fontSize: designTokens.typography.caption2.fontSize,
+                fontWeight: '600',
+                color: '#f59e0b',
+              }}>
                 {pendingUsers.length} pending
               </Text>
             </View>
@@ -187,24 +318,50 @@ export default function ApprovalsPage() {
       </View>
 
       <ScrollView 
-        className="flex-1 p-6"
+        contentContainerStyle={{ 
+          padding: designTokens.spacing.xl,
+          gap: designTokens.spacing.lg,
+        }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
         {pendingUsers.length === 0 ? (
-          <View className={cn('items-center justify-center py-12', Theme.background)}>
-            <Ionicons name="checkmark-circle-outline" size={64} className="opacity-30 mb-4" />
-            <Text className={cn('text-lg font-medium mb-2', Theme.text.primary)}>
+          <View style={{
+            alignItems: 'center',
+            paddingVertical: designTokens.spacing.xxxl,
+            backgroundColor: colors.backgroundElevated,
+            borderRadius: designTokens.borderRadius.xl,
+            borderWidth: 1,
+            borderColor: colors.border,
+            ...designTokens.shadows.sm,
+          }}>
+            <Ionicons name="checkmark-circle-outline" size={64} color={colors.textTertiary} />
+            <Text style={{
+              fontSize: designTokens.typography.title3.fontSize,
+              fontWeight: designTokens.typography.title3.fontWeight,
+              color: colors.textPrimary,
+              marginTop: designTokens.spacing.lg,
+              marginBottom: designTokens.spacing.xs,
+            } as any}>
               All caught up!
             </Text>
-            <Text className={cn('text-center opacity-70', Theme.text.secondary)}>
+            <Text style={{
+              fontSize: designTokens.typography.footnote.fontSize,
+              color: colors.textSecondary,
+              textAlign: 'center',
+            }}>
               No pending approvals at the moment
             </Text>
           </View>
         ) : (
           <View>
-            <Text className={cn('text-sm font-medium mb-4', Theme.text.secondary)}>
+            <Text style={{
+              fontSize: designTokens.typography.footnote.fontSize,
+              fontWeight: '600',
+              color: colors.textSecondary,
+              marginBottom: designTokens.spacing.lg,
+            }}>
               {pendingUsers.length} user{pendingUsers.length !== 1 ? 's' : ''} waiting for approval
             </Text>
             

@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme, cn } from '../../src/utils/themeUtils';
+import { useThemeContext } from '@/contexts/ThemeContext';
 
 export default function StudentsManagementScreen() {
   const [students, setStudents] = useState<any[]>([]);
@@ -14,6 +15,7 @@ export default function StudentsManagementScreen() {
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [selectedClass, setSelectedClass] = useState('');
   const [assigning, setAssigning] = useState(false);
+  const { colors } = useThemeContext();
 
   useEffect(() => {
     loadData();
@@ -218,53 +220,53 @@ const handleAssignClassSimple = async () => {
 
   if (loading) {
     return (
-      <View className={cn('flex-1 justify-center items-center', Theme.background)}>
+      <View className={cn('flex-1 justify-center items-center', colors.background)}>
         <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className={cn('text-lg mt-4', Theme.text.secondary)}>Loading students...</Text>
+        <Text className={cn('text-lg mt-4', colors.textSecondary)}>Loading students...</Text>
       </View>
     );
   }
 
   return (
-    <View className={cn('flex-1', Theme.background)}>
+    <View className={cn('flex-1', colors.background)}>
       {/* Header - Fixed */}
-      <View className={cn('px-6 pt-12 pb-6 border-b', Theme.background, Theme.border)}>
+      <View className={cn('px-6 pt-12 pb-6 border-b', colors.background, colors.border)}>
         <View className="flex-row items-center justify-between mb-4">
           <View>
-            <Text className={cn('text-3xl font-bold tracking-tight', Theme.text.primary)}>
+            <Text className={cn('text-3xl font-bold tracking-tight', colors.textPrimary)}>
               Student Management
             </Text>
-            <Text className={cn('text-lg opacity-70 mt-1', Theme.text.secondary)}>
+            <Text className={cn('text-lg opacity-70 mt-1', colors.textSecondary)}>
               Manage student assignments and classes
             </Text>
           </View>
           <TouchableOpacity 
             onPress={loadData} 
-            className={cn('w-10 h-10 rounded-full items-center justify-center', Theme.elevated)}
+            className={cn('w-10 h-10 rounded-full items-center justify-center', colors.backgroundElevated)}
           >
-            <Ionicons name="refresh" size={20} className={Theme.text.secondary} />
+            <Ionicons name="refresh" size={20} className={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
         {/* Stats */}
         <View className="flex-row space-x-4">
-          <View className={cn('flex-1 p-4 rounded-2xl border', Theme.elevated, Theme.border)}>
-            <Text className={cn('text-2xl font-bold mb-1', Theme.text.primary)}>
+          <View className={cn('flex-1 p-4 rounded-2xl border', colors.backgroundElevated, colors.border)}>
+            <Text className={cn('text-2xl font-bold mb-1', colors.textPrimary)}>
               {students.length}
             </Text>
-            <Text className={cn('text-sm', Theme.text.secondary)}>Total Students</Text>
+            <Text className={cn('text-sm', colors.textSecondary)}>Total Students</Text>
           </View>
-          <View className={cn('flex-1 p-4 rounded-2xl border', Theme.elevated, Theme.border)}>
-            <Text className={cn('text-2xl font-bold mb-1', Theme.text.primary)}>
+          <View className={cn('flex-1 p-4 rounded-2xl border', colors.backgroundElevated, colors.border)}>
+            <Text className={cn('text-2xl font-bold mb-1', colors.textPrimary)}>
               {students.filter(s => s.is_approved).length}
             </Text>
-            <Text className={cn('text-sm', Theme.text.secondary)}>Approved</Text>
+            <Text className={cn('text-sm', colors.textSecondary)}>Approved</Text>
           </View>
-          <View className={cn('flex-1 p-4 rounded-2xl border', Theme.elevated, Theme.border)}>
-            <Text className={cn('text-2xl font-bold mb-1', Theme.text.primary)}>
+          <View className={cn('flex-1 p-4 rounded-2xl border', colors.backgroundElevated, colors.border)}>
+            <Text className={cn('text-2xl font-bold mb-1', colors.textPrimary)}>
               {students.filter(s => s.profile?.class).length}
             </Text>
-            <Text className={cn('text-sm', Theme.text.secondary)}>Assigned</Text>
+            <Text className={cn('text-sm', colors.textSecondary)}>Assigned</Text>
           </View>
         </View>
       </View>
@@ -280,8 +282,8 @@ const handleAssignClassSimple = async () => {
               key={student.id}
               className={cn(
                 'p-5 rounded-2xl border',
-                Theme.elevated,
-                Theme.border
+                colors.backgroundElevated,
+                colors.border
               )}
             >
               <View className="flex-row items-start justify-between">
@@ -290,10 +292,10 @@ const handleAssignClassSimple = async () => {
                     <Ionicons name="person" size={24} color="#3b82f6" />
                   </View>
                   <View className="flex-1">
-                    <Text className={cn('text-lg font-semibold mb-1', Theme.text.primary)}>
+                    <Text className={cn('text-lg font-semibold mb-1', colors.textPrimary)}>
                       {student.profile?.name || 'No Name'}
                     </Text>
-                    <Text className={cn('text-sm mb-2', Theme.text.secondary)}>
+                    <Text className={cn('text-sm mb-2', colors.textSecondary)}>
                       {student.email}
                     </Text>
                     
@@ -358,12 +360,12 @@ const handleAssignClassSimple = async () => {
           ))}
 
           {students.length === 0 && (
-            <View className={cn('items-center py-16 rounded-2xl border-2 border-dashed', Theme.border)}>
+            <View className={cn('items-center py-16 rounded-2xl border-2 border-dashed', colors.border)}>
               <Ionicons name="people-outline" size={64} className="opacity-30 mb-4" />
-              <Text className={cn('text-2xl font-bold mb-2', Theme.text.primary)}>
+              <Text className={cn('text-2xl font-bold mb-2', colors.textPrimary)}>
                 No Students
               </Text>
-              <Text className={cn('text-center opacity-70 text-lg mb-6', Theme.text.secondary)}>
+              <Text className={cn('text-center opacity-70 text-lg mb-6', colors.textSecondary)}>
                 Students will appear here once they register
               </Text>
               <TouchableOpacity onPress={loadData} className="bg-blue-500 px-6 py-3 rounded-2xl">
@@ -376,14 +378,14 @@ const handleAssignClassSimple = async () => {
 
       {/* Class Assignment Modal */}
       <Modal visible={showClassModal} animationType="slide" presentationStyle="pageSheet">
-        <View className={cn('flex-1', Theme.background)}>
-          <View className={cn('px-6 pt-8 pb-6 border-b', Theme.background, Theme.border)}>
+        <View className={cn('flex-1', colors.background)}>
+          <View className={cn('px-6 pt-8 pb-6 border-b', colors.background, colors.border)}>
             <View className="flex-row items-center justify-between mb-4">
               <View className="flex-1">
-                <Text className={cn('text-2xl font-bold', Theme.text.primary)}>
+                <Text className={cn('text-2xl font-bold', colors.textPrimary)}>
                   Assign Class
                 </Text>
-                <Text className={cn('text-lg mt-2', Theme.text.secondary)}>
+                <Text className={cn('text-lg mt-2', colors.textSecondary)}>
                   {selectedStudent?.profile?.name || selectedStudent?.email}
                 </Text>
               </View>
@@ -391,7 +393,7 @@ const handleAssignClassSimple = async () => {
                 onPress={() => setShowClassModal(false)}
                 className="w-10 h-10 rounded-full items-center justify-center bg-gray-100 dark:bg-gray-800"
               >
-                <Ionicons name="close" size={20} className={Theme.text.secondary} />
+                <Ionicons name="close" size={20} className={colors.textSecondary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -406,8 +408,8 @@ const handleAssignClassSimple = async () => {
                     'p-4 rounded-2xl border flex-row items-center justify-between',
                     selectedClass === classItem.id 
                       ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300' 
-                      : Theme.elevated,
-                    Theme.border
+                      : colors.backgroundElevated,
+                    colors.border
                   )}
                 >
                   <View className="flex-row items-center space-x-4">
@@ -415,10 +417,10 @@ const handleAssignClassSimple = async () => {
                       <Ionicons name="school" size={24} color="#3b82f6" />
                     </View>
                     <View>
-                      <Text className={cn('text-lg font-semibold', Theme.text.primary)}>
+                      <Text className={cn('text-lg font-semibold', colors.textPrimary)}>
                         {classItem.name}
                       </Text>
-                      <Text className={cn('text-sm', Theme.text.secondary)}>
+                      <Text className={cn('text-sm', colors.textSecondary)}>
                         {classItem.level?.name} • Grade {classItem.grade} • Section {classItem.section}
                       </Text>
                     </View>
@@ -432,7 +434,7 @@ const handleAssignClassSimple = async () => {
             </View>
           </ScrollView>
 
-          <View className={cn('p-6 border-t', Theme.background, Theme.border)}>
+          <View className={cn('p-6 border-t', colors.background, colors.border)}>
             <TouchableOpacity
               className={cn(
                 'w-full py-4 rounded-2xl items-center',

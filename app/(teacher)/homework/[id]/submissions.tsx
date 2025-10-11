@@ -6,6 +6,7 @@ import { useAuth } from '../../../../src/contexts/AuthContext';
 import { apiService } from '../../../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme, cn } from '../../../../src/utils/themeUtils';
+import { useThemeContext } from '@/contexts/ThemeContext';
 
 interface Submission {
   id: string;
@@ -57,6 +58,7 @@ export default function HomeworkSubmissionsScreen() {
   const [feedback, setFeedback] = useState('');
   const [grading, setGrading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const { colors } = useThemeContext();
 
   useEffect(() => {
     loadHomeworkAndSubmissions();
@@ -185,30 +187,30 @@ export default function HomeworkSubmissionsScreen() {
 
   if (loading) {
     return (
-      <View className={cn('flex-1 justify-center items-center', Theme.background)}>
+      <View className={cn('flex-1 justify-center items-center', colors.background)}>
         <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className={cn('text-lg mt-4', Theme.text.secondary)}>Loading submissions...</Text>
+        <Text className={cn('text-lg mt-4', colors.textSecondary)}>Loading submissions...</Text>
       </View>
     );
   }
 
   return (
-    <View className={cn('flex-1', Theme.background)}>
+    <View className={cn('flex-1', colors.background)}>
       {/* Header */}
-      <View className={cn('px-6 pt-16 pb-6 border-b', Theme.background, Theme.border)}>
+      <View className={cn('px-6 pt-16 pb-6 border-b', colors.background, colors.border)}>
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-1">
             <TouchableOpacity 
               onPress={() => router.back()}
               className="flex-row items-center mb-2"
             >
-              <Ionicons name="arrow-back" size={20} className={Theme.text.secondary} />
-              <Text className={cn('ml-2', Theme.text.secondary)}>Back</Text>
+              <Ionicons name="arrow-back" size={20} className={colors.textSecondary} />
+              <Text className={cn('ml-2', colors.textSecondary)}>Back</Text>
             </TouchableOpacity>
-            <Text className={cn('text-3xl font-bold mb-2', Theme.text.primary)}>
+            <Text className={cn('text-3xl font-bold mb-2', colors.textPrimary)}>
               {homework?.title}
             </Text>
-            <Text className={cn('text-lg opacity-70', Theme.text.secondary)}>
+            <Text className={cn('text-lg opacity-70', colors.textSecondary)}>
               {homework?.class} • {homework?.subject} • {submissions.length} submissions
             </Text>
           </View>
@@ -251,12 +253,12 @@ export default function HomeworkSubmissionsScreen() {
       >
         <View className="p-6 space-y-4">
           {submissions.length === 0 ? (
-            <View className={cn('items-center py-16 rounded-2xl border-2 border-dashed', Theme.border)}>
+            <View className={cn('items-center py-16 rounded-2xl border-2 border-dashed', colors.border)}>
               <Ionicons name="document-text-outline" size={80} className="opacity-20 mb-4" />
-              <Text className={cn('text-2xl font-bold mb-2', Theme.text.primary)}>
+              <Text className={cn('text-2xl font-bold mb-2', colors.textPrimary)}>
                 No Submissions Yet
               </Text>
-              <Text className={cn('text-center opacity-70 text-lg', Theme.text.secondary)}>
+              <Text className={cn('text-center opacity-70 text-lg', colors.textSecondary)}>
                 Students haven't submitted this homework yet
               </Text>
             </View>
@@ -264,14 +266,14 @@ export default function HomeworkSubmissionsScreen() {
             submissions.map((submission) => (
               <View
                 key={submission.id}
-                className={cn('rounded-2xl p-5 border', Theme.elevated, Theme.border)}
+                className={cn('rounded-2xl p-5 border', colors.backgroundElevated, colors.border)}
               >
                 <View className="flex-row justify-between items-start mb-4">
                   <View className="flex-1">
-                    <Text className={cn('text-xl font-semibold mb-1', Theme.text.primary)}>
+                    <Text className={cn('text-xl font-semibold mb-1', colors.textPrimary)}>
                       {submission.student?.profile?.name || 'Student'}
                     </Text>
-                    <Text className={cn('text-sm', Theme.text.secondary)}>
+                    <Text className={cn('text-sm', colors.textSecondary)}>
                       {submission.student?.profile?.class && `${submission.student.profile.class} • `}
                       Submitted {formatDate(submission.submitted_at)}
                     </Text>
@@ -291,21 +293,21 @@ export default function HomeworkSubmissionsScreen() {
                   )}
                 </View>
 
-                <Text className={cn('text-base mb-4', Theme.text.primary)}>
+                <Text className={cn('text-base mb-4', colors.textPrimary)}>
                   {submission.content || 'No content provided'}
                 </Text>
 
                 {submission.attachments && submission.attachments.length > 0 && (
                   <View className="mb-4">
-                    <Text className={cn('text-sm font-medium mb-2', Theme.text.primary)}>Attachments:</Text>
+                    <Text className={cn('text-sm font-medium mb-2', colors.textPrimary)}>Attachments:</Text>
                     <View className="flex-row flex-wrap gap-2">
                       {submission.attachments.map((attachment, index) => (
                         <TouchableOpacity
                           key={index}
                           className="flex-row items-center bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-full"
                         >
-                          <Ionicons name="document" size={16} className={Theme.text.secondary} />
-                          <Text className={cn('text-sm ml-2', Theme.text.primary)}>
+                          <Ionicons name="document" size={16} className={colors.textSecondary} />
+                          <Text className={cn('text-sm ml-2', colors.textPrimary)}>
                             {attachment}
                           </Text>
                         </TouchableOpacity>
@@ -365,24 +367,24 @@ export default function HomeworkSubmissionsScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setGradingSubmission(null)}
       >
-        <View className={cn('flex-1', Theme.background)}>
-          <View className={cn('px-6 pt-8 pb-6 border-b', Theme.background, Theme.border)}>
+        <View className={cn('flex-1', colors.background)}>
+          <View className={cn('px-6 pt-8 pb-6 border-b', colors.background, colors.border)}>
             <View className="flex-row items-center justify-between mb-4">
-              <Text className={cn('text-2xl font-bold', Theme.text.primary)}>
+              <Text className={cn('text-2xl font-bold', colors.textPrimary)}>
                 Grade Submission
               </Text>
               <TouchableOpacity 
                 onPress={() => setGradingSubmission(null)}
                 className="w-10 h-10 rounded-full items-center justify-center bg-gray-100 dark:bg-gray-800"
               >
-                <Ionicons name="close" size={20} className={Theme.text.secondary} />
+                <Ionicons name="close" size={20} className={colors.textSecondary} />
               </TouchableOpacity>
             </View>
-            <Text className={cn('text-lg', Theme.text.secondary)}>
+            <Text className={cn('text-lg', colors.textSecondary)}>
               {gradingSubmission?.student?.profile?.name}
             </Text>
             {gradingSubmission && (
-              <Text className={cn('text-sm mt-1', Theme.text.secondary)}>
+              <Text className={cn('text-sm mt-1', colors.textSecondary)}>
                 Submitted on {formatDate(gradingSubmission.submitted_at)}
               </Text>
             )}
@@ -393,11 +395,11 @@ export default function HomeworkSubmissionsScreen() {
               {/* Submission Content Preview */}
               {gradingSubmission?.content && (
                 <View>
-                  <Text className={cn('text-lg font-semibold mb-3', Theme.text.primary)}>
+                  <Text className={cn('text-lg font-semibold mb-3', colors.textPrimary)}>
                     Student's Submission
                   </Text>
-                  <View className={cn('p-4 rounded-2xl border', Theme.border)}>
-                    <Text className={cn('text-base', Theme.text.primary)}>
+                  <View className={cn('p-4 rounded-2xl border', colors.border)}>
+                    <Text className={cn('text-base', colors.textPrimary)}>
                       {gradingSubmission.content}
                     </Text>
                   </View>
@@ -406,23 +408,23 @@ export default function HomeworkSubmissionsScreen() {
 
               {/* Grade Input */}
               <View>
-                <Text className={cn('text-lg font-semibold mb-3', Theme.text.primary)}>
+                <Text className={cn('text-lg font-semibold mb-3', colors.textPrimary)}>
                   Grade *
                 </Text>
                 <View className="flex-row items-center space-x-3">
                   <TextInput
                     className={cn(
                       'flex-1 rounded-2xl p-4 border text-lg',
-                      Theme.border,
-                      Theme.background,
-                      Theme.text.primary
+                      colors.border,
+                      colors.background,
+                      colors.textPrimary
                     )}
                     placeholder={`0-${homework?.points || 100}`}
                     keyboardType="numeric"
                     value={grade}
                     onChangeText={setGrade}
                   />
-                  <Text className={cn('text-lg font-semibold', Theme.text.primary)}>
+                  <Text className={cn('text-lg font-semibold', colors.textPrimary)}>
                     / {homework?.points}
                   </Text>
                 </View>
@@ -430,15 +432,15 @@ export default function HomeworkSubmissionsScreen() {
 
               {/* Feedback Input */}
               <View>
-                <Text className={cn('text-lg font-semibold mb-3', Theme.text.primary)}>
+                <Text className={cn('text-lg font-semibold mb-3', colors.textPrimary)}>
                   Feedback
                 </Text>
                 <TextInput
                   className={cn(
                     'rounded-2xl p-4 border text-lg h-32',
-                    Theme.border,
-                    Theme.background,
-                    Theme.text.primary
+                    colors.border,
+                    colors.background,
+                    colors.textPrimary
                   )}
                   placeholder="Add your feedback and notes for the student..."
                   value={feedback}
@@ -454,7 +456,7 @@ export default function HomeworkSubmissionsScreen() {
                   onPress={() => setGradingSubmission(null)}
                   className="flex-1 px-6 py-4 rounded-2xl bg-gray-100 dark:bg-gray-800 items-center"
                 >
-                  <Text className={cn('font-semibold text-lg', Theme.text.primary)}>Cancel</Text>
+                  <Text className={cn('font-semibold text-lg', colors.textPrimary)}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleGradeSubmission}

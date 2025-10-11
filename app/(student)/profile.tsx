@@ -1,4 +1,4 @@
-// app/(teacher)/profile.tsx
+// app/(student)/profile.tsx
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -13,42 +13,44 @@ import {
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useThemeContext } from '../../src/contexts/ThemeContext';
+import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { designTokens } from '../../src/utils/designTokens';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
-interface TeacherStats {
-  totalStudents: number;
-  activeExams: number;
-  averageClassScore: number;
-  examsCreated: number;
-  pendingGrading: number;
-}
-
-export default function TeacherProfileScreen() {
+export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const { colors, isDark, toggleTheme } = useThemeContext();
   const [activeTab, setActiveTab] = useState<'profile' | 'settings'>('profile');
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
-  const [teacherStats] = useState<TeacherStats>({
-    totalStudents: 156,
-    activeExams: 8,
-    averageClassScore: 78,
-    examsCreated: 24,
-    pendingGrading: 12,
-  });
-
+  const [profileStats, setProfileStats] = useState<any>(null);
   const [settings, setSettings] = useState({
     notifications: true,
-    examNotifications: true,
-    gradingReminders: true,
+    dataSaver: false,
   });
+
+  useEffect(() => {
+    loadProfileData();
+  }, []);
+
+  const loadProfileData = async () => {
+    try {
+      // Load real profile stats from API
+      const statsResponse = await apiService.getStudentStats();
+      if (statsResponse.data.success) {
+        setProfileStats(statsResponse.data.data);
+      }
+    } catch (error) {
+      console.error('Failed to load profile data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const onRefresh = () => {
     setRefreshing(true);
-    // Simulate refresh
-    setTimeout(() => setRefreshing(false), 1000);
+    loadProfileData();
   };
 
   const handleLogout = () => {
@@ -178,9 +180,9 @@ export default function TeacherProfileScreen() {
         >
           Profile
         </Text>
-        
+
         {/* Dark Mode Toggle */}
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={toggleTheme}
           style={{
             padding: designTokens.spacing.sm,
@@ -189,10 +191,10 @@ export default function TeacherProfileScreen() {
             ...designTokens.shadows.sm,
           }}
         >
-          <Ionicons 
-            name={isDark ? "sunny" : "moon"} 
-            size={24} 
-            color={colors.textPrimary} 
+          <Ionicons
+            name={isDark ? "sunny" : "moon"}
+            size={24}
+            color={colors.textPrimary}
           />
         </TouchableOpacity>
       </View>
@@ -242,12 +244,13 @@ export default function TeacherProfileScreen() {
         ))}
       </View>
 
-      <ScrollView 
+      <Animated.ScrollView
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
+        entering={FadeIn.duration(600)} // Smooth fade-in when screen loads
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
+          <RefreshControl
+            refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor={colors.primary}
           />
@@ -257,12 +260,12 @@ export default function TeacherProfileScreen() {
           {activeTab === 'profile' ? (
             <>
               {/* Profile Header */}
-              <ProfileSection title="Teacher Information">
+              <ProfileSection title="Student Information">
                 <View style={{ padding: designTokens.spacing.lg }}>
-                  <View style={{ 
-                    flexDirection: 'row', 
-                    alignItems: 'center', 
-                    marginBottom: designTokens.spacing.xl 
+                  <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginBottom: designTokens.spacing.xl
                   }}>
                     <View
                       style={{
@@ -280,7 +283,7 @@ export default function TeacherProfileScreen() {
                         fontWeight: '700',
                         color: colors.primary,
                       }}>
-                        {user?.profile?.name?.charAt(0) || 'T'}
+                        {user?.profile?.name?.charAt(0) || 'S'}
                       </Text>
                     </View>
                     <View style={{ flex: 1 }}>
@@ -292,7 +295,7 @@ export default function TeacherProfileScreen() {
                           marginBottom: 2,
                         } as any}
                       >
-                        {user?.profile?.name || 'Teacher'}
+                        {user?.profile?.name || 'Student'}
                       </Text>
                       <Text
                         style={{
@@ -301,7 +304,7 @@ export default function TeacherProfileScreen() {
                           marginBottom: 2,
                         }}
                       >
-                        {user?.profile?.class ? `Class ${user.profile.class}` : 'All Classes'}
+                        {user?.profile?.class ? `Class ${user.profile.class}` : 'No class assigned'}
                       </Text>
                       <View style={{
                         flexDirection: 'row',
@@ -326,69 +329,69 @@ export default function TeacherProfileScreen() {
                             fontWeight: '600',
                           }}
                         >
-                          Active
+                          {user?.is_approved ? 'Active' : 'Pending'}
                         </Text>
                       </View>
                     </View>
                   </View>
 
-                  <View style={{ 
-                    borderTopWidth: 1, 
-                    borderTopColor: colors.separator, 
-                    paddingTop: designTokens.spacing.lg 
+                  <View style={{
+                    borderTopWidth: 1,
+                    borderTopColor: colors.separator,
+                    paddingTop: designTokens.spacing.lg
                   }}>
-                    <View style={{ 
-                      flexDirection: 'row', 
-                      justifyContent: 'space-between', 
-                      marginBottom: designTokens.spacing.md 
+                    <View style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      marginBottom: designTokens.spacing.md
                     }}>
-                      <Text style={{ 
-                        fontSize: designTokens.typography.body.fontSize, 
-                        color: colors.textSecondary 
+                      <Text style={{
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: colors.textSecondary
                       }}>
-                        Teacher ID
+                        Student ID
                       </Text>
-                      <Text style={{ 
-                        fontSize: designTokens.typography.body.fontSize, 
-                        color: colors.textPrimary, 
-                        fontWeight: '500' 
+                      <Text style={{
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: colors.textPrimary,
+                        fontWeight: '500'
                       }}>
-                        {user?.teacher_id || 'Not set'}
+                        {user?.student_id || 'Not set'}
                       </Text>
                     </View>
-                    <View style={{ 
-                      flexDirection: 'row', 
-                      justifyContent: 'space-between', 
-                      marginBottom: designTokens.spacing.md 
+                    <View style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      marginBottom: designTokens.spacing.md
                     }}>
-                      <Text style={{ 
-                        fontSize: designTokens.typography.body.fontSize, 
-                        color: colors.textSecondary 
+                      <Text style={{
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: colors.textSecondary
                       }}>
                         Email
                       </Text>
-                      <Text style={{ 
-                        fontSize: designTokens.typography.body.fontSize, 
-                        color: colors.textPrimary, 
-                        fontWeight: '500' 
+                      <Text style={{
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: colors.textPrimary,
+                        fontWeight: '500'
                       }}>
                         {user?.email}
                       </Text>
                     </View>
-                    <View style={{ 
-                      flexDirection: 'row', 
-                      justifyContent: 'space-between' 
+                    <View style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between'
                     }}>
-                      <Text style={{ 
-                        fontSize: designTokens.typography.body.fontSize, 
-                        color: colors.textSecondary 
+                      <Text style={{
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: colors.textSecondary
                       }}>
                         Account Created
                       </Text>
-                      <Text style={{ 
-                        fontSize: designTokens.typography.body.fontSize, 
-                        color: colors.textPrimary, 
-                        fontWeight: '500' 
+                      <Text style={{
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: colors.textPrimary,
+                        fontWeight: '500'
                       }}>
                         {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
                       </Text>
@@ -397,193 +400,110 @@ export default function TeacherProfileScreen() {
                 </View>
               </ProfileSection>
 
-              {/* Teaching Stats */}
-              <ProfileSection title="Teaching Overview">
-                <View style={{ padding: designTokens.spacing.lg }}>
-                  <View style={{ 
-                    flexDirection: 'row', 
-                    marginBottom: designTokens.spacing.lg 
-                  }}>
-                    <View style={{ 
-                      flex: 1, 
-                      alignItems: 'center',
-                      borderRightWidth: 1,
-                      borderRightColor: colors.separator,
-                      paddingRight: designTokens.spacing.lg,
-                    }}>
-                      <Text
-                        style={{
-                          fontSize: designTokens.typography.title1.fontSize,
-                          fontWeight: designTokens.typography.title1.fontWeight,
-                          color: colors.textPrimary,
-                          marginBottom: 2,
-                        } as any}
-                      >
-                        {teacherStats.totalStudents}
-                      </Text>
-                      <Text style={{ 
-                        fontSize: designTokens.typography.footnote.fontSize, 
-                        color: colors.textSecondary 
-                      }}>
-                        Students
-                      </Text>
-                    </View>
-                    <View style={{ 
-                      flex: 1, 
-                      alignItems: 'center',
-                      borderRightWidth: 1,
-                      borderRightColor: colors.separator,
-                      paddingHorizontal: designTokens.spacing.lg,
-                    }}>
-                      <Text
-                        style={{
-                          fontSize: designTokens.typography.title1.fontSize,
-                          fontWeight: designTokens.typography.title1.fontWeight,
-                          color: colors.textPrimary,
-                          marginBottom: 2,
-                        } as any}
-                      >
-                        {teacherStats.examsCreated}
-                      </Text>
-                      <Text style={{ 
-                        fontSize: designTokens.typography.footnote.fontSize, 
-                        color: colors.textSecondary 
-                      }}>
-                        Exams Created
-                      </Text>
-                    </View>
-                    <View style={{ 
-                      flex: 1, 
-                      alignItems: 'center',
-                      paddingLeft: designTokens.spacing.lg,
-                    }}>
-                      <Text
-                        style={{
-                          fontSize: designTokens.typography.title1.fontSize,
-                          fontWeight: designTokens.typography.title1.fontWeight,
-                          color: colors.textPrimary,
-                          marginBottom: 2,
-                        } as any}
-                      >
-                        {teacherStats.pendingGrading}
-                      </Text>
-                      <Text style={{ 
-                        fontSize: designTokens.typography.footnote.fontSize, 
-                        color: colors.textSecondary 
-                      }}>
-                        To Grade
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              </ProfileSection>
-
-              {/* Class Performance */}
-              <ProfileSection title="Class Performance">
-                <View style={{ padding: designTokens.spacing.lg }}>
-                  <View style={{ marginBottom: designTokens.spacing.lg }}>
-                    <View style={{ 
-                      flexDirection: 'row', 
-                      justifyContent: 'space-between', 
-                      marginBottom: designTokens.spacing.sm 
-                    }}>
-                      <Text style={{ 
-                        fontSize: designTokens.typography.body.fontSize, 
-                        color: colors.textSecondary 
-                      }}>
-                        Average Class Score
-                      </Text>
-                      <Text style={{ 
-                        fontSize: designTokens.typography.body.fontSize, 
-                        color: colors.textPrimary, 
-                        fontWeight: '500' 
-                      }}>
-                        {teacherStats.averageClassScore}%
-                      </Text>
-                    </View>
+              {/* Performance Stats */}
+              {profileStats && (
+                <ProfileSection title="Performance">
+                  <View style={{ padding: designTokens.spacing.lg }}>
                     <View style={{
-                      height: 8,
-                      backgroundColor: colors.separator,
-                      borderRadius: 4,
-                      overflow: 'hidden',
+                      flexDirection: 'row',
+                      marginBottom: designTokens.spacing.lg
                     }}>
-                      <View
-                        style={{
-                          height: '100%',
-                          width: `${teacherStats.averageClassScore}%`,
-                          backgroundColor: colors.primary,
-                          borderRadius: 4,
-                        }}
-                      />
+                      <View style={{
+                        flex: 1,
+                        alignItems: 'center',
+                        borderRightWidth: 1,
+                        borderRightColor: colors.separator,
+                        paddingRight: designTokens.spacing.lg,
+                      }}>
+                        <Text
+                          style={{
+                            fontSize: designTokens.typography.title1.fontSize,
+                            fontWeight: designTokens.typography.title1.fontWeight,
+                            color: colors.textPrimary,
+                            marginBottom: 2,
+                          } as any}
+                        >
+                          {profileStats.averageScore || '0'}%
+                        </Text>
+                        <Text style={{
+                          fontSize: designTokens.typography.footnote.fontSize,
+                          color: colors.textSecondary
+                        }}>
+                          Average
+                        </Text>
+                      </View>
+                      <View style={{
+                        flex: 1,
+                        alignItems: 'center',
+                        borderRightWidth: 1,
+                        borderRightColor: colors.separator,
+                        paddingHorizontal: designTokens.spacing.lg,
+                      }}>
+                        <Text
+                          style={{
+                            fontSize: designTokens.typography.title1.fontSize,
+                            fontWeight: designTokens.typography.title1.fontWeight,
+                            color: colors.textPrimary,
+                            marginBottom: 2,
+                          } as any}
+                        >
+                          {profileStats.examsCompleted || '0'}
+                        </Text>
+                        <Text style={{
+                          fontSize: designTokens.typography.footnote.fontSize,
+                          color: colors.textSecondary
+                        }}>
+                          Completed
+                        </Text>
+                      </View>
+                      <View style={{
+                        flex: 1,
+                        alignItems: 'center',
+                        paddingLeft: designTokens.spacing.lg,
+                      }}>
+                        <Text
+                          style={{
+                            fontSize: designTokens.typography.title1.fontSize,
+                            fontWeight: designTokens.typography.title1.fontWeight,
+                            color: colors.textPrimary,
+                            marginBottom: 2,
+                          } as any}
+                        >
+                          #{profileStats.rank || '--'}
+                        </Text>
+                        <Text style={{
+                          fontSize: designTokens.typography.footnote.fontSize,
+                          color: colors.textSecondary
+                        }}>
+                          Rank
+                        </Text>
+                      </View>
                     </View>
                   </View>
-                  
-                  <View>
-                    <View style={{ 
-                      flexDirection: 'row', 
-                      justifyContent: 'space-between', 
-                      marginBottom: designTokens.spacing.sm 
-                    }}>
-                      <Text style={{ 
-                        fontSize: designTokens.typography.body.fontSize, 
-                        color: colors.textSecondary 
-                      }}>
-                        Student Engagement
-                      </Text>
-                      <Text style={{ 
-                        fontSize: designTokens.typography.body.fontSize, 
-                        color: colors.textPrimary, 
-                        fontWeight: '500' 
-                      }}>
-                        92%
-                      </Text>
-                    </View>
-                    <View style={{
-                      height: 8,
-                      backgroundColor: colors.separator,
-                      borderRadius: 4,
-                      overflow: 'hidden',
-                    }}>
-                      <View
-                        style={{
-                          height: '100%',
-                          width: '92%',
-                          backgroundColor: '#34C759',
-                          borderRadius: 4,
-                        }}
-                      />
-                    </View>
-                  </View>
-                </View>
-              </ProfileSection>
+                </ProfileSection>
+              )}
             </>
           ) : (
             <>
-              <ProfileSection title="Notification Settings">
+              <ProfileSection title="Preferences">
                 <View style={{ paddingHorizontal: designTokens.spacing.lg }}>
                   <SettingItem
-                    title="General Notifications"
-                    description="App notifications and updates"
+                    title="Notifications"
+                    description="Exam reminders and updates"
                     value={settings.notifications}
                     onToggle={() => toggleSetting('notifications')}
                   />
                   <SettingItem
-                    title="Exam Alerts"
-                    description="Exam completion notifications"
-                    value={settings.examNotifications}
-                    onToggle={() => toggleSetting('examNotifications')}
-                  />
-                  <SettingItem
-                    title="Grading Reminders"
-                    description="Pending grading alerts"
-                    value={settings.gradingReminders}
-                    onToggle={() => toggleSetting('gradingReminders')}
+                    title="Data Saver"
+                    description="Reduce data usage"
+                    value={settings.dataSaver}
+                    onToggle={() => toggleSetting('dataSaver')}
                   />
                 </View>
               </ProfileSection>
-              
-              {/* System Settings */}
-              <ProfileSection title="System Preferences">
+
+              {/* Dark Mode Setting */}
+              <ProfileSection title="Appearance">
                 <View style={{ paddingHorizontal: designTokens.spacing.lg }}>
                   <View
                     style={{
@@ -623,74 +543,13 @@ export default function TeacherProfileScreen() {
                   </View>
                 </View>
               </ProfileSection>
-
-              {/* Teacher Tools */}
-              <ProfileSection title="Teacher Tools">
-                <View>
-                  <TouchableOpacity 
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: designTokens.spacing.lg,
-                      borderBottomWidth: 1,
-                      borderBottomColor: colors.separator,
-                    }}
-                  >
-                    <Text style={{ 
-                      fontSize: designTokens.typography.body.fontSize, 
-                      color: colors.primary,
-                      fontWeight: '500'
-                    }}>
-                      Export Student Data
-                    </Text>
-                    <Ionicons name="download" size={20} color={colors.primary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: designTokens.spacing.lg,
-                      borderBottomWidth: 1,
-                      borderBottomColor: colors.separator,
-                    }}
-                  >
-                    <Text style={{ 
-                      fontSize: designTokens.typography.body.fontSize, 
-                      color: colors.primary,
-                      fontWeight: '500'
-                    }}>
-                      Class Analytics
-                    </Text>
-                    <Ionicons name="bar-chart" size={20} color={colors.primary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: designTokens.spacing.lg,
-                    }}
-                  >
-                    <Text style={{ 
-                      fontSize: designTokens.typography.body.fontSize, 
-                      color: colors.primary,
-                      fontWeight: '500'
-                    }}>
-                      Teaching Resources
-                    </Text>
-                    <Ionicons name="library" size={20} color={colors.primary} />
-                  </TouchableOpacity>
-                </View>
-              </ProfileSection>
             </>
           )}
 
           {/* Logout Button */}
-          <View style={{ 
-            paddingHorizontal: designTokens.spacing.xl, 
-            marginTop: designTokens.spacing.xl 
+          <View style={{
+            paddingHorizontal: designTokens.spacing.xl,
+            marginTop: designTokens.spacing.xl
           }}>
             <TouchableOpacity
               onPress={handleLogout}
@@ -720,7 +579,7 @@ export default function TeacherProfileScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }

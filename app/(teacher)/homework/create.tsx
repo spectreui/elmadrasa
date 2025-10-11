@@ -18,6 +18,7 @@ import { useAuth } from '../../../src/contexts/AuthContext';
 import { apiService } from '../../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme, cn } from '../../../src/utils/themeUtils';
+import { useThemeContext } from '@/contexts/ThemeContext';
 
 interface ClassItem {
   id: string;
@@ -44,6 +45,8 @@ export default function CreateHomeworkScreen() {
   const [showSubjectModal, setShowSubjectModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+    const { colors } = useThemeContext();
+
   
   const [form, setForm] = useState({
     title: '',
@@ -202,17 +205,17 @@ export default function CreateHomeworkScreen() {
         presentationStyle="pageSheet"
         onRequestClose={handleCancel}
       >
-        <View className={cn('flex-1', Theme.background)}>
-          <View className={cn('px-6 pt-8 pb-6 border-b', Theme.background, Theme.border)}>
+        <View className={cn('flex-1', colors.background)}>
+          <View className={cn('px-6 pt-8 pb-6 border-b', colors.background, colors.border)}>
             <View className="flex-row items-center justify-between mb-4">
-              <Text className={cn('text-2xl font-bold', Theme.text.primary)}>
+              <Text className={cn('text-2xl font-bold', colors.textPrimary)}>
                 Select Due Date
               </Text>
               <TouchableOpacity 
                 onPress={handleCancel}
                 className="w-10 h-10 rounded-full items-center justify-center bg-gray-100 dark:bg-gray-800"
               >
-                <Ionicons name="close" size={20} className={Theme.text.secondary} />
+                <Ionicons name="close" size={20} className={colors.textSecondary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -221,7 +224,7 @@ export default function CreateHomeworkScreen() {
             <View className="p-6 space-y-6">
               {/* Year Selection */}
               <View>
-                <Text className={cn('text-lg font-semibold mb-3', Theme.text.primary)}>Year</Text>
+                <Text className={cn('text-lg font-semibold mb-3', colors.textPrimary)}>Year</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
                   <View className="flex-row space-x-2">
                     {years.map((year) => (
@@ -229,11 +232,11 @@ export default function CreateHomeworkScreen() {
                         key={year}
                         className={cn(
                           'px-4 py-3 rounded-2xl border',
-                          tempDate.getFullYear() === year ? 'bg-blue-500 border-blue-500' : Theme.border
+                          tempDate.getFullYear() === year ? 'bg-blue-500 border-blue-500' : colors.border
                         )}
                         onPress={() => setTempDate(new Date(year, tempDate.getMonth(), tempDate.getDate()))}
                       >
-                        <Text className={tempDate.getFullYear() === year ? 'text-white font-semibold' : cn('font-medium', Theme.text.primary)}>
+                        <Text className={tempDate.getFullYear() === year ? 'text-white font-semibold' : cn('font-medium', colors.textPrimary)}>
                           {year}
                         </Text>
                       </TouchableOpacity>
@@ -244,18 +247,18 @@ export default function CreateHomeworkScreen() {
 
               {/* Month Selection */}
               <View>
-                <Text className={cn('text-lg font-semibold mb-3', Theme.text.primary)}>Month</Text>
+                <Text className={cn('text-lg font-semibold mb-3', colors.textPrimary)}>Month</Text>
                 <View className="grid grid-cols-3 gap-3">
                   {months.map((month, index) => (
                     <TouchableOpacity
                       key={month}
                       className={cn(
                         'p-4 rounded-2xl border items-center',
-                        tempDate.getMonth() === index ? 'bg-blue-500 border-blue-500' : Theme.border
+                        tempDate.getMonth() === index ? 'bg-blue-500 border-blue-500' : colors.border
                       )}
                       onPress={() => setTempDate(new Date(tempDate.getFullYear(), index, tempDate.getDate()))}
                     >
-                      <Text className={tempDate.getMonth() === index ? 'text-white font-semibold' : cn('font-medium', Theme.text.primary)}>
+                      <Text className={tempDate.getMonth() === index ? 'text-white font-semibold' : cn('font-medium', colors.textPrimary)}>
                         {month}
                       </Text>
                     </TouchableOpacity>
@@ -265,18 +268,18 @@ export default function CreateHomeworkScreen() {
 
               {/* Day Selection */}
               <View>
-                <Text className={cn('text-lg font-semibold mb-3', Theme.text.primary)}>Day</Text>
+                <Text className={cn('text-lg font-semibold mb-3', colors.textPrimary)}>Day</Text>
                 <View className="grid grid-cols-7 gap-2">
                   {Array.from({ length: getDaysInMonth(tempDate.getFullYear(), tempDate.getMonth()) }, (_, i) => i + 1).map((day) => (
                     <TouchableOpacity
                       key={day}
                       className={cn(
                         'w-10 h-10 rounded-full items-center justify-center border',
-                        tempDate.getDate() === day ? 'bg-blue-500 border-blue-500' : Theme.border
+                        tempDate.getDate() === day ? 'bg-blue-500 border-blue-500' : colors.border
                       )}
                       onPress={() => setTempDate(new Date(tempDate.getFullYear(), tempDate.getMonth(), day))}
                     >
-                      <Text className={tempDate.getDate() === day ? 'text-white font-semibold' : cn('font-medium', Theme.text.primary)}>
+                      <Text className={tempDate.getDate() === day ? 'text-white font-semibold' : cn('font-medium', colors.textPrimary)}>
                         {day}
                       </Text>
                     </TouchableOpacity>
@@ -300,7 +303,7 @@ export default function CreateHomeworkScreen() {
                   onPress={handleCancel}
                   className="flex-1 px-6 py-4 rounded-2xl bg-gray-100 dark:bg-gray-800 items-center"
                 >
-                  <Text className={cn('font-semibold text-lg', Theme.text.primary)}>Cancel</Text>
+                  <Text className={cn('font-semibold text-lg', colors.textPrimary)}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleConfirm}
@@ -335,9 +338,9 @@ export default function CreateHomeworkScreen() {
 
   if (fetchingData) {
     return (
-      <View className={cn('flex-1 justify-center items-center', Theme.background)}>
+      <View className={cn('flex-1 justify-center items-center', colors.background)}>
         <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className={cn('text-lg mt-4', Theme.text.secondary)}>Loading your classes...</Text>
+        <Text className={cn('text-lg mt-4', colors.textSecondary)}>Loading your classes...</Text>
       </View>
     );
   }
@@ -345,7 +348,7 @@ export default function CreateHomeworkScreen() {
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className={cn('flex-1', Theme.background)}
+      className={cn('flex-1', colors.background)}
     >
       <ScrollView 
         className="flex-1" 
@@ -353,46 +356,46 @@ export default function CreateHomeworkScreen() {
         contentContainerStyle={{ flexGrow: 1 }}
       >
         {/* Header */}
-        <View className={cn('px-6 pt-16 pb-6 border-b', Theme.background, Theme.border)}>
+        <View className={cn('px-6 pt-16 pb-6 border-b', colors.background, colors.border)}>
           <View className="flex-row justify-between items-center">
             <View className="flex-1">
-              <Text className={cn('text-3xl font-bold mb-2', Theme.text.primary)}>
+              <Text className={cn('text-3xl font-bold mb-2', colors.textPrimary)}>
                 New Homework
               </Text>
-              <Text className={cn('text-lg opacity-70', Theme.text.secondary)}>
+              <Text className={cn('text-lg opacity-70', colors.textSecondary)}>
                 Create assignment for your class
               </Text>
             </View>
             <TouchableOpacity 
-              className={cn('w-12 h-12 rounded-2xl items-center justify-center', Theme.elevated)}
+              className={cn('w-12 h-12 rounded-2xl items-center justify-center', colors.backgroundElevated)}
               onPress={() => router.back()}
             >
-              <Ionicons name="close" size={24} className={Theme.text.secondary} />
+              <Ionicons name="close" size={24} className={colors.textSecondary} />
             </TouchableOpacity>
           </View>
         </View>
 
         <View className="flex-1 p-6">
-          <View className={cn('rounded-2xl p-6 border', Theme.elevated, Theme.border)}>
+          <View className={cn('rounded-2xl p-6 border', colors.backgroundElevated, colors.border)}>
             {/* Basic Info */}
             <View className="space-y-6">
               <View>
-                <Text className={cn('text-xl font-semibold mb-4', Theme.text.primary)}>
+                <Text className={cn('text-xl font-semibold mb-4', colors.textPrimary)}>
                   Assignment Details
                 </Text>
                 
                 <View className="space-y-5">
                   {/* Title */}
                   <View>
-                    <Text className={cn('text-base font-semibold mb-3', Theme.text.primary)}>
+                    <Text className={cn('text-base font-semibold mb-3', colors.textPrimary)}>
                       Title *
                     </Text>
                     <TextInput
                       className={cn(
                         'rounded-2xl p-4 border text-lg',
-                        Theme.border,
-                        Theme.background,
-                        Theme.text.primary
+                        colors.border,
+                        colors.background,
+                        colors.textPrimary
                       )}
                       placeholder="Enter homework title"
                       placeholderTextColor="#9CA3AF"
@@ -403,15 +406,15 @@ export default function CreateHomeworkScreen() {
 
                   {/* Description */}
                   <View>
-                    <Text className={cn('text-base font-semibold mb-3', Theme.text.primary)}>
+                    <Text className={cn('text-base font-semibold mb-3', colors.textPrimary)}>
                       Description
                     </Text>
                     <TextInput
                       className={cn(
                         'rounded-2xl p-4 border text-lg h-32',
-                        Theme.border,
-                        Theme.background,
-                        Theme.text.primary
+                        colors.border,
+                        colors.background,
+                        colors.textPrimary
                       )}
                       placeholder="Enter homework description and instructions..."
                       placeholderTextColor="#9CA3AF"
@@ -424,85 +427,85 @@ export default function CreateHomeworkScreen() {
 
                   {/* Class Selection */}
                   <View>
-                    <Text className={cn('text-base font-semibold mb-3', Theme.text.primary)}>
+                    <Text className={cn('text-base font-semibold mb-3', colors.textPrimary)}>
                       Class *
                     </Text>
                     <TouchableOpacity
                       className={cn(
                         'rounded-2xl p-4 border flex-row items-center justify-between',
-                        Theme.border,
-                        Theme.background
+                        colors.border,
+                        colors.background
                       )}
                       onPress={() => setShowClassModal(true)}
                     >
-                      <Text className={cn('text-lg', form.class_name ? Theme.text.primary : 'text-gray-500')}>
+                      <Text className={cn('text-lg', form.class_name ? colors.textPrimary : 'text-gray-500')}>
                         {form.class_name || 'Select class'}
                       </Text>
-                      <Ionicons name="chevron-down" size={20} className={Theme.text.secondary} />
+                      <Ionicons name="chevron-down" size={20} className={colors.textSecondary} />
                     </TouchableOpacity>
                   </View>
 
                   {/* Subject Selection */}
                   <View>
-                    <Text className={cn('text-base font-semibold mb-3', Theme.text.primary)}>
+                    <Text className={cn('text-base font-semibold mb-3', colors.textPrimary)}>
                       Subject *
                     </Text>
                     <TouchableOpacity
                       className={cn(
                         'rounded-2xl p-4 border flex-row items-center justify-between',
-                        Theme.border,
-                        Theme.background
+                        colors.border,
+                        colors.background
                       )}
                       onPress={() => setShowSubjectModal(true)}
                       disabled={!form.class_id}
                     >
-                      <Text className={cn('text-lg', form.subject_name ? Theme.text.primary : 'text-gray-500')}>
+                      <Text className={cn('text-lg', form.subject_name ? colors.textPrimary : 'text-gray-500')}>
                         {form.subject_name || (form.class_id ? 'Select subject' : 'Select class first')}
                       </Text>
-                      <Ionicons name="chevron-down" size={20} className={Theme.text.secondary} />
+                      <Ionicons name="chevron-down" size={20} className={colors.textSecondary} />
                     </TouchableOpacity>
                   </View>
                 </View>
               </View>
 
               {/* Settings */}
-              <View className={cn('border-t pt-6', Theme.border)}>
-                <Text className={cn('text-xl font-semibold mb-4', Theme.text.primary)}>
+              <View className={cn('border-t pt-6', colors.border)}>
+                <Text className={cn('text-xl font-semibold mb-4', colors.textPrimary)}>
                   Settings
                 </Text>
                 
                 <View className="space-y-5">
                   {/* Due Date */}
                   <View>
-                    <Text className={cn('text-base font-semibold mb-3', Theme.text.primary)}>
+                    <Text className={cn('text-base font-semibold mb-3', colors.textPrimary)}>
                       Due Date *
                     </Text>
                     <TouchableOpacity
                       className={cn(
                         'rounded-2xl p-4 border flex-row items-center justify-between',
-                        Theme.border,
-                        Theme.background
+                        colors.border,
+                        colors.background
                       )}
                       onPress={() => setShowDatePicker(true)}
                     >
-                      <Text className={cn('text-lg', form.due_date ? Theme.text.primary : 'text-gray-500')}>
+                      <Text className={cn('text-lg', form.due_date ? colors.textPrimary : 'text-gray-500')}>
                         {formatDisplayDate(form.due_date)}
                       </Text>
-                      <Ionicons name="calendar" size={20} className={Theme.text.secondary} />
+                      <Ionicons name="calendar" size={20} className={colors.textSecondary} />
                     </TouchableOpacity>
                   </View>
 
                   {/* Points */}
                   <View>
-                    <Text className={cn('text-base font-semibold mb-3', Theme.text.primary)}>
+                    <Text className={cn('text-base font-semibold mb-3', colors.textPrimary)}>
                       Points
                     </Text>
                     <TextInput
                       className={cn(
                         'rounded-2xl p-4 border text-lg',
-                        Theme.border,
-                        Theme.background,
-                        Theme.text.primary
+                        colors.border,
+                        colors.background,
+                        colors.textPrimary
                       )}
                       placeholder="10"
                       keyboardType="numeric"
@@ -514,10 +517,10 @@ export default function CreateHomeworkScreen() {
                   {/* Attachments */}
                   <View className="flex-row justify-between items-center py-2">
                     <View className="flex-1">
-                      <Text className={cn('font-semibold text-lg', Theme.text.primary)}>
+                      <Text className={cn('font-semibold text-lg', colors.textPrimary)}>
                         Allow Attachments
                       </Text>
-                      <Text className={cn('text-sm mt-1', Theme.text.secondary)}>
+                      <Text className={cn('text-sm mt-1', colors.textSecondary)}>
                         Students can upload files with their submission
                       </Text>
                     </View>
@@ -565,17 +568,17 @@ export default function CreateHomeworkScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowClassModal(false)}
       >
-        <View className={cn('flex-1', Theme.background)}>
-          <View className={cn('px-6 pt-8 pb-6 border-b', Theme.background, Theme.border)}>
+        <View className={cn('flex-1', colors.background)}>
+          <View className={cn('px-6 pt-8 pb-6 border-b', colors.background, colors.border)}>
             <View className="flex-row items-center justify-between mb-4">
-              <Text className={cn('text-2xl font-bold', Theme.text.primary)}>
+              <Text className={cn('text-2xl font-bold', colors.textPrimary)}>
                 Select Class
               </Text>
               <TouchableOpacity 
                 onPress={() => setShowClassModal(false)}
                 className="w-10 h-10 rounded-full items-center justify-center bg-gray-100 dark:bg-gray-800"
               >
-                <Ionicons name="close" size={20} className={Theme.text.secondary} />
+                <Ionicons name="close" size={20} className={colors.textSecondary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -587,8 +590,8 @@ export default function CreateHomeworkScreen() {
                   key={classItem.class_id}
                   className={cn(
                     'p-4 rounded-2xl border flex-row items-center justify-between',
-                    form.class_id === classItem.class_id ? 'bg-blue-50 border-blue-200' : Theme.elevated,
-                    Theme.border
+                    form.class_id === classItem.class_id ? 'bg-blue-50 border-blue-200' : colors.backgroundElevated,
+                    colors.border
                   )}
                   onPress={() => {
                     setForm({
@@ -602,10 +605,10 @@ export default function CreateHomeworkScreen() {
                   }}
                 >
                   <View className="flex-1">
-                    <Text className={cn('text-lg font-semibold', Theme.text.primary)}>
+                    <Text className={cn('text-lg font-semibold', colors.textPrimary)}>
                       {classItem.class_name}
                     </Text>
-                    <Text className={cn('text-sm', Theme.text.secondary)}>
+                    <Text className={cn('text-sm', colors.textSecondary)}>
                       {classItem.level?.name} • {classItem.subjects?.length || 0} subject{classItem.subjects?.length !== 1 ? 's' : ''}
                     </Text>
                   </View>
@@ -626,17 +629,17 @@ export default function CreateHomeworkScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowSubjectModal(false)}
       >
-        <View className={cn('flex-1', Theme.background)}>
-          <View className={cn('px-6 pt-8 pb-6 border-b', Theme.background, Theme.border)}>
+        <View className={cn('flex-1', colors.background)}>
+          <View className={cn('px-6 pt-8 pb-6 border-b', colors.background, colors.border)}>
             <View className="flex-row items-center justify-between mb-4">
-              <Text className={cn('text-2xl font-bold', Theme.text.primary)}>
+              <Text className={cn('text-2xl font-bold', colors.textPrimary)}>
                 Select Subject
               </Text>
               <TouchableOpacity 
                 onPress={() => setShowSubjectModal(false)}
                 className="w-10 h-10 rounded-full items-center justify-center bg-gray-100 dark:bg-gray-800"
               >
-                <Ionicons name="close" size={20} className={Theme.text.secondary} />
+                <Ionicons name="close" size={20} className={colors.textSecondary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -648,8 +651,8 @@ export default function CreateHomeworkScreen() {
                   key={subject.id}
                   className={cn(
                     'p-4 rounded-2xl border flex-row items-center justify-between',
-                    form.subject_id === subject.id ? 'bg-blue-50 border-blue-200' : Theme.elevated,
-                    Theme.border
+                    form.subject_id === subject.id ? 'bg-blue-50 border-blue-200' : colors.backgroundElevated,
+                    colors.border
                   )}
                   onPress={() => {
                     setForm({
@@ -661,10 +664,10 @@ export default function CreateHomeworkScreen() {
                   }}
                 >
                   <View className="flex-1">
-                    <Text className={cn('text-lg font-semibold', Theme.text.primary)}>
+                    <Text className={cn('text-lg font-semibold', colors.textPrimary)}>
                       {subject.name}
                     </Text>
-                    <Text className={cn('text-sm', Theme.text.secondary)}>
+                    <Text className={cn('text-sm', colors.textSecondary)}>
                       Code: {subject.code}
                     </Text>
                   </View>

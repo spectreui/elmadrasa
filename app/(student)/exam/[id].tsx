@@ -11,8 +11,9 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { apiService } from '../../src/services/api';
-import { Exam, Question, ApiResponse } from '../../src/types';
+import { apiService } from '../../../src/services/api';
+import { Exam, Question, ApiResponse } from '..../../src/types';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 interface ExamDetails extends Exam {
   questions: Question[];
@@ -35,6 +36,7 @@ export default function StudentExamScreen() {
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [hasTaken, setHasTaken] = useState(false);
+  const [examStatus, setExamStatus] = useState<'available' | 'taken' | 'upcoming' | 'missed'>('available');
 
   useEffect(() => {
     loadExamData();
@@ -49,9 +51,24 @@ export default function StudentExamScreen() {
       if (response.data.data && response.data.success) {
         setExam(response.data.data);
         
+        // Check exam status based on due date
+        const examData = response.data.data;
+        if (examData.due_date) {
+          const now = new Date();
+          const dueDate = new Date(examData.due_date);
+          
+          if (dueDate < now) {
+            setExamStatus('missed');
+          } else {
+            setExamStatus('available');
+          }
+        } else {
+          setExamStatus('available');
+        }
+        
         // Initialize timer if exam is timed
-        if (response.data.data.settings?.timed) {
-          setTimeLeft(response.data.data.settings.duration * 60); // Convert to seconds
+        if (examData.settings?.timed) {
+          setTimeLeft(examData.settings.duration * 60); // Convert to seconds
         }
       }
     } catch (error: any) {
@@ -66,6 +83,9 @@ export default function StudentExamScreen() {
     try {
       const taken = await apiService.checkExamTaken(examId!);
       setHasTaken(taken);
+      if (taken) {
+        setExamStatus('taken');
+      }
     } catch (error) {
       console.error('Failed to check exam status:', error);
     }
@@ -150,7 +170,7 @@ export default function StudentExamScreen() {
       // ✅ Direct navigation without Alert
       console.log('🎯 Navigating directly to results page...');
       router.push({
-        pathname: '/exam-results',
+        pathname: '/exam/results/' + examId,
         params: { 
           submissionId: submissionData.submission?.id,
           examId: examId,
@@ -205,6 +225,9 @@ export default function StudentExamScreen() {
     );
   }
 
+  // Check if exam is missed (past due date and not taken)
+  const isMissed = examStatus === 'missed' && !hasTaken;
+
   if (hasTaken) {
     return (
       <SafeAreaView style={styles.container}>
@@ -212,6 +235,49 @@ export default function StudentExamScreen() {
           <Text style={styles.errorText}>Exam Already Taken</Text>
           <Text style={styles.subtitle}>
             You have already completed this exam.
+          </Text>
+          <TouchableOpacity 
+            style={styles.button}
+            onPress={() => router.push('/exams')}
+          >
+            <Text style={styles.buttonText}>Back to Exams</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (isMissed) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Exam Not Available</Text>
+          <Text style={styles.subtitle}>
+            The due date for this exam has passed.
+          </Text>
+          <TouchableOpacity 
+            style={styles.button}
+            onPress={() => router.push('/exams')}
+          >
+            <Text style={styles.buttonText}>Back to Exams</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Check if exam is upcoming (future due date)
+  const isUpcoming = examStatus === 'upcoming';
+  if (isUpcoming) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Exam Not Available Yet</Text>
+          <Text style={styles.subtitle}>
+            This exam is scheduled for a future date.
+          </Text>
+          <Text style={styles.subtitle}>
+            Available on: {new Date(exam.due_date!).toLocaleDateString()}
           </Text>
           <TouchableOpacity 
             style={styles.button}
@@ -264,10 +330,21 @@ export default function StudentExamScreen() {
             </Text>
           </View>
         )}
+        
+        {exam.due_date && (
+          <View style={styles.dueDateContainer}>
+            <Text style={styles.dueDateText}>
+              Due: {new Date(exam.due_date).toLocaleDateString()} at {new Date(exam.due_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Questions */}
-      <ScrollView style={styles.questionsContainer}>
+      <Animated.ScrollView 
+      
+      entering={FadeIn.duration(600)} // Smooth fade-in when screen loads
+      style={styles.questionsContainer}>
         {exam.questions.map((question, index) => (
           <View key={question.id} style={styles.questionCard}>
             <Text style={styles.questionNumber}>
@@ -336,7 +413,7 @@ export default function StudentExamScreen() {
             )}
           </View>
         ))}
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* Submit Button */}
       <View style={styles.footer}>
@@ -456,6 +533,19 @@ const styles = StyleSheet.create({
   settingsText: {
     fontSize: 14,
     color: '#666',
+  },
+  dueDateContainer: {
+    marginTop: 8,
+    padding: 8,
+    backgroundColor: '#FFF9E6',
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF9500',
+  },
+  dueDateText: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
   },
   questionsContainer: {
     flex: 1,

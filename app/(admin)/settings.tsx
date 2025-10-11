@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme, cn } from '../../src/utils/themeUtils';
+import { useThemeContext } from '@/contexts/ThemeContext';
 
 interface Level {
   id: string;
@@ -38,6 +39,7 @@ export default function SettingsPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const { colors } = useThemeContext();
   
   // Form states
   const [levelForm, setLevelForm] = useState({ name: '', short_name: '', description: '' });
@@ -132,7 +134,7 @@ export default function SettingsPage() {
     if (loading) {
       return (
         <View className="items-center justify-center py-12">
-          <Text className={cn('text-lg', Theme.text.primary)}>Loading...</Text>
+          <Text className={cn('text-lg', colors.textPrimary)}>Loading...</Text>
         </View>
       );
     }
@@ -146,12 +148,12 @@ export default function SettingsPage() {
         return (
           <View className="space-y-3">
             {levels.map((level) => (
-              <View key={level.id} className={cn('p-4 rounded-2xl border', Theme.elevated, Theme.border)}>
-                <Text className={cn('text-lg font-semibold', Theme.text.primary)}>
+              <View key={level.id} className={cn('p-4 rounded-2xl border', colors.backgroundElevated, colors.border)}>
+                <Text className={cn('text-lg font-semibold', colors.textPrimary)}>
                   {level.name} ({level.short_name})
                 </Text>
                 {level.description && (
-                  <Text className={cn('text-sm mt-1', Theme.text.secondary)}>
+                  <Text className={cn('text-sm mt-1', colors.textSecondary)}>
                     {level.description}
                   </Text>
                 )}
@@ -164,15 +166,15 @@ export default function SettingsPage() {
         return (
           <View className="space-y-3">
             {classes.map((classItem) => (
-              <View key={classItem.id} className={cn('p-4 rounded-2xl border', Theme.elevated, Theme.border)}>
-                <Text className={cn('text-lg font-semibold', Theme.text.primary)}>
+              <View key={classItem.id} className={cn('p-4 rounded-2xl border', colors.backgroundElevated, colors.border)}>
+                <Text className={cn('text-lg font-semibold', colors.textPrimary)}>
                   {classItem.name}
                 </Text>
-                <Text className={cn('text-sm mt-1', Theme.text.secondary)}>
+                <Text className={cn('text-sm mt-1', colors.textSecondary)}>
                   Grade {classItem.grade} - Section {classItem.section}
                 </Text>
                 {classItem.level && (
-                  <Text className={cn('text-sm', Theme.text.secondary)}>
+                  <Text className={cn('text-sm', colors.textSecondary)}>
                     Level: {classItem.level.name}
                   </Text>
                 )}
@@ -185,17 +187,17 @@ export default function SettingsPage() {
         return (
           <View className="space-y-3">
             {subjects.map((subject) => (
-              <View key={subject.id} className={cn('p-4 rounded-2xl border', Theme.elevated, Theme.border)}>
-                <Text className={cn('text-lg font-semibold', Theme.text.primary)}>
+              <View key={subject.id} className={cn('p-4 rounded-2xl border', colors.backgroundElevated, colors.border)}>
+                <Text className={cn('text-lg font-semibold', colors.textPrimary)}>
                   {subject.name} ({subject.code})
                 </Text>
                 {subject.description && (
-                  <Text className={cn('text-sm mt-1', Theme.text.secondary)}>
+                  <Text className={cn('text-sm mt-1', colors.textSecondary)}>
                     {subject.description}
                   </Text>
                 )}
                 {subject.level && (
-                  <Text className={cn('text-sm', Theme.text.secondary)}>
+                  <Text className={cn('text-sm', colors.textSecondary)}>
                     Level: {subject.level.name}
                   </Text>
                 )}
@@ -210,37 +212,37 @@ export default function SettingsPage() {
     switch (activeTab) {
       case 'levels':
         return (
-          <View className={cn('p-5 rounded-2xl border space-y-4', Theme.elevated, Theme.border)}>
-            <Text className={cn('text-xl font-semibold mb-4', Theme.text.primary)}>
+          <View className={cn('p-5 rounded-2xl border space-y-4', colors.backgroundElevated, colors.border)}>
+            <Text className={cn('text-xl font-semibold mb-4', colors.textPrimary)}>
               Create New Level
             </Text>
             
             <View>
-              <Text className={cn('text-sm font-medium mb-2', Theme.text.primary)}>Name *</Text>
+              <Text className={cn('text-sm font-medium mb-2', colors.textPrimary)}>Name *</Text>
               <TextInput
                 value={levelForm.name}
                 onChangeText={(text) => setLevelForm({ ...levelForm, name: text })}
-                className={cn('p-3 rounded-xl border', Theme.border, Theme.background, Theme.text.primary)}
+                className={cn('p-3 rounded-xl border', colors.border, colors.background, colors.textPrimary)}
                 placeholder="e.g., Primary School"
               />
             </View>
             
             <View>
-              <Text className={cn('text-sm font-medium mb-2', Theme.text.primary)}>Short Name *</Text>
+              <Text className={cn('text-sm font-medium mb-2', colors.textPrimary)}>Short Name *</Text>
               <TextInput
                 value={levelForm.short_name}
                 onChangeText={(text) => setLevelForm({ ...levelForm, short_name: text })}
-                className={cn('p-3 rounded-xl border', Theme.border, Theme.background, Theme.text.primary)}
+                className={cn('p-3 rounded-xl border', colors.border, colors.background, colors.textPrimary)}
                 placeholder="e.g., PRIMARY"
               />
             </View>
             
             <View>
-              <Text className={cn('text-sm font-medium mb-2', Theme.text.primary)}>Description</Text>
+              <Text className={cn('text-sm font-medium mb-2', colors.textPrimary)}>Description</Text>
               <TextInput
                 value={levelForm.description}
                 onChangeText={(text) => setLevelForm({ ...levelForm, description: text })}
-                className={cn('p-3 rounded-xl border', Theme.border, Theme.background, Theme.text.primary)}
+                className={cn('p-3 rounded-xl border', colors.border, colors.background, colors.textPrimary)}
                 placeholder="Optional description"
                 multiline
               />
@@ -251,7 +253,7 @@ export default function SettingsPage() {
                 onPress={() => setShowCreateForm(false)}
                 className="flex-1 px-4 py-3 rounded-xl bg-gray-200 dark:bg-gray-700 items-center"
               >
-                <Text className={cn('font-medium', Theme.text.primary)}>Cancel</Text>
+                <Text className={cn('font-medium', colors.textPrimary)}>Cancel</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -266,23 +268,23 @@ export default function SettingsPage() {
 
       case 'classes':
         return (
-          <View className={cn('p-5 rounded-2xl border space-y-4', Theme.elevated, Theme.border)}>
-            <Text className={cn('text-xl font-semibold mb-4', Theme.text.primary)}>
+          <View className={cn('p-5 rounded-2xl border space-y-4', colors.backgroundElevated, colors.border)}>
+            <Text className={cn('text-xl font-semibold mb-4', colors.textPrimary)}>
               Create New Class
             </Text>
             
             <View>
-              <Text className={cn('text-sm font-medium mb-2', Theme.text.primary)}>Name *</Text>
+              <Text className={cn('text-sm font-medium mb-2', colors.textPrimary)}>Name *</Text>
               <TextInput
                 value={classForm.name}
                 onChangeText={(text) => setClassForm({ ...classForm, name: text })}
-                className={cn('p-3 rounded-xl border', Theme.border, Theme.background, Theme.text.primary)}
+                className={cn('p-3 rounded-xl border', colors.border, colors.background, colors.textPrimary)}
                 placeholder="e.g., 10A"
               />
             </View>
             
             <View>
-              <Text className={cn('text-sm font-medium mb-2', Theme.text.primary)}>Level *</Text>
+              <Text className={cn('text-sm font-medium mb-2', colors.textPrimary)}>Level *</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View className="flex-row space-x-2">
                   {levels.map((level) => (
@@ -291,13 +293,13 @@ export default function SettingsPage() {
                       onPress={() => setClassForm({ ...classForm, level_id: level.id })}
                       className={cn(
                         'px-4 py-2 rounded-full border',
-                        classForm.level_id === level.id ? 'bg-blue-500 border-blue-500' : Theme.border
+                        classForm.level_id === level.id ? 'bg-blue-500 border-blue-500' : colors.border
                       )}
                     >
                       <Text className={
                         classForm.level_id === level.id 
                           ? 'text-white text-sm'
-                          : cn('text-sm', Theme.text.primary)
+                          : cn('text-sm', colors.textPrimary)
                       }>
                         {level.name}
                       </Text>
@@ -309,21 +311,21 @@ export default function SettingsPage() {
             
             <View className="flex-row space-x-3">
               <View className="flex-1">
-                <Text className={cn('text-sm font-medium mb-2', Theme.text.primary)}>Grade *</Text>
+                <Text className={cn('text-sm font-medium mb-2', colors.textPrimary)}>Grade *</Text>
                 <TextInput
                   value={classForm.grade}
                   onChangeText={(text) => setClassForm({ ...classForm, grade: text })}
-                  className={cn('p-3 rounded-xl border', Theme.border, Theme.background, Theme.text.primary)}
+                  className={cn('p-3 rounded-xl border', colors.border, colors.background, colors.textPrimary)}
                   placeholder="e.g., 10"
                 />
               </View>
               
               <View className="flex-1">
-                <Text className={cn('text-sm font-medium mb-2', Theme.text.primary)}>Section *</Text>
+                <Text className={cn('text-sm font-medium mb-2', colors.textPrimary)}>Section *</Text>
                 <TextInput
                   value={classForm.section}
                   onChangeText={(text) => setClassForm({ ...classForm, section: text })}
-                  className={cn('p-3 rounded-xl border', Theme.border, Theme.background, Theme.text.primary)}
+                  className={cn('p-3 rounded-xl border', colors.border, colors.background, colors.textPrimary)}
                   placeholder="e.g., A"
                 />
               </View>
@@ -334,7 +336,7 @@ export default function SettingsPage() {
                 onPress={() => setShowCreateForm(false)}
                 className="flex-1 px-4 py-3 rounded-xl bg-gray-200 dark:bg-gray-700 items-center"
               >
-                <Text className={cn('font-medium', Theme.text.primary)}>Cancel</Text>
+                <Text className={cn('font-medium', colors.textPrimary)}>Cancel</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -349,33 +351,33 @@ export default function SettingsPage() {
 
       case 'subjects':
         return (
-          <View className={cn('p-5 rounded-2xl border space-y-4', Theme.elevated, Theme.border)}>
-            <Text className={cn('text-xl font-semibold mb-4', Theme.text.primary)}>
+          <View className={cn('p-5 rounded-2xl border space-y-4', colors.backgroundElevated, colors.border)}>
+            <Text className={cn('text-xl font-semibold mb-4', colors.textPrimary)}>
               Create New Subject
             </Text>
             
             <View>
-              <Text className={cn('text-sm font-medium mb-2', Theme.text.primary)}>Name *</Text>
+              <Text className={cn('text-sm font-medium mb-2', colors.textPrimary)}>Name *</Text>
               <TextInput
                 value={subjectForm.name}
                 onChangeText={(text) => setSubjectForm({ ...subjectForm, name: text })}
-                className={cn('p-3 rounded-xl border', Theme.border, Theme.background, Theme.text.primary)}
+                className={cn('p-3 rounded-xl border', colors.border, colors.background, colors.textPrimary)}
                 placeholder="e.g., Mathematics"
               />
             </View>
             
             <View>
-              <Text className={cn('text-sm font-medium mb-2', Theme.text.primary)}>Code *</Text>
+              <Text className={cn('text-sm font-medium mb-2', colors.textPrimary)}>Code *</Text>
               <TextInput
                 value={subjectForm.code}
                 onChangeText={(text) => setSubjectForm({ ...subjectForm, code: text })}
-                className={cn('p-3 rounded-xl border', Theme.border, Theme.background, Theme.text.primary)}
+                className={cn('p-3 rounded-xl border', colors.border, colors.background, colors.textPrimary)}
                 placeholder="e.g., MATH"
               />
             </View>
             
             <View>
-              <Text className={cn('text-sm font-medium mb-2', Theme.text.primary)}>Level *</Text>
+              <Text className={cn('text-sm font-medium mb-2', colors.textPrimary)}>Level *</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View className="flex-row space-x-2">
                   {levels.map((level) => (
@@ -384,13 +386,13 @@ export default function SettingsPage() {
                       onPress={() => setSubjectForm({ ...subjectForm, level_id: level.id })}
                       className={cn(
                         'px-4 py-2 rounded-full border',
-                        subjectForm.level_id === level.id ? 'bg-blue-500 border-blue-500' : Theme.border
+                        subjectForm.level_id === level.id ? 'bg-blue-500 border-blue-500' : colors.border
                       )}
                     >
                       <Text className={
                         subjectForm.level_id === level.id 
                           ? 'text-white text-sm'
-                          : cn('text-sm', Theme.text.primary)
+                          : cn('text-sm', colors.textPrimary)
                       }>
                         {level.name}
                       </Text>
@@ -401,11 +403,11 @@ export default function SettingsPage() {
             </View>
             
             <View>
-              <Text className={cn('text-sm font-medium mb-2', Theme.text.primary)}>Description</Text>
+              <Text className={cn('text-sm font-medium mb-2', colors.textPrimary)}>Description</Text>
               <TextInput
                 value={subjectForm.description}
                 onChangeText={(text) => setSubjectForm({ ...subjectForm, description: text })}
-                className={cn('p-3 rounded-xl border', Theme.border, Theme.background, Theme.text.primary)}
+                className={cn('p-3 rounded-xl border', colors.border, colors.background, colors.textPrimary)}
                 placeholder="Optional description"
                 multiline
               />
@@ -416,7 +418,7 @@ export default function SettingsPage() {
                 onPress={() => setShowCreateForm(false)}
                 className="flex-1 px-4 py-3 rounded-xl bg-gray-200 dark:bg-gray-700 items-center"
               >
-                <Text className={cn('font-medium', Theme.text.primary)}>Cancel</Text>
+                <Text className={cn('font-medium', colors.textPrimary)}>Cancel</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -432,15 +434,15 @@ export default function SettingsPage() {
   };
 
   return (
-    <View className={cn('flex-1', Theme.background)}>
+    <View className={cn('flex-1', colors.background)}>
       {/* Header */}
-      <View className={cn('px-6 pt-12 pb-6 border-b', Theme.background, Theme.border)}>
+      <View className={cn('px-6 pt-12 pb-6 border-b', colors.background, colors.border)}>
         <View className="flex-row items-center justify-between mb-4">
           <View>
-            <Text className={cn('text-3xl font-bold tracking-tight', Theme.text.primary)}>
+            <Text className={cn('text-3xl font-bold tracking-tight', colors.textPrimary)}>
               System Settings
             </Text>
-            <Text className={cn('text-lg opacity-70 mt-1', Theme.text.secondary)}>
+            <Text className={cn('text-lg opacity-70 mt-1', colors.textSecondary)}>
               Manage school structure and configuration
             </Text>
           </View>
@@ -457,13 +459,13 @@ export default function SettingsPage() {
               }}
               className={cn(
                 'px-4 py-2 rounded-full border',
-                activeTab === tab ? 'bg-blue-500 border-blue-500' : Theme.border
+                activeTab === tab ? 'bg-blue-500 border-blue-500' : colors.border
               )}
             >
               <Text className={
                 activeTab === tab 
                   ? 'text-white font-medium text-sm'
-                  : cn('font-medium text-sm', Theme.text.primary)
+                  : cn('font-medium text-sm', colors.textPrimary)
               }>
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </Text>
@@ -477,7 +479,7 @@ export default function SettingsPage() {
         {!showCreateForm && (
           <TouchableOpacity
             onPress={() => setShowCreateForm(true)}
-            className={cn('p-4 rounded-2xl border mb-6 flex-row items-center justify-center space-x-2', Theme.elevated, Theme.border)}
+            className={cn('p-4 rounded-2xl border mb-6 flex-row items-center justify-center space-x-2', colors.backgroundElevated, colors.border)}
           >
             <Ionicons name="add" size={20} className="text-blue-500" />
             <Text className="text-blue-500 font-semibold text-lg">

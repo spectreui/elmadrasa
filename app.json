@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Elmadrasa",
-    "slug": "elmadrasa-app",
+    "slug": "school-app",
     "scheme": "elmadrasaapp",
     "userInterfaceStyle": "automatic",
     "plugins": [
@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "com.webeleavte.elmadrasa",
-      "versionCode": 20,
+      "versionCode": 27,
       "jsEngine": "hermes"
     },
     "ios": {

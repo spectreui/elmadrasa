@@ -3,8 +3,8 @@ import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { LoginRequest, AuthResponse, ApiResponse, User, Exam } from "../types";
 import { storage } from "../utils/storage";
 
-// const API_BASE_URL = "http://192.168.1.228:5001/api";
-const API_BASE_URL = "https://elmadrasa-server.vercel.app/api";
+const API_BASE_URL = "http://192.168.1.228:5001/api";
+// const API_BASE_URL = "https://elmadrasa-server.vercel.app/api";
 
 class ApiService {
   private api: AxiosInstance;
@@ -289,7 +289,7 @@ class ApiService {
   }
 
   public async getTeacherProfileStats(): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.get("/teachers/profile/stats");
+    return this.api.get("/teachers/profile-stats");
   }
 
   public async updateTeacherProfile(profileData: any): Promise<AxiosResponse<ApiResponse<any>>> {
@@ -494,17 +494,46 @@ class ApiService {
     return this.api.get(url);
   }
 
-  async getClasses(levelId?: string): Promise<AxiosResponse<ApiResponse<any[]>>> {
-    const url = levelId ? `/admin/classes?level_id=${levelId}` : "/admin/classes";
-    return this.api.get(url);
+  // Make sure your apiService.getClasses() method looks like this:
+getClasses = async () => {
+  try {
+    const response = await this.api.get('/admin/classes');
+    console.log('📡 Raw API response:', response); // Debug log
+    return response; // Return the full response object
+  } catch (error) {
+    throw error;
   }
+};
+
+  async getGradesByLevel(levelId?: string) {
+    const params = levelId ? { level_id: levelId } : {};
+    const response = await this.api.get('/admin/grades', { params });
+    return response.data;
+  }
+
+  // In your api service file
+getClassesByGrade = async (grade: string, levelId: string) => {
+  try {
+    const response = await this.api.get('/admin/classes', {
+      params: { 
+        grade: grade,
+        level_id: levelId  // Make sure both parameters are sent
+      }
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 
   async getTeacherAssignments(): Promise<AxiosResponse<ApiResponse<any[]>>> {
     return this.api.get("/admin/teacher-assignments");
   }
 
-  async getLevels(): Promise<AxiosResponse<ApiResponse<any[]>>> {
-    return this.api.get("/admin/levels");
+  async getLevels() {
+    const response = await this.api.get('/admin/levels');
+    return response.data;
   }
 
   // src/services/api.ts - Add this method
@@ -547,30 +576,30 @@ class ApiService {
 
   // src/services/api.ts - Add these methods if missing
 
-// Teacher homework methods
-async getTeacherHomework(): Promise<AxiosResponse<ApiResponse<any>>> {
-  return this.api.get("/homework/teacher/all");
-}
+  // Teacher homework methods
+  async getTeacherHomework(): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.get("/homework/teacher/all");
+  }
 
-async getHomeworkSubmissions(homeworkId: string): Promise<AxiosResponse<ApiResponse<any>>> {
-  return this.api.get(`/homework/${homeworkId}/submissions`);
-}
+  async getHomeworkSubmissions(homeworkId: string): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.get(`/homework/${homeworkId}/submissions`);
+  }
 
-async gradeSubmission(submissionId: string, grade: number, feedback?: string): Promise<AxiosResponse<ApiResponse<any>>> {
-  return this.api.post(`/homework/submissions/${submissionId}/grade`, { 
-    grade, 
-    feedback 
-  });
-}
+  async gradeSubmission(submissionId: string, grade: number, feedback?: string): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.post(`/homework/submissions/${submissionId}/grade`, {
+      grade,
+      feedback
+    });
+  }
 
-// In api.ts - ensure these methods exist
-async updateUserProfile(userId: string, data: any): Promise<AxiosResponse<ApiResponse<any>>> {
-  return this.api.put(`/users/${userId}/profile`, data);
-}
+  // In api.ts - ensure these methods exist
+  async updateUserProfile(userId: string, data: any): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.put(`/users/${userId}/profile`, data);
+  }
 
-async updateStudentClass(studentId: string, className: string): Promise<AxiosResponse<ApiResponse<any>>> {
-  return this.api.put(`/admin/students/${studentId}/class`, { class_name: className });
-}
+  async updateStudentClass(studentId: string, className: string): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.put(`/admin/students/${studentId}/class`, { class_name: className });
+  }
 }
 
 export const apiService = new ApiService();

@@ -4,6 +4,7 @@ export interface User {
   email: string;
   role: 'student' | 'teacher' | 'admin';
   student_id?: string;
+  teacher_id?: string;
   is_approved: boolean;
   profile: UserProfile;
   created_at: string;
@@ -86,6 +87,7 @@ export interface Exam {
   description?: string;
   subject: string;
   class: string;
+  due_date: string;
   teacher_id: string;
   settings: ExamSettings;
   is_active: boolean;
@@ -222,6 +224,13 @@ export interface TeacherDashboardStats {
   averageScore: number;
   pendingGrading: number;
   classesCount: number;
+  subjectsCount: number;
+  performanceTrends: PerformanceTrend[];
+  totalExams?: number; // Add this for total exams if needed
+  totalSubmissions?: number; // Add this for total submissions if needed
+  recentActivity?: RecentActivity[]; // Add this for recent activities if needed
+  studentEngagement?: number; // Add this for student engagement if needed
+  responseTime?: string; // Add this for average response time if needed
 }
 
 export interface RecentActivity {

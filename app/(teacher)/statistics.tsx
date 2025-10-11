@@ -1,10 +1,12 @@
-// app/(teacher)/statistics.tsx
+// app/(teacher)/statistics.tsx - Updated with Full Dark Mode Support
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { ClassStats, PerformanceTrend } from '../../src/types'; // Fixed import
+import { useThemeContext } from '@/contexts/ThemeContext';
+import { designTokens } from '../../src/utils/designTokens';
+import { ClassStats, PerformanceTrend } from '../../src/types';
 
 interface StatisticsData {
   classStats: ClassStats[];
@@ -27,6 +29,7 @@ export default function StatisticsScreen() {
   });
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
   const [loading, setLoading] = useState(true);
+  const { colors } = useThemeContext();
 
   useEffect(() => {
     loadStatistics();
@@ -49,7 +52,6 @@ export default function StatisticsScreen() {
           pendingGrading: data.pendingGrading || 0
         });
       } else {
-        // Set empty data instead of mock data
         setClassStats([]);
         setPerformanceTrend([]);
         setQuickStats({
@@ -62,7 +64,6 @@ export default function StatisticsScreen() {
 
     } catch (error) {
       console.error('Failed to load statistics:', error);
-      // Set empty data on error
       setClassStats([]);
       setPerformanceTrend([]);
       setQuickStats({
@@ -77,10 +78,10 @@ export default function StatisticsScreen() {
   };
 
   const getImprovementColor = (improvement: number | undefined) => {
-    if (!improvement) return 'text-slate-600';
-    if (improvement > 0) return 'text-green-600';
-    if (improvement < 0) return 'text-red-600';
-    return 'text-slate-600';
+    if (!improvement) return colors.textSecondary;
+    if (improvement > 0) return colors.success;
+    if (improvement < 0) return colors.error;
+    return colors.textSecondary;
   };
 
   const getImprovementIcon = (improvement: number | undefined) => {
@@ -96,20 +97,23 @@ export default function StatisticsScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-slate-50">
-        <ActivityIndicator size="large" color="#0f172a" />
-        <Text className="text-slate-600 mt-4 text-base">Loading analytics...</Text>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading analytics...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView className="flex-1 bg-slate-50" showsVerticalScrollIndicator={false}>
-      <View className="p-6">
-        <Text className="text-3xl font-bold text-slate-900 mb-6">Analytics</Text>
+    <ScrollView 
+      style={[styles.container, { backgroundColor: colors.background }]}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.content}>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Analytics</Text>
 
         {/* Period Selector */}
-        <View className="flex-row bg-slate-100 rounded-lg p-1 mb-6">
+        <View style={[styles.periodSelector, { backgroundColor: colors.background }]}>
           {[
             { key: 'week', label: 'This Week' },
             { key: 'month', label: 'This Month' },
@@ -117,15 +121,21 @@ export default function StatisticsScreen() {
           ].map((period) => (
             <TouchableOpacity
               key={period.key}
-              className={`flex-1 py-2 rounded-md ${
-                selectedPeriod === period.key ? 'bg-white dark:bg-gray-800 shadow-sm' : ''
-              }`}
+              style={[
+                styles.periodButton,
+                selectedPeriod === period.key 
+                  ? { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm } 
+                  : {}
+              ]}
               onPress={() => setSelectedPeriod(period.key as any)}
             >
               <Text 
-                className={`text-center text-sm font-medium ${
-                  selectedPeriod === period.key ? 'text-slate-900' : 'text-slate-600'
-                }`}
+                style={[
+                  styles.periodText,
+                  selectedPeriod === period.key 
+                    ? { color: colors.primary } 
+                    : { color: colors.textSecondary }
+                ]}
               >
                 {period.label}
               </Text>
@@ -134,47 +144,54 @@ export default function StatisticsScreen() {
         </View>
 
         {/* Class Performance */}
-        <View className="mb-8">
-          <Text className="text-xl font-semibold text-slate-900 mb-4">Class Performance</Text>
-          <View className="space-y-4">
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Class Performance</Text>
+          <View style={styles.classStatsList}>
             {classStats.length > 0 ? (
               classStats.map((stats, index) => (
-                <View key={stats.id || index} className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-slate-200 shadow-sm">
-                  <View className="flex-row justify-between items-start mb-3">
-                    <Text className="text-lg font-semibold text-slate-900">{stats.className}</Text>
-                    <View className="flex-row items-center">
+                <View 
+                  key={stats.id || index} 
+                  style={[styles.classStatCard, { 
+                    backgroundColor: colors.backgroundElevated,
+                    borderColor: colors.border,
+                    ...designTokens.shadows.sm
+                  }]}
+                >
+                  <View style={styles.classStatHeader}>
+                    <Text style={[styles.className, { color: colors.textPrimary }]}>{stats.className}</Text>
+                    <View style={styles.improvementContainer}>
                       <Ionicons 
                         name={getImprovementIcon(stats.improvement) as any} 
                         size={16} 
-                        color={stats.improvement && stats.improvement > 0 ? '#10b981' : '#ef4444'} 
+                        color={getImprovementColor(stats.improvement)} 
                       />
-                      <Text className={`text-sm font-medium ml-1 ${getImprovementColor(stats.improvement)}`}>
+                      <Text style={[styles.improvementText, { color: getImprovementColor(stats.improvement) }]}>
                         {getImprovementValue(stats.improvement)}
                       </Text>
                     </View>
                   </View>
 
-                  <View className="grid grid-cols-3 gap-4">
-                    <View className="items-center">
-                      <Text className="text-2xl font-bold text-slate-900">{stats.averageScore}%</Text>
-                      <Text className="text-slate-500 text-xs">Avg. Score</Text>
+                  <View style={styles.statsGrid}>
+                    <View style={styles.statItem}>
+                      <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.averageScore}%</Text>
+                      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Avg. Score</Text>
                     </View>
-                    <View className="items-center">
-                      <Text className="text-2xl font-bold text-slate-900">{stats.studentCount}</Text>
-                      <Text className="text-slate-500 text-xs">Students</Text>
+                    <View style={styles.statItem}>
+                      <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.studentCount}</Text>
+                      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Students</Text>
                     </View>
-                    <View className="items-center">
-                      <Text className="text-2xl font-bold text-slate-900">{stats.completedExams}</Text>
-                      <Text className="text-slate-500 text-xs">Exams</Text>
+                    <View style={styles.statItem}>
+                      <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.completedExams}</Text>
+                      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Exams</Text>
                     </View>
                   </View>
                 </View>
               ))
             ) : (
-              <View className="bg-white dark:bg-gray-800 rounded-xl p-8 border border-slate-200 shadow-sm items-center">
-                <Ionicons name="stats-chart" size={48} color="#cbd5e1" />
-                <Text className="text-slate-500 text-lg font-medium mt-4">No class data available</Text>
-                <Text className="text-slate-400 text-sm text-center mt-2">
+              <View style={[styles.emptyState, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                <Ionicons name="stats-chart" size={48} color={colors.textTertiary} />
+                <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>No class data available</Text>
+                <Text style={[styles.emptySubtitle, { color: colors.textTertiary }]}>
                   Class performance data will appear here once available
                 </Text>
               </View>
@@ -183,35 +200,38 @@ export default function StatisticsScreen() {
         </View>
 
         {/* Performance Trend */}
-        <View className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-slate-200 shadow-sm mb-6">
-          <Text className="text-xl font-semibold text-slate-900 mb-4">Performance Trend</Text>
+        <View style={[styles.trendCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Performance Trend</Text>
           
           {performanceTrend.length > 0 ? (
-            <View className="space-y-3">
+            <View style={styles.trendList}>
               {performanceTrend.map((trend, index) => (
-                <View key={index} className="flex-row items-center justify-between">
-                  <Text className="text-slate-700 font-medium w-12">{trend.month}</Text>
+                <View key={index} style={styles.trendItem}>
+                  <Text style={[styles.trendMonth, { color: colors.textPrimary }]}>{trend.month}</Text>
                   
-                  <View className="flex-1 mx-4">
-                    <View className="w-full bg-slate-100 rounded-full h-2">
-                      <View 
-                        className="h-2 rounded-full bg-blue-500"
-                        style={{ width: `${(trend.averageScore / 100) * 100}%` }}
-                      />
-                    </View>
+                  <View style={[styles.trendBar, { backgroundColor: colors.background }]}>
+                    <View 
+                      style={[
+                        styles.trendFill,
+                        { 
+                          backgroundColor: colors.primary,
+                          width: `${(trend.averageScore / 100) * 100}%` 
+                        }
+                      ]}
+                    />
                   </View>
                   
-                  <View className="flex-row items-center w-20 justify-end">
-                    <Text className="text-slate-900 font-semibold">{trend.averageScore}%</Text>
+                  <View style={styles.trendScore}>
+                    <Text style={[styles.trendValue, { color: colors.textPrimary }]}>{trend.averageScore}%</Text>
                   </View>
                 </View>
               ))}
             </View>
           ) : (
-            <View className="items-center py-8">
-              <Ionicons name="trending-up" size={48} color="#cbd5e1" />
-              <Text className="text-slate-500 text-base font-medium mt-4">No trend data available</Text>
-              <Text className="text-slate-400 text-sm text-center mt-2">
+            <View style={styles.emptyState}>
+              <Ionicons name="trending-up" size={48} color={colors.textTertiary} />
+              <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>No trend data available</Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textTertiary }]}>
                 Performance trends will appear here once available
               </Text>
             </View>
@@ -219,25 +239,191 @@ export default function StatisticsScreen() {
         </View>
 
         {/* Quick Stats */}
-        <View className="grid grid-cols-2 gap-4">
-          <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-slate-200 shadow-sm">
-            <Text className="text-slate-500 text-sm font-medium mb-1">Total Exams</Text>
-            <Text className="text-2xl font-bold text-slate-900">{quickStats.totalExams}</Text>
+        <View style={styles.quickStatsGrid}>
+          <View style={[styles.quickStatCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+            <Text style={[styles.quickStatLabel, { color: colors.textSecondary }]}>Total Exams</Text>
+            <Text style={[styles.quickStatValue, { color: colors.textPrimary }]}>{quickStats.totalExams}</Text>
           </View>
-          <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-slate-200 shadow-sm">
-            <Text className="text-slate-500 text-sm font-medium mb-1">Avg. Completion</Text>
-            <Text className="text-2xl font-bold text-slate-900">{quickStats.avgCompletion}%</Text>
+          <View style={[styles.quickStatCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+            <Text style={[styles.quickStatLabel, { color: colors.textSecondary }]}>Avg. Completion</Text>
+            <Text style={[styles.quickStatValue, { color: colors.textPrimary }]}>{quickStats.avgCompletion}%</Text>
           </View>
-          <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-slate-200 shadow-sm">
-            <Text className="text-slate-500 text-sm font-medium mb-1">Active Students</Text>
-            <Text className="text-2xl font-bold text-slate-900">{quickStats.activeStudents}</Text>
+          <View style={[styles.quickStatCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+            <Text style={[styles.quickStatLabel, { color: colors.textSecondary }]}>Active Students</Text>
+            <Text style={[styles.quickStatValue, { color: colors.textPrimary }]}>{quickStats.activeStudents}</Text>
           </View>
-          <View className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-slate-200 shadow-sm">
-            <Text className="text-slate-500 text-sm font-medium mb-1">Pending Grading</Text>
-            <Text className="text-2xl font-bold text-slate-900">{quickStats.pendingGrading}</Text>
+          <View style={[styles.quickStatCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+            <Text style={[styles.quickStatLabel, { color: colors.textSecondary }]}>Pending Grading</Text>
+            <Text style={[styles.quickStatValue, { color: colors.textPrimary }]}>{quickStats.pendingGrading}</Text>
           </View>
         </View>
       </View>
     </ScrollView>
   );
 }
+
+const styles = {
+  container: {
+    flex: 1,
+  },
+  loadingText: {
+    marginTop: designTokens.spacing.md,
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '500',
+  },
+  content: {
+    padding: designTokens.spacing.xl,
+  },
+  headerTitle: {
+    fontSize: designTokens.typography.title1.fontSize,
+    fontWeight: designTokens.typography.title1.fontWeight as any,
+    marginBottom: designTokens.spacing.xl,
+  },
+  periodSelector: {
+    flexDirection: 'row',
+    borderRadius: designTokens.borderRadius.lg,
+    padding: designTokens.spacing.xs,
+    marginBottom: designTokens.spacing.xl,
+  },
+  periodButton: {
+    flex: 1,
+    paddingVertical: designTokens.spacing.sm,
+    borderRadius: designTokens.borderRadius.md,
+  },
+  periodText: {
+    textAlign: 'center',
+    fontSize: designTokens.typography.caption1.fontSize,
+    fontWeight: '600',
+  },
+  section: {
+    marginBottom: designTokens.spacing.xxl,
+  },
+  sectionTitle: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: designTokens.typography.title3.fontWeight as any,
+    marginBottom: designTokens.spacing.lg,
+  },
+  classStatsList: {
+    gap: designTokens.spacing.md,
+  },
+  classStatCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    borderWidth: 1,
+  },
+  classStatHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: designTokens.spacing.lg,
+  },
+  className: {
+    fontSize: designTokens.typography.headline.fontSize,
+    fontWeight: '600',
+  },
+  improvementContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  improvementText: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    fontWeight: '600',
+    marginLeft: designTokens.spacing.xxs,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: designTokens.typography.title2.fontSize,
+    fontWeight: designTokens.typography.title2.fontWeight as any,
+    marginBottom: designTokens.spacing.xxs,
+  },
+  statLabel: {
+    fontSize: designTokens.typography.caption1.fontSize,
+  },
+  emptyState: {
+    alignItems: 'center',
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.xxxl,
+    borderWidth: 1,
+  },
+  emptyTitle: {
+    fontSize: designTokens.typography.headline.fontSize,
+    fontWeight: '500',
+    marginTop: designTokens.spacing.lg,
+    marginBottom: designTokens.spacing.xs,
+  },
+  emptySubtitle: {
+    fontSize: designTokens.typography.footnote.fontSize,
+    textAlign: 'center',
+  },
+  trendCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    borderWidth: 1,
+    marginBottom: designTokens.spacing.xl,
+    ...designTokens.shadows.sm,
+  },
+  cardTitle: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: designTokens.typography.title3.fontWeight as any,
+    marginBottom: designTokens.spacing.lg,
+  },
+  trendList: {
+    gap: designTokens.spacing.md,
+  },
+  trendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  trendMonth: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    fontWeight: '500',
+    width: 40,
+  },
+  trendBar: {
+    flex: 1,
+    height: 8,
+    borderRadius: designTokens.borderRadius.full,
+    marginHorizontal: designTokens.spacing.md,
+    overflow: 'hidden',
+  },
+  trendFill: {
+    height: '100%',
+    borderRadius: designTokens.borderRadius.full,
+  },
+  trendScore: {
+    width: 60,
+    alignItems: 'flex-end',
+  },
+  trendValue: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    fontWeight: '600',
+  },
+  quickStatsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: designTokens.spacing.md,
+  },
+  quickStatCard: {
+    flex: 1,
+    minWidth: '48%',
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    borderWidth: 1,
+    ...designTokens.shadows.sm,
+  },
+  quickStatLabel: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    fontWeight: '500',
+    marginBottom: designTokens.spacing.xs,
+  },
+  quickStatValue: {
+    fontSize: designTokens.typography.title2.fontSize,
+    fontWeight: designTokens.typography.title2.fontWeight as any,
+  },
+};

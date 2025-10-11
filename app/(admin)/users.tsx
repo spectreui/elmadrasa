@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme, cn } from '../../src/utils/themeUtils';
+import { useThemeContext } from '@/contexts/ThemeContext';
 
 interface User {
   id: string;
@@ -25,6 +26,7 @@ export default function UsersManagement() {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'student' | 'teacher'>('all');
+  const { colors } = useThemeContext();
 
   useEffect(() => {
     loadUsers();
@@ -120,13 +122,13 @@ export default function UsersManagement() {
   };
 
   const UserCard = ({ user }: { user: User }) => (
-    <View className={cn('p-5 rounded-2xl border mb-3', Theme.elevated, Theme.border)}>
+    <View className={cn('p-5 rounded-2xl border mb-3', colors.backgroundElevated, colors.border)}>
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1">
-          <Text className={cn('text-lg font-semibold mb-1', Theme.text.primary)}>
+          <Text className={cn('text-lg font-semibold mb-1', colors.textPrimary)}>
             {user.profile?.name || 'No Name'}
           </Text>
-          <Text className={cn('text-sm mb-1', Theme.text.secondary)}>
+          <Text className={cn('text-sm mb-1', colors.textSecondary)}>
             {user.email}
           </Text>
           <View className="flex-row items-center space-x-3 mt-2">
@@ -154,7 +156,7 @@ export default function UsersManagement() {
             </View>
           </View>
           {user.profile?.class && (
-            <Text className={cn('text-sm mt-2', Theme.text.secondary)}>
+            <Text className={cn('text-sm mt-2', colors.textSecondary)}>
               Class: {user.profile.class}
             </Text>
           )}
@@ -178,7 +180,7 @@ export default function UsersManagement() {
         </View>
       </View>
       
-      <Text className={cn('text-xs', Theme.text.secondary)}>
+      <Text className={cn('text-xs', colors.textSecondary)}>
         Joined: {new Date(user.created_at).toLocaleDateString()}
       </Text>
     </View>
@@ -186,22 +188,22 @@ export default function UsersManagement() {
 
   if (loading) {
     return (
-      <View className={cn('flex-1 items-center justify-center', Theme.background)}>
-        <Text className={cn('text-lg', Theme.text.primary)}>Loading users...</Text>
+      <View className={cn('flex-1 items-center justify-center', colors.background)}>
+        <Text className={cn('text-lg', colors.textPrimary)}>Loading users...</Text>
       </View>
     );
   }
 
   return (
-    <View className={cn('flex-1', Theme.background)}>
+    <View className={cn('flex-1', colors.background)}>
       {/* Header */}
-      <View className={cn('px-6 pt-12 pb-6 border-b', Theme.background, Theme.border)}>
+      <View className={cn('px-6 pt-12 pb-6 border-b', colors.background, colors.border)}>
         <View className="flex-row items-center justify-between mb-4">
           <View>
-            <Text className={cn('text-3xl font-bold tracking-tight', Theme.text.primary)}>
+            <Text className={cn('text-3xl font-bold tracking-tight', colors.textPrimary)}>
               User Management
             </Text>
-            <Text className={cn('text-lg opacity-70 mt-1', Theme.text.secondary)}>
+            <Text className={cn('text-lg opacity-70 mt-1', colors.textSecondary)}>
               Manage students and teachers
             </Text>
           </View>
@@ -215,9 +217,9 @@ export default function UsersManagement() {
             onChangeText={setSearchQuery}
             className={cn(
               'w-full px-4 py-3 rounded-2xl border text-base',
-              Theme.border,
-              Theme.background,
-              Theme.text.primary
+              colors.border,
+              colors.background,
+              colors.textPrimary
             )}
             placeholderTextColor="#9CA3AF"
           />
@@ -231,13 +233,13 @@ export default function UsersManagement() {
                   'px-4 mx-1 py-2 rounded-full border',
                   roleFilter === role 
                     ? 'bg-blue-500 border-blue-500' 
-                    : Theme.border
+                    : colors.border
                 )}
               >
                 <Text className={
                   roleFilter === role 
                     ? 'text-white font-medium text-sm'
-                    : cn('font-medium text-sm', Theme.text.primary)
+                    : cn('font-medium text-sm', colors.textPrimary)
                 }>
                   {role === 'all' ? 'All' : role.charAt(0).toUpperCase() + role.slice(1)}s
                 </Text>
@@ -254,12 +256,12 @@ export default function UsersManagement() {
         }
       >
         {filteredUsers.length === 0 ? (
-          <View className={cn('items-center justify-center py-12', Theme.background)}>
+          <View className={cn('items-center justify-center py-12', colors.background)}>
             <Ionicons name="people-outline" size={64} className="opacity-30 mb-4" />
-            <Text className={cn('text-lg font-medium mb-2', Theme.text.primary)}>
+            <Text className={cn('text-lg font-medium mb-2', colors.textPrimary)}>
               No users found
             </Text>
-            <Text className={cn('text-center opacity-70', Theme.text.secondary)}>
+            <Text className={cn('text-center opacity-70', colors.textSecondary)}>
               {searchQuery || roleFilter !== 'all' 
                 ? 'Try adjusting your search or filters'
                 : 'No users registered yet'
@@ -268,7 +270,7 @@ export default function UsersManagement() {
           </View>
         ) : (
           <View>
-            <Text className={cn('text-sm font-medium mb-4', Theme.text.secondary)}>
+            <Text className={cn('text-sm font-medium mb-4', colors.textSecondary)}>
               {filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''} found
             </Text>
             

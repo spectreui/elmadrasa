@@ -1,17 +1,19 @@
-// app/(teacher)/my-classes.tsx
+// app/(teacher)/my-classes.tsx - Updated with Full Dark Mode Support
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { Theme, cn } from '../../src/utils/themeUtils';
 import * as Clipboard from 'expo-clipboard';
+import { useThemeContext } from '@/contexts/ThemeContext';
+import { designTokens } from '../../src/utils/designTokens';
 
 export default function MyClassesScreen() {
   const { user } = useAuth();
   const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
   const [joinCodes, setJoinCodes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { colors } = useThemeContext();
 
   useEffect(() => {
     loadTeacherClasses();
@@ -24,9 +26,6 @@ export default function MyClassesScreen() {
         apiService.getTeacherJoinCodes(),
       ]);
 
-      console.log('📚 Teacher Classes:', classesRes.data.data);
-      console.log('🔑 Join Codes:', codesRes.data.data);
-
       setTeacherClasses(classesRes.data.data || []);
       setJoinCodes(codesRes.data.data || []);
     } catch (error) {
@@ -38,25 +37,14 @@ export default function MyClassesScreen() {
 
   const getJoinCodeForClassSubject = (classId: string, subjectId: string) => {
     const foundCode = joinCodes.find(code => {
-      console.log('🔍 Searching for:', { classId, subjectId });
-      console.log('🔍 Checking code:', { 
-        codeClassId: code.class_id, 
-        codeSubjectId: code.subject_id,
-        codeValue: code.code || code.join_code 
-      });
       return code.class_id === classId && code.subject_id === subjectId;
     });
     
-    console.log('✅ Found join code:', foundCode);
     return foundCode;
   };
 
   const copyJoinCode = async (joinCodeData: any) => {
     try {
-      // Debug the join code data structure
-      console.log('📋 Join code data to copy:', joinCodeData);
-      
-      // Try different possible property names
       const codeToCopy = joinCodeData.code || joinCodeData.join_code || joinCodeData;
       
       if (!codeToCopy) {
@@ -64,8 +52,6 @@ export default function MyClassesScreen() {
         return;
       }
 
-      console.log('📋 Copying code:', codeToCopy);
-      
       await Clipboard.setStringAsync(codeToCopy);
       Alert.alert(
         'Join Code Copied!', 
@@ -80,89 +66,75 @@ export default function MyClassesScreen() {
 
   if (loading) {
     return (
-      <View className={cn('flex-1 justify-center items-center', Theme.background)}>
-        <Text className={cn('text-lg', Theme.text.secondary)}>Loading your classes...</Text>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading your classes...</Text>
       </View>
     );
   }
 
   return (
-    <View className={cn('flex-1', Theme.background)}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View className={cn('p-6 border-b', Theme.background, Theme.border)}>
-        <Text className={cn('text-2xl font-bold mb-2', Theme.text.primary)}>
+      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
           My Classes
         </Text>
-        <Text className={cn('text-base', Theme.text.secondary)}>
+        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
           Classes and subjects you teach
         </Text>
-        
-        {/* Debug Info */}
-        <TouchableOpacity 
-          onPress={() => {
-            console.log('🐛 DEBUG INFO:');
-            console.log('Teacher Classes:', teacherClasses);
-            console.log('Join Codes:', joinCodes);
-            Alert.alert('Debug Info', 'Check console for debug information');
-          }}
-          className="mt-2 bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded self-start"
-        >
-          <Text className="text-xs text-gray-600 dark:text-gray-300">
-            Debug: Show Data
-          </Text>
-        </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View className="p-6">
+      <ScrollView 
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.classesList}>
           {teacherClasses.length === 0 ? (
-            <View className={cn('items-center py-12', Theme.background)}>
-              <Ionicons name="school" size={64} color="#9ca3af" />
-              <Text className={cn('text-lg font-semibold mt-4', Theme.text.secondary)}>
+            <View style={[styles.emptyState, { backgroundColor: colors.background }]}>
+              <Ionicons name="school" size={64} color={colors.textTertiary} />
+              <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
                 No classes assigned
               </Text>
-              <Text className={cn('text-sm text-center mt-2', Theme.text.tertiary)}>
+              <Text style={[styles.emptySubtitle, { color: colors.textTertiary }]}>
                 Contact your administrator to get assigned to classes and subjects.
               </Text>
             </View>
           ) : (
             teacherClasses.map(classItem => (
-              <View key={classItem.id} className="mb-8">
-                <Text className={cn('text-xl font-semibold mb-4', Theme.text.primary)}>
+              <View key={classItem.id} style={styles.classSection}>
+                <Text style={[styles.className, { color: colors.textPrimary }]}>
                   {classItem.class_name}
                 </Text>
                 
                 {/* Subjects for this class */}
-                <View className="space-y-3">
+                <View style={styles.subjectsList}>
                   {classItem.subjects.map((subject: any) => {
                     const joinCode = getJoinCodeForClassSubject(classItem.class_id, subject.id);
                     
                     return (
                       <View
                         key={subject.id}
-                        className={cn(
-                          'p-4 rounded-xl border',
-                          Theme.elevated,
-                          Theme.border
-                        )}
+                        style={[styles.subjectCard, { 
+                          backgroundColor: colors.backgroundElevated,
+                          borderColor: colors.border
+                        }]}
                       >
-                        <View className="flex-row items-center justify-between mb-3">
-                          <View className="flex-row items-center space-x-3">
+                        <View style={styles.subjectHeader}>
+                          <View style={styles.subjectInfo}>
                             <View 
-                              className="w-10 h-10 rounded-lg items-center justify-center"
-                              style={{ backgroundColor: subject.color || '#3b82f6' }}
+                              style={[styles.subjectIcon, { backgroundColor: subject.color || colors.primary }]}
                             >
                               <Ionicons 
-                                name={subject.icon as any || 'book'} 
+                                name={subject.icon || 'book'} 
                                 size={20} 
                                 color="white" 
                               />
                             </View>
-                            <View className="flex-1">
-                              <Text className={cn('text-lg font-semibold', Theme.text.primary)}>
+                            <View style={styles.subjectDetails}>
+                              <Text style={[styles.subjectName, { color: colors.textPrimary }]}>
                                 {subject.name}
                               </Text>
-                              <Text className={cn('text-sm', Theme.text.secondary)}>
+                              <Text style={[styles.subjectClass, { color: colors.textSecondary }]}>
                                 {classItem.class_name}
                               </Text>
                             </View>
@@ -172,29 +144,30 @@ export default function MyClassesScreen() {
                         {joinCode ? (
                           <TouchableOpacity
                             onPress={() => copyJoinCode(joinCode)}
-                            className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg flex-row items-center justify-between active:bg-blue-100 dark:active:bg-blue-900/30"
+                            style={[styles.joinCodeContainer, { backgroundColor: `${colors.primary}15` }]}
+                            activeOpacity={0.7}
                           >
-                            <View className="flex-1">
-                              <Text className="text-blue-600 dark:text-blue-400 text-sm font-medium">
+                            <View style={styles.joinCodeInfo}>
+                              <Text style={[styles.joinCodeLabel, { color: colors.primary }]}>
                                 Join Code
                               </Text>
-                              <Text className="text-blue-800 dark:text-blue-300 font-mono text-base">
+                              <Text style={[styles.joinCodeValue, { color: colors.primary }]}>
                                 {joinCode.code || joinCode.join_code || 'No code available'}
                               </Text>
-                              <Text className="text-blue-600 dark:text-blue-400 text-xs mt-1">
+                              <Text style={[styles.joinCodeHint, { color: colors.primary }]}>
                                 Tap to copy and share with students
                               </Text>
                             </View>
-                            <View className="bg-blue-500 p-2 rounded-lg ml-3">
+                            <View style={[styles.copyButton, { backgroundColor: colors.primary }]}>
                               <Ionicons name="copy" size={18} color="white" />
                             </View>
                           </TouchableOpacity>
                         ) : (
-                          <View className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
-                            <Text className="text-gray-600 dark:text-gray-400 text-sm text-center">
+                          <View style={[styles.noCodeContainer, { backgroundColor: colors.background }]}>
+                            <Text style={[styles.noCodeText, { color: colors.textSecondary }]}>
                               No join code available
                             </Text>
-                            <Text className="text-gray-500 dark:text-gray-500 text-xs text-center mt-1">
+                            <Text style={[styles.noCodeDetails, { color: colors.textTertiary }]}>
                               Class ID: {classItem.class_id}, Subject ID: {subject.id}
                             </Text>
                           </View>
@@ -211,3 +184,138 @@ export default function MyClassesScreen() {
     </View>
   );
 }
+
+const styles = {
+  container: {
+    flex: 1,
+  },
+  loadingText: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '500',
+    marginTop: designTokens.spacing.xxl,
+    textAlign: 'center',
+  },
+  header: {
+    paddingHorizontal: designTokens.spacing.xl,
+    paddingTop: designTokens.spacing.xxxl,
+    paddingBottom: designTokens.spacing.lg,
+    borderBottomWidth: 1,
+  },
+  headerTitle: {
+    fontSize: designTokens.typography.title1.fontSize,
+    fontWeight: designTokens.typography.title1.fontWeight as any,
+    marginBottom: designTokens.spacing.xs,
+  },
+  headerSubtitle: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '500',
+  },
+  content: {
+    flex: 1,
+  },
+  classesList: {
+    padding: designTokens.spacing.xl,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: designTokens.spacing.xxxl,
+  },
+  emptyTitle: {
+    fontSize: designTokens.typography.headline.fontSize,
+    fontWeight: '500',
+    marginTop: designTokens.spacing.lg,
+    marginBottom: designTokens.spacing.xs,
+  },
+  emptySubtitle: {
+    fontSize: designTokens.typography.footnote.fontSize,
+    textAlign: 'center',
+  },
+  classSection: {
+    marginBottom: designTokens.spacing.xxl,
+  },
+  className: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: designTokens.typography.title3.fontWeight as any,
+    marginBottom: designTokens.spacing.lg,
+  },
+  subjectsList: {
+    gap: designTokens.spacing.md,
+  },
+  subjectCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    borderWidth: 1,
+    overflow: 'hidden',
+    ...designTokens.shadows.sm,
+  },
+  subjectHeader: {
+    padding: designTokens.spacing.lg,
+  },
+  subjectInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  subjectIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: designTokens.borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: designTokens.spacing.md,
+  },
+  subjectDetails: {
+    flex: 1,
+  },
+  subjectName: {
+    fontSize: designTokens.typography.headline.fontSize,
+    fontWeight: '600',
+    marginBottom: designTokens.spacing.xxs,
+  },
+  subjectClass: {
+    fontSize: designTokens.typography.caption1.fontSize,
+  },
+  joinCodeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: designTokens.spacing.lg,
+  },
+  joinCodeInfo: {
+    flex: 1,
+  },
+  joinCodeLabel: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    fontWeight: '600',
+    marginBottom: designTokens.spacing.xxs,
+  },
+  joinCodeValue: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '600',
+    fontFamily: 'monospace',
+    marginBottom: designTokens.spacing.xxs,
+  },
+  joinCodeHint: {
+    fontSize: designTokens.typography.caption2.fontSize,
+  },
+  copyButton: {
+    width: 40,
+    height: 40,
+    borderRadius: designTokens.borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: designTokens.spacing.md,
+  },
+  noCodeContainer: {
+    padding: designTokens.spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: 'transparent',
+  },
+  noCodeText: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    textAlign: 'center',
+    marginBottom: designTokens.spacing.xxs,
+  },
+  noCodeDetails: {
+    fontSize: designTokens.typography.caption2.fontSize,
+    textAlign: 'center',
+  },
+};

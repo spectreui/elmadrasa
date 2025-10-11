@@ -7,8 +7,8 @@
 
 // // Screens
 // import LoginScreen from '../../app/(auth)/login';
-// import StudentDashboard from '../../app/(tabs)/student';
-// import TeacherDashboard from '../../app/(tabs)/teacher';
+// import StudentDashboard from '../../app/(student)/student';
+// import TeacherDashboard from '../../app/(student)/teacher';
 
 // const Stack = createNativeStackNavigator();
 // const Tab = createBottomTabNavigator();

@@ -4,8 +4,8 @@ import { View, Text, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Acti
 import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { Theme, cn } from '../../src/utils/themeUtils';
-import { Picker } from '@react-native-picker/picker';
+import { designTokens } from '../../src/utils/designTokens';
+import { useThemeContext } from '../../src/contexts/ThemeContext';
 
 export default function ClassesManagementScreen() {
   const [classes, setClasses] = useState<any[]>([]);
@@ -25,6 +25,7 @@ export default function ClassesManagementScreen() {
     section: '',
     description: ''
   });
+  const { colors, isDark } = useThemeContext();
 
   useEffect(() => {
     loadData();
@@ -39,7 +40,9 @@ export default function ClassesManagementScreen() {
         
         // Map grade numbers based on level
         if (level.short_name === 'PREP') {
-          className = `Prep ${formData.grade}${formData.section}`;
+          // For prepatory, map 1->7, 2->8, 3->9
+          const gradeMap = { '1': '7', '2': '8', '3': '9' };
+          className = `${gradeMap[formData.grade as keyof typeof gradeMap]}${formData.section}`;
         } else if (level.short_name === 'PRI') {
           className = `Primary ${formData.grade}${formData.section}`;
         } else if (level.short_name === 'SEC') {
@@ -54,21 +57,26 @@ export default function ClassesManagementScreen() {
   }, [formData.level_id, formData.grade, formData.section, levels]);
 
   const loadData = async () => {
-    try {
-      const [classesRes, levelsRes] = await Promise.all([
-        apiService.getClasses(),
-        apiService.getLevels(),
-      ]);
-      
-      setClasses(classesRes.data.data || []);
-      setLevels(levelsRes.data.data || []);
-    } catch (error) {
-      console.error('Failed to load data:', error);
-      Alert.alert('Error', 'Failed to load classes');
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    console.log('🔄 Loading data...'); // Debug log
+    const [classesRes, levelsRes] = await Promise.all([
+      apiService.getClasses(), // This should NOT send empty params
+      apiService.getLevels(),
+    ]);
+    
+    console.log('📚 Classes response:', classesRes.data); // Debug log
+    console.log('📊 Levels response:', levelsRes.data); // Debug log
+    
+    setClasses(classesRes.data.data || []);
+    setLevels(levelsRes.data.data || []);
+  } catch (error) {
+    console.error('Failed to load data:', error);
+    Alert.alert('Error', 'Failed to load classes');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const loadClassDetails = async (classItem: any) => {
     try {
@@ -126,8 +134,11 @@ export default function ClassesManagementScreen() {
       loadData();
     } catch (error: any) {
       console.error('Create class error:', error);
-      if (error.response?.data.error === "duplicate key value violates unique constraint \"classes_name_unique\"") Alert.alert("Error", "Class already Exists!")
-      else Alert.alert('Error', error.response?.data?.error || 'Failed to create class');
+      if (error.response?.data.error === "duplicate key value violates unique constraint \"classes_name_unique\"") {
+        Alert.alert("Error", "Class already exists!");
+      } else {
+        Alert.alert('Error', error.response?.data?.error || 'Failed to create class');
+      }
     } finally {
       setCreating(false);
     }
@@ -173,21 +184,62 @@ export default function ClassesManagementScreen() {
     ];
   };
 
-  const getDisplayGrade = (classItem: any) => {
-    if (!classItem.level) return `Grade ${classItem.grade}`;
-    
-    switch (classItem.level.short_name) {
-      case 'PREP':
-        return `Prep ${classItem.grade}`;
-      case 'PRI':
-        return `Primary ${classItem.grade}`;
-      case 'SEC':
-        const gradeMap = { '1': '10', '2': '11', '3': '12' };
-        return `Grade ${gradeMap[classItem.grade as keyof typeof gradeMap]}`;
-      default:
-        return `Grade ${classItem.grade}`;
+  const mapGradeToEgyptian = (grade: string, levelShortName?: string): string => {
+    // For Prep levels, use 1st, 2nd, 3rd
+    if (levelShortName === 'PREP') {
+      const prepMap: { [key: string]: string } = {
+        '1': '1st',
+        '2': '2nd',
+        '3': '3rd'
+      };
+      return prepMap[grade] || grade;
     }
+
+    // For Secondary levels, use 1st, 2nd, 3rd
+    if (levelShortName === 'SEC') {
+      const secMap: { [key: string]: string } = {
+        '10': '1st',
+        '11': '2nd',
+        '12': '3rd'
+      };
+      return secMap[grade] || grade;
+    }
+
+    // For Primary, just show the number
+    if (levelShortName === 'PRI') {
+      return grade;
+    }
+
+    // Default mappings
+    const defaultMap: { [key: string]: string } = {
+      '1': '1st',
+      '2': '2nd',
+      '3': '3rd',
+      '10': '1st',
+      '11': '2nd',
+      '12': '3rd'
+    };
+
+    return defaultMap[grade] || grade;
   };
+
+  const getDisplayGrade = (classItem: any) => {
+  if (!classItem.level) return `Grade ${classItem.grade}`;
+  
+  const levelShortName = classItem.level.short_name;
+  
+  switch (levelShortName) {
+    case 'PREP':
+      return `Prep ${mapGradeToEgyptian(classItem.grade, 'PREP')}`;
+    case 'PRI':
+      return `Primary ${classItem.grade}`;
+    case 'SEC':
+      return `Grade ${mapGradeToEgyptian(classItem.grade, 'SEC')}`;
+    default:
+      return `Grade ${classItem.grade}`;
+  }
+};
+
 
   const getLevelDisplayName = (classItem: any) => {
     if (!classItem.level) return 'Unknown Level';
@@ -207,162 +259,372 @@ export default function ClassesManagementScreen() {
   const getLevelColor = (levelShortName: string) => {
     switch (levelShortName) {
       case 'PREP':
-        return { bg: 'bg-amber-500/10', text: 'text-amber-600', border: 'border-amber-200' };
+        return { 
+          bg: isDark ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.1)', 
+          text: '#f59e0b', 
+          border: isDark ? 'rgba(245, 158, 11, 0.3)' : 'rgba(245, 158, 11, 0.2)' 
+        };
       case 'PRI':
-        return { bg: 'bg-blue-500/10', text: 'text-blue-600', border: 'border-blue-200' };
+        return { 
+          bg: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.1)', 
+          text: '#3b82f6', 
+          border: isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)' 
+        };
       case 'SEC':
-        return { bg: 'bg-purple-500/10', text: 'text-purple-600', border: 'border-purple-200' };
+        return { 
+          bg: isDark ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.1)', 
+          text: '#8b5cf6', 
+          border: isDark ? 'rgba(139, 92, 246, 0.3)' : 'rgba(139, 92, 246, 0.2)' 
+        };
       default:
-        return { bg: 'bg-gray-500/10', text: 'text-gray-600', border: 'border-gray-200' };
+        return { 
+          bg: isDark ? 'rgba(156, 163, 175, 0.15)' : 'rgba(156, 163, 175, 0.1)', 
+          text: '#9ca3af', 
+          border: isDark ? 'rgba(156, 163, 175, 0.3)' : 'rgba(156, 163, 175, 0.2)' 
+        };
     }
   };
 
   if (loading) {
     return (
-      <View className={cn('flex-1 justify-center items-center', Theme.background)}>
-        <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className={cn('text-lg mt-4', Theme.text.secondary)}>Loading classes...</Text>
+      <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{ 
+          marginTop: designTokens.spacing.lg, 
+          fontSize: designTokens.typography.body.fontSize,
+          color: colors.textSecondary 
+        }}>
+          Loading classes...
+        </Text>
       </View>
     );
   }
 
   return (
-    <View className={cn('flex-1', Theme.background)}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
-      <View className={cn('px-6 pt-16 pb-6', Theme.background)}>
-        <View className="flex-row items-center justify-between mb-6">
-          <View className="flex-1">
-            <Text className={cn('text-4xl font-bold tracking-tight mb-2', Theme.text.primary)}>
+      <View style={{ 
+        paddingHorizontal: designTokens.spacing.xl, 
+        paddingTop: designTokens.spacing.xxxl + 10, 
+        paddingBottom: designTokens.spacing.xl,
+        backgroundColor: colors.background 
+      }}>
+        <View style={{ 
+          flexDirection: 'row', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          marginBottom: designTokens.spacing.xl 
+        }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{
+              fontSize: designTokens.typography.largeTitle.fontSize,
+              fontWeight: designTokens.typography.largeTitle.fontWeight,
+              color: colors.textPrimary,
+              marginBottom: designTokens.spacing.xs,
+            } as any}>
               Classes
             </Text>
-            <Text className={cn('text-lg opacity-70', Theme.text.secondary)}>
+            <Text style={{
+              fontSize: designTokens.typography.body.fontSize,
+              color: colors.textSecondary,
+            }}>
               Manage and organize school classes
             </Text>
           </View>
           <TouchableOpacity
             onPress={() => setShowCreateModal(true)}
-            className="bg-blue-500 px-6 py-4 rounded-2xl flex-row items-center space-x-3 shadow-lg shadow-blue-500/25"
+            style={{
+              backgroundColor: colors.primary,
+              paddingHorizontal: designTokens.spacing.lg,
+              paddingVertical: designTokens.spacing.md,
+              borderRadius: designTokens.borderRadius.xl,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: designTokens.spacing.sm,
+              ...designTokens.shadows.md,
+            }}
           >
-            <Ionicons name="add" size={22} color="#FFFFFF" />
-            <Text className="text-white font-semibold text-base">New Class</Text>
+            <Ionicons name="add" size={20} color="#FFFFFF" />
+            <Text style={{
+              color: '#FFFFFF',
+              fontWeight: '600',
+              fontSize: designTokens.typography.body.fontSize,
+            }}>
+              New Class
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* Stats Cards */}
-        <View className="flex-row space-x-4">
-          <View className={cn('flex-1 p-5 rounded-2xl border', Theme.elevated, Theme.border)}>
-            <View className="flex-row items-center justify-between">
+        <View style={{ 
+          flexDirection: 'row', 
+          gap: designTokens.spacing.md 
+        }}>
+          <View style={{ 
+            flex: 1, 
+            padding: designTokens.spacing.lg,
+            borderRadius: designTokens.borderRadius.xl,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.backgroundElevated,
+          }}>
+            <View style={{ 
+              flexDirection: 'row', 
+              alignItems: 'center', 
+              justifyContent: 'space-between' 
+            }}>
               <View>
-                <Text className={cn('text-2xl font-bold mb-1', Theme.text.primary)}>
+                <Text style={{
+                  fontSize: designTokens.typography.title1.fontSize,
+                  fontWeight: designTokens.typography.title1.fontWeight,
+                  color: colors.textPrimary,
+                  marginBottom: designTokens.spacing.xs,
+                } as any}>
                   {classes.length}
                 </Text>
-                <Text className={cn('text-sm font-medium', Theme.text.secondary)}>
+                <Text style={{
+                  fontSize: designTokens.typography.footnote.fontSize,
+                  fontWeight: '600',
+                  color: colors.textSecondary,
+                }}>
                   Total Classes
                 </Text>
               </View>
-              <View className="w-12 h-12 bg-blue-500/10 rounded-2xl items-center justify-center">
-                <Ionicons name="school" size={24} color="#3b82f6" />
+              <View style={{ 
+                width: 44, 
+                height: 44, 
+                borderRadius: designTokens.borderRadius.lg,
+                backgroundColor: `${colors.primary}15`,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <Ionicons name="school" size={20} color={colors.primary} />
               </View>
             </View>
           </View>
 
-          <View className={cn('flex-1 p-5 rounded-2xl border', Theme.elevated, Theme.border)}>
-            <View className="flex-row items-center justify-between">
+          <View style={{ 
+            flex: 1, 
+            padding: designTokens.spacing.lg,
+            borderRadius: designTokens.borderRadius.xl,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.backgroundElevated,
+          }}>
+            <View style={{ 
+              flexDirection: 'row', 
+              alignItems: 'center', 
+              justifyContent: 'space-between' 
+            }}>
               <View>
-                <Text className={cn('text-2xl font-bold mb-1', Theme.text.primary)}>
+                <Text style={{
+                  fontSize: designTokens.typography.title1.fontSize,
+                  fontWeight: designTokens.typography.title1.fontWeight,
+                  color: colors.textPrimary,
+                  marginBottom: designTokens.spacing.xs,
+                } as any}>
                   {levels.length}
                 </Text>
-                <Text className={cn('text-sm font-medium', Theme.text.secondary)}>
+                <Text style={{
+                  fontSize: designTokens.typography.footnote.fontSize,
+                  fontWeight: '600',
+                  color: colors.textSecondary,
+                }}>
                   Education Levels
                 </Text>
               </View>
-              <View className="w-12 h-12 bg-purple-500/10 rounded-2xl items-center justify-center">
-                <Ionicons name="layers" size={24} color="#8b5cf6" />
+              <View style={{ 
+                width: 44, 
+                height: 44, 
+                borderRadius: designTokens.borderRadius.lg,
+                backgroundColor: `${colors.primary}15`,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <Ionicons name="layers" size={20} color={colors.primary} />
               </View>
             </View>
           </View>
         </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
-        <View className="px-6 pb-6">
-          {/* Classes Grid */}
-          <View className="mb-6">
-            <Text className={cn('text-2xl font-bold mb-4', Theme.text.primary)}>
-              All Classes
-            </Text>
-            
-            {classes.length === 0 ? (
-              <View className={cn('items-center py-16 rounded-2xl border-2 border-dashed', Theme.border)}>
-                <Ionicons name="school-outline" size={80} className="opacity-20 mb-4" />
-                <Text className={cn('text-2xl font-bold mb-2', Theme.text.primary)}>
-                  No Classes Yet
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        contentContainerStyle={{ 
+          paddingHorizontal: designTokens.spacing.xl, 
+          paddingBottom: designTokens.spacing.xxl 
+        }}
+      >
+        {/* Classes Grid */}
+        <View style={{ marginBottom: designTokens.spacing.xl }}>
+          <Text style={{
+            fontSize: designTokens.typography.title2.fontSize,
+            fontWeight: designTokens.typography.title2.fontWeight,
+            color: colors.textPrimary,
+            marginBottom: designTokens.spacing.lg,
+          } as any}>
+            All Classes
+          </Text>
+          
+          {classes.length === 0 ? (
+            <View style={{ 
+              alignItems: 'center', 
+              paddingVertical: designTokens.spacing.xxxl,
+              borderRadius: designTokens.borderRadius.xxl,
+              borderWidth: 2,
+              borderStyle: 'dashed',
+              borderColor: colors.border,
+              backgroundColor: colors.backgroundElevated,
+            }}>
+              <Ionicons name="school-outline" size={60} color={colors.textTertiary} style={{ marginBottom: designTokens.spacing.lg }} />
+              <Text style={{
+                fontSize: designTokens.typography.title2.fontSize,
+                fontWeight: designTokens.typography.title2.fontWeight,
+                color: colors.textPrimary,
+                marginBottom: designTokens.spacing.xs,
+              } as any}>
+                No Classes Yet
+              </Text>
+              <Text style={{
+                fontSize: designTokens.typography.body.fontSize,
+                color: colors.textSecondary,
+                textAlign: 'center',
+                marginBottom: designTokens.spacing.xl,
+              }}>
+                Create your first class to get started
+              </Text>
+              <TouchableOpacity
+                onPress={() => setShowCreateModal(true)}
+                style={{
+                  backgroundColor: colors.primary,
+                  paddingHorizontal: designTokens.spacing.xl,
+                  paddingVertical: designTokens.spacing.lg,
+                  borderRadius: designTokens.borderRadius.xl,
+                  ...designTokens.shadows.md,
+                }}
+              >
+                <Text style={{
+                  color: '#FFFFFF',
+                  fontWeight: '600',
+                  fontSize: designTokens.typography.body.fontSize,
+                }}>
+                  Create First Class
                 </Text>
-                <Text className={cn('text-center opacity-70 mb-6 text-lg', Theme.text.secondary)}>
-                  Create your first class to get started
-                </Text>
-                <TouchableOpacity
-                  onPress={() => setShowCreateModal(true)}
-                  className="bg-blue-500 px-8 py-4 rounded-2xl shadow-lg shadow-blue-500/25"
-                >
-                  <Text className="text-white font-semibold text-lg">Create First Class</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View className="grid grid-cols-1 gap-4">
-                {classes.map(classItem => {
-                  const levelColor = getLevelColor(classItem.level?.short_name);
-                  return (
-                    <TouchableOpacity
-                      key={classItem.id}
-                      className={cn(
-                        'p-6 rounded-3xl border-2 transition-all active:scale-95',
-                        Theme.elevated,
-                        levelColor.border
-                      )}
-                      onPress={() => loadClassDetails(classItem)}
-                    >
-                      <View className="flex-row items-start justify-between">
-                        <View className="flex-row items-start space-x-5 flex-1">
-                          <View className={cn('w-16 h-16 rounded-2xl items-center justify-center', levelColor.bg)}>
-                            <Ionicons name="school" size={28} color={levelColor.text.replace('text-', '#').split('-')[0]} />
-                          </View>
-                          <View className="flex-1">
-                            <Text className={cn('text-2xl font-bold mb-3', Theme.text.primary)}>
-                              {classItem.name}
-                            </Text>
-                            <View className="flex-row flex-wrap gap-3">
-                              <View className={cn('px-4 py-2 rounded-full', levelColor.bg)}>
-                                <Text className={cn('text-base font-semibold', levelColor.text)}>
-                                  {getDisplayGrade(classItem)}
-                                </Text>
-                              </View>
-                              <View className="px-4 py-2 rounded-full bg-green-500/10">
-                                <Text className="text-green-600 text-base font-semibold">
-                                  Section {classItem.section}
-                                </Text>
-                              </View>
-                              <View className="px-4 py-2 rounded-full bg-gray-500/10">
-                                <Text className="text-gray-600 text-base font-semibold">
-                                  {getLevelDisplayName(classItem)}
-                                </Text>
-                              </View>
-                            </View>
-                            {classItem.metadata?.description && (
-                              <Text className={cn('text-base mt-3 leading-6', Theme.text.secondary)}>
-                                {classItem.metadata.description}
-                              </Text>
-                            )}
-                          </View>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={{ gap: designTokens.spacing.md }}>
+              {classes.map(classItem => {
+                const levelColor = getLevelColor(classItem.level?.short_name);
+                return (
+                  <TouchableOpacity
+                    key={classItem.id}
+                    style={{
+                      padding: designTokens.spacing.lg,
+                      borderRadius: designTokens.borderRadius.xxl,
+                      borderWidth: 2,
+                      borderColor: levelColor.border,
+                      backgroundColor: colors.backgroundElevated,
+                      ...designTokens.shadows.sm,
+                    }}
+                    onPress={() => loadClassDetails(classItem)}
+                  >
+                    <View style={{ 
+                      flexDirection: 'row', 
+                      alignItems: 'flex-start', 
+                      justifyContent: 'space-between' 
+                    }}>
+                      <View style={{ 
+                        flexDirection: 'row', 
+                        alignItems: 'flex-start', 
+                        gap: designTokens.spacing.lg,
+                        flex: 1 
+                      }}>
+                        <View style={{ 
+                          width: 56, 
+                          height: 56, 
+                          borderRadius: designTokens.borderRadius.lg,
+                          backgroundColor: levelColor.bg,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}>
+                          <Ionicons name="school" size={24} color={levelColor.text} />
                         </View>
-                        <Ionicons name="chevron-forward" size={24} className="text-gray-400 mt-2" />
+                        <View style={{ flex: 1 }}>
+                          <Text style={{
+                            fontSize: designTokens.typography.title3.fontSize,
+                            fontWeight: designTokens.typography.title3.fontWeight,
+                            color: colors.textPrimary,
+                            marginBottom: designTokens.spacing.md,
+                          } as any}>
+                            {classItem.name}
+                          </Text>
+                          <View style={{ 
+                            flexDirection: 'row', 
+                            flexWrap: 'wrap', 
+                            gap: designTokens.spacing.sm 
+                          }}>
+                            <View style={{ 
+                              paddingHorizontal: designTokens.spacing.md,
+                              paddingVertical: designTokens.spacing.sm,
+                              borderRadius: designTokens.borderRadius.full,
+                              backgroundColor: levelColor.bg,
+                            }}>
+                              <Text style={{
+                                fontSize: designTokens.typography.footnote.fontSize,
+                                fontWeight: '600',
+                                color: levelColor.text,
+                              }}>
+                                {getDisplayGrade(classItem)}
+                              </Text>
+                            </View>
+                            <View style={{ 
+                              paddingHorizontal: designTokens.spacing.md,
+                              paddingVertical: designTokens.spacing.sm,
+                              borderRadius: designTokens.borderRadius.full,
+                              backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.1)',
+                            }}>
+                              <Text style={{
+                                fontSize: designTokens.typography.footnote.fontSize,
+                                fontWeight: '600',
+                                color: '#10b981',
+                              }}>
+                                Section {classItem.section}
+                              </Text>
+                            </View>
+                            <View style={{ 
+                              paddingHorizontal: designTokens.spacing.md,
+                              paddingVertical: designTokens.spacing.sm,
+                              borderRadius: designTokens.borderRadius.full,
+                              backgroundColor: isDark ? 'rgba(156, 163, 175, 0.15)' : 'rgba(156, 163, 175, 0.1)',
+                            }}>
+                              <Text style={{
+                                fontSize: designTokens.typography.footnote.fontSize,
+                                fontWeight: '600',
+                                color: colors.textSecondary,
+                              }}>
+                                {getLevelDisplayName(classItem)}
+                              </Text>
+                            </View>
+                          </View>
+                          {classItem.metadata?.description && (
+                            <Text style={{
+                              fontSize: designTokens.typography.body.fontSize,
+                              color: colors.textSecondary,
+                              marginTop: designTokens.spacing.md,
+                            }}>
+                              {classItem.metadata.description}
+                            </Text>
+                          )}
+                        </View>
                       </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            )}
-          </View>
+                      <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} style={{ marginTop: 4 }} />
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -373,77 +635,217 @@ export default function ClassesManagementScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowCreateModal(false)}
       >
-        <View className={cn('flex-1', Theme.background)}>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
           {/* Modal Header */}
-          <View className={cn('px-6 pt-8 pb-6 border-b', Theme.background, Theme.border)}>
-            <View className="flex-row items-center justify-between mb-2">
+          <View style={{ 
+            paddingHorizontal: designTokens.spacing.xl, 
+            paddingTop: designTokens.spacing.xxl, 
+            paddingBottom: designTokens.spacing.lg,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+            backgroundColor: colors.background,
+          }}>
+            <View style={{ 
+              flexDirection: 'row', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              marginBottom: designTokens.spacing.sm 
+            }}>
               <View>
-                <Text className={cn('text-3xl font-bold', Theme.text.primary)}>
+                <Text style={{
+                  fontSize: designTokens.typography.largeTitle.fontSize,
+                  fontWeight: designTokens.typography.largeTitle.fontWeight,
+                  color: colors.textPrimary,
+                } as any}>
                   New Class
                 </Text>
-                <Text className={cn('text-lg mt-2', Theme.text.secondary)}>
+                <Text style={{
+                  fontSize: designTokens.typography.body.fontSize,
+                  color: colors.textSecondary,
+                  marginTop: designTokens.spacing.xs,
+                }}>
                   Create a new class for students
                 </Text>
               </View>
               <TouchableOpacity 
                 onPress={() => setShowCreateModal(false)}
-                className="w-12 h-12 rounded-2xl items-center justify-center bg-gray-100 dark:bg-gray-800"
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: designTokens.borderRadius.lg,
+                  backgroundColor: colors.backgroundElevated,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
-                <Ionicons name="close" size={24} className="text-gray-600 dark:text-gray-400" />
+                <Ionicons name="close" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
           </View>
 
-          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-            <View className="p-6 space-y-8">
+          <ScrollView 
+            style={{ flex: 1 }} 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ 
+              padding: designTokens.spacing.xl,
+              paddingBottom: designTokens.spacing.xxxl 
+            }}
+          >
+            <View style={{ gap: designTokens.spacing.xxl }}>
               {/* Level Selection */}
               <View>
-                <Text className={cn('text-xl font-semibold mb-4', Theme.text.primary)}>
+                <Text style={{
+                  fontSize: designTokens.typography.title3.fontSize,
+                  fontWeight: designTokens.typography.title3.fontWeight,
+                  color: colors.textPrimary,
+                  marginBottom: designTokens.spacing.lg,
+                } as any}>
                   Education Level *
                 </Text>
-                <View className={cn('rounded-2xl border-2 overflow-hidden', Theme.border)}>
-                  <Picker
-                    selectedValue={formData.level_id}
-                    onValueChange={(value) => setFormData({ ...formData, level_id: value, grade: '', section: '', name: '' })}
-                  >
-                    <Picker.Item 
-                      label="Select an education level" 
-                      value="" 
-                    />
-                    {levels.map(level => (
-                      <Picker.Item 
-                        key={level.id} 
-                        label={`${level.name} (${level.short_name})`} 
-                        value={level.id} 
-                      />
-                    ))}
-                  </Picker>
+                <View style={{
+                  borderRadius: designTokens.borderRadius.xl,
+                  borderWidth: 2,
+                  borderColor: colors.border,
+                  backgroundColor: colors.backgroundElevated,
+                  overflow: 'hidden',
+                }}>
+                  <View style={{ 
+                    borderWidth: 0,
+                    borderColor: 'transparent',
+                    backgroundColor: 'transparent',
+                  }}>
+                    <View style={{ 
+                      height: 50,
+                      paddingHorizontal: designTokens.spacing.lg,
+                      justifyContent: 'center',
+                    }}>
+                      <Text style={{
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: formData.level_id ? colors.textPrimary : colors.textTertiary,
+                      }}>
+                        {formData.level_id 
+                          ? `${levels.find(l => l.id === formData.level_id)?.name} (${levels.find(l => l.id === formData.level_id)?.short_name})`
+                          : 'Select an education level'
+                        }
+                      </Text>
+                    </View>
+                    <View style={{ 
+                      maxHeight: 200,
+                      backgroundColor: colors.backgroundElevated,
+                    }}>
+                      <ScrollView>
+                        <TouchableOpacity
+                          style={{ 
+                            padding: designTokens.spacing.lg,
+                            borderBottomWidth: 1,
+                            borderBottomColor: colors.border,
+                          }}
+                          onPress={() => setFormData({ ...formData, level_id: '', grade: '', section: '', name: '' })}
+                        >
+                          <Text style={{
+                            fontSize: designTokens.typography.body.fontSize,
+                            color: colors.textTertiary,
+                          }}>
+                            Select an education level
+                          </Text>
+                        </TouchableOpacity>
+                        {levels.map(level => (
+                          <TouchableOpacity
+                            key={level.id}
+                            style={{ 
+                              padding: designTokens.spacing.lg,
+                              borderBottomWidth: levels.indexOf(level) < levels.length - 1 ? 1 : 0,
+                              borderBottomColor: colors.border,
+                            }}
+                            onPress={() => setFormData({ ...formData, level_id: level.id, grade: '', section: '', name: '' })}
+                          >
+                            <Text style={{
+                              fontSize: designTokens.typography.body.fontSize,
+                              color: colors.textPrimary,
+                            }}>
+                              {level.name} ({level.short_name})
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  </View>
                 </View>
               </View>
 
               {/* Grade Selection */}
               {formData.level_id && (
                 <View>
-                  <Text className={cn('text-xl font-semibold mb-4', Theme.text.primary)}>
+                  <Text style={{
+                    fontSize: designTokens.typography.title3.fontSize,
+                    fontWeight: designTokens.typography.title3.fontWeight,
+                    color: colors.textPrimary,
+                    marginBottom: designTokens.spacing.lg,
+                  } as any}>
                     Grade Level *
                   </Text>
-                  <View className={cn('rounded-2xl border-2 overflow-hidden', Theme.border)}>
-                    <Picker
-                      selectedValue={formData.grade}
-                      onValueChange={(value) => setFormData({ ...formData, grade: value, section: '', name: '' })}
-                    >
-                      <Picker.Item 
-                        label={`Select ${levels.find(l => l.id === formData.level_id)?.short_name?.toLowerCase()} grade`} 
-                        value="" 
-                      />
-                      {getGradeOptions(formData.level_id).map(grade => (
-                        <Picker.Item 
-                          key={grade.value} 
-                          label={grade.label} 
-                          value={grade.value}
-                        />
-                      ))}
-                    </Picker>
+                  <View style={{
+                    borderRadius: designTokens.borderRadius.xl,
+                    borderWidth: 2,
+                    borderColor: colors.border,
+                    backgroundColor: colors.backgroundElevated,
+                    overflow: 'hidden',
+                  }}>
+                    <View style={{ 
+                      height: 50,
+                      paddingHorizontal: designTokens.spacing.lg,
+                      justifyContent: 'center',
+                    }}>
+                      <Text style={{
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: formData.grade ? colors.textPrimary : colors.textTertiary,
+                      }}>
+                        {formData.grade 
+                          ? getGradeOptions(formData.level_id).find(g => g.value === formData.grade)?.label
+                          : `Select ${levels.find(l => l.id === formData.level_id)?.short_name?.toLowerCase()} grade`
+                        }
+                      </Text>
+                    </View>
+                    <View style={{ 
+                      maxHeight: 200,
+                      backgroundColor: colors.backgroundElevated,
+                    }}>
+                      <ScrollView>
+                        <TouchableOpacity
+                          style={{ 
+                            padding: designTokens.spacing.lg,
+                            borderBottomWidth: 1,
+                            borderBottomColor: colors.border,
+                          }}
+                          onPress={() => setFormData({ ...formData, grade: '', section: '', name: '' })}
+                        >
+                          <Text style={{
+                            fontSize: designTokens.typography.body.fontSize,
+                            color: colors.textTertiary,
+                          }}>
+                            Select grade level
+                          </Text>
+                        </TouchableOpacity>
+                        {getGradeOptions(formData.level_id).map(grade => (
+                          <TouchableOpacity
+                            key={grade.value}
+                            style={{ 
+                              padding: designTokens.spacing.lg,
+                              borderBottomWidth: getGradeOptions(formData.level_id).indexOf(grade) < getGradeOptions(formData.level_id).length - 1 ? 1 : 0,
+                              borderBottomColor: colors.border,
+                            }}
+                            onPress={() => setFormData({ ...formData, grade: grade.value, section: '', name: '' })}
+                          >
+                            <Text style={{
+                              fontSize: designTokens.typography.body.fontSize,
+                              color: colors.textPrimary,
+                            }}>
+                              {grade.label}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
                   </View>
                 </View>
               )}
@@ -451,37 +853,102 @@ export default function ClassesManagementScreen() {
               {/* Section Selection */}
               {formData.grade && (
                 <View>
-                  <Text className={cn('text-xl font-semibold mb-4', Theme.text.primary)}>
+                  <Text style={{
+                    fontSize: designTokens.typography.title3.fontSize,
+                    fontWeight: designTokens.typography.title3.fontWeight,
+                    color: colors.textPrimary,
+                    marginBottom: designTokens.spacing.lg,
+                  } as any}>
                     Section *
                   </Text>
-                  <View className={cn('rounded-2xl border-2 overflow-hidden', Theme.border)}>
-                    <Picker
-                      selectedValue={formData.section}
-                      onValueChange={(value) => setFormData({ ...formData, section: value })}
-                    >
-                      <Picker.Item 
-                        label="Select section" 
-                        value="" 
-                      />
-                      {getSectionOptions().map(section => (
-                        <Picker.Item 
-                          key={section.value} 
-                          label={section.label} 
-                          value={section.value}
-                        />
-                      ))}
-                    </Picker>
+                  <View style={{
+                    borderRadius: designTokens.borderRadius.xl,
+                    borderWidth: 2,
+                    borderColor: colors.border,
+                    backgroundColor: colors.backgroundElevated,
+                    overflow: 'hidden',
+                  }}>
+                    <View style={{ 
+                      height: 50,
+                      paddingHorizontal: designTokens.spacing.lg,
+                      justifyContent: 'center',
+                    }}>
+                      <Text style={{
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: formData.section ? colors.textPrimary : colors.textTertiary,
+                      }}>
+                        {formData.section 
+                          ? `Section ${formData.section}`
+                          : 'Select section'
+                        }
+                      </Text>
+                    </View>
+                    <View style={{ 
+                      maxHeight: 200,
+                      backgroundColor: colors.backgroundElevated,
+                    }}>
+                      <ScrollView>
+                        <TouchableOpacity
+                          style={{ 
+                            padding: designTokens.spacing.lg,
+                            borderBottomWidth: 1,
+                            borderBottomColor: colors.border,
+                          }}
+                          onPress={() => setFormData({ ...formData, section: '' })}
+                        >
+                          <Text style={{
+                            fontSize: designTokens.typography.body.fontSize,
+                            color: colors.textTertiary,
+                          }}>
+                            Select section
+                          </Text>
+                        </TouchableOpacity>
+                        {getSectionOptions().map(section => (
+                          <TouchableOpacity
+                            key={section.value}
+                            style={{ 
+                              padding: designTokens.spacing.lg,
+                              borderBottomWidth: getSectionOptions().indexOf(section) < getSectionOptions().length - 1 ? 1 : 0,
+                              borderBottomColor: colors.border,
+                            }}
+                            onPress={() => setFormData({ ...formData, section: section.value })}
+                          >
+                            <Text style={{
+                              fontSize: designTokens.typography.body.fontSize,
+                              color: colors.textPrimary,
+                            }}>
+                              {section.label}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
                   </View>
                 </View>
               )}
 
               {/* Auto-generated Class Name */}
               {formData.name && (
-                <View className={cn('p-5 rounded-2xl bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800')}>
-                  <Text className={cn('text-base font-medium mb-2 text-blue-800 dark:text-blue-200')}>
+                <View style={{
+                  padding: designTokens.spacing.lg,
+                  borderRadius: designTokens.borderRadius.xl,
+                  backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.1)',
+                  borderWidth: 1,
+                  borderColor: isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)',
+                }}>
+                  <Text style={{
+                    fontSize: designTokens.typography.footnote.fontSize,
+                    fontWeight: '600',
+                    color: colors.primary,
+                    marginBottom: designTokens.spacing.xs,
+                  }}>
                     Class Name
                   </Text>
-                  <Text className={cn('text-2xl font-bold text-blue-900 dark:text-blue-100')}>
+                  <Text style={{
+                    fontSize: designTokens.typography.title3.fontSize,
+                    fontWeight: designTokens.typography.title3.fontWeight,
+                    color: colors.textPrimary,
+                  } as any}>
                     {formData.name}
                   </Text>
                 </View>
@@ -489,7 +956,12 @@ export default function ClassesManagementScreen() {
 
               {/* Description */}
               <View>
-                <Text className={cn('text-xl font-semibold mb-4', Theme.text.primary)}>
+                <Text style={{
+                  fontSize: designTokens.typography.title3.fontSize,
+                  fontWeight: designTokens.typography.title3.fontWeight,
+                  color: colors.textPrimary,
+                  marginBottom: designTokens.spacing.lg,
+                } as any}>
                   Description (Optional)
                 </Text>
                 <TextInput
@@ -498,14 +970,19 @@ export default function ClassesManagementScreen() {
                   placeholder="Add any additional notes about this class..."
                   multiline
                   numberOfLines={4}
-                  className={cn(
-                    'w-full px-5 py-4 rounded-2xl border-2 text-lg leading-6',
-                    Theme.border,
-                    Theme.background,
-                    Theme.text.primary
-                  )}
-                  placeholderTextColor="#9CA3AF"
-                  textAlignVertical="top"
+                  style={{
+                    width: '100%',
+                    paddingHorizontal: designTokens.spacing.lg,
+                    paddingVertical: designTokens.spacing.md,
+                    borderRadius: designTokens.borderRadius.xl,
+                    borderWidth: 2,
+                    borderColor: colors.border,
+                    backgroundColor: colors.backgroundElevated,
+                    fontSize: designTokens.typography.body.fontSize,
+                    color: colors.textPrimary,
+                    textAlignVertical: 'top',
+                  }}
+                  placeholderTextColor={colors.textTertiary}
                 />
               </View>
 
@@ -513,17 +990,27 @@ export default function ClassesManagementScreen() {
               <TouchableOpacity
                 onPress={handleCreateClass}
                 disabled={!formData.name || !formData.level_id || !formData.grade || !formData.section || creating}
-                className={cn(
-                  'w-full py-5 rounded-2xl items-center shadow-lg',
-                  (!formData.name || !formData.level_id || !formData.grade || !formData.section || creating) 
-                    ? 'bg-blue-400 shadow-blue-400/25' 
-                    : 'bg-blue-500 shadow-blue-500/25 active:scale-95'
-                )}
+                style={{
+                  width: '100%',
+                  paddingVertical: designTokens.spacing.lg,
+                  borderRadius: designTokens.borderRadius.xl,
+                  backgroundColor: (!formData.name || !formData.level_id || !formData.grade || !formData.section || creating) 
+                    ? colors.textTertiary 
+                    : colors.primary,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  ...designTokens.shadows.md,
+                  opacity: (!formData.name || !formData.level_id || !formData.grade || !formData.section || creating) ? 0.7 : 1,
+                }}
               >
                 {creating ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <Text className="text-white font-semibold text-xl">
+                  <Text style={{
+                    color: '#FFFFFF',
+                    fontWeight: '600',
+                    fontSize: designTokens.typography.body.fontSize,
+                  }}>
                     Create Class
                   </Text>
                 )}
@@ -540,136 +1027,298 @@ export default function ClassesManagementScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowClassDetails(false)}
       >
-        <View className={cn('flex-1', Theme.background)}>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
           {/* Modal Header */}
-          <View className={cn('px-6 pt-8 pb-6 border-b', Theme.background, Theme.border)}>
-            <View className="flex-row items-center justify-between mb-4">
-              <View className="flex-1">
-                <Text className={cn('text-3xl font-bold', Theme.text.primary)}>
+          <View style={{ 
+            paddingHorizontal: designTokens.spacing.xl, 
+            paddingTop: designTokens.spacing.xxl, 
+            paddingBottom: designTokens.spacing.lg,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+            backgroundColor: colors.background,
+          }}>
+            <View style={{ 
+              flexDirection: 'row', 
+              alignItems: 'center', 
+              justifyContent: 'space-between',
+              marginBottom: designTokens.spacing.md,
+            }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{
+                  fontSize: designTokens.typography.largeTitle.fontSize,
+                  fontWeight: designTokens.typography.largeTitle.fontWeight,
+                  color: colors.textPrimary,
+                } as any}>
                   {selectedClass?.name}
                 </Text>
-                <Text className={cn('text-lg mt-2', Theme.text.secondary)}>
+                <Text style={{
+                  fontSize: designTokens.typography.body.fontSize,
+                  color: colors.textSecondary,
+                  marginTop: designTokens.spacing.xs,
+                }}>
                   {selectedClass?.level?.name} • Section {selectedClass?.section}
                 </Text>
               </View>
               <TouchableOpacity 
                 onPress={() => setShowClassDetails(false)}
-                className="w-12 h-12 rounded-2xl items-center justify-center bg-gray-100 dark:bg-gray-800 ml-4"
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: designTokens.borderRadius.lg,
+                  backgroundColor: colors.backgroundElevated,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginLeft: designTokens.spacing.lg,
+                }}
               >
-                <Ionicons name="close" size={24} className="text-gray-600 dark:text-gray-400" />
+                <Ionicons name="close" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
           </View>
 
-          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-            <View className="p-6 space-y-8">
-              {detailsLoading ? (
-                <View className="items-center py-16">
-                  <ActivityIndicator size="large" color="#3b82f6" />
-                  <Text className={cn('text-xl mt-6', Theme.text.secondary)}>Loading class details...</Text>
+          <ScrollView 
+            style={{ flex: 1 }} 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ 
+              padding: designTokens.spacing.xl,
+              paddingBottom: designTokens.spacing.xxxl 
+            }}
+          >
+            {detailsLoading ? (
+              <View style={{ 
+                alignItems: 'center', 
+                paddingVertical: designTokens.spacing.xxxl 
+              }}>
+                <ActivityIndicator size="large" color={colors.primary} />
+                <Text style={{
+                  marginTop: designTokens.spacing.lg,
+                  fontSize: designTokens.typography.body.fontSize,
+                  color: colors.textSecondary,
+                }}>
+                  Loading class details...
+                </Text>
+              </View>
+            ) : (
+              <View style={{ gap: designTokens.spacing.xxxl }}>
+                {/* Teachers Section */}
+                <View>
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    marginBottom: designTokens.spacing.lg 
+                  }}>
+                    <Text style={{
+                      fontSize: designTokens.typography.title2.fontSize,
+                      fontWeight: designTokens.typography.title2.fontWeight,
+                      color: colors.textPrimary,
+                    } as any}>
+                      Teachers
+                    </Text>
+                    <View style={{ 
+                      paddingHorizontal: designTokens.spacing.md,
+                      paddingVertical: designTokens.spacing.sm,
+                      borderRadius: designTokens.borderRadius.full,
+                      backgroundColor: `${colors.primary}15`,
+                    }}>
+                      <Text style={{
+                        fontSize: designTokens.typography.footnote.fontSize,
+                        fontWeight: '600',
+                        color: colors.primary,
+                      }}>
+                        {classTeachers.length} teacher{classTeachers.length !== 1 ? 's' : ''}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {classTeachers.length > 0 ? (
+                    <View style={{ gap: designTokens.spacing.md }}>
+                      {classTeachers.map((item, index) => (
+                        <View
+                          key={item.assignmentId}
+                          style={{
+                            padding: designTokens.spacing.lg,
+                            borderRadius: designTokens.borderRadius.xl,
+                            borderWidth: 1,
+                            borderColor: colors.border,
+                            backgroundColor: colors.backgroundElevated,
+                          }}
+                        >
+                          <View style={{ 
+                            flexDirection: 'row', 
+                            alignItems: 'center', 
+                            gap: designTokens.spacing.lg 
+                          }}>
+                            <View style={{ 
+                              width: 44, 
+                              height: 44, 
+                              borderRadius: designTokens.borderRadius.lg,
+                              backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.1)',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}>
+                              <Ionicons name="person" size={20} color="#10b981" />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text style={{
+                                fontSize: designTokens.typography.body.fontSize,
+                                fontWeight: '600',
+                                color: colors.textPrimary,
+                                marginBottom: designTokens.spacing.xs,
+                              }}>
+                                {item.teacher?.profile?.name || 'Teacher'}
+                              </Text>
+                              <Text style={{
+                                fontSize: designTokens.typography.footnote.fontSize,
+                                color: colors.textSecondary,
+                              }}>
+                                {item.subject?.name || 'Subject'}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  ) : (
+                    <View style={{ 
+                      alignItems: 'center', 
+                      paddingVertical: designTokens.spacing.xxl,
+                      borderRadius: designTokens.borderRadius.xl,
+                      borderWidth: 2,
+                      borderStyle: 'dashed',
+                      borderColor: colors.border,
+                      backgroundColor: colors.backgroundElevated,
+                    }}>
+                      <Ionicons name="person-outline" size={48} color={colors.textTertiary} style={{ marginBottom: designTokens.spacing.lg }} />
+                      <Text style={{
+                        fontSize: designTokens.typography.title3.fontSize,
+                        fontWeight: designTokens.typography.title3.fontWeight,
+                        color: colors.textPrimary,
+                        marginBottom: designTokens.spacing.xs,
+                      } as any}>
+                        No Teachers
+                      </Text>
+                      <Text style={{
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: colors.textSecondary,
+                        textAlign: 'center',
+                      }}>
+                        Assign teachers to this class from the teacher assignments page
+                      </Text>
+                    </View>
+                  )}
                 </View>
-              ) : (
-                <>
-                  {/* Teachers Section */}
-                  <View>
-                    <View className="flex-row items-center justify-between mb-6">
-                      <Text className={cn('text-2xl font-bold', Theme.text.primary)}>
-                        Teachers
-                      </Text>
-                      <View className="px-4 py-2 bg-blue-500/10 rounded-full">
-                        <Text className="text-blue-600 font-semibold text-base">
-                          {classTeachers.length} teacher{classTeachers.length !== 1 ? 's' : ''}
-                        </Text>
-                      </View>
-                    </View>
 
-                    {classTeachers.length > 0 ? (
-                      <View className="space-y-4">
-                        {classTeachers.map((item, index) => (
-                          <View
-                            key={item.assignmentId}
-                            className={cn('p-5 rounded-2xl border-2', Theme.elevated, Theme.border)}
-                          >
-                            <View className="flex-row items-center space-x-4">
-                              <View className="w-12 h-12 bg-green-500/10 rounded-2xl items-center justify-center">
-                                <Ionicons name="person" size={24} color="#10b981" />
-                              </View>
-                              <View className="flex-1">
-                                <Text className={cn('text-xl font-semibold mb-1', Theme.text.primary)}>
-                                  {item.teacher?.profile?.name || 'Teacher'}
-                                </Text>
-                                <Text className={cn('text-lg', Theme.text.secondary)}>
-                                  {item.subject?.name || 'Subject'}
-                                </Text>
-                              </View>
-                            </View>
-                          </View>
-                        ))}
-                      </View>
-                    ) : (
-                      <View className={cn('p-8 rounded-2xl border-2 border-dashed items-center', Theme.border)}>
-                        <Ionicons name="person-outline" size={64} className="opacity-20 mb-4" />
-                        <Text className={cn('text-2xl font-bold mb-2', Theme.text.primary)}>
-                          No Teachers
-                        </Text>
-                        <Text className={cn('text-center opacity-70 text-lg', Theme.text.secondary)}>
-                          Assign teachers to this class from the teacher assignments page
-                        </Text>
-                      </View>
-                    )}
+                {/* Students Section */}
+                <View>
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    marginBottom: designTokens.spacing.lg 
+                  }}>
+                    <Text style={{
+                      fontSize: designTokens.typography.title2.fontSize,
+                      fontWeight: designTokens.typography.title2.fontWeight,
+                      color: colors.textPrimary,
+                    } as any}>
+                      Students
+                    </Text>
+                    <View style={{ 
+                      paddingHorizontal: designTokens.spacing.md,
+                      paddingVertical: designTokens.spacing.sm,
+                      borderRadius: designTokens.borderRadius.full,
+                      backgroundColor: `${colors.primary}15`,
+                    }}>
+                      <Text style={{
+                        fontSize: designTokens.typography.footnote.fontSize,
+                        fontWeight: '600',
+                        color: colors.primary,
+                      }}>
+                        {classStudents.length} student{classStudents.length !== 1 ? 's' : ''}
+                      </Text>
+                    </View>
                   </View>
 
-                  {/* Students Section */}
-                  <View>
-                    <View className="flex-row items-center justify-between mb-6">
-                      <Text className={cn('text-2xl font-bold', Theme.text.primary)}>
-                        Students
-                      </Text>
-                      <View className="px-4 py-2 bg-purple-500/10 rounded-full">
-                        <Text className="text-purple-600 font-semibold text-base">
-                          {classStudents.length} student{classStudents.length !== 1 ? 's' : ''}
-                        </Text>
-                      </View>
-                    </View>
-
-                    {classStudents.length > 0 ? (
-                      <View className="space-y-4">
-                        {classStudents.map((student, index) => (
-                          <View
-                            key={student.id}
-                            className={cn('p-5 rounded-2xl border-2', Theme.elevated, Theme.border)}
-                          >
-                            <View className="flex-row items-center space-x-4">
-                              <View className="w-12 h-12 bg-purple-500/10 rounded-2xl items-center justify-center">
-                                <Ionicons name="school" size={24} color="#8b5cf6" />
-                              </View>
-                              <View className="flex-1">
-                                <Text className={cn('text-xl font-semibold mb-1', Theme.text.primary)}>
-                                  {student.full_name || student.user?.profile?.name || 'Student'}
-                                </Text>
-                                <Text className={cn('text-lg', Theme.text.secondary)}>
-                                  {student.user?.email || 'No email'}
-                                </Text>
-                              </View>
+                  {classStudents.length > 0 ? (
+                    <View style={{ gap: designTokens.spacing.md }}>
+                      {classStudents.map((student, index) => (
+                        <View
+                          key={student.id}
+                          style={{
+                            padding: designTokens.spacing.lg,
+                            borderRadius: designTokens.borderRadius.xl,
+                            borderWidth: 1,
+                            borderColor: colors.border,
+                            backgroundColor: colors.backgroundElevated,
+                          }}
+                        >
+                          <View style={{ 
+                            flexDirection: 'row', 
+                            alignItems: 'center', 
+                            gap: designTokens.spacing.lg 
+                          }}>
+                            <View style={{ 
+                              width: 44, 
+                              height: 44, 
+                              borderRadius: designTokens.borderRadius.lg,
+                              backgroundColor: isDark ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.1)',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}>
+                              <Ionicons name="school" size={20} color="#8b5cf6" />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text style={{
+                                fontSize: designTokens.typography.body.fontSize,
+                                fontWeight: '600',
+                                color: colors.textPrimary,
+                                marginBottom: designTokens.spacing.xs,
+                              }}>
+                                {student.full_name || student.user?.profile?.name || 'Student'}
+                              </Text>
+                              <Text style={{
+                                fontSize: designTokens.typography.footnote.fontSize,
+                                color: colors.textSecondary,
+                              }}>
+                                {student.user?.email || 'No email'}
+                              </Text>
                             </View>
                           </View>
-                        ))}
-                      </View>
-                    ) : (
-                      <View className={cn('p-8 rounded-2xl border-2 border-dashed items-center', Theme.border)}>
-                        <Ionicons name="school-outline" size={64} className="opacity-20 mb-4" />
-                        <Text className={cn('text-2xl font-bold mb-2', Theme.text.primary)}>
-                          No Students
-                        </Text>
-                        <Text className={cn('text-center opacity-70 text-lg', Theme.text.secondary)}>
-                          Students will appear here when they are assigned to this class
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </>
-              )}
-            </View>
+                        </View>
+                      ))}
+                    </View>
+                  ) : (
+                    <View style={{ 
+                      alignItems: 'center', 
+                      paddingVertical: designTokens.spacing.xxl,
+                      borderRadius: designTokens.borderRadius.xl,
+                      borderWidth: 2,
+                      borderStyle: 'dashed',
+                      borderColor: colors.border,
+                      backgroundColor: colors.backgroundElevated,
+                    }}>
+                      <Ionicons name="school-outline" size={48} color={colors.textTertiary} style={{ marginBottom: designTokens.spacing.lg }} />
+                      <Text style={{
+                        fontSize: designTokens.typography.title3.fontSize,
+                        fontWeight: designTokens.typography.title3.fontWeight,
+                        color: colors.textPrimary,
+                        marginBottom: designTokens.spacing.xs,
+                      } as any}>
+                        No Students
+                      </Text>
+                      <Text style={{
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: colors.textSecondary,
+                        textAlign: 'center',
+                      }}>
+                        Students will appear here when they are assigned to this class
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            )}
           </ScrollView>
         </View>
       </Modal>

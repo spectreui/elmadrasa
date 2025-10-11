@@ -1,14 +1,20 @@
 import { Tabs, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../src/contexts/AuthContext";
+import { colors } from "@/utils/designSystem";
+import { useThemeContext } from "@/contexts/ThemeContext";
 
 export default function TabLayout() {
-  const { user } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
+  const { isDark, colors, toggleTheme } = useThemeContext();
+
 
   if (user?.role === "teacher") {
     return <Redirect href="/(teacher)" />;
-  } else  if (user?.role === "admin") {
+  } else if (user?.role === "admin") {
     return <Redirect href="/(admin)" />;
+  } else if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
   }
 
   return (
@@ -16,10 +22,10 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#ffffff",
-          borderTopColor: "#e5e7eb",
-          height: 90,
-          paddingBottom: 20,
+          backgroundColor: colors.backgroundElevated,
+          borderTopColor: colors.border,
+          height: 70,
+          paddingBottom: 0,
           paddingTop: 8,
         },
         tabBarActiveTintColor: "#3b82f6",
@@ -82,7 +88,41 @@ export default function TabLayout() {
           ),
         }}
       />
-  
+      <Tabs.Screen
+        name="join-subject"
+        options={{
+          title: "Join Subject",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "add" : "add-outline"}
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="homework/[id]"
+        options={{
+          href: null
+        }
+        }
+      />
+      <Tabs.Screen
+        name="exam/[id]"
+        options={{
+          href: null
+        }
+        }
+      />
+      <Tabs.Screen
+        name="exam/results/[id]"
+        options={{
+          href: null
+        }
+        }
+      />
+
       <Tabs.Screen
         name="profile"
         options={{

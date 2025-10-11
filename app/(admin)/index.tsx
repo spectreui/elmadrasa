@@ -6,6 +6,7 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme, cn } from '../../src/utils/themeUtils';
+import { useThemeContext } from '@/contexts/ThemeContext';
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -18,6 +19,7 @@ export default function AdminDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const { colors } = useThemeContext()
 
   useEffect(() => {
     loadDashboardData();
@@ -83,8 +85,8 @@ export default function AdminDashboard() {
     <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
       <View className={cn(
         'p-6 rounded-3xl border',
-        Theme.elevated,
-        Theme.border,
+        colors.backgroundElevated,
+        colors.border,
         'shadow-sm'
       )}>
         <View className="flex-row items-start justify-between mb-4">
@@ -128,13 +130,13 @@ export default function AdminDashboard() {
           )}
         </View>
 
-        <Text className={cn('text-3xl font-bold mb-1', Theme.text.primary)}>
+        <Text className={cn('text-3xl font-bold mb-1', colors.textPrimary)}>
           {loading ? '...' : value.toLocaleString()}
         </Text>
-        <Text className={cn('text-lg font-semibold mb-2', Theme.text.primary)}>
+        <Text className={cn('text-lg font-semibold mb-2', colors.textPrimary)}>
           {title}
         </Text>
-        <Text className={cn('text-sm opacity-70', Theme.text.secondary)}>
+        <Text className={cn('text-sm opacity-70', colors.textSecondary)}>
           {subtitle}
         </Text>
       </View>
@@ -151,8 +153,8 @@ export default function AdminDashboard() {
     <TouchableOpacity
       className={cn(
         'p-5 rounded-2xl border flex-row items-center justify-between',
-        Theme.elevated,
-        Theme.border,
+        colors.backgroundElevated,
+        colors.border,
         'active:scale-95 transition-transform'
       )}
       onPress={onPress}
@@ -176,10 +178,10 @@ export default function AdminDashboard() {
           />
         </View>
         <View className="flex-1">
-          <Text className={cn('font-semibold text-base mb-1', Theme.text.primary)}>
+          <Text className={cn('font-semibold text-base mb-1', colors.textPrimary)}>
             {title}
           </Text>
-          <Text className={cn('text-sm opacity-70', Theme.text.secondary)}>
+          <Text className={cn('text-sm opacity-70', colors.textSecondary)}>
             {subtitle}
           </Text>
         </View>
@@ -189,27 +191,27 @@ export default function AdminDashboard() {
   );
 
   return (
-    <View className={cn('flex-1', Theme.background)}>
+    <View className={cn('flex-1', colors.background)}>
       {/* Header */}
-      <View className={cn('px-6 pt-12 pb-6 border-b', Theme.background, Theme.border)}>
+      <View className={cn('px-6 pt-12 pb-6 border-b', colors.background, colors.border)}>
         <View className="flex-row items-center justify-between mb-3">
           <View>
-            <Text className={cn('text-3xl font-bold tracking-tight', Theme.text.primary)}>
+            <Text className={cn('text-3xl font-bold tracking-tight', colors.textPrimary)}>
               Dashboard
             </Text>
-            <Text className={cn('text-lg opacity-70 mt-1', Theme.text.secondary)}>
+            <Text className={cn('text-lg opacity-70 mt-1', colors.textSecondary)}>
               Welcome back, Admin
             </Text>
           </View>
           <TouchableOpacity
             className={cn(
               'w-10 h-10 rounded-full items-center justify-center',
-              Theme.elevated,
-              Theme.border
+              colors.backgroundElevated,
+              colors.border
             )}
             onPress={loadDashboardData}
           >
-            <Ionicons name="refresh" size={20} className={Theme.text.secondary} />
+            <Ionicons name="refresh" size={20} className={colors.textSecondary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -224,10 +226,10 @@ export default function AdminDashboard() {
           {/* Overview Section */}
           <View className="space-y-4">
             <View className="flex-row items-center justify-between">
-              <Text className={cn('text-2xl font-bold tracking-tight', Theme.text.primary)}>
+              <Text className={cn('text-2xl font-bold tracking-tight', colors.textPrimary)}>
                 Overview
               </Text>
-              <Text className={cn('text-sm opacity-70', Theme.text.secondary)}>
+              <Text className={cn('text-sm opacity-70', colors.textSecondary)}>
                 Real-time data
               </Text>
             </View>
@@ -265,7 +267,7 @@ export default function AdminDashboard() {
 
           {/* Quick Actions */}
           <View className="space-y-4">
-            <Text className={cn('text-2xl font-bold tracking-tight', Theme.text.primary)}>
+            <Text className={cn('text-2xl font-bold tracking-tight', colors.textPrimary)}>
               Quick Actions
             </Text>
 
@@ -308,20 +310,20 @@ export default function AdminDashboard() {
 
           {/* Recent Activity Placeholder */}
           <View className="space-y-4">
-            <Text className={cn('text-2xl font-bold tracking-tight', Theme.text.primary)}>
+            <Text className={cn('text-2xl font-bold tracking-tight', colors.textPrimary)}>
               Recent Activity
             </Text>
 
             <View className={cn(
               'p-6 rounded-2xl border items-center justify-center',
-              Theme.elevated,
-              Theme.border
+              colors.backgroundElevated,
+              colors.border
             )}>
               <Ionicons name="stats-chart-outline" size={48} className="opacity-30 mb-3" />
-              <Text className={cn('text-lg font-medium mb-1', Theme.text.primary)}>
+              <Text className={cn('text-lg font-medium mb-1', colors.textPrimary)}>
                 Activity Feed
               </Text>
-              <Text className={cn('text-center opacity-70', Theme.text.secondary)}>
+              <Text className={cn('text-center opacity-70', colors.textSecondary)}>
                 Recent system activities and updates will appear here
               </Text>
             </View>

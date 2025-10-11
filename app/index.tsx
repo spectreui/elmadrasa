@@ -28,7 +28,7 @@ export default function Index() {
         router.replace('/(admin)');
       } else {
         console.log('➡️ Redirecting student to tabs');
-        router.replace('/(tabs)');
+        router.replace('/(student)');
       }
     }
   }, [isAuthenticated, loading, user, router]);

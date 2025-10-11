@@ -1,10 +1,11 @@
-// app/(admin)/teachers.tsx - Updated with proper scroll
+// app/(admin)/teachers.tsx - Updated to match student design
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, Modal, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { Theme, cn } from '../../src/utils/themeUtils';
+import { designTokens } from '../../src/utils/designTokens';
+import { useThemeContext } from '@/contexts/ThemeContext';
 
 export default function TeachersManagementScreen() {
   const [teachers, setTeachers] = useState<any[]>([]);
@@ -17,6 +18,8 @@ export default function TeachersManagementScreen() {
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [assigning, setAssigning] = useState(false);
+  const [removingAssignment, setRemovingAssignment] = useState<string | null>(null);
+  const { colors, isDark } = useThemeContext();
 
   useEffect(() => {
     loadData();
@@ -25,19 +28,12 @@ export default function TeachersManagementScreen() {
   const loadData = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Loading teachers data...');
-      
       const [teachersRes, classesRes, subjectsRes, assignmentsRes] = await Promise.all([
         apiService.getUsersByRole('teacher'),
         apiService.getClasses(),
         apiService.getSubjects(),
         apiService.getTeacherAssignments(),
       ]);
-
-      console.log('👨‍🏫 Teachers:', teachersRes.data);
-      console.log('🏫 Classes:', classesRes.data);
-      console.log('📚 Subjects:', subjectsRes.data);
-      console.log('🔗 Assignments:', assignmentsRes.data);
 
       if (teachersRes.data.success) {
         setTeachers(teachersRes.data.data || []);
@@ -58,7 +54,7 @@ export default function TeachersManagementScreen() {
       }
 
     } catch (error: any) {
-      console.error('❌ Failed to load data:', error);
+      console.error('Failed to load data:', error);
       Alert.alert(
         'Error', 
         error.response?.data?.error || error.message || 'Failed to load data'
@@ -95,22 +91,24 @@ export default function TeachersManagementScreen() {
         return;
       }
 
-      console.log(`🎯 Assigning ${selectedTeacher.profile?.name} to ${subjectObj.name} in ${classObj.name}`);
-
-      await apiService.assignTeacherToClass({
+      const response = await apiService.assignTeacherToClass({
         teacher_id: selectedTeacher.id,
         class_id: selectedClass,
         subject_id: selectedSubject
       });
 
-      Alert.alert('Success', `Assigned ${selectedTeacher.profile?.name} to ${subjectObj.name} in ${classObj.name}`);
-      setShowAssignmentModal(false);
-      setSelectedTeacher(null);
-      setSelectedClass('');
-      setSelectedSubject('');
-      await loadData(); // Refresh the data
+      if (response.data.success) {
+        Alert.alert('Success', `Assigned ${selectedTeacher.profile?.name} to ${subjectObj.name} in ${classObj.name}`);
+        setShowAssignmentModal(false);
+        setSelectedTeacher(null);
+        setSelectedClass('');
+        setSelectedSubject('');
+        await loadData();
+      } else {
+        throw new Error(response.data.error || 'Failed to assign teacher');
+      }
     } catch (error: any) {
-      console.error('❌ Assign teacher error:', error);
+      console.error('Assign teacher error:', error);
       Alert.alert(
         'Error', 
         error.response?.data?.error || error.message || 'Failed to assign teacher'
@@ -137,16 +135,16 @@ export default function TeachersManagementScreen() {
 
   const deleteTeacher = async (teacherId: string) => {
     try {
-      Alert.alert(
-        'Info', 
-        'Delete functionality requires a backend endpoint. Would you like to refresh the data instead?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Refresh', onPress: loadData }
-        ]
-      );
-    } catch (error) {
-      Alert.alert('Error', 'Failed to delete teacher');
+      const response = await apiService.deleteUser(teacherId);
+      if (response.data.success) {
+        Alert.alert('Success', 'Teacher deleted successfully');
+        loadData();
+      } else {
+        throw new Error(response.data.error || 'Failed to delete teacher');
+      }
+    } catch (error: any) {
+      console.error('Delete teacher error:', error);
+      Alert.alert('Error', error.response?.data?.error || 'Failed to delete teacher');
     }
   };
 
@@ -161,12 +159,19 @@ export default function TeachersManagementScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              // Note: You'll need to create a remove assignment endpoint
-              Alert.alert('Info', 'Remove assignment functionality would be implemented here');
-              // await apiService.removeTeacherAssignment(assignmentId);
-              // loadData();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to remove assignment');
+              setRemovingAssignment(assignmentId);
+              const response = await apiService.removeTeacherAssignment(assignmentId);
+              if (response.data.success) {
+                Alert.alert('Success', 'Assignment removed successfully');
+                await loadData();
+              } else {
+                throw new Error(response.data.error || 'Failed to remove assignment');
+              }
+            } catch (error: any) {
+              console.error('Remove assignment error:', error);
+              Alert.alert('Error', error.response?.data?.error || error.message || 'Failed to remove assignment');
+            } finally {
+              setRemovingAssignment(null);
             }
           }
         }
@@ -176,10 +181,15 @@ export default function TeachersManagementScreen() {
 
   const approveTeacher = async (teacher: any) => {
     try {
-      await apiService.approveUser(teacher.id);
-      Alert.alert('Success', `Approved ${teacher.profile?.name}`);
-      loadData();
+      const response = await apiService.approveUser(teacher.id);
+      if (response.data.success) {
+        Alert.alert('Success', `Approved ${teacher.profile?.name}`);
+        loadData();
+      } else {
+        throw new Error(response.data.error || 'Failed to approve teacher');
+      }
     } catch (error: any) {
+      console.error('Approve teacher error:', error);
       Alert.alert('Error', error.response?.data?.error || 'Failed to approve teacher');
     }
   };
@@ -195,311 +205,588 @@ export default function TeachersManagementScreen() {
 
   if (loading) {
     return (
-      <View className={cn('flex-1 justify-center items-center', Theme.background)}>
-        <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className={cn('text-lg mt-4', Theme.text.secondary)}>Loading teachers...</Text>
+      <View style={{
+        flex: 1,
+        backgroundColor: colors.background,
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{
+          marginTop: designTokens.spacing.md,
+          fontSize: designTokens.typography.body.fontSize,
+          color: colors.textSecondary,
+        }}>
+          Loading teachers...
+        </Text>
       </View>
     );
   }
 
   return (
-    <View className={cn('flex-1', Theme.background)}>
-      {/* Header - Fixed */}
-      <View className={cn('p-6 border-b', Theme.background, Theme.border)}>
-        <View className="flex-row items-center space-x-4">
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#3b82f6" />
-          </TouchableOpacity>
-          <View className="flex-1">
-            <Text className={cn('text-2xl font-bold', Theme.text.primary)}>
-              Teacher Management
-            </Text>
-            <Text className={cn('text-base', Theme.text.secondary)}>
-              {teachers.length} teacher(s) found
-            </Text>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* Header */}
+      <View style={{
+        padding: designTokens.spacing.xl,
+        paddingTop: designTokens.spacing.xxxl,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+        backgroundColor: colors.background,
+      }}>
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: designTokens.spacing.md,
+        }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity 
+              onPress={() => router.back()}
+              style={{
+                padding: designTokens.spacing.sm,
+                marginRight: designTokens.spacing.md,
+                borderRadius: designTokens.borderRadius.full,
+                backgroundColor: colors.backgroundElevated,
+              }}
+            >
+              <Ionicons name="arrow-back" size={24} color={colors.primary} />
+            </TouchableOpacity>
+            <View>
+              <Text style={{
+                fontSize: designTokens.typography.title1.fontSize,
+                fontWeight: designTokens.typography.title1.fontWeight,
+                color: colors.textPrimary,
+              } as any}>
+                Teacher Management
+              </Text>
+              <Text style={{
+                fontSize: designTokens.typography.body.fontSize,
+                color: colors.textSecondary,
+              }}>
+                {teachers.length} teacher(s) found
+              </Text>
+            </View>
           </View>
-          <TouchableOpacity onPress={loadData} className="bg-blue-500 p-2 rounded-lg">
-            <Ionicons name="refresh" size={20} color="white" />
+          <TouchableOpacity 
+            onPress={loadData}
+            style={{
+              padding: designTokens.spacing.sm,
+              borderRadius: designTokens.borderRadius.full,
+              backgroundColor: colors.primary + '15',
+            }}
+          >
+            <Ionicons name="refresh" size={20} color={colors.primary} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Scrollable Content */}
-      <View className="flex-1">
-        <ScrollView 
-          className="flex-1"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ flexGrow: 1 }}
-        >
-          <View className="p-6 space-y-6">
-            {teachers.map(teacher => {
-              const assignments = getTeacherAssignments(teacher.id);
-              
-              return (
-                <View
-                  key={teacher.id}
-                  className={cn(
-                    'p-4 rounded-xl border',
-                    Theme.elevated,
-                    Theme.border
-                  )}
-                >
-                  {/* Teacher Info */}
-                  <View className="flex-row items-start justify-between mb-4">
-                    <View className="flex-row items-start space-x-3 flex-1">
-                      <View className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full items-center justify-center">
-                        <Ionicons name="person" size={20} color="#10b981" />
+      {/* Content */}
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: designTokens.spacing.xl, gap: designTokens.spacing.lg }}
+      >
+        {teachers.map(teacher => {
+          const assignments = getTeacherAssignments(teacher.id);
+          
+          return (
+            <View
+              key={teacher.id}
+              style={{
+                padding: designTokens.spacing.lg,
+                borderRadius: designTokens.borderRadius.xl,
+                backgroundColor: colors.backgroundElevated,
+                borderWidth: 1,
+                borderColor: colors.border,
+                ...designTokens.shadows.sm,
+              }}
+            >
+              {/* Teacher Info */}
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                marginBottom: designTokens.spacing.lg,
+              }}>
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'flex-start',
+                  flex: 1,
+                }}>
+                  <View style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: designTokens.borderRadius.full,
+                    backgroundColor: '#10b981' + '15',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: designTokens.spacing.md,
+                  }}>
+                    <Ionicons name="person" size={24} color="#10b981" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{
+                      fontSize: designTokens.typography.title3.fontSize,
+                      fontWeight: designTokens.typography.title3.fontWeight,
+                      color: colors.textPrimary,
+                      marginBottom: 2,
+                    } as any}>
+                      {teacher.profile?.name || 'No Name'}
+                    </Text>
+                    <Text style={{
+                      fontSize: designTokens.typography.footnote.fontSize,
+                      color: colors.textSecondary,
+                      marginBottom: designTokens.spacing.xs,
+                    }}>
+                      {teacher.email}
+                    </Text>
+                    <Text style={{
+                      fontSize: designTokens.typography.caption1.fontSize,
+                      color: colors.textTertiary,
+                    }}>
+                      Department: {teacher.profile?.department || 'Not specified'}
+                    </Text>
+                    
+                    <View style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: designTokens.spacing.xs,
+                      marginTop: designTokens.spacing.sm,
+                    }}>
+                      <View style={{
+                        paddingHorizontal: designTokens.spacing.md,
+                        paddingVertical: designTokens.spacing.xs,
+                        borderRadius: designTokens.borderRadius.full,
+                        backgroundColor: teacher.is_approved ? '#10b981' + '15' : '#f97316' + '15',
+                      }}>
+                        <Text style={{
+                          fontSize: designTokens.typography.caption2.fontSize,
+                          fontWeight: '600',
+                          color: teacher.is_approved ? '#10b981' : '#f97316',
+                        }}>
+                          {teacher.is_approved ? '✓ Approved' : 'Pending Approval'}
+                        </Text>
                       </View>
-                      <View className="flex-1">
-                        <Text className={cn('font-semibold text-lg', Theme.text.primary)}>
-                          {teacher.profile?.name || 'No Name'}
-                        </Text>
-                        <Text className={cn('text-sm', Theme.text.secondary)}>
-                          {teacher.email}
-                        </Text>
-                        <Text className="text-sm text-gray-500 mt-1">
-                          Department: {teacher.profile?.department || 'Not specified'}
-                        </Text>
-                        
-                        <View className="flex-row items-center space-x-2 mt-2">
-                          <View className={`px-2 py-1 rounded-full ${teacher.is_approved ? 'bg-green-100' : 'bg-orange-100'}`}>
-                            <Text className={`text-xs font-medium ${teacher.is_approved ? 'text-green-800' : 'text-orange-800'}`}>
-                              {teacher.is_approved ? '✓ Approved' : 'Pending Approval'}
-                            </Text>
-                          </View>
-                          
-                          {!teacher.is_approved && (
-                            <TouchableOpacity 
-                              onPress={() => approveTeacher(teacher)}
-                              className="bg-green-500 px-3 py-1 rounded-full"
-                            >
-                              <Text className="text-white text-xs font-medium">Approve</Text>
-                            </TouchableOpacity>
-                          )}
-                        </View>
-                      </View>
-                    </View>
-
-                    <View className="flex-row space-x-2">
-                      <TouchableOpacity
-                        onPress={() => openAssignmentModal(teacher)}
-                        className="bg-blue-500 p-2 rounded-lg"
-                        disabled={!teacher.is_approved}
-                      >
-                        <Ionicons name="add" size={16} color="white" />
-                      </TouchableOpacity>
                       
-                      <TouchableOpacity
-                        onPress={() => handleDeleteTeacher(teacher)}
-                        className="bg-red-500 p-2 rounded-lg"
-                      >
-                        <Ionicons name="trash" size={16} color="white" />
-                      </TouchableOpacity>
+                      {!teacher.is_approved && (
+                        <TouchableOpacity 
+                          onPress={() => approveTeacher(teacher)}
+                          style={{
+                            paddingHorizontal: designTokens.spacing.md,
+                            paddingVertical: designTokens.spacing.xs,
+                            borderRadius: designTokens.borderRadius.full,
+                            backgroundColor: colors.primary,
+                          }}
+                        >
+                          <Text style={{
+                            fontSize: designTokens.typography.caption2.fontSize,
+                            fontWeight: '600',
+                            color: '#ffffff',
+                          }}>
+                            Approve
+                          </Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
                   </View>
-
-                  {/* Current Assignments */}
-                  {assignments.length > 0 ? (
-                    <View className="mt-4">
-                      <Text className={cn('font-semibold mb-2', Theme.text.primary)}>
-                        Current Assignments ({assignments.length})
-                      </Text>
-                      <View className="space-y-2">
-                        {assignments.map(assignment => (
-                          <View
-                            key={assignment.id}
-                            className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg flex-row items-center justify-between"
-                          >
-                            <View className="flex-1">
-                              <Text className="text-blue-800 dark:text-blue-300 font-medium">
-                                {assignment.subject?.name}
-                              </Text>
-                              <Text className="text-blue-600 dark:text-blue-400 text-sm">
-                                Class: {assignment.class?.name}
-                              </Text>
-                              <Text className="text-blue-500 dark:text-blue-300 text-xs">
-                                Join Code: {assignment.code}
-                              </Text>
-                            </View>
-                            <TouchableOpacity
-                              onPress={() => removeAssignment(
-                                assignment.id,
-                                teacher.profile?.name,
-                                assignment.class?.name,
-                                assignment.subject?.name
-                              )}
-                              className="bg-red-500 p-1 rounded"
-                            >
-                              <Ionicons name="close" size={14} color="white" />
-                            </TouchableOpacity>
-                          </View>
-                        ))}
-                      </View>
-                    </View>
-                  ) : (
-                    <View className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg mt-4">
-                      <Text className="text-gray-600 dark:text-gray-400 text-sm text-center">
-                        No assignments yet
-                      </Text>
-                    </View>
-                  )}
                 </View>
-              );
-            })}
 
-            {teachers.length === 0 && (
-              <View className={cn('items-center py-12', Theme.background)}>
-                <Ionicons name="person" size={64} color="#9ca3af" />
-                <Text className={cn('text-lg font-semibold mt-4', Theme.text.secondary)}>
-                  No teachers found
-                </Text>
-                <Text className={cn('text-sm text-center mt-2', Theme.text.tertiary)}>
-                  Teachers will appear here once they register.
-                </Text>
-                <TouchableOpacity onPress={loadData} className="bg-blue-500 px-4 py-2 rounded-lg mt-4">
-                  <Text className="text-white font-semibold">Refresh</Text>
-                </TouchableOpacity>
+                <View style={{
+                  flexDirection: 'row',
+                  gap: designTokens.spacing.sm,
+                }}>
+                  <TouchableOpacity
+                    onPress={() => openAssignmentModal(teacher)}
+                    disabled={!teacher.is_approved}
+                    style={{
+                      padding: designTokens.spacing.sm,
+                      borderRadius: designTokens.borderRadius.lg,
+                      backgroundColor: teacher.is_approved ? colors.primary + '15' : isDark ? '#374151' : '#e5e7eb',
+                    }}
+                  >
+                    <Ionicons name="add" size={16} color={teacher.is_approved ? colors.primary : colors.textTertiary} />
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    onPress={() => handleDeleteTeacher(teacher)}
+                    style={{
+                      padding: designTokens.spacing.sm,
+                      borderRadius: designTokens.borderRadius.lg,
+                      backgroundColor: '#ef4444' + '15',
+                    }}
+                  >
+                    <Ionicons name="trash" size={16} color="#ef4444" />
+                  </TouchableOpacity>
+                </View>
               </View>
-            )}
+
+              {/* Current Assignments */}
+              {assignments.length > 0 ? (
+                <View>
+                  <Text style={{
+                    fontSize: designTokens.typography.headline.fontSize,
+                    fontWeight: designTokens.typography.headline.fontWeight,
+                    color: colors.textPrimary,
+                    marginBottom: designTokens.spacing.md,
+                  } as any}>
+                    Current Assignments ({assignments.length})
+                  </Text>
+                  <View style={{ gap: designTokens.spacing.sm }}>
+                    {assignments.map(assignment => (
+                      <View
+                        key={assignment.id}
+                        style={{
+                          backgroundColor: colors.primary + '15',
+                          padding: designTokens.spacing.md,
+                          borderRadius: designTokens.borderRadius.lg,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        <View style={{ flex: 1 }}>
+                          <Text style={{
+                            fontSize: designTokens.typography.footnote.fontSize,
+                            fontWeight: '600',
+                            color: colors.primary,
+                            marginBottom: 2,
+                          }}>
+                            {assignment.subject?.name}
+                          </Text>
+                          <Text style={{
+                            fontSize: designTokens.typography.caption1.fontSize,
+                            color: colors.primary + 'cc',
+                            marginBottom: 2,
+                          }}>
+                            Class: {assignment.class?.name}
+                          </Text>
+                          <Text style={{
+                            fontSize: designTokens.typography.caption2.fontSize,
+                            color: colors.primary + 'aa',
+                          }}>
+                            Join Code: {assignment.code}
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => removeAssignment(
+                            assignment.id,
+                            teacher.profile?.name,
+                            assignment.class?.name,
+                            assignment.subject?.name
+                          )}
+                          disabled={removingAssignment === assignment.id}
+                          style={{
+                            padding: designTokens.spacing.xs,
+                            borderRadius: designTokens.borderRadius.md,
+                            backgroundColor: '#ef4444',
+                          }}
+                        >
+                          {removingAssignment === assignment.id ? (
+                            <ActivityIndicator size="small" color="#ffffff" />
+                          ) : (
+                            <Ionicons name="close" size={14} color="#ffffff" />
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ) : (
+                <View style={{
+                  backgroundColor: isDark ? '#374151' : '#f3f4f6',
+                  padding: designTokens.spacing.lg,
+                  borderRadius: designTokens.borderRadius.lg,
+                  alignItems: 'center',
+                }}>
+                  <Text style={{
+                    fontSize: designTokens.typography.footnote.fontSize,
+                    color: colors.textSecondary,
+                  }}>
+                    No assignments yet
+                  </Text>
+                </View>
+              )}
+            </View>
+          );
+        })}
+
+        {teachers.length === 0 && (
+          <View style={{
+            alignItems: 'center',
+            paddingVertical: designTokens.spacing.xxxl,
+            backgroundColor: colors.backgroundElevated,
+            borderRadius: designTokens.borderRadius.xl,
+            borderWidth: 1,
+            borderColor: colors.border,
+            ...designTokens.shadows.sm,
+          }}>
+            <Ionicons name="person" size={64} color={colors.textTertiary} />
+            <Text style={{
+              fontSize: designTokens.typography.title3.fontSize,
+              fontWeight: designTokens.typography.title3.fontWeight,
+              color: colors.textSecondary,
+              marginTop: designTokens.spacing.lg,
+              marginBottom: designTokens.spacing.xs,
+            } as any}>
+              No teachers found
+            </Text>
+            <Text style={{
+              fontSize: designTokens.typography.footnote.fontSize,
+              color: colors.textTertiary,
+              textAlign: 'center',
+              marginBottom: designTokens.spacing.lg,
+            }}>
+              Teachers will appear here once they register.
+            </Text>
+            <TouchableOpacity 
+              onPress={loadData}
+              style={{
+                paddingHorizontal: designTokens.spacing.xl,
+                paddingVertical: designTokens.spacing.md,
+                borderRadius: designTokens.borderRadius.full,
+                backgroundColor: colors.primary,
+              }}
+            >
+              <Text style={{
+                fontSize: designTokens.typography.footnote.fontSize,
+                fontWeight: '600',
+                color: '#ffffff',
+              }}>
+                Refresh
+              </Text>
+            </TouchableOpacity>
           </View>
-        </ScrollView>
-      </View>
+        )}
+      </ScrollView>
 
       {/* Assignment Modal */}
       <Modal visible={showAssignmentModal} animationType="slide" presentationStyle="pageSheet">
-        <View className={cn('flex-1', Theme.background)}>
-          <View className={cn('p-6 border-b', Theme.background, Theme.border)}>
-            <View className="flex-row items-center justify-between">
-              <Text className={cn('text-xl font-semibold', Theme.text.primary)}>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+          <View style={{
+            padding: designTokens.spacing.xl,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+            backgroundColor: colors.background,
+          }}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: designTokens.spacing.xs,
+            }}>
+              <Text style={{
+                fontSize: designTokens.typography.title2.fontSize,
+                fontWeight: designTokens.typography.title2.fontWeight,
+                color: colors.textPrimary,
+              } as any}>
                 Assign Teacher
               </Text>
               <TouchableOpacity onPress={() => setShowAssignmentModal(false)}>
-                <Ionicons name="close" size={24} color="#6b7280" />
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
-            <Text className={cn('text-sm mt-2', Theme.text.secondary)}>
+            <Text style={{
+              fontSize: designTokens.typography.footnote.fontSize,
+              color: colors.textSecondary,
+            }}>
               Assign {selectedTeacher?.profile?.name} to a class and subject
             </Text>
           </View>
 
-          <View className="flex-1">
-            <ScrollView 
-              className="flex-1"
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ flexGrow: 1 }}
-            >
-              <View className="p-6 space-y-6">
-                {/* Class Selection */}
-                <View>
-                  <Text className={cn('font-semibold mb-3', Theme.text.primary)}>
-                    Select Class
-                  </Text>
-                  <View className="space-y-2">
-                    {classes.map(classItem => (
-                      <TouchableOpacity
-                        key={classItem.id}
-                        onPress={() => {
-                          setSelectedClass(classItem.id);
-                          setSelectedSubject(''); // Reset subject when class changes
-                        }}
-                        className={cn(
-                          'p-3 rounded-xl border flex-row items-center justify-between',
-                          selectedClass === classItem.id 
-                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300' 
-                            : Theme.elevated,
-                          Theme.border
-                        )}
-                      >
-                        <View className="flex-row items-center space-x-3">
-                          <View className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg items-center justify-center">
-                            <Ionicons name="school" size={16} color="#3b82f6" />
-                          </View>
-                          <View>
-                            <Text className={cn('font-medium', Theme.text.primary)}>
-                              {classItem.name}
-                            </Text>
-                            <Text className={cn('text-xs', Theme.text.secondary)}>
-                              {classItem.level?.name} • Grade {classItem.grade}
-                            </Text>
-                          </View>
-                        </View>
-                        
-                        {selectedClass === classItem.id && (
-                          <Ionicons name="checkmark-circle" size={20} color="#10b981" />
-                        )}
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-
-                {/* Subject Selection */}
-                <View>
-                  <Text className={cn('font-semibold mb-3', Theme.text.primary)}>
-                    Select Subject
-                  </Text>
-                  {!selectedClass ? (
-                    <View className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-xl">
-                      <Text className="text-yellow-800 dark:text-yellow-200 text-sm">
-                        Please select a class first to see available subjects
-                      </Text>
+          <ScrollView 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ padding: designTokens.spacing.xl, gap: designTokens.spacing.xxl }}
+          >
+            {/* Class Selection */}
+            <View>
+              <Text style={{
+                fontSize: designTokens.typography.headline.fontSize,
+                fontWeight: designTokens.typography.headline.fontWeight,
+                color: colors.textPrimary,
+                marginBottom: designTokens.spacing.lg,
+              } as any}>
+                Select Class
+              </Text>
+              <View style={{ gap: designTokens.spacing.sm }}>
+                {classes.map(classItem => (
+                  <TouchableOpacity
+                    key={classItem.id}
+                    onPress={() => {
+                      setSelectedClass(classItem.id);
+                      setSelectedSubject(''); // Reset subject when class changes
+                    }}
+                    style={{
+                      padding: designTokens.spacing.lg,
+                      borderRadius: designTokens.borderRadius.xl,
+                      backgroundColor: selectedClass === classItem.id 
+                        ? colors.primary + '15' 
+                        : colors.backgroundElevated,
+                      borderWidth: 1,
+                      borderColor: selectedClass === classItem.id 
+                        ? colors.primary 
+                        : colors.border,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      ...designTokens.shadows.sm,
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: designTokens.borderRadius.md,
+                        backgroundColor: colors.primary + '15',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: designTokens.spacing.md,
+                      }}>
+                        <Ionicons name="school" size={16} color={colors.primary} />
+                      </View>
+                      <View>
+                        <Text style={{
+                          fontSize: designTokens.typography.headline.fontSize,
+                          fontWeight: designTokens.typography.headline.fontWeight,
+                          color: colors.textPrimary,
+                          marginBottom: 2,
+                        } as any}>
+                          {classItem.name}
+                        </Text>
+                        <Text style={{
+                          fontSize: designTokens.typography.caption1.fontSize,
+                          color: colors.textSecondary,
+                        }}>
+                          {classItem.level?.name} • Grade {classItem.grade}
+                        </Text>
+                      </View>
                     </View>
-                  ) : (
-                    <View className="space-y-2">
-                      {getFilteredSubjects().map(subject => (
-                        <TouchableOpacity
-                          key={subject.id}
-                          onPress={() => setSelectedSubject(subject.id)}
-                          className={cn(
-                            'p-3 rounded-xl border flex-row items-center justify-between',
-                            selectedSubject === subject.id 
-                              ? 'bg-green-50 dark:bg-green-900/20 border-green-300' 
-                              : Theme.elevated,
-                            Theme.border
-                          )}
-                        >
-                          <View className="flex-row items-center space-x-3">
-                            <View 
-                              className="w-8 h-8 rounded-lg items-center justify-center"
-                              style={{ backgroundColor: subject.color || '#10b981' }}
-                            >
-                              <Ionicons 
-                                name={subject.icon as any || 'book'} 
-                                size={16} 
-                                color="white" 
-                              />
-                            </View>
-                            <View>
-                              <Text className={cn('font-medium', Theme.text.primary)}>
-                                {subject.name}
-                              </Text>
-                              <Text className={cn('text-xs', Theme.text.secondary)}>
-                                {subject.code}
-                              </Text>
-                            </View>
-                          </View>
-                          
-                          {selectedSubject === subject.id && (
-                            <Ionicons name="checkmark-circle" size={20} color="#10b981" />
-                          )}
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  )}
-                </View>
+                    
+                    {selectedClass === classItem.id && (
+                      <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                ))}
               </View>
-            </ScrollView>
-          </View>
+            </View>
 
-          <View className={cn('p-6 border-t', Theme.background, Theme.border)}>
+            {/* Subject Selection */}
+            <View>
+              <Text style={{
+                fontSize: designTokens.typography.headline.fontSize,
+                fontWeight: designTokens.typography.headline.fontWeight,
+                color: colors.textPrimary,
+                marginBottom: designTokens.spacing.lg,
+              } as any}>
+                Select Subject
+              </Text>
+              {!selectedClass ? (
+                <View style={{
+                  backgroundColor: '#f59e0b' + '15',
+                  padding: designTokens.spacing.lg,
+                  borderRadius: designTokens.borderRadius.xl,
+                  alignItems: 'center',
+                }}>
+                  <Text style={{
+                    fontSize: designTokens.typography.footnote.fontSize,
+                    color: '#f59e0b',
+                    textAlign: 'center',
+                  }}>
+                    Please select a class first to see available subjects
+                  </Text>
+                </View>
+              ) : (
+                <View style={{ gap: designTokens.spacing.sm }}>
+                  {getFilteredSubjects().map(subject => (
+                    <TouchableOpacity
+                      key={subject.id}
+                      onPress={() => setSelectedSubject(subject.id)}
+                      style={{
+                        padding: designTokens.spacing.lg,
+                        borderRadius: designTokens.borderRadius.xl,
+                        backgroundColor: selectedSubject === subject.id 
+                          ? '#10b981' + '15' 
+                          : colors.backgroundElevated,
+                        borderWidth: 1,
+                        borderColor: selectedSubject === subject.id 
+                          ? '#10b981' 
+                          : colors.border,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        ...designTokens.shadows.sm,
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View 
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: designTokens.borderRadius.md,
+                            backgroundColor: subject.color || '#10b981',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginRight: designTokens.spacing.md,
+                          }}
+                        >
+                          <Ionicons 
+                            name={subject.icon as any || 'book'} 
+                            size={16} 
+                            color="white" 
+                          />
+                        </View>
+                        <View>
+                          <Text style={{
+                            fontSize: designTokens.typography.headline.fontSize,
+                            fontWeight: designTokens.typography.headline.fontWeight,
+                            color: colors.textPrimary,
+                            marginBottom: 2,
+                          } as any}>
+                            {subject.name}
+                          </Text>
+                          <Text style={{
+                            fontSize: designTokens.typography.caption1.fontSize,
+                            color: colors.textSecondary,
+                          }}>
+                            {subject.code}
+                          </Text>
+                        </View>
+                      </View>
+                      
+                      {selectedSubject === subject.id && (
+                        <Ionicons name="checkmark-circle" size={20} color="#10b981" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          </ScrollView>
+
+          <View style={{
+            padding: designTokens.spacing.xl,
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+            backgroundColor: colors.background,
+          }}>
             <TouchableOpacity
-              className="bg-blue-500 rounded-xl p-4 flex-row justify-center items-center shadow-sm active:opacity-80 disabled:opacity-50"
+              style={{
+                backgroundColor: colors.primary,
+                borderRadius: designTokens.borderRadius.xl,
+                padding: designTokens.spacing.lg,
+                alignItems: 'center',
+                ...designTokens.shadows.sm,
+                opacity: !selectedClass || !selectedSubject || assigning ? 0.5 : 1,
+              }}
               onPress={handleAssignTeacher}
               disabled={!selectedClass || !selectedSubject || assigning}
             >
               {assigning ? (
-                <ActivityIndicator size="small" color="white" />
+                <ActivityIndicator size="small" color="#ffffff" />
               ) : (
-                <Text className="text-white font-semibold text-lg">
+                <Text style={{
+                  fontSize: designTokens.typography.body.fontSize,
+                  fontWeight: '600',
+                  color: '#ffffff',
+                }}>
                   Assign Teacher
                 </Text>
               )}

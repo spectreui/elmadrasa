@@ -1,20 +1,39 @@
-// app/(teacher)/index.tsx
+// app/(teacher)/index.tsx - REDESIGNED
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Pressable } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
+  Pressable,
+  Image
+} from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { useThemeContext } from '../../src/contexts/ThemeContext';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { TeacherDashboardStats, RecentActivity } from '../../src/types';
+import { designTokens } from '../../src/utils/designTokens';
 
 export default function TeacherDashboard() {
   const { user } = useAuth();
+  const { colors } = useThemeContext();
   const [stats, setStats] = useState<TeacherDashboardStats>({
     activeExams: 0,
     totalStudents: 0,
     averageScore: 0,
     pendingGrading: 0,
-    classesCount: 0
+    classesCount: 0,
+    totalExams: 0,
+    totalSubmissions: 0,
+    subjectsCount: 0,
+    recentActivity: [],
+    studentEngagement: 0,
+    responseTime: 'N/A',
+    performanceTrends: [],
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,29 +47,26 @@ export default function TeacherDashboard() {
     try {
       setLoading(true);
 
-      const [statsResponse, activityResponse] = await Promise.all([
+      const [statsResponse, activityResponse, profileStatsResponse] = await Promise.all([
         apiService.getTeacherDashboardStats(),
-        apiService.getRecentTeacherActivity()
+        apiService.getRecentTeacherActivity(),
+        apiService.getTeacherProfileStats()
       ]);
 
       if (statsResponse.data.success) {
-        setStats(statsResponse.data.data);
+        setStats(prev => ({ ...prev, ...statsResponse.data.data }));
       }
 
       if (activityResponse.data.success) {
         setRecentActivity(activityResponse.data.data || []);
       }
 
+      if (profileStatsResponse.data.success) {
+        setStats(prev => ({ ...prev, ...profileStatsResponse.data.data }));
+      }
+
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
-      setStats({
-        activeExams: 0,
-        totalStudents: 0,
-        averageScore: 0,
-        pendingGrading: 0,
-        classesCount: 0
-      });
-      setRecentActivity([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -62,21 +78,19 @@ export default function TeacherDashboard() {
     loadDashboardData();
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return '#34C759';
-      case 'pending': return '#FF9500';
-      case 'grading': return '#007AFF';
-      default: return '#8E8E93';
-    }
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
   };
 
-  const getStatusBgColor = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-50 dark:bg-green-900/20';
-      case 'pending': return 'bg-orange-50 dark:bg-orange-900/20';
-      case 'grading': return 'bg-blue-50 dark:bg-blue-900/20';
-      default: return 'bg-gray-50 dark:bg-gray-800';
+      case 'completed': return colors.success;
+      case 'pending': return colors.warning;
+      case 'grading': return colors.primary;
+      default: return colors.textTertiary;
     }
   };
 
@@ -85,219 +99,523 @@ export default function TeacherDashboard() {
       case 'exam': return 'document-text';
       case 'homework': return 'book';
       case 'announcement': return 'megaphone';
+      case 'grading': return 'checkmark-circle';
       default: return 'document';
     }
   };
 
+  const StatCard = ({ 
+    title, 
+    value, 
+    subtitle, 
+    icon, 
+    color,
+    trend 
+  }: {
+    title: string;
+    value: string | number;
+    subtitle: string;
+    icon: string;
+    color: string;
+    trend?: string;
+  }) => (
+    <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated }]}>
+      <View style={styles.statHeader}>
+        <View style={[styles.statIcon, { backgroundColor: `${color}20` }]}>
+          <Ionicons name={icon as any} size={20} color={color} />
+        </View>
+        {trend && (
+          <Text style={[styles.trendText, { color: colors.success }]}>{trend}</Text>
+        )}
+      </View>
+      <Text style={[styles.statValue, { color: colors.textPrimary }]}>{value}</Text>
+      <Text style={[styles.statTitle, { color: colors.textSecondary }]}>{title}</Text>
+      <Text style={[styles.statSubtitle, { color: colors.textTertiary }]}>{subtitle}</Text>
+    </View>
+  );
+
+  const QuickActionCard = ({ 
+    title, 
+    description, 
+    icon, 
+    color,
+    onPress 
+  }: {
+    title: string;
+    description: string;
+    icon: string;
+    color: string;
+    onPress: () => void;
+  }) => (
+    <TouchableOpacity
+      style={[styles.quickActionCard, { backgroundColor: colors.backgroundElevated }]}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <View style={[styles.actionIcon, { backgroundColor: color }]}>
+        <Ionicons name={icon as any} size={24} color="white" />
+      </View>
+      <Text style={[styles.actionTitle, { color: colors.textPrimary }]}>{title}</Text>
+      <Text style={[styles.actionDescription, { color: colors.textSecondary }]}>{description}</Text>
+    </TouchableOpacity>
+  );
+
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50 dark:bg-gray-900">
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text className="text-gray-600 dark:text-gray-400 mt-4 text-base font-medium">Loading your dashboard...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          Loading your dashboard...
+        </Text>
       </View>
     );
   }
 
   return (
     <ScrollView
-      className="flex-1 bg-gray-50 dark:bg-gray-900"
+      style={[styles.container, { backgroundColor: colors.background }]}
       showsVerticalScrollIndicator={false}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        <RefreshControl 
+          refreshing={refreshing} 
+          onRefresh={onRefresh}
+          colors={[colors.primary]}
+          tintColor={colors.primary}
+        />
       }
     >
-      <View className="flex-1">
-        {/* Header */}
-        <View className="bg-white dark:bg-gray-800 px-6 pt-16 pb-6 border-b border-gray-100 dark:border-gray-700">
-          <View className="flex-row justify-between items-start">
-            <View>
-              <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                Good morning,
-              </Text>
-              <Text className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                {user?.profile?.name || 'Teacher'}
-              </Text>
-              <Text className="text-gray-500 dark:text-gray-400 text-base font-medium">
-                {new Date().toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </Text>
-            </View>
-            <View className="flex-row items-center space-x-2">
-              <Pressable onPress={() => router.push('/(teacher)/profile')}>
-                <Ionicons name="person" size={20} color="#007AFF" />
-              </Pressable>
-            </View>
+      {/* Header Section */}
+      <View style={[styles.header, { backgroundColor: colors.backgroundElevated }]}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerText}>
+            <Text style={[styles.greeting, { color: colors.textSecondary }]}>
+              {getGreeting()},
+            </Text>
+            <Text style={[styles.userName, { color: colors.textPrimary }]}>
+              {user?.profile?.name || 'Teacher'}
+            </Text>
+            <Text style={[styles.date, { color: colors.textTertiary }]}>
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </Text>
           </View>
-        </View>
-
-        {/* Stats Overview */}
-        <View className="px-6 pt-6">
-          <Text className="text-xl font-bold text-gray-900 dark:text-white mb-4">Overview</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="mb-6"
+          <Pressable 
+            style={[styles.profileButton, { backgroundColor: `${colors.primary}15` }]}
+            onPress={() => router.push('/(teacher)/profile')}
           >
-            <View className="flex-row space-x-4 pb-2">
-              {/* Active Exams Card */}
-              <View className="bg-white dark:bg-gray-800 rounded-2xl p-5 w-48 shadow-sm border border-gray-100 dark:border-gray-700">
-                <View className="flex-row items-center justify-between mb-3">
-                  <View className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl items-center justify-center">
-                    <Ionicons name="document-text" size={20} color="#007AFF" />
-                  </View>
-                  <Text className="text-blue-600 dark:text-blue-400 text-sm font-semibold">+12%</Text>
-                </View>
-                <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                  {stats.activeExams}
-                </Text>
-                <Text className="text-gray-500 dark:text-gray-400 text-sm font-medium">Active Exams</Text>
-              </View>
-
-              {/* Students Card */}
-              <View className="bg-white dark:bg-gray-800 rounded-2xl p-5 w-48 shadow-sm border border-gray-100 dark:border-gray-700">
-                <View className="flex-row items-center justify-between mb-3">
-                  <View className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-xl items-center justify-center">
-                    <Ionicons name="people" size={20} color="#34C759" />
-                  </View>
-                  <Text className="text-green-600 dark:text-green-400 text-sm font-semibold">+8%</Text>
-                </View>
-                <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                  {stats.totalStudents}
-                </Text>
-                <Text className="text-gray-500 dark:text-gray-400 text-sm font-medium">Students</Text>
-              </View>
-
-              {/* Average Score Card */}
-              <View className="bg-white dark:bg-gray-800 rounded-2xl p-5 w-48 shadow-sm border border-gray-100 dark:border-gray-700">
-                <View className="flex-row items-center justify-between mb-3">
-                  <View className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-xl items-center justify-center">
-                    <Ionicons name="trending-up" size={20} color="#FF9500" />
-                  </View>
-                  <Text className="text-orange-600 dark:text-orange-400 text-sm font-semibold">+5%</Text>
-                </View>
-                <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                  {stats.averageScore}%
-                </Text>
-                <Text className="text-gray-500 dark:text-gray-400 text-sm font-medium">Avg. Score</Text>
-              </View>
-            </View>
-          </ScrollView>
-        </View>
-
-        {/* Quick Actions */}
-        <View className="px-6 mb-6">
-          <Text className="text-xl font-bold text-gray-900 dark:text-white mb-4">Quick Actions</Text>
-          <View className="grid grid-cols-2 gap-3">
-            <TouchableOpacity
-              className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm active:opacity-80"
-              onPress={() => router.push('/(teacher)/create-exam')}
-            >
-              <View className="w-12 h-12 bg-blue-500 rounded-xl items-center justify-center mb-3">
-                <Ionicons name="document-text" size={24} color="white" />
-              </View>
-              <Text className="text-gray-900 dark:text-white font-semibold text-base mb-1">Create Exam</Text>
-              <Text className="text-gray-500 dark:text-gray-400 text-sm">Design new assessment</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm active:opacity-80"
-              onPress={() => router.push('/(teacher)/create-homework')}
-            >
-              <View className="w-12 h-12 bg-green-500 rounded-xl items-center justify-center mb-3">
-                <Ionicons name="book" size={24} color="white" />
-              </View>
-              <Text className="text-gray-900 dark:text-white font-semibold text-base mb-1">Assign Work</Text>
-              <Text className="text-gray-500 dark:text-gray-400 text-sm">Create homework</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm active:opacity-80"
-              onPress={() => router.push('/(teacher)/classes')}
-            >
-              <View className="w-12 h-12 bg-purple-500 rounded-xl items-center justify-center mb-3">
-                <Ionicons name="people" size={24} color="white" />
-              </View>
-              <Text className="text-gray-900 dark:text-white font-semibold text-base mb-1">My Classes</Text>
-              <Text className="text-gray-500 dark:text-gray-400 text-sm">Manage students</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm active:opacity-80"
-              onPress={() => router.push('/(teacher)/statistics')}
-            >
-              <View className="w-12 h-12 bg-orange-500 rounded-xl items-center justify-center mb-3">
-                <Ionicons name="bar-chart" size={24} color="white" />
-              </View>
-              <Text className="text-gray-900 dark:text-white font-semibold text-base mb-1">Analytics</Text>
-              <Text className="text-gray-500 dark:text-gray-400 text-sm">View insights</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Recent Activity */}
-        <View className="px-6 mb-8">
-          <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-xl font-bold text-gray-900 dark:text-white">Recent Activity</Text>
-            <TouchableOpacity>
-              <Text className="text-blue-600 dark:text-blue-400 text-base font-medium">View All</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
-            {recentActivity.length > 0 ? (
-              recentActivity.map((activity, index) => (
-                <TouchableOpacity
-                  key={activity.id}
-                  className={`flex-row items-center p-4 ${index !== recentActivity.length - 1 ? 'border-b border-gray-100 dark:border-gray-700' : ''} active:bg-gray-50 dark:active:bg-gray-700`}
-                >
-                  <View className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${getStatusBgColor(activity.status)}`}>
-                    <Ionicons
-                      name={getTypeIcon(activity.type) as any}
-                      size={20}
-                      color={getStatusColor(activity.status)}
-                    />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-gray-900 dark:text-white font-semibold text-base mb-1">
-                      {activity.title}
-                    </Text>
-                    <Text className="text-gray-500 dark:text-gray-400 text-sm mb-1">
-                      {activity.description}
-                    </Text>
-                    <Text className="text-gray-400 dark:text-gray-500 text-xs">
-                      {new Date(activity.date).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </Text>
-                  </View>
-                  <View className={`px-3 py-1 rounded-full ${getStatusBgColor(activity.status)}`}>
-                    <Text
-                      className="text-xs font-semibold capitalize"
-                      style={{ color: getStatusColor(activity.status) }}
-                    >
-                      {activity.status}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))
+            {user?.profile?.avatar ? (
+              <Image 
+                source={{ uri: user.profile.avatar }} 
+                style={styles.avatar}
+              />
             ) : (
-              <View className="p-8 items-center">
-                <Ionicons name="time" size={48} color="#D1D5DB dark:text-gray-600" />
-                <Text className="text-gray-500 dark:text-gray-400 text-base font-medium mt-3">No recent activity</Text>
-                <Text className="text-gray-400 dark:text-gray-500 text-sm text-center mt-1">
-                  Your recent activities will appear here
-                </Text>
-              </View>
+              <Ionicons name="person" size={20} color={colors.primary} />
             )}
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Stats Grid */}
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Overview</Text>
+        <View style={styles.statsGrid}>
+          <StatCard
+            title="Active Exams"
+            value={stats.activeExams}
+            subtitle="Currently running"
+            icon="document-text"
+            color={colors.primary}
+            trend="+12%"
+          />
+          <StatCard
+            title="Students"
+            value={stats.totalStudents}
+            subtitle="Total enrolled"
+            icon="people"
+            color={colors.success}
+            trend="+8%"
+          />
+          <StatCard
+            title="Avg. Score"
+            value={`${stats.averageScore}%`}
+            subtitle="Class average"
+            icon="trending-up"
+            color={colors.warning}
+            trend="+5%"
+          />
+          <StatCard
+            title="Engagement"
+            value={`${stats.studentEngagement}%`}
+            subtitle="Student activity"
+            icon="pulse"
+            color={colors.error}
+          />
+        </View>
+      </View>
+
+      {/* Quick Actions */}
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Actions</Text>
+        <View style={styles.actionsGrid}>
+          <QuickActionCard
+            title="Create Exam"
+            description="Design new assessment"
+            icon="document-text"
+            color={colors.primary}
+            onPress={() => router.push('/(teacher)/create-exam')}
+          />
+          <QuickActionCard
+            title="Assign Work"
+            description="Create homework"
+            icon="book"
+            color={colors.success}
+            onPress={() => router.push('/(teacher)/create-homework')}
+          />
+          <QuickActionCard
+            title="My Classes"
+            description="Manage students"
+            icon="people"
+            color={colors.purple}
+            onPress={() => router.push('/(teacher)/classes')}
+          />
+          <QuickActionCard
+            title="Analytics"
+            description="View insights"
+            icon="bar-chart"
+            color={colors.warning}
+            onPress={() => router.push('/(teacher)/statistics')}
+          />
+        </View>
+      </View>
+
+      {/* Recent Activity */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Activity</Text>
+          <TouchableOpacity onPress={() => router.push('/(teacher)/activity')}>
+            <Text style={[styles.viewAllText, { color: colors.primary }]}>View All</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={[styles.activityCard, { backgroundColor: colors.backgroundElevated }]}>
+          {recentActivity.length > 0 ? (
+            recentActivity.map((activity, index) => (
+              <TouchableOpacity
+                key={activity.id}
+                style={[
+                  styles.activityItem,
+                  { 
+                    borderBottomColor: colors.border,
+                    borderBottomWidth: index !== recentActivity.length - 1 ? 1 : 0
+                  }
+                ]}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.activityIcon, { backgroundColor: `${getStatusColor(activity.status)}15` }]}>
+                  <Ionicons
+                    name={getTypeIcon(activity.type) as any}
+                    size={20}
+                    color={getStatusColor(activity.status)}
+                  />
+                </View>
+                <View style={styles.activityContent}>
+                  <Text style={[styles.activityTitle, { color: colors.textPrimary }]}>
+                    {activity.title}
+                  </Text>
+                  <Text style={[styles.activityDescription, { color: colors.textSecondary }]}>
+                    {activity.description}
+                  </Text>
+                  <Text style={[styles.activityDate, { color: colors.textTertiary }]}>
+                    {new Date(activity.date).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </Text>
+                </View>
+                <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(activity.status)}15` }]}>
+                  <Text
+                    style={[styles.statusText, { color: getStatusColor(activity.status) }]}
+                  >
+                    {activity.status}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Ionicons name="time" size={48} color={colors.textTertiary} />
+              <Text style={[styles.emptyStateTitle, { color: colors.textSecondary }]}>
+                No recent activity
+              </Text>
+              <Text style={[styles.emptyStateSubtitle, { color: colors.textTertiary }]}>
+                Your recent activities will appear here
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+
+      {/* Additional Stats */}
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Performance Insights</Text>
+        <View style={styles.insightsGrid}>
+          <View style={[styles.insightCard, { backgroundColor: colors.backgroundElevated }]}>
+            <Ionicons name="school" size={24} color={colors.success} />
+            <Text style={[styles.insightValue, { color: colors.textPrimary }]}>
+              {stats.classesCount}
+            </Text>
+            <Text style={[styles.insightLabel, { color: colors.textSecondary }]}>Classes</Text>
+          </View>
+          <View style={[styles.insightCard, { backgroundColor: colors.backgroundElevated }]}>
+            <Ionicons name="library" size={24} color={colors.primary} />
+            <Text style={[styles.insightValue, { color: colors.textPrimary }]}>
+              {stats.subjectsCount}
+            </Text>
+            <Text style={[styles.insightLabel, { color: colors.textSecondary }]}>Subjects</Text>
+          </View>
+          <View style={[styles.insightCard, { backgroundColor: colors.backgroundElevated }]}>
+            <Ionicons name="time" size={24} color={colors.warning} />
+            <Text style={[styles.insightValue, { color: colors.textPrimary }]}>
+              {stats.responseTime}
+            </Text>
+            <Text style={[styles.insightLabel, { color: colors.textSecondary }]}>Avg. Response</Text>
           </View>
         </View>
       </View>
+
+      {/* Bottom Spacing */}
+      <View style={styles.bottomSpacing} />
     </ScrollView>
   );
 }
+
+const styles = {
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: designTokens.spacing.md,
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '500',
+  },
+  header: {
+    paddingHorizontal: designTokens.spacing.xl,
+    paddingTop: designTokens.spacing.xxxl,
+    paddingBottom: designTokens.spacing.xl,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  headerText: {
+    flex: 1,
+  },
+  greeting: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: designTokens.typography.title3.fontWeight as any,
+    marginBottom: designTokens.spacing.xs,
+  },
+  userName: {
+    fontSize: designTokens.typography.title1.fontSize,
+    fontWeight: designTokens.typography.title1.fontWeight as any,
+    marginBottom: designTokens.spacing.xs,
+  },
+  date: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '500',
+  },
+  profileButton: {
+    width: 44,
+    height: 44,
+    borderRadius: designTokens.borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...designTokens.shadows.sm,
+  },
+  avatar: {
+    width: 32,
+    height: 32,
+    borderRadius: designTokens.borderRadius.full,
+  },
+  section: {
+    paddingHorizontal: designTokens.spacing.xl,
+    marginTop: designTokens.spacing.xl,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: designTokens.spacing.md,
+  },
+  sectionTitle: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: designTokens.typography.title3.fontWeight as any,
+    marginBottom: designTokens.spacing.md,
+  },
+  viewAllText: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '600',
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: designTokens.spacing.md,
+  },
+  statCard: {
+    flex: 1,
+    minWidth: '48%',
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    ...designTokens.shadows.sm,
+  },
+  statHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: designTokens.spacing.md,
+  },
+  statIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: designTokens.borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  trendText: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    fontWeight: '600',
+  },
+  statValue: {
+    fontSize: designTokens.typography.title2.fontSize,
+    fontWeight: designTokens.typography.title2.fontWeight as any,
+    marginBottom: designTokens.spacing.xs,
+  },
+  statTitle: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '600',
+    marginBottom: designTokens.spacing.xs,
+  },
+  statSubtitle: {
+    fontSize: designTokens.typography.caption1.fontSize,
+  },
+  actionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: designTokens.spacing.md,
+  },
+  quickActionCard: {
+    flex: 1,
+    minWidth: '48%',
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    ...designTokens.shadows.sm,
+  },
+  actionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: designTokens.borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: designTokens.spacing.md,
+  },
+  actionTitle: {
+    fontSize: designTokens.typography.headline.fontSize,
+    fontWeight: '600',
+    marginBottom: designTokens.spacing.xs,
+  },
+  actionDescription: {
+    fontSize: designTokens.typography.caption1.fontSize,
+  },
+  activityCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    ...designTokens.shadows.sm,
+    overflow: 'hidden',
+  },
+  activityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: designTokens.spacing.lg,
+  },
+  activityIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: designTokens.borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: designTokens.spacing.md,
+  },
+  activityContent: {
+    flex: 1,
+  },
+  activityTitle: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '600',
+    marginBottom: designTokens.spacing.xs,
+  },
+  activityDescription: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    marginBottom: designTokens.spacing.xs,
+  },
+  activityDate: {
+    fontSize: designTokens.typography.caption2.fontSize,
+  },
+  statusBadge: {
+    paddingHorizontal: designTokens.spacing.sm,
+    paddingVertical: designTokens.spacing.xs,
+    borderRadius: designTokens.borderRadius.full,
+  },
+  statusText: {
+    fontSize: designTokens.typography.caption2.fontSize,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  emptyState: {
+    padding: designTokens.spacing.xxl,
+    alignItems: 'center',
+  },
+  emptyStateTitle: {
+    fontSize: designTokens.typography.headline.fontSize,
+    fontWeight: '500',
+    marginTop: designTokens.spacing.lg,
+    marginBottom: designTokens.spacing.xs,
+  },
+  emptyStateSubtitle: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    textAlign: 'center',
+  },
+  insightsGrid: {
+    flexDirection: 'row',
+    gap: designTokens.spacing.md,
+  },
+  insightCard: {
+    flex: 1,
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    alignItems: 'center',
+    ...designTokens.shadows.sm,
+  },
+  insightValue: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: designTokens.typography.title3.fontWeight as any,
+    marginTop: designTokens.spacing.sm,
+    marginBottom: designTokens.spacing.xs,
+  },
+  insightLabel: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    textAlign: 'center',
+  },
+  bottomSpacing: {
+    height: designTokens.spacing.xxl,
+  },
+};

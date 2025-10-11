@@ -1,4 +1,4 @@
-// app/(teacher)/exam-results/[id].tsx
+// app/(teacher)/exam-results/[id].tsx - Updated with Full Dark Mode Support
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -15,6 +15,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { apiService } from '../../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
+import { useThemeContext } from '@/contexts/ThemeContext';
+import { designTokens } from '../../../src/utils/designTokens';
 
 interface Student {
   id: string;
@@ -77,83 +79,77 @@ export default function TeacherExamResultsScreen() {
   const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'analytics'>('overview');
   const [feedback, setFeedback] = useState('');
   const [sendingFeedback, setSendingFeedback] = useState(false);
+  const { colors } = useThemeContext();
 
   useEffect(() => {
     loadExamResults();
   }, [id]);
 
-  // In your app/(teacher)/exam-results/[id].tsx - Update the loadExamResults function
-const loadExamResults = async () => {
-  try {
-    setLoading(true);
-    console.log('📊 Loading teacher exam results for:', id);
-    
-    // ✅ FIX: Use the teacher-specific endpoint
-    const response = await apiService.getTeacherExamResults(id as string);
-    
-    if (response.data.success) {
-      const data = response.data.data;
-      console.log('✅ Exam results loaded:', data);
+  const loadExamResults = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getTeacherExamResults(id as string);
       
-      const transformedResults: ExamResults = {
-        exam: {
-          id: data.exam.id,
-          title: data.exam.title,
-          subject: data.exam.subject,
-          class: data.exam.class,
-          created_at: data.exam.created_at,
-          settings: data.exam.settings,
-          teacher: data.exam.teacher
-        },
-        statistics: data.statistics || {
-          totalSubmissions: data.submissions?.length || 0,
-          averageScore: 0,
-          highestScore: 0,
-          lowestScore: 0,
-          completionRate: 0
-        },
-        scoreDistribution: data.scoreDistribution || [],
-        submissions: (data.submissions || []).map((sub: any) => ({
-          id: sub.id,
-          student: {
-            id: sub.student?.id || 'unknown',
-            name: sub.student?.name || 'Unknown Student',
-            studentId: sub.student?.studentId || 'N/A',
-            class: sub.student?.class || 'Unknown Class',
-            email: sub.student?.email
+      if (response.data.success) {
+        const data = response.data.data;
+        
+        const transformedResults: ExamResults = {
+          exam: {
+            id: data.exam.id,
+            title: data.exam.title,
+            subject: data.exam.subject,
+            class: data.exam.class,
+            created_at: data.exam.created_at,
+            settings: data.exam.settings,
+            teacher: data.exam.teacher
           },
-          score: sub.score,
-          total_points: sub.totalPoints || sub.total_points,
-          percentage: sub.percentage || Math.round((sub.score / (sub.totalPoints || sub.total_points || 1)) * 100),
-          submitted_at: sub.submittedAt || sub.submitted_at,
-          answers: sub.answers || [],
-          time_spent: sub.time_spent
-        }))
-      };
+          statistics: data.statistics || {
+            totalSubmissions: data.submissions?.length || 0,
+            averageScore: 0,
+            highestScore: 0,
+            lowestScore: 0,
+            completionRate: 0
+          },
+          scoreDistribution: data.scoreDistribution || [],
+          submissions: (data.submissions || []).map((sub: any) => ({
+            id: sub.id,
+            student: {
+              id: sub.student?.id || 'unknown',
+              name: sub.student?.name || 'Unknown Student',
+              studentId: sub.student?.studentId || 'N/A',
+              class: sub.student?.class || 'Unknown Class',
+              email: sub.student?.email
+            },
+            score: sub.score,
+            total_points: sub.totalPoints || sub.total_points,
+            percentage: sub.percentage || Math.round((sub.score / (sub.totalPoints || sub.total_points || 1)) * 100),
+            submitted_at: sub.submittedAt || sub.submitted_at,
+            answers: sub.answers || [],
+            time_spent: sub.time_spent
+          }))
+        };
 
-      // Calculate statistics if not provided
-      if (!data.statistics && transformedResults.submissions.length > 0) {
-        const stats = calculateStatistics(transformedResults.submissions);
-        transformedResults.statistics = { ...transformedResults.statistics, ...stats };
+        if (!data.statistics && transformedResults.submissions.length > 0) {
+          const stats = calculateStatistics(transformedResults.submissions);
+          transformedResults.statistics = { ...transformedResults.statistics, ...stats };
+        }
+
+        if (!data.scoreDistribution && transformedResults.submissions.length > 0) {
+          transformedResults.scoreDistribution = calculateScoreDistribution(transformedResults.submissions);
+        }
+
+        setResults(transformedResults);
+      } else {
+        throw new Error(response.data.error);
       }
-
-      // Calculate score distribution if not provided
-      if (!data.scoreDistribution && transformedResults.submissions.length > 0) {
-        transformedResults.scoreDistribution = calculateScoreDistribution(transformedResults.submissions);
-      }
-
-      setResults(transformedResults);
-    } else {
-      throw new Error(response.data.error);
+    } catch (error: any) {
+      console.error('Failed to load exam results:', error);
+      Alert.alert('Error', 'Failed to load exam results. Please try again.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-  } catch (error: any) {
-    console.error('❌ Failed to load exam results:', error);
-    Alert.alert('Error', 'Failed to load exam results. Please try again.');
-  } finally {
-    setLoading(false);
-    setRefreshing(false);
-  }
-};
+  };
 
   const calculateScoreDistribution = (submissions: Submission[]) => {
     const distribution = [
@@ -196,19 +192,11 @@ const loadExamResults = async () => {
   };
 
   const getGradeColor = (percentage: number) => {
-    if (percentage >= 90) return 'text-green-600';
-    if (percentage >= 80) return 'text-blue-600';
-    if (percentage >= 70) return 'text-yellow-600';
-    if (percentage >= 60) return 'text-orange-600';
-    return 'text-red-600';
-  };
-
-  const getGradeBgColor = (percentage: number) => {
-    if (percentage >= 90) return 'bg-green-500';
-    if (percentage >= 80) return 'bg-blue-500';
-    if (percentage >= 70) return 'bg-yellow-500';
-    if (percentage >= 60) return 'bg-orange-500';
-    return 'bg-red-500';
+    if (percentage >= 90) return colors.success;
+    if (percentage >= 80) return colors.primary;
+    if (percentage >= 70) return colors.warning;
+    if (percentage >= 60) return colors.orange;
+    return colors.error;
   };
 
   const handleViewSubmission = (submission: Submission) => {
@@ -225,8 +213,7 @@ const loadExamResults = async () => {
 
     try {
       setSendingFeedback(true);
-      // TODO: Implement feedback API endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       Alert.alert('Success', 'Feedback sent to student successfully!');
       setFeedbackModalVisible(false);
@@ -282,27 +269,27 @@ const loadExamResults = async () => {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text className="text-gray-600 mt-4 text-base font-medium">Loading exam results...</Text>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading exam results...</Text>
       </View>
     );
   }
 
   if (!results) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
-        <Ionicons name="alert-circle" size={64} color="#D1D5DB" />
-        <Text className="text-gray-500 text-lg font-medium mt-4">No results found</Text>
-        <Text className="text-gray-400 text-sm text-center mt-2 px-8">
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Ionicons name="alert-circle" size={64} color={colors.textTertiary} />
+        <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No results found</Text>
+        <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
           Unable to load exam results. The exam may not exist or you may not have permission to view it.
         </Text>
         <TouchableOpacity 
-          className="bg-blue-500 px-6 py-3 rounded-xl mt-6 flex-row items-center"
+          style={[styles.backButton, { backgroundColor: colors.primary }]}
           onPress={() => router.back()}
         >
           <Ionicons name="chevron-back" size={20} color="white" />
-          <Text className="text-white font-semibold ml-2">Go Back</Text>
+          <Text style={styles.backButtonText}>Go Back</Text>
         </TouchableOpacity>
       </View>
     );
@@ -311,49 +298,49 @@ const loadExamResults = async () => {
   const performanceInsights = getPerformanceInsights();
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View className="bg-white dark:bg-gray-800 px-6 pt-16 pb-6 border-b border-gray-100">
-        <View className="flex-row items-center justify-between mb-4">
+      <View style={[styles.header, { backgroundColor: colors.backgroundElevated, borderBottomColor: colors.border }]}>
+        <View style={styles.headerContent}>
           <TouchableOpacity 
-            className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
+            style={[styles.headerButton, { backgroundColor: colors.background }]}
             onPress={() => router.back()}
           >
-            <Ionicons name="chevron-back" size={20} color="#007AFF" />
+            <Ionicons name="chevron-back" size={20} color={colors.primary} />
           </TouchableOpacity>
-          <Text className="text-xl font-bold text-gray-900 flex-1 text-center">Exam Analytics</Text>
-          <View className="flex-row space-x-2">
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Exam Analytics</Text>
+          <View style={styles.headerActions}>
             <TouchableOpacity 
-              className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
+              style={[styles.headerButton, { backgroundColor: colors.background }]}
               onPress={shareResults}
             >
-              <Ionicons name="share" size={18} color="#007AFF" />
+              <Ionicons name="share" size={18} color={colors.primary} />
             </TouchableOpacity>
             <TouchableOpacity 
-              className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
+              style={[styles.headerButton, { backgroundColor: colors.background }]}
               onPress={exportResults}
             >
-              <Ionicons name="download" size={18} color="#007AFF" />
+              <Ionicons name="download" size={18} color={colors.primary} />
             </TouchableOpacity>
           </View>
         </View>
 
-        <View className="mb-4">
-          <Text className="text-2xl font-bold text-gray-900 mb-1">
+        <View style={styles.examInfo}>
+          <Text style={[styles.examTitle, { color: colors.textPrimary }]}>
             {results.exam.title}
           </Text>
-          <Text className="text-gray-500 text-base font-medium">
+          <Text style={[styles.examSubtitle, { color: colors.textSecondary }]}>
             {results.exam.subject} • {results.exam.class}
           </Text>
           {results.exam.teacher && (
-            <Text className="text-gray-400 text-sm mt-1">
+            <Text style={[styles.examCreator, { color: colors.textTertiary }]}>
               Created by: {results.exam.teacher.profile.name}
             </Text>
           )}
         </View>
 
         {/* Tabs */}
-        <View className="flex-row bg-gray-100 rounded-xl p-1">
+        <View style={[styles.tabsContainer, { backgroundColor: colors.background }]}>
           {[
             { key: 'overview', label: 'Overview', icon: 'stats-chart' },
             { key: 'submissions', label: 'Submissions', icon: 'document-text' },
@@ -361,20 +348,26 @@ const loadExamResults = async () => {
           ].map((tab) => (
             <TouchableOpacity
               key={tab.key}
-              className={`flex-1 py-3 rounded-lg flex-row justify-center items-center ${
-                activeTab === tab.key ? 'bg-white dark:bg-gray-800 shadow-sm' : ''
-              }`}
+              style={[
+                styles.tab,
+                activeTab === tab.key 
+                  ? { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm } 
+                  : {}
+              ]}
               onPress={() => setActiveTab(tab.key as any)}
             >
               <Ionicons
                 name={tab.icon as any}
                 size={16}
-                color={activeTab === tab.key ? '#007AFF' : '#8E8E93'}
+                color={activeTab === tab.key ? colors.primary : colors.textTertiary}
               />
               <Text
-                className={`ml-2 text-sm font-semibold ${
-                  activeTab === tab.key ? 'text-blue-600' : 'text-gray-500'
-                }`}
+                style={[
+                  styles.tabText,
+                  activeTab === tab.key 
+                    ? { color: colors.primary } 
+                    : { color: colors.textSecondary }
+                ]}
               >
                 {tab.label}
               </Text>
@@ -384,23 +377,27 @@ const loadExamResults = async () => {
       </View>
 
       <ScrollView 
-        className="flex-1"
+        style={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+          />
         }
       >
         {activeTab === 'overview' ? (
-          <View className="p-6">
+          <View style={styles.tabContent}>
             {/* Performance Insights */}
             {performanceInsights.length > 0 && (
-              <View className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 mb-6">
-                <View className="flex-row items-start">
-                  <Ionicons name="bulb" size={20} color="#D97706" className="mt-0.5 mr-3" />
-                  <View className="flex-1">
-                    <Text className="text-yellow-800 font-semibold text-base mb-2">Performance Insights</Text>
+              <View style={[styles.insightsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.warning }]}>
+                <View style={styles.insightsHeader}>
+                  <Ionicons name="bulb" size={20} color={colors.warning} style={styles.insightsIcon} />
+                  <View style={styles.insightsText}>
+                    <Text style={[styles.insightsTitle, { color: colors.textPrimary }]}>Performance Insights</Text>
                     {performanceInsights.map((insight, index) => (
-                      <Text key={index} className="text-yellow-700 text-sm mb-1">• {insight}</Text>
+                      <Text key={index} style={[styles.insightItem, { color: colors.textSecondary }]}>• {insight}</Text>
                     ))}
                   </View>
                 </View>
@@ -408,84 +405,75 @@ const loadExamResults = async () => {
             )}
 
             {/* Statistics Cards */}
-            <View className="grid grid-cols-2 gap-4 mb-6">
-              <View className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 shadow-sm">
-                <View className="flex-row items-center justify-between mb-3">
-                  <Text className="text-gray-500 text-sm font-medium">Submissions</Text>
-                  <Ionicons name="people" size={20} color="#007AFF" />
+            <View style={styles.statsGrid}>
+              <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                <View style={styles.statHeader}>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Submissions</Text>
+                  <Ionicons name="people" size={20} color={colors.primary} />
                 </View>
-                <Text className="text-2xl font-bold text-gray-900">
-                  {results.statistics.totalSubmissions}
-                </Text>
-                <Text className="text-gray-400 text-xs mt-1">
+                <Text style={[styles.statValue, { color: colors.textPrimary }]}>{results.statistics.totalSubmissions}</Text>
+                <Text style={[styles.statSubtitle, { color: colors.textTertiary }]}>
                   {results.statistics.totalStudents ? `of ${results.statistics.totalStudents} students` : 'Total submissions'}
                 </Text>
               </View>
 
-              <View className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 shadow-sm">
-                <View className="flex-row items-center justify-between mb-3">
-                  <Text className="text-gray-500 text-sm font-medium">Avg. Score</Text>
-                  <Ionicons name="trophy" size={20} color="#34C759" />
+              <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                <View style={styles.statHeader}>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Avg. Score</Text>
+                  <Ionicons name="trophy" size={20} color={colors.success} />
                 </View>
-                <Text className="text-2xl font-bold text-gray-900">
-                  {results.statistics.averageScore}%
-                </Text>
-                <Text className="text-gray-400 text-xs mt-1">Class average</Text>
+                <Text style={[styles.statValue, { color: colors.textPrimary }]}>{results.statistics.averageScore}%</Text>
+                <Text style={[styles.statSubtitle, { color: colors.textTertiary }]}>Class average</Text>
               </View>
 
-              <View className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 shadow-sm">
-                <View className="flex-row items-center justify-between mb-3">
-                  <Text className="text-gray-500 text-sm font-medium">Highest</Text>
-                  <Ionicons name="trending-up" size={20} color="#FF9500" />
+              <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                <View style={styles.statHeader}>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Highest</Text>
+                  <Ionicons name="trending-up" size={20} color={colors.warning} />
                 </View>
-                <Text className="text-2xl font-bold text-gray-900">
-                  {results.statistics.highestScore}%
-                </Text>
-                <Text className="text-gray-400 text-xs mt-1">Top score</Text>
+                <Text style={[styles.statValue, { color: colors.textPrimary }]}>{results.statistics.highestScore}%</Text>
+                <Text style={[styles.statSubtitle, { color: colors.textTertiary }]}>Top score</Text>
               </View>
 
-              <View className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 shadow-sm">
-                <View className="flex-row items-center justify-between mb-3">
-                  <Text className="text-gray-500 text-sm font-medium">Lowest</Text>
-                  <Ionicons name="trending-down" size={20} color="#FF3B30" />
+              <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                <View style={styles.statHeader}>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Lowest</Text>
+                  <Ionicons name="trending-down" size={20} color={colors.error} />
                 </View>
-                <Text className="text-2xl font-bold text-gray-900">
-                  {results.statistics.lowestScore}%
-                </Text>
-                <Text className="text-gray-400 text-xs mt-1">Lowest score</Text>
+                <Text style={[styles.statValue, { color: colors.textPrimary }]}>{results.statistics.lowestScore}%</Text>
+                <Text style={[styles.statSubtitle, { color: colors.textTertiary }]}>Lowest score</Text>
               </View>
             </View>
 
             {/* Score Distribution */}
-            <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm mb-6">
-              <Text className="text-lg font-semibold text-gray-900 mb-4">Score Distribution</Text>
-              <View className="space-y-3">
+            <View style={[styles.scoreDistributionCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Score Distribution</Text>
+              <View style={styles.distributionList}>
                 {results.scoreDistribution.map((item, index) => (
-                  <View key={index} className="flex-row items-center justify-between">
-                    <Text className="text-gray-700 font-medium text-sm w-12">{item.range}</Text>
-                    <View className="flex-1 mx-3">
-                      <View className="w-full bg-gray-200 rounded-full h-3">
-                        <View 
-                          className={`h-3 rounded-full ${getGradeBgColor(parseInt(item.range.split('-')[0]))}`}
-                          style={{ 
+                  <View key={index} style={styles.distributionItem}>
+                    <Text style={[styles.distributionRange, { color: colors.textPrimary }]}>{item.range}</Text>
+                    <View style={[styles.distributionBar, { backgroundColor: colors.background }]}>
+                      <View 
+                        style={[
+                          styles.distributionFill,
+                          { 
+                            backgroundColor: getGradeColor(parseInt(item.range.split('-')[0])),
                             width: `${(item.count / Math.max(...results.scoreDistribution.map(s => s.count), 1) * 100)}%` 
-                          }}
-                        />
-                      </View>
+                          }
+                        ]}
+                      />
                     </View>
-                    <Text className="text-gray-500 text-sm font-medium w-8 text-right">
-                      {item.count}
-                    </Text>
+                    <Text style={[styles.distributionCount, { color: colors.textSecondary }]}>{item.count}</Text>
                   </View>
                 ))}
               </View>
             </View>
 
             {/* Top Performers */}
-            <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm">
-              <View className="flex-row justify-between items-center mb-4">
-                <Text className="text-lg font-semibold text-gray-900">Top Performers</Text>
-                <Text className="text-gray-500 text-sm">
+            <View style={[styles.topPerformersCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+              <View style={styles.cardHeader}>
+                <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Top Performers</Text>
+                <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
                   Showing top 3 of {results.submissions.length}
                 </Text>
               </View>
@@ -495,24 +483,24 @@ const loadExamResults = async () => {
                 .map((submission, index) => (
                 <View 
                   key={submission.id}
-                  className={`flex-row items-center justify-between py-3 ${
-                    index < 2 ? 'border-b border-gray-100' : ''
-                  }`}
+                  style={[
+                    styles.performerItem,
+                    { 
+                      borderBottomColor: colors.border,
+                      borderBottomWidth: index < 2 ? 1 : 0
+                    }
+                  ]}
                 >
-                  <View className="flex-row items-center">
-                    <View className="w-8 h-8 bg-blue-100 rounded-full items-center justify-center mr-3">
-                      <Text className="text-blue-600 font-bold text-sm">{index + 1}</Text>
+                  <View style={styles.performerInfo}>
+                    <View style={[styles.rankBadge, { backgroundColor: `${colors.primary}20` }]}>
+                      <Text style={[styles.rankText, { color: colors.primary }]}>{index + 1}</Text>
                     </View>
-                    <View>
-                      <Text className="text-gray-900 font-semibold text-base">
-                        {submission.student.name}
-                      </Text>
-                      <Text className="text-gray-500 text-sm">
-                        {submission.student.studentId}
-                      </Text>
+                    <View style={styles.performerDetails}>
+                      <Text style={[styles.performerName, { color: colors.textPrimary }]}>{submission.student.name}</Text>
+                      <Text style={[styles.performerId, { color: colors.textSecondary }]}>{submission.student.studentId}</Text>
                     </View>
                   </View>
-                  <Text className={`text-lg font-bold ${getGradeColor(submission.percentage)}`}>
+                  <Text style={[styles.performerScore, { color: getGradeColor(submission.percentage) }]}>
                     {submission.percentage}%
                   </Text>
                 </View>
@@ -520,44 +508,47 @@ const loadExamResults = async () => {
             </View>
           </View>
         ) : activeTab === 'submissions' ? (
-          <View className="p-6">
+          <View style={styles.tabContent}>
             {/* Submissions List */}
-            <View className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <View style={[styles.submissionsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
               {results.submissions.length > 0 ? (
                 results.submissions
                   .sort((a, b) => b.percentage - a.percentage)
                   .map((submission, index) => (
                   <TouchableOpacity
                     key={submission.id}
-                    className={`flex-row items-center justify-between p-4 ${
-                      index !== results.submissions.length - 1 ? 'border-b border-gray-100' : ''
-                    } active:bg-gray-50`}
+                    style={[
+                      styles.submissionItem,
+                      { 
+                        borderBottomColor: colors.border,
+                        borderBottomWidth: index !== results.submissions.length - 1 ? 1 : 0
+                      }
+                    ]}
                     onPress={() => handleViewSubmission(submission)}
+                    activeOpacity={0.7}
                   >
-                    <View className="flex-1">
-                      <Text className="text-gray-900 font-semibold text-base mb-1">
-                        {submission.student.name}
-                      </Text>
-                      <Text className="text-gray-500 text-sm">
+                    <View style={styles.submissionInfo}>
+                      <Text style={[styles.submissionName, { color: colors.textPrimary }]}>{submission.student.name}</Text>
+                      <Text style={[styles.submissionDetails, { color: colors.textSecondary }]}>
                         {submission.student.studentId} • {submission.student.class}
                       </Text>
                     </View>
-                    <View className="items-end">
-                      <Text className={`text-lg font-bold ${getGradeColor(submission.percentage)}`}>
+                    <View style={styles.submissionMeta}>
+                      <Text style={[styles.submissionScore, { color: getGradeColor(submission.percentage) }]}>
                         {submission.percentage}%
                       </Text>
-                      <Text className="text-gray-400 text-xs">
+                      <Text style={[styles.submissionDate, { color: colors.textTertiary }]}>
                         {new Date(submission.submitted_at).toLocaleDateString()}
                       </Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={16} color="#8E8E93" className="ml-3" />
+                    <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} style={styles.chevronIcon} />
                   </TouchableOpacity>
                 ))
               ) : (
-                <View className="p-8 items-center">
-                  <Ionicons name="document-text-outline" size={48} color="#D1D5DB" />
-                  <Text className="text-gray-500 text-base font-medium mt-3">No submissions yet</Text>
-                  <Text className="text-gray-400 text-sm text-center mt-1">
+                <View style={styles.emptyState}>
+                  <Ionicons name="document-text-outline" size={48} color={colors.textTertiary} />
+                  <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>No submissions yet</Text>
+                  <Text style={[styles.emptySubtitle, { color: colors.textTertiary }]}>
                     Students haven't submitted this exam yet
                   </Text>
                 </View>
@@ -565,26 +556,26 @@ const loadExamResults = async () => {
             </View>
           </View>
         ) : (
-          <View className="p-6">
+          <View style={styles.tabContent}>
             {/* Analytics Tab */}
-            <View className="space-y-6">
+            <View style={styles.analyticsSection}>
               {/* Performance Trends */}
-              <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm">
-                <Text className="text-lg font-semibold text-gray-900 mb-4">Performance Analysis</Text>
-                <View className="space-y-3">
-                  <View className="flex-row justify-between items-center py-2">
-                    <Text className="text-gray-700 font-medium">Class Average</Text>
-                    <Text className="text-gray-900 font-semibold">{results.statistics.averageScore}%</Text>
+              <View style={[styles.analyticsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Performance Analysis</Text>
+                <View style={styles.trendList}>
+                  <View style={[styles.trendItem, { borderBottomColor: colors.border }]}>
+                    <Text style={[styles.trendLabel, { color: colors.textSecondary }]}>Class Average</Text>
+                    <Text style={[styles.trendValue, { color: colors.textPrimary }]}>{results.statistics.averageScore}%</Text>
                   </View>
-                  <View className="flex-row justify-between items-center py-2 border-t border-gray-100">
-                    <Text className="text-gray-700 font-medium">Performance Range</Text>
-                    <Text className="text-gray-900 font-semibold">
+                  <View style={[styles.trendItem, { borderBottomColor: colors.border }]}>
+                    <Text style={[styles.trendLabel, { color: colors.textSecondary }]}>Performance Range</Text>
+                    <Text style={[styles.trendValue, { color: colors.textPrimary }]}>
                       {results.statistics.lowestScore}% - {results.statistics.highestScore}%
                     </Text>
                   </View>
-                  <View className="flex-row justify-between items-center py-2 border-t border-gray-100">
-                    <Text className="text-gray-700 font-medium">Standard Deviation</Text>
-                    <Text className="text-gray-900 font-semibold">
+                  <View style={styles.trendItem}>
+                    <Text style={[styles.trendLabel, { color: colors.textSecondary }]}>Standard Deviation</Text>
+                    <Text style={[styles.trendValue, { color: colors.textPrimary }]}>
                       {Math.round(Math.sqrt(
                         results.submissions.reduce((acc, sub) => 
                           acc + Math.pow(sub.percentage - results.statistics.averageScore, 2), 0
@@ -596,28 +587,28 @@ const loadExamResults = async () => {
               </View>
 
               {/* Question Analysis */}
-              <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm">
-                <Text className="text-lg font-semibold text-gray-900 mb-4">Question Analysis</Text>
-                <Text className="text-gray-500 text-sm mb-4">
+              <View style={[styles.analyticsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Question Analysis</Text>
+                <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
                   Detailed question-by-question analysis coming soon...
                 </Text>
-                <TouchableOpacity className="bg-blue-50 rounded-xl p-4 items-center">
-                  <Text className="text-blue-600 font-semibold">Generate Detailed Report</Text>
+                <TouchableOpacity style={[styles.actionButton, { backgroundColor: `${colors.primary}15` }]}>
+                  <Text style={[styles.actionButtonText, { color: colors.primary }]}>Generate Detailed Report</Text>
                 </TouchableOpacity>
               </View>
 
               {/* Action Recommendations */}
-              <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm">
-                <Text className="text-lg font-semibold text-gray-900 mb-4">Recommended Actions</Text>
-                <View className="space-y-3">
+              <View style={[styles.analyticsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Recommended Actions</Text>
+                <View style={styles.recommendationsList}>
                   {performanceInsights.map((insight, index) => (
-                    <View key={index} className="flex-row items-start">
-                      <Ionicons name="checkmark-circle" size={16} color="#34C759" className="mt-1 mr-3" />
-                      <Text className="text-gray-700 text-sm flex-1">{insight}</Text>
+                    <View key={index} style={styles.recommendationItem}>
+                      <Ionicons name="checkmark-circle" size={16} color={colors.success} style={styles.recommendationIcon} />
+                      <Text style={[styles.recommendationText, { color: colors.textSecondary }]}>{insight}</Text>
                     </View>
                   ))}
                   {performanceInsights.length === 0 && (
-                    <Text className="text-gray-500 text-sm">No specific recommendations at this time.</Text>
+                    <Text style={[styles.noRecommendations, { color: colors.textTertiary }]}>No specific recommendations at this time.</Text>
                   )}
                 </View>
               </View>
@@ -632,59 +623,57 @@ const loadExamResults = async () => {
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <View className="flex-1 bg-gray-50">
+        <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
           {/* Modal Header */}
-          <View className="bg-white dark:bg-gray-800 px-6 pt-16 pb-4 border-b border-gray-100">
-            <View className="flex-row items-center justify-between mb-4">
+          <View style={[styles.modalHeader, { backgroundColor: colors.backgroundElevated, borderBottomColor: colors.border }]}>
+            <View style={styles.modalHeaderContent}>
               <TouchableOpacity 
-                className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
+                style={[styles.modalButton, { backgroundColor: colors.background }]}
                 onPress={() => setDetailModalVisible(false)}
               >
-                <Ionicons name="close" size={20} color="#007AFF" />
+                <Ionicons name="close" size={20} color={colors.primary} />
               </TouchableOpacity>
-              <Text className="text-xl font-bold text-gray-900 flex-1 text-center">Submission Details</Text>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Submission Details</Text>
               <TouchableOpacity 
-                className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center"
+                style={[styles.modalButton, { backgroundColor: `${colors.primary}15` }]}
                 onPress={handleSendFeedback}
               >
-                <Ionicons name="chatbubble" size={18} color="#007AFF" />
+                <Ionicons name="chatbubble" size={18} color={colors.primary} />
               </TouchableOpacity>
             </View>
           </View>
 
           {selectedSubmission && (
-            <ScrollView className="flex-1 p-6">
-              <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm mb-6">
-                <View className="flex-row items-center justify-between mb-4">
-                  <View className="flex-1">
-                    <Text className="text-lg font-semibold text-gray-900">
-                      {selectedSubmission.student.name}
-                    </Text>
-                    <Text className="text-gray-500 text-sm">
+            <ScrollView style={styles.modalContent}>
+              <View style={[styles.studentCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                <View style={styles.studentHeader}>
+                  <View style={styles.studentInfo}>
+                    <Text style={[styles.studentName, { color: colors.textPrimary }]}>{selectedSubmission.student.name}</Text>
+                    <Text style={[styles.studentDetails, { color: colors.textSecondary }]}>
                       {selectedSubmission.student.studentId} • {selectedSubmission.student.class}
                     </Text>
                     {selectedSubmission.student.email && (
-                      <Text className="text-gray-400 text-sm">
+                      <Text style={[styles.studentEmail, { color: colors.textTertiary }]}>
                         {selectedSubmission.student.email}
                       </Text>
                     )}
                   </View>
-                  <View className="items-end">
-                    <Text className={`text-2xl font-bold ${getGradeColor(selectedSubmission.percentage)}`}>
+                  <View style={styles.studentScore}>
+                    <Text style={[styles.scoreValue, { color: getGradeColor(selectedSubmission.percentage) }]}>
                       {selectedSubmission.percentage}%
                     </Text>
-                    <Text className="text-gray-500 text-sm">
+                    <Text style={[styles.scoreDetails, { color: colors.textSecondary }]}>
                       {selectedSubmission.score}/{selectedSubmission.total_points} points
                     </Text>
                   </View>
                 </View>
 
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-gray-400 text-sm">
+                <View style={styles.submissionMetaRow}>
+                  <Text style={[styles.submissionMetaText, { color: colors.textTertiary }]}>
                     Submitted: {new Date(selectedSubmission.submitted_at).toLocaleString()}
                   </Text>
                   {selectedSubmission.time_spent && (
-                    <Text className="text-gray-400 text-sm">
+                    <Text style={[styles.submissionMetaText, { color: colors.textTertiary }]}>
                       Time: {selectedSubmission.time_spent}
                     </Text>
                   )}
@@ -692,30 +681,27 @@ const loadExamResults = async () => {
               </View>
 
               {/* Answers Section */}
-              <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 shadow-sm">
-                <Text className="text-lg font-semibold text-gray-900 mb-4">Question Analysis</Text>
-                <View className="space-y-4">
+              <View style={[styles.answersCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Question Analysis</Text>
+                <View style={styles.answersList}>
                   {selectedSubmission.answers.map((answer: any, index: number) => (
-                    <View key={index} className="border border-gray-200 rounded-xl p-4">
-                      <View className="flex-row justify-between items-start mb-2">
-                        <Text className="text-gray-900 font-medium text-base flex-1">
-                          Q{index + 1}
-                        </Text>
-                        <View className={`px-2 py-1 rounded-full ${
-                          answer.is_correct ? 'bg-green-50' : 'bg-red-50'
-                        }`}>
-                          <Text className={`text-xs font-semibold ${
-                            answer.is_correct ? 'text-green-600' : 'text-red-600'
-                          }`}>
+                    <View 
+                      key={index} 
+                      style={[styles.answerItem, { borderColor: colors.border }]}
+                    >
+                      <View style={styles.answerHeader}>
+                        <Text style={[styles.questionNumber, { color: colors.textPrimary }]}>Q{index + 1}</Text>
+                        <View style={[styles.answerStatus, { backgroundColor: answer.is_correct ? `${colors.success}20` : `${colors.error}20` }]}>
+                          <Text style={[styles.statusText, { color: answer.is_correct ? colors.success : colors.error }]}>
                             {answer.is_correct ? 'Correct' : 'Incorrect'}
                           </Text>
                         </View>
                       </View>
-                      <Text className="text-gray-500 text-sm mb-2">
+                      <Text style={[styles.answerPoints, { color: colors.textSecondary }]}>
                         Points: {answer.points}
                       </Text>
                       {answer.answer && (
-                        <Text className="text-gray-700 text-sm">
+                        <Text style={[styles.answerText, { color: colors.textPrimary }]}>
                           Answer: {answer.answer}
                         </Text>
                       )}
@@ -725,18 +711,18 @@ const loadExamResults = async () => {
               </View>
 
               {/* Action Buttons */}
-              <View className="flex-row space-x-3 mt-6">
+              <View style={styles.modalActions}>
                 <TouchableOpacity 
-                  className="flex-1 bg-blue-500 rounded-xl p-4 items-center"
+                  style={[styles.modalActionButton, { backgroundColor: colors.primary }]}
                   onPress={exportResults}
                 >
-                  <Text className="text-white font-semibold text-base">Download PDF</Text>
+                  <Text style={styles.modalActionText}>Download PDF</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  className="flex-1 bg-gray-100 rounded-xl p-4 items-center"
+                  style={[styles.modalActionButton, { backgroundColor: colors.background }]}
                   onPress={handleSendFeedback}
                 >
-                  <Text className="text-gray-700 font-semibold text-base">Send Feedback</Text>
+                  <Text style={[styles.modalActionText, { color: colors.textPrimary }]}>Send Feedback</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -750,37 +736,42 @@ const loadExamResults = async () => {
         animationType="slide"
         transparent={true}
       >
-        <View className="flex-1 justify-center items-center bg-black/50 p-6">
-          <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm">
-            <Text className="text-xl font-bold text-gray-900 mb-2">Send Feedback</Text>
-            <Text className="text-gray-500 text-sm mb-4">
+        <View style={[styles.feedbackOverlay, { backgroundColor: `${colors.textPrimary}80` }]}>
+          <View style={[styles.feedbackModal, { backgroundColor: colors.backgroundElevated }]}>
+            <Text style={[styles.feedbackTitle, { color: colors.textPrimary }]}>Send Feedback</Text>
+            <Text style={[styles.feedbackSubtitle, { color: colors.textSecondary }]}>
               Send personalized feedback to {selectedSubmission?.student.name}
             </Text>
             
             <TextInput
-              className="border border-gray-300 rounded-xl p-4 h-32 text-base mb-4"
+              style={[styles.feedbackInput, { 
+                borderColor: colors.border, 
+                backgroundColor: colors.background,
+                color: colors.textPrimary
+              }]}
               placeholder="Write your feedback here..."
+              placeholderTextColor={colors.textTertiary}
               multiline
               value={feedback}
               onChangeText={setFeedback}
             />
             
-            <View className="flex-row space-x-3">
+            <View style={styles.feedbackActions}>
               <TouchableOpacity 
-                className="flex-1 bg-gray-100 rounded-xl p-4 items-center"
+                style={[styles.feedbackButton, { backgroundColor: colors.background }]}
                 onPress={() => setFeedbackModalVisible(false)}
               >
-                <Text className="text-gray-700 font-semibold">Cancel</Text>
+                <Text style={[styles.feedbackButtonText, { color: colors.textPrimary }]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                className="flex-1 bg-blue-500 rounded-xl p-4 items-center"
+                style={[styles.feedbackButton, { backgroundColor: colors.primary }]}
                 onPress={sendFeedback}
                 disabled={!feedback.trim() || sendingFeedback}
               >
                 {sendingFeedback ? (
                   <ActivityIndicator size="small" color="white" />
                 ) : (
-                  <Text className="text-white font-semibold">Send</Text>
+                  <Text style={styles.feedbackButtonText}>Send</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -790,3 +781,537 @@ const loadExamResults = async () => {
     </View>
   );
 }
+
+const styles = {
+  container: {
+    flex: 1,
+  },
+  loadingText: {
+    marginTop: designTokens.spacing.md,
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '500',
+  },
+  emptyTitle: {
+    fontSize: designTokens.typography.headline.fontSize,
+    fontWeight: '500',
+    marginTop: designTokens.spacing.lg,
+    marginBottom: designTokens.spacing.xs,
+  },
+  emptySubtitle: {
+    fontSize: designTokens.typography.footnote.fontSize,
+    textAlign: 'center',
+    marginBottom: designTokens.spacing.lg,
+    paddingHorizontal: designTokens.spacing.xl,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: designTokens.spacing.lg,
+    paddingVertical: designTokens.spacing.sm,
+    borderRadius: designTokens.borderRadius.lg,
+    ...designTokens.shadows.sm,
+  },
+  backButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: designTokens.typography.body.fontSize,
+    marginLeft: designTokens.spacing.xs,
+  },
+  header: {
+    paddingHorizontal: designTokens.spacing.xl,
+    paddingTop: designTokens.spacing.xxxl,
+    paddingBottom: designTokens.spacing.lg,
+    borderBottomWidth: 1,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: designTokens.spacing.md,
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: designTokens.borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: designTokens.typography.title3.fontWeight as any,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: designTokens.spacing.sm,
+  },
+  examInfo: {
+    marginBottom: designTokens.spacing.lg,
+  },
+  examTitle: {
+    fontSize: designTokens.typography.title2.fontSize,
+    fontWeight: designTokens.typography.title2.fontWeight as any,
+    marginBottom: designTokens.spacing.xs,
+  },
+  examSubtitle: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '500',
+    marginBottom: designTokens.spacing.xs,
+  },
+  examCreator: {
+    fontSize: designTokens.typography.caption1.fontSize,
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    borderRadius: designTokens.borderRadius.lg,
+    padding: designTokens.spacing.xs,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: designTokens.spacing.md,
+    borderRadius: designTokens.borderRadius.md,
+  },
+  tabText: {
+    marginLeft: designTokens.spacing.xs,
+    fontSize: designTokens.typography.footnote.fontSize,
+    fontWeight: '600',
+  },
+  content: {
+    flex: 1,
+  },
+  tabContent: {
+    padding: designTokens.spacing.xl,
+  },
+  insightsCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    borderWidth: 1,
+    marginBottom: designTokens.spacing.lg,
+  },
+  insightsHeader: {
+    flexDirection: 'row',
+  },
+  insightsIcon: {
+    marginTop: designTokens.spacing.xxs,
+    marginRight: designTokens.spacing.md,
+  },
+  insightsText: {
+    flex: 1,
+  },
+  insightsTitle: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '600',
+    marginBottom: designTokens.spacing.xs,
+  },
+  insightItem: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    marginBottom: designTokens.spacing.xxs,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: designTokens.spacing.md,
+    marginBottom: designTokens.spacing.lg,
+  },
+  statCard: {
+    flex: 1,
+    minWidth: '48%',
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    borderWidth: 1,
+    ...designTokens.shadows.sm,
+  },
+  statHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: designTokens.spacing.md,
+  },
+  statLabel: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    fontWeight: '500',
+  },
+  statValue: {
+    fontSize: designTokens.typography.title2.fontSize,
+    fontWeight: designTokens.typography.title2.fontWeight as any,
+    marginBottom: designTokens.spacing.xxs,
+  },
+  statSubtitle: {
+    fontSize: designTokens.typography.caption2.fontSize,
+  },
+  scoreDistributionCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    borderWidth: 1,
+    marginBottom: designTokens.spacing.lg,
+    ...designTokens.shadows.sm,
+  },
+  cardTitle: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: designTokens.typography.title3.fontWeight as any,
+    marginBottom: designTokens.spacing.md,
+  },
+  distributionList: {
+    gap: designTokens.spacing.md,
+  },
+  distributionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  distributionRange: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    fontWeight: '500',
+    width: 40,
+  },
+  distributionBar: {
+    flex: 1,
+    height: 12,
+    borderRadius: designTokens.borderRadius.full,
+    marginHorizontal: designTokens.spacing.md,
+    overflow: 'hidden',
+  },
+  distributionFill: {
+    height: '100%',
+    borderRadius: designTokens.borderRadius.full,
+  },
+  distributionCount: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    fontWeight: '500',
+    width: 30,
+    textAlign: 'right',
+  },
+  topPerformersCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    borderWidth: 1,
+    ...designTokens.shadows.sm,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: designTokens.spacing.md,
+  },
+  cardSubtitle: {
+    fontSize: designTokens.typography.caption1.fontSize,
+  },
+  performerItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: designTokens.spacing.md,
+  },
+  performerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rankBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: designTokens.borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: designTokens.spacing.md,
+  },
+  rankText: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    fontWeight: '600',
+  },
+  performerDetails: {
+    flex: 1,
+  },
+  performerName: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '600',
+    marginBottom: designTokens.spacing.xxs,
+  },
+  performerId: {
+    fontSize: designTokens.typography.caption1.fontSize,
+  },
+  performerScore: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: '700',
+  },
+  submissionsCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    borderWidth: 1,
+    overflow: 'hidden',
+    ...designTokens.shadows.sm,
+  },
+  submissionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: designTokens.spacing.lg,
+  },
+  submissionInfo: {
+    flex: 1,
+    marginRight: designTokens.spacing.md,
+  },
+  submissionName: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '600',
+    marginBottom: designTokens.spacing.xxs,
+  },
+  submissionDetails: {
+    fontSize: designTokens.typography.caption1.fontSize,
+  },
+  submissionMeta: {
+    alignItems: 'flex-end',
+    marginRight: designTokens.spacing.md,
+  },
+  submissionScore: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: '700',
+    marginBottom: designTokens.spacing.xxs,
+  },
+  submissionDate: {
+    fontSize: designTokens.typography.caption2.fontSize,
+  },
+  chevronIcon: {
+    marginLeft: designTokens.spacing.xs,
+  },
+  emptyState: {
+    padding: designTokens.spacing.xxl,
+    alignItems: 'center',
+  },
+  analyticsSection: {
+    gap: designTokens.spacing.lg,
+  },
+  analyticsCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    borderWidth: 1,
+    ...designTokens.shadows.sm,
+  },
+  trendList: {
+    gap: designTokens.spacing.md,
+  },
+  trendItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: designTokens.spacing.xs,
+    borderBottomWidth: 1,
+  },
+  trendLabel: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '500',
+  },
+  trendValue: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '600',
+  },
+  actionButton: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: designTokens.spacing.lg,
+    paddingVertical: designTokens.spacing.sm,
+    borderRadius: designTokens.borderRadius.lg,
+    marginTop: designTokens.spacing.md,
+  },
+  actionButtonText: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '600',
+  },
+  recommendationsList: {
+    gap: designTokens.spacing.md,
+    marginTop: designTokens.spacing.md,
+  },
+  recommendationItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  recommendationIcon: {
+    marginTop: designTokens.spacing.xxs,
+    marginRight: designTokens.spacing.md,
+  },
+  recommendationText: {
+    flex: 1,
+    fontSize: designTokens.typography.caption1.fontSize,
+  },
+  noRecommendations: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    textAlign: 'center',
+    marginTop: designTokens.spacing.md,
+  },
+  modalContainer: {
+    flex: 1,
+  },
+  modalHeader: {
+    paddingHorizontal: designTokens.spacing.xl,
+    paddingTop: designTokens.spacing.xxxl,
+    paddingBottom: designTokens.spacing.md,
+    borderBottomWidth: 1,
+  },
+  modalHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: designTokens.spacing.md,
+  },
+  modalButton: {
+    width: 40,
+    height: 40,
+    borderRadius: designTokens.borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalTitle: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: designTokens.typography.title3.fontWeight as any,
+  },
+  modalContent: {
+    flex: 1,
+    padding: designTokens.spacing.xl,
+  },
+  studentCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    borderWidth: 1,
+    marginBottom: designTokens.spacing.lg,
+    ...designTokens.shadows.sm,
+  },
+  studentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: designTokens.spacing.md,
+  },
+  studentInfo: {
+    flex: 1,
+    marginRight: designTokens.spacing.md,
+  },
+  studentName: {
+    fontSize: designTokens.typography.headline.fontSize,
+    fontWeight: '600',
+    marginBottom: designTokens.spacing.xs,
+  },
+  studentDetails: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    marginBottom: designTokens.spacing.xs,
+  },
+  studentEmail: {
+    fontSize: designTokens.typography.caption2.fontSize,
+  },
+  studentScore: {
+    alignItems: 'flex-end',
+  },
+  scoreValue: {
+    fontSize: designTokens.typography.title1.fontSize,
+    fontWeight: designTokens.typography.title1.fontWeight as any,
+    marginBottom: designTokens.spacing.xxs,
+  },
+  scoreDetails: {
+    fontSize: designTokens.typography.caption1.fontSize,
+  },
+  submissionMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  submissionMetaText: {
+    fontSize: designTokens.typography.caption1.fontSize,
+  },
+  answersCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    borderWidth: 1,
+    ...designTokens.shadows.sm,
+  },
+  answersList: {
+    gap: designTokens.spacing.md,
+  },
+  answerItem: {
+    borderWidth: 1,
+    borderRadius: designTokens.borderRadius.lg,
+    padding: designTokens.spacing.lg,
+  },
+  answerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: designTokens.spacing.sm,
+  },
+  questionNumber: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '600',
+    flex: 1,
+  },
+  answerStatus: {
+    paddingHorizontal: designTokens.spacing.sm,
+    paddingVertical: designTokens.spacing.xs,
+    borderRadius: designTokens.borderRadius.full,
+  },
+  statusText: {
+    fontSize: designTokens.typography.caption2.fontSize,
+    fontWeight: '600',
+  },
+  answerPoints: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    marginBottom: designTokens.spacing.sm,
+  },
+  answerText: {
+    fontSize: designTokens.typography.caption1.fontSize,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: designTokens.spacing.md,
+    marginTop: designTokens.spacing.lg,
+  },
+  modalActionButton: {
+    flex: 1,
+    paddingVertical: designTokens.spacing.md,
+    borderRadius: designTokens.borderRadius.lg,
+    alignItems: 'center',
+  },
+  modalActionText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: designTokens.typography.body.fontSize,
+  },
+  feedbackOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: designTokens.spacing.xl,
+  },
+  feedbackModal: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    ...designTokens.shadows.xl,
+  },
+  feedbackTitle: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: designTokens.typography.title3.fontWeight as any,
+    marginBottom: designTokens.spacing.xs,
+  },
+  feedbackSubtitle: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    marginBottom: designTokens.spacing.lg,
+  },
+  feedbackInput: {
+    borderWidth: 1,
+    borderRadius: designTokens.borderRadius.lg,
+    padding: designTokens.spacing.md,
+    height: 120,
+    fontSize: designTokens.typography.body.fontSize,
+    marginBottom: designTokens.spacing.lg,
+  },
+  feedbackActions: {
+    flexDirection: 'row',
+    gap: designTokens.spacing.md,
+  },
+  feedbackButton: {
+    flex: 1,
+    paddingVertical: designTokens.spacing.md,
+    borderRadius: designTokens.borderRadius.lg,
+    alignItems: 'center',
+  },
+  feedbackButtonText: {
+    fontWeight: '600',
+    fontSize: designTokens.typography.body.fontSize,
+  },
+};
+
