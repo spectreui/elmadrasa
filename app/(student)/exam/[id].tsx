@@ -47,16 +47,16 @@ export default function StudentExamScreen() {
     try {
       setLoading(true);
       const response = await apiService.getExamById(examId!);
-      
+
       if (response.data.data && response.data.success) {
         setExam(response.data.data);
-        
+
         // Check exam status based on due date
         const examData = response.data.data;
         if (examData.due_date) {
           const now = new Date();
           const dueDate = new Date(examData.due_date);
-          
+
           if (dueDate < now) {
             setExamStatus('missed');
           } else {
@@ -65,7 +65,7 @@ export default function StudentExamScreen() {
         } else {
           setExamStatus('available');
         }
-        
+
         // Initialize timer if exam is timed
         if (examData.settings?.timed) {
           setTimeLeft(examData.settings.duration * 60); // Convert to seconds
@@ -137,7 +137,7 @@ export default function StudentExamScreen() {
 
     // Check if all questions are answered
     const unansweredQuestions = exam?.questions.filter(q => !answers[q.id]) || [];
-    
+
     if (unansweredQuestions.length > 0) {
       Alert.alert(
         'Unanswered Questions',
@@ -153,44 +153,44 @@ export default function StudentExamScreen() {
   };
 
   const submitExam = async () => {
-  try {
-    setSubmitting(true);
-    console.log('📤 Starting exam submission...');
-    
-    const response = await apiService.api.post('/submissions/submit', {
-      examId: examId,
-      answers: answers
-    });
+    try {
+      setSubmitting(true);
+      console.log('📤 Starting exam submission...');
 
-    console.log('✅ Exam submission response:', response.data);
-
-    if (response.data.success) {
-      const submissionData = response.data.data;
-      
-      // ✅ Direct navigation without Alert
-      console.log('🎯 Navigating directly to results page...');
-      router.push({
-        pathname: '/exam/results/' + examId,
-        params: { 
-          submissionId: submissionData.submission?.id,
-          examId: examId,
-          score: submissionData.score,
-          totalPoints: submissionData.totalPoints,
-          percentage: Math.round(submissionData.percentage),
-          examTitle: exam?.title || 'Exam Results'
-        }
+      const response = await apiService.api.post('/submissions/submit', {
+        examId: examId,
+        answers: answers
       });
-      
-    } else {
-      Alert.alert('Submission Failed', response.data.error || 'Unknown error occurred');
+
+      console.log('✅ Exam submission response:', response.data);
+
+      if (response.data.success) {
+        const submissionData = response.data.data;
+
+        // ✅ Direct navigation without Alert
+        console.log('🎯 Navigating directly to results page...');
+        router.push({
+          pathname: '/exam/results/' + examId,
+          params: {
+            submissionId: submissionData.submission?.id,
+            examId: examId,
+            score: submissionData.score,
+            totalPoints: submissionData.totalPoints,
+            percentage: Math.round(submissionData.percentage),
+            examTitle: exam?.title || 'Exam Results'
+          }
+        });
+
+      } else {
+        Alert.alert('Submission Failed', response.data.error || 'Unknown error occurred');
+      }
+    } catch (error: any) {
+      console.error('❌ Exam submission error:', error);
+      Alert.alert('Error', 'Failed to submit exam. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
-  } catch (error: any) {
-    console.error('❌ Exam submission error:', error);
-    Alert.alert('Error', 'Failed to submit exam. Please try again.');
-  } finally {
-    setSubmitting(false);
-  }
-};
+  };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -214,7 +214,7 @@ export default function StudentExamScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Exam not found</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.button}
             onPress={() => router.back()}
           >
@@ -236,7 +236,7 @@ export default function StudentExamScreen() {
           <Text style={styles.subtitle}>
             You have already completed this exam.
           </Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.button}
             onPress={() => router.push('/exams')}
           >
@@ -255,7 +255,7 @@ export default function StudentExamScreen() {
           <Text style={styles.subtitle}>
             The due date for this exam has passed.
           </Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.button}
             onPress={() => router.push('/exams')}
           >
@@ -279,7 +279,7 @@ export default function StudentExamScreen() {
           <Text style={styles.subtitle}>
             Available on: {new Date(exam.due_date!).toLocaleDateString()}
           </Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.button}
             onPress={() => router.push('/exams')}
           >
@@ -294,13 +294,13 @@ export default function StudentExamScreen() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
         >
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
-        
+
         {timeLeft !== null && (
           <View style={[
             styles.timer,
@@ -322,7 +322,7 @@ export default function StudentExamScreen() {
             Teacher: {exam.teacher.profile.name}
           </Text>
         )}
-        
+
         {exam.settings?.timed && (
           <View style={styles.examSettings}>
             <Text style={styles.settingsText}>
@@ -330,28 +330,27 @@ export default function StudentExamScreen() {
             </Text>
           </View>
         )}
-        
+
         {exam.due_date && (
           <View style={styles.dueDateContainer}>
             <Text style={styles.dueDateText}>
-              Due: {new Date(exam.due_date).toLocaleDateString()} at {new Date(exam.due_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+              Due: {new Date(exam.due_date).toLocaleDateString()} at {new Date(exam.due_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </Text>
           </View>
         )}
       </View>
 
       {/* Questions */}
-      <Animated.ScrollView 
-      
-      entering={FadeIn.duration(600)} // Smooth fade-in when screen loads
-      style={styles.questionsContainer}>
+      <Animated.ScrollView
+        entering={FadeIn.duration(600)} // Smooth fade-in when screen loads
+        style={styles.questionsContainer}>
         {exam.questions.map((question, index) => (
           <View key={question.id} style={styles.questionCard}>
             <Text style={styles.questionNumber}>
               Question {index + 1} ({question.points} point{question.points !== 1 ? 's' : ''})
             </Text>
             <Text style={styles.questionText}>{question.question}</Text>
-            
+
             {question.type === 'mcq' ? (
               <View style={styles.optionsContainer}>
                 {question.options.map((option, optionIndex) => (
@@ -391,8 +390,8 @@ export default function StudentExamScreen() {
                       question.question,
                       [
                         { text: 'Cancel', style: 'cancel' },
-                        { 
-                          text: 'Save', 
+                        {
+                          text: 'Save',
                           onPress: (answer) => {
                             if (answer) {
                               handleAnswerSelect(question.id, answer);
