@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "com.webeleavte.elmadrasa",
-      "versionCode": 31,
+      "versionCode": 32,
       "jsEngine": "hermes"
     },
     "ios": {
@@ -22,6 +22,31 @@
         "ITSAppUsesNonExemptEncryption": false
       },
       "buildNumber": "2"
+    },
+    "web": {
+      "pwa": {
+        "name": "Elmadrasa",
+        "shortName": "Elmadrasa",
+        "themeColor": "#007AFF",
+        "backgroundColor": "#F2F2F7",
+        "display": "standalone",
+        "startUrl": ".",
+        "orientation": "portrait",
+        "scope": "/",
+        "description": "Elmadrasa School App",
+        "icons": [
+          {
+            "src": "./assets/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+          },
+          {
+            "src": "./assets/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+          }
+        ]
+      }
     },
     "extra": {
       "router": {},
