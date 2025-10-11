@@ -3,8 +3,8 @@ import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { LoginRequest, AuthResponse, ApiResponse, User, Exam } from "../types";
 import { storage } from "../utils/storage";
 
-const API_BASE_URL = "http://192.168.1.228:5001/api";
-// const API_BASE_URL = "https://elmadrasa-server.vercel.app/api";
+// const API_BASE_URL = "http://192.168.1.228:5001/api";
+const API_BASE_URL = "https://elmadrasa-server.vercel.app/api";
 
 class ApiService {
   private api: AxiosInstance;

@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "com.webeleavte.elmadrasa",
-      "versionCode": 27,
+      "versionCode": 29,
       "jsEngine": "hermes"
     },
     "ios": {
