@@ -12,9 +12,19 @@
       "typedRoutes": true
     },
     "android": {
-      "bundleIdentifier": "com.elmadrasa.app",
-      "versionCode": 32,
-      "jsEngine": "hermes"
+      "jsEngine": "hermes",
+      "package": "com.elmadrasa.app",
+      
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            { "scheme": "https", "host": "elmadrasa-link.vercel.app" },
+            { "scheme": "elmadrasa" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "ios": {
       "bundleIdentifier": "com.elmadrasa.app",
@@ -24,7 +34,7 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "2"
+      "buildNumber": "3"
     },
     "web": {
       "pwa": {
