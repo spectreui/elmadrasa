@@ -12,12 +12,15 @@
       "typedRoutes": true
     },
     "android": {
-      "package": "com.webeleavte.elmadrasa",
+      "bundleIdentifier": "com.elmadrasa.app",
       "versionCode": 32,
       "jsEngine": "hermes"
     },
     "ios": {
-      "bundleIdentifier": "com.webeleavte.elmadrasa",
+      "bundleIdentifier": "com.elmadrasa.app",
+      "associatedDomains": [
+        "applinks:elmadrasa-link.vercel.app"
+      ],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },

@@ -107,29 +107,44 @@ export default function ExamsScreen() {
     loadExams();
   };
 
+  // Update the getExamStatus function to handle the new status field
   const getExamStatus = (exam: Exam): 'available' | 'taken' | 'upcoming' | 'missed' => {
+    // Use the status from backend if available, otherwise calculate it
+    if (exam.status) {
+      return exam.status as 'available' | 'taken' | 'upcoming' | 'missed';
+    }
+
+    // Fallback to calculation if needed
     if (takenExams.has(exam.id)) {
       return 'taken';
     }
 
-    // If no due date, consider it available
-    if (!exam.due_date) {
-      return 'available';
-    }
-
-    // Properly parse the date with timezone
     const now = new Date();
-    const dueDate = new Date(exam.due_date);
+    const availableFrom = exam.available_from ? new Date(exam.available_from) : null;
+    const dueDate = exam.due_date ? new Date(exam.due_date) : null;
 
-    // If due date is in the future, it's upcoming
-    if (dueDate > now) {
+    // If available_from is in the future, it's upcoming
+    if (availableFrom && now < availableFrom) {
       return 'upcoming';
     }
 
-    // If due date has passed and not taken, it's missed
-    return 'missed';
+    // If due_date is in the past, it's missed
+    if (dueDate && now > dueDate) {
+      return 'missed';
+    }
+
+    // If within the window, it's available
+    const isAfterStart = availableFrom ? now >= availableFrom : true;
+    const isBeforeEnd = dueDate ? now <= dueDate : true;
+
+    if (isAfterStart && isBeforeEnd) {
+      return 'available';
+    }
+
+    return 'available'; // fallback
   };
 
+  // Update getStatusColor to include missed status
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'available': return { bg: '#10B98115', border: '#10B981', text: '#10B981' };
@@ -140,6 +155,7 @@ export default function ExamsScreen() {
     }
   };
 
+  // Update getStatusText to include missed status
   const getStatusText = (status: string) => {
     switch (status) {
       case 'available': return 'Available';
@@ -150,8 +166,10 @@ export default function ExamsScreen() {
     }
   };
 
+  // Update handleExamPress to handle missed exams
   const handleExamPress = async (exam: Exam) => {
     const status = getExamStatus(exam);
+
     if (status === 'taken') {
       try {
         // Fetch the latest submission for this exam
@@ -168,10 +186,41 @@ export default function ExamsScreen() {
         router.push(`/exam/results/${exam.id}`);
       }
     } else if (status === 'available') {
+      // For available exams, check access before navigating
       router.push(`/exam/${exam.id}`);
+    } else if (status === 'upcoming') {
+      const availableFrom = exam.available_from ? new Date(exam.available_from) : null;
+      if (availableFrom) {
+        Alert.alert('Coming Soon', `This exam will be available on ${availableFrom.toLocaleString()}.`);
+      }
+    } else if (status === 'missed') {
+      Alert.alert('Exam Expired', 'The due date for this exam has passed.');
     }
   };
 
+
+  // Add this helper function outside your component
+  const mapClassDisplay = (className: string): string => {
+    const classMap: { [key: string]: string } = {
+      '7': '1st Prep', '8': '2nd Prep', '9': '3rd Prep',
+      '10': '1st Secondary', '11': '2nd Secondary', '12': '3rd Secondary'
+    };
+
+    // Handle common Egyptian class formats
+    const normalized = className.toLowerCase().trim();
+    if (normalized.includes('prep') || normalized.includes('preparatory')) {
+      if (normalized.includes('1') || normalized.includes('first')) return '1st Prep';
+      if (normalized.includes('2') || normalized.includes('second')) return '2nd Prep';
+      if (normalized.includes('3') || normalized.includes('third')) return '3rd Prep';
+    }
+    if (normalized.includes('secondary')) {
+      if (normalized.includes('1') || normalized.includes('first')) return '1st Secondary';
+      if (normalized.includes('2') || normalized.includes('second')) return '2nd Secondary';
+      if (normalized.includes('3') || normalized.includes('third')) return '3rd Secondary';
+    }
+
+    return classMap[className] || `Class ${className}`;
+  };
 
   if (loading) {
     return (
@@ -441,7 +490,7 @@ export default function ExamsScreen() {
                           fontSize: designTokens.typography.footnote.fontSize,
                           color: colors.textSecondary
                         }}>
-                          {exam.subject} • Class {exam.class}
+                          {exam.subject} • {mapClassDisplay(exam.class)}
                         </Text>
                       </View>
                       <View style={{
@@ -484,14 +533,33 @@ export default function ExamsScreen() {
                     </View>
 
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={{
-                        fontSize: designTokens.typography.caption1.fontSize,
-                        color: colors.textTertiary
-                      }}>
-                        {exam.due_date
-                          ? `Due: ${new Date(exam.due_date).toLocaleDateString()}`
-                          : 'No due date'}
-                      </Text>
+                      <View>
+                        {exam.available_from && (
+                          <Text style={{
+                            fontSize: designTokens.typography.caption1.fontSize,
+                            color: colors.textTertiary,
+                            marginBottom: 4
+                          }}>
+                            Available: {new Date(exam.available_from).toLocaleDateString()} at {new Date(exam.available_from).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </Text>
+                        )}
+                        {exam.due_date && (
+                          <Text style={{
+                            fontSize: designTokens.typography.caption1.fontSize,
+                            color: colors.textTertiary
+                          }}>
+                            Due: {new Date(exam.due_date).toLocaleDateString()} at {new Date(exam.due_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </Text>
+                        )}
+                        {!exam.available_from && !exam.due_date && (
+                          <Text style={{
+                            fontSize: designTokens.typography.caption1.fontSize,
+                            color: colors.textTertiary
+                          }}>
+                            No time restrictions
+                          </Text>
+                        )}
+                      </View>
 
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={{

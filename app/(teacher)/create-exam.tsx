@@ -1,6 +1,6 @@
 // app/(teacher)/create-exam.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Switch, Modal, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Switch, Modal, FlatList, ActivityIndicator, Image } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';
@@ -8,6 +8,8 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useThemeContext } from '../../src/contexts/ThemeContext';
 import { designTokens } from '../../src/utils/designTokens';
+import * as FileSystem from 'expo-file-system';
+import * as DocumentPicker from 'expo-document-picker';
 
 export default function CreateExamScreen() {
   const { colors } = useThemeContext();
@@ -16,15 +18,22 @@ export default function CreateExamScreen() {
   const [subject, setSubject] = useState('');
   const [classLevel, setClassLevel] = useState('');
   const [dueDate, setDueDate] = useState<Date | null>(null);
+  const [availableFrom, setAvailableFrom] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showAvailableDatePicker, setShowAvailableDatePicker] = useState(false);
   const [timed, setTimed] = useState(false);
   const [duration, setDuration] = useState('60');
   const [allowRetake, setAllowRetake] = useState(false);
   const [randomOrder, setRandomOrder] = useState(false);
+  const [allowImageSubmissions, setAllowImageSubmissions] = useState(false);
+  const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
+  const [attachmentType, setAttachmentType] = useState<'pdf' | 'image' | null>(null);
+  const [attachmentName, setAttachmentName] = useState<string | null>(null);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
   const [questions, setQuestions] = useState<any[]>([
     { 
       question: '', 
-      type: 'multiple_choice', 
+      type: 'mcq', 
       options: ['', ''], 
       correct_answer: '', 
       points: '1' 
@@ -108,7 +117,7 @@ export default function CreateExamScreen() {
       ...questions,
       { 
         question: '', 
-        type: 'multiple_choice', 
+        type: 'mcq', 
         options: ['', ''], 
         correct_answer: '', 
         points: '1' 
@@ -141,6 +150,57 @@ export default function CreateExamScreen() {
     }
   };
 
+  // Add this function to handle file picking and upload
+  const pickAndUploadAttachment = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'image/*'],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        setUploadingAttachment(true);
+
+        // For images, we can upload as base64
+        if (asset.mimeType?.startsWith('image/')) {
+          try {
+            // Read as base64
+            const base64 = await FileSystem.readAsStringAsync(asset.uri, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+
+            // Upload to backend
+            const response = await apiService.api.post('/upload/exam-image-base64', {
+              image: `data:${asset.mimeType};base64,${base64}`,
+              fileName: asset.name,
+            });
+
+            if (response.data.success && response.data.url) {
+              setAttachmentUrl(response.data.url);
+              setAttachmentType('image');
+              setAttachmentName(asset.name);
+              Alert.alert('Success', 'Image uploaded successfully!');
+            }
+          } catch (error) {
+            console.error('Image upload error:', error);
+            Alert.alert('Error', 'Failed to upload image');
+          }
+        } 
+        // For PDFs, we need to handle differently
+        else if (asset.mimeType === 'application/pdf') {
+          Alert.alert('Info', 'PDF upload functionality needs to be implemented. For now, you can add image attachments.');
+        }
+
+        setUploadingAttachment(false);
+      }
+    } catch (error) {
+      console.error('Document picker error:', error);
+      Alert.alert('Error', 'Failed to pick document');
+      setUploadingAttachment(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!title || !subject || !classLevel) {
       Alert.alert('Error', 'Please fill in all required fields');
@@ -148,9 +208,15 @@ export default function CreateExamScreen() {
     }
 
     if (questions.some(q => !q.question || 
-      (q.type === 'multiple_choice' && (!q.options.some((opt: string) => opt) || !q.correct_answer)) || 
+      (q.type === 'mcq' && (!q.options.some((opt: string) => opt) || !q.correct_answer)) || 
       (q.type === 'text' && !q.correct_answer))) {
       Alert.alert('Error', 'Please complete all questions');
+      return;
+    }
+
+    // Validate date range
+    if (availableFrom && dueDate && availableFrom >= dueDate) {
+      Alert.alert('Error', 'Available date must be before due date');
       return;
     }
 
@@ -161,7 +227,11 @@ export default function CreateExamScreen() {
         title,
         subject,
         class: classLevel,
+        available_from: availableFrom ? availableFrom.toISOString() : null,
         due_date: dueDate ? dueDate.toISOString() : null,
+        allow_image_submissions: allowImageSubmissions,
+        attachment_url: attachmentUrl,
+        attachment_type: attachmentType,
         questions: questions.map(q => ({
           ...q,
           points: parseInt(q.points) || 1
@@ -465,6 +535,52 @@ export default function CreateExamScreen() {
             )}
           </View>
 
+          <View style={{ marginBottom: designTokens.spacing.lg }}>
+            <Text style={{
+              fontSize: designTokens.typography.footnote.fontSize,
+              color: colors.textSecondary,
+              marginBottom: designTokens.spacing.xs,
+              fontWeight: '500'
+            }}>
+              Available From
+            </Text>
+            <TouchableOpacity 
+              onPress={() => setShowAvailableDatePicker(true)}
+              style={{
+                backgroundColor: colors.background,
+                borderRadius: designTokens.borderRadius.lg,
+                padding: designTokens.spacing.md,
+                borderWidth: 1,
+                borderColor: colors.border,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}
+            >
+              <Text style={{
+                fontSize: designTokens.typography.body.fontSize,
+                color: availableFrom ? colors.textPrimary : colors.textTertiary
+              }}>
+                {availableFrom ? availableFrom.toLocaleString() : 'Select available date/time'}
+              </Text>
+              <Ionicons name="calendar" size={20} color={colors.textTertiary} />
+            </TouchableOpacity>
+            
+            {showAvailableDatePicker && (
+              <DateTimePicker
+                value={availableFrom || new Date()}
+                mode="datetime"
+                display="default"
+                onChange={(event, selectedDate) => {
+                  setShowAvailableDatePicker(false);
+                  if (selectedDate) {
+                    setAvailableFrom(selectedDate);
+                  }
+                }}
+              />
+            )}
+          </View>
+
           <View>
             <Text style={{
               fontSize: designTokens.typography.footnote.fontSize,
@@ -621,7 +737,8 @@ export default function CreateExamScreen() {
           <View style={{ 
             flexDirection: 'row', 
             justifyContent: 'space-between', 
-            alignItems: 'center'
+            alignItems: 'center',
+            marginBottom: designTokens.spacing.lg
           }}>
             <View>
               <Text style={{
@@ -645,6 +762,165 @@ export default function CreateExamScreen() {
               trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor={randomOrder ? '#fff' : '#f4f3f4'}
             />
+          </View>
+
+          {/* Advanced Options Section */}
+          <View style={{ 
+            padding: designTokens.spacing.lg,
+            backgroundColor: colors.background,
+            borderRadius: designTokens.borderRadius.lg,
+            marginTop: designTokens.spacing.md
+          }}>
+            <Text style={{
+              fontSize: designTokens.typography.title3.fontSize,
+              fontWeight: designTokens.typography.title3.fontWeight,
+              color: colors.textPrimary,
+              marginBottom: designTokens.spacing.md
+            } as any}>
+              Advanced Options
+            </Text>
+
+            <View style={{ 
+              flexDirection: 'row', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              marginBottom: designTokens.spacing.lg
+            }}>
+              <View>
+                <Text style={{
+                  fontSize: designTokens.typography.body.fontSize,
+                  color: colors.textPrimary,
+                  fontWeight: '500'
+                }}>
+                  Allow Image Submissions
+                </Text>
+                <Text style={{
+                  fontSize: designTokens.typography.footnote.fontSize,
+                  color: colors.textSecondary,
+                  marginTop: 2
+                }}>
+                  Students can submit photos of paper answers
+                </Text>
+              </View>
+              <Switch
+                value={allowImageSubmissions}
+                onValueChange={setAllowImageSubmissions}
+                trackColor={{ false: colors.border, true: colors.primary }}
+                thumbColor={allowImageSubmissions ? '#fff' : '#f4f3f4'}
+              />
+            </View>
+
+            <View>
+              <Text style={{
+                fontSize: designTokens.typography.footnote.fontSize,
+                color: colors.textSecondary,
+                marginBottom: designTokens.spacing.xs,
+                fontWeight: '500'
+              }}>
+                Exam Attachment (Optional)
+              </Text>
+              
+              {!attachmentUrl ? (
+                <TouchableOpacity 
+                  onPress={pickAndUploadAttachment}
+                  disabled={uploadingAttachment}
+                  style={{
+                    backgroundColor: colors.background,
+                    borderRadius: designTokens.borderRadius.lg,
+                    padding: designTokens.spacing.md,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
+                >
+                  {uploadingAttachment ? (
+                    <>
+                      <ActivityIndicator size="small" color={colors.primary} />
+                      <Text style={{
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: colors.textPrimary,
+                        marginLeft: 8
+                      }}>
+                        Uploading...
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <Ionicons name="attach" size={20} color={colors.textTertiary} />
+                      <Text style={{
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: colors.textPrimary,
+                        marginLeft: 8
+                      }}>
+                        Add PDF/Image Attachment
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              ) : (
+                <View style={{
+                  backgroundColor: colors.background,
+                  borderRadius: designTokens.borderRadius.lg,
+                  padding: designTokens.spacing.md,
+                  borderWidth: 1,
+                  borderColor: colors.border
+                }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: colors.textPrimary,
+                        marginBottom: 4
+                      }} numberOfLines={1}>
+                        {attachmentName || 'Attachment'}
+                      </Text>
+                      <Text style={{
+                        fontSize: designTokens.typography.caption1.fontSize,
+                        color: colors.textSecondary
+                      }}>
+                        {attachmentType?.toUpperCase()} File
+                      </Text>
+                    </View>
+                    <TouchableOpacity 
+                      onPress={() => {
+                        setAttachmentUrl(null);
+                        setAttachmentType(null);
+                        setAttachmentName(null);
+                      }}
+                      style={{
+                        padding: 8
+                      }}
+                    >
+                      <Ionicons name="close-circle" size={20} color="#EF4444" />
+                    </TouchableOpacity>
+                  </View>
+                  
+                  {attachmentType === 'image' && (
+                    <Image 
+                      source={{ uri: attachmentUrl }} 
+                      style={{ 
+                        width: '100%', 
+                        height: 100, 
+                        borderRadius: 8, 
+                        marginTop: 8 
+                      }} 
+                      resizeMode="cover"
+                    />
+                  )}
+                </View>
+              )}
+              
+              <Text style={{
+                fontSize: designTokens.typography.caption1.fontSize,
+                color: colors.textTertiary,
+                marginTop: 8,
+                fontStyle: 'italic'
+              }}>
+                Upload a PDF or image to replace questions. Students will see this file instead of individual questions.
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -725,10 +1001,10 @@ export default function CreateExamScreen() {
                 padding: 4
               }}>
                 <TouchableOpacity
-                  onPress={() => updateQuestion(qIndex, 'type', 'multiple_choice')}
+                  onPress={() => updateQuestion(qIndex, 'type', 'mcq')}
                   style={{
                     flex: 1,
-                    backgroundColor: question.type === 'multiple_choice' ? colors.primary : 'transparent',
+                    backgroundColor: question.type === 'mcq' ? colors.primary : 'transparent',
                     borderRadius: designTokens.borderRadius.md,
                     paddingVertical: designTokens.spacing.sm,
                     alignItems: 'center'
@@ -736,8 +1012,8 @@ export default function CreateExamScreen() {
                 >
                   <Text style={{
                     fontSize: designTokens.typography.footnote.fontSize,
-                    color: question.type === 'multiple_choice' ? '#fff' : colors.textSecondary,
-                    fontWeight: question.type === 'multiple_choice' ? '600' : 'normal'
+                    color: question.type === 'mcq' ? '#fff' : colors.textSecondary,
+                    fontWeight: question.type === 'mcq' ? '600' : 'normal'
                   }}>
                     Multiple Choice
                   </Text>
@@ -792,7 +1068,7 @@ export default function CreateExamScreen() {
               </View>
 
               {/* Options for Multiple Choice */}
-              {question.type === 'multiple_choice' && (
+              {question.type === 'mcq' && (
                 <View style={{ marginBottom: designTokens.spacing.md }}>
                   <View style={{ 
                     flexDirection: 'row', 
@@ -890,10 +1166,10 @@ export default function CreateExamScreen() {
                   marginBottom: designTokens.spacing.xs,
                   fontWeight: '500'
                 }}>
-                  {question.type === 'multiple_choice' ? 'Correct Answer *' : 'Expected Answer *'}
+                  {question.type === 'mcq' ? 'Correct Answer *' : 'Expected Answer *'}
                 </Text>
                 
-                {question.type === 'multiple_choice' ? (
+                {question.type === 'mcq' ? (
                   <View style={{ 
                     flexDirection: 'row', 
                     flexWrap: 'wrap', 

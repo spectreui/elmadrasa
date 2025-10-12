@@ -3,7 +3,7 @@ import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { LoginRequest, AuthResponse, ApiResponse, User, Exam } from "../types";
 import { storage } from "../utils/storage";
 
-// const API_BASE_URL = "http://192.168.1.228:5001/api";
+// const API_BASE_URL = "http://192.168.1.69:5001/api";
 const API_BASE_URL = "https://elmadrasa-server.vercel.app/api";
 
 class ApiService {
@@ -276,6 +276,24 @@ class ApiService {
     return this.api.get("/teachers/activity");
   }
 
+  // Add these methods to your ApiService class
+
+  // Manual grading methods
+  async getSubmissionsNeedingGrading(): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.get("/teachers/submissions/needs-grading");
+  }
+
+  async getSubmissionForGrading(submissionId: string): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.get(`/teachers/submissions/${submissionId}`);
+  }
+
+  async manuallyGradeSubmission(submissionId: string, score: number, feedback?: string): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.post(`/teachers/submissions/${submissionId}/grade`, {
+      score,
+      feedback
+    });
+  }
+
   public async getExamResults(examId: string): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.get(`/exams/${examId}/results`);
   }
@@ -495,15 +513,15 @@ class ApiService {
   }
 
   // Make sure your apiService.getClasses() method looks like this:
-getClasses = async () => {
-  try {
-    const response = await this.api.get('/admin/classes');
-    console.log('📡 Raw API response:', response); // Debug log
-    return response; // Return the full response object
-  } catch (error) {
-    throw error;
-  }
-};
+  getClasses = async () => {
+    try {
+      const response = await this.api.get('/admin/classes');
+      console.log('📡 Raw API response:', response); // Debug log
+      return response; // Return the full response object
+    } catch (error) {
+      throw error;
+    }
+  };
 
   async getGradesByLevel(levelId?: string) {
     const params = levelId ? { level_id: levelId } : {};
@@ -512,19 +530,19 @@ getClasses = async () => {
   }
 
   // In your api service file
-getClassesByGrade = async (grade: string, levelId: string) => {
-  try {
-    const response = await this.api.get('/admin/classes', {
-      params: { 
-        grade: grade,
-        level_id: levelId  // Make sure both parameters are sent
-      }
-    });
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
+  getClassesByGrade = async (grade: string, levelId: string) => {
+    try {
+      const response = await this.api.get('/admin/classes', {
+        params: {
+          grade: grade,
+          level_id: levelId  // Make sure both parameters are sent
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
 
 
   async getTeacherAssignments(): Promise<AxiosResponse<ApiResponse<any[]>>> {
@@ -549,11 +567,12 @@ getClassesByGrade = async (grade: string, levelId: string) => {
     return this.api.get(`/homework/${id}`);
   }
 
-  async submitHomework(homeworkId: string, content: string, attachments?: any[]): Promise<AxiosResponse<ApiResponse<any>>> {
+  async submitHomework(homeworkId: string, content: string, attachments?: any[], answers?: any[]): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.post("/homework/submit", {
       homework_id: homeworkId,
       content,
-      attachments
+      attachments,
+      answers
     });
   }
 
@@ -585,12 +604,14 @@ getClassesByGrade = async (grade: string, levelId: string) => {
     return this.api.get(`/homework/${homeworkId}/submissions`);
   }
 
-  async gradeSubmission(submissionId: string, grade: number, feedback?: string): Promise<AxiosResponse<ApiResponse<any>>> {
+  async gradeSubmission(submissionId: string, grade: number, feedback?: string, question_grades?: any[]): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.post(`/homework/submissions/${submissionId}/grade`, {
       grade,
-      feedback
+      feedback,
+      question_grades
     });
   }
+
 
   // In api.ts - ensure these methods exist
   async updateUserProfile(userId: string, data: any): Promise<AxiosResponse<ApiResponse<any>>> {

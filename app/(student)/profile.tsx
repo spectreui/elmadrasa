@@ -27,7 +27,6 @@ export default function ProfileScreen() {
   const [profileStats, setProfileStats] = useState<any>(null);
   const [settings, setSettings] = useState({
     notifications: true,
-    dataSaver: false,
   });
 
   useEffect(() => {
@@ -492,12 +491,6 @@ export default function ProfileScreen() {
                     description="Exam reminders and updates"
                     value={settings.notifications}
                     onToggle={() => toggleSetting('notifications')}
-                  />
-                  <SettingItem
-                    title="Data Saver"
-                    description="Reduce data usage"
-                    value={settings.dataSaver}
-                    onToggle={() => toggleSetting('dataSaver')}
                   />
                 </View>
               </ProfileSection>

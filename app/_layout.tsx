@@ -1,6 +1,6 @@
 // app/_layout.tsx - UPDATED
 import "../global.css"
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet } from 'react-native';
@@ -8,6 +8,9 @@ import { AuthProvider } from '../src/contexts/AuthContext';
 import { ThemeProvider, useThemeContext } from '../src/contexts/ThemeContext';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Toast from "react-native-toast-message";
+import * as Linking from 'expo-linking';
+import { handleDeepLink } from '../src/utils/linking';
+
 
 function ThemeWrapper({ children }: { children: React.ReactNode }) {
   const { isDark } = useThemeContext();
@@ -21,6 +24,23 @@ function ThemeWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
+      useEffect(() => {
+    // Handle initial URL when app is opened from a link
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        handleDeepLink(url);
+      }
+    });
+    
+    // Listen for URL changes while app is running
+    const subscription = Linking.addEventListener('url', (event) => {
+      handleDeepLink(event.url);
+    });
+    
+    return () => {
+      subscription.remove();
+    };
+  }, []);
   return (
     <SafeAreaProvider>
       <ThemeProvider>

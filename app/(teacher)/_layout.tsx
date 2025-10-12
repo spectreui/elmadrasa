@@ -22,13 +22,13 @@ export default function TeacherLayout() {
       if (!isAuthenticated) {
         console.log('➡️ Redirecting to login');
         router.replace('/(auth)/login');
-      } else if (user?.role === 'teacher') {
+      } else if (isAuthenticated && user?.role === 'teacher') {
         console.log('➡️ Redirecting teacher to teacher dashboard');
         router.replace('/(teacher)');
-      } else if (user?.role === 'admin') {
+      } else if (isAuthenticated && user?.role === 'admin') {
         console.log('➡️ Redirecting teacher to teacher dashboard');
         router.replace('/(admin)');
-      } else {
+      } else if (isAuthenticated && user?.role === 'student') {
         console.log('➡️ Redirecting student to tabs');
         router.replace('/(student)');
       }

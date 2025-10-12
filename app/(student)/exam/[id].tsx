@@ -1,5 +1,5 @@
-// app/exam/[id].tsx
-import React, { useState, useEffect } from 'react';
+// app/(student)/exam/[id].tsx
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,11 +9,16 @@ import {
   Alert,
   ActivityIndicator,
   SafeAreaView,
+  AppState,
+  AppStateStatus,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { apiService } from '../../../src/services/api';
-import { Exam, Question, ApiResponse } from '..../../src/types';
+import { Exam, Question, ApiResponse } from '../../../src/types'; // Fixed import path
 import Animated, { FadeIn } from 'react-native-reanimated';
+import * as FileSystem from 'expo-file-system';
+import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons';
 
 interface ExamDetails extends Exam {
   questions: Question[];
@@ -37,43 +42,133 @@ export default function StudentExamScreen() {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [hasTaken, setHasTaken] = useState(false);
   const [examStatus, setExamStatus] = useState<'available' | 'taken' | 'upcoming' | 'missed'>('available');
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [showWarning, setShowWarning] = useState(true);
+
+  // Refs to track auto-submit state
+  const isAutoSubmitting = useRef(false);
+  const appState = useRef(AppState.currentState);
 
   useEffect(() => {
-    loadExamData();
-    checkExamStatus();
-  }, [examId]);
+  loadExamData();
+  checkExamStatus();
+  
+  // Add app state listener for background/foreground detection
+  const subscription = AppState.addEventListener('change', handleAppStateChange);
+  
+  // Cleanup function to remove listener
+  return () => {
+    if (subscription?.remove) {
+      subscription.remove();
+    } else {
+      // For older React Native versions
+      AppState.removeEventListener('change', handleAppStateChange);
+    }
+  };
+}, [examId]);
+
+  // Handle app going to background
+  const handleAppStateChange = (nextAppState: AppStateStatus) => {
+    if (appState.current.match(/active/) && nextAppState.match(/inactive|background/)) {
+      console.log('App went to background - auto-submitting exam');
+      handleAutoSubmit(true); // true indicates auto-submit
+    }
+    appState.current = nextAppState;
+  };
+
+  const pickImages = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets) {
+        setUploadingImages(true);
+
+        const uploadedUrls = [];
+        for (const asset of result.assets) {
+          try {
+            const fileInfo = await FileSystem.getInfoAsync(asset.uri);
+            if (fileInfo.exists) {
+              const formData = new FormData();
+              formData.append('image', {
+                uri: asset.uri,
+                type: 'image/jpeg',
+                name: `exam-image-${Date.now()}.jpg`,
+              } as any);
+
+              const response = await apiService.api.post('/upload/exam-image', formData, {
+                headers: {
+                  'Content-Type': 'multipart/form-data',
+                },
+              });
+
+              if (response.data.success && response.data.url) {
+                uploadedUrls.push(response.data.url);
+              }
+            }
+          } catch (uploadError) {
+            console.error('Image upload error:', uploadError);
+          }
+        }
+
+        setImageUrls(prev => [...prev, ...uploadedUrls]);
+        setUploadingImages(false);
+      }
+    } catch (error) {
+      console.error('Image picker error:', error);
+      Alert.alert('Error', 'Failed to pick images');
+      setUploadingImages(false);
+    }
+  };
 
   const loadExamData = async () => {
     try {
       setLoading(true);
       const response = await apiService.getExamById(examId!);
 
-      if (response.data.data && response.data.success) {
+      if (response.data.success) {
         setExam(response.data.data);
 
-        // Check exam status based on due date
         const examData = response.data.data;
-        if (examData.due_date) {
-          const now = new Date();
-          const dueDate = new Date(examData.due_date);
+        const now = new Date();
+        const availableFrom = examData?.available_from ? new Date(examData.available_from) : null;
+        const dueDate = examData?.due_date ? new Date(examData.due_date) : null;
 
-          if (dueDate < now) {
-            setExamStatus('missed');
-          } else {
-            setExamStatus('available');
-          }
+        if (availableFrom && now < availableFrom) {
+          setExamStatus('upcoming');
+        } else if (dueDate && now > dueDate) {
+          setExamStatus('missed');
+        } else if ((!availableFrom || now >= availableFrom) && (!dueDate || now <= dueDate)) {
+          setExamStatus('available');
         } else {
           setExamStatus('available');
         }
 
-        // Initialize timer if exam is timed
-        if (examData.settings?.timed) {
-          setTimeLeft(examData.settings.duration * 60); // Convert to seconds
+        if (examData?.settings?.timed) {
+          setTimeLeft(examData.settings.duration * 60);
         }
+      } else {
+        if (response.status === 403) {
+          Alert.alert('Exam Expired', response.data.error || 'This exam is no longer available.', [
+            { text: 'OK', onPress: () => router.back() }
+          ]);
+          return;
+        }
+        throw new Error(response.data.error || 'Failed to load exam');
       }
     } catch (error: any) {
       console.error('Failed to load exam:', error);
-      Alert.alert('Error', 'Failed to load exam details');
+      if (error.response?.status === 403) {
+        Alert.alert('Access Denied', error.response.data.error || 'You cannot access this exam at this time.', [
+          { text: 'OK', onPress: () => router.back() }
+        ]);
+      } else {
+        Alert.alert('Error', 'Failed to load exam details');
+      }
     } finally {
       setLoading(false);
     }
@@ -100,7 +195,7 @@ export default function StudentExamScreen() {
         if (prev === null || prev <= 1) {
           clearInterval(timer);
           if (prev === 1) {
-            handleAutoSubmit();
+            handleAutoSubmit(true); // true indicates auto-submit
           }
           return 0;
         }
@@ -118,24 +213,42 @@ export default function StudentExamScreen() {
     }));
   };
 
-  const handleAutoSubmit = async () => {
-    Alert.alert(
-      'Time Up!',
-      'Your exam has been automatically submitted.',
-      [{ text: 'OK', onPress: () => handleSubmit() }]
-    );
+  const handleAutoSubmit = async (isAuto: boolean = false) => {
+    // Prevent multiple auto-submissions
+    if (isAutoSubmitting.current) return;
+
+    isAutoSubmitting.current = true;
+
+    if (isAuto) {
+      Alert.alert(
+        'Auto-Submitted',
+        'Your exam was automatically submitted due to time limit or app backgrounding.',
+        [{ text: 'OK', onPress: () => submitExam(true) }] // true indicates auto-submit
+      );
+    } else {
+      Alert.alert(
+        'Time Up!',
+        'Your exam has been automatically submitted.',
+        [{ text: 'OK', onPress: () => submitExam(true) }] // true indicates auto-submit
+      );
+    }
   };
 
   const handleSubmit = async () => {
+    // Skip confirmation for auto-submissions or when no answers
+    if (isAutoSubmitting.current) {
+      submitExam(true);
+      return;
+    }
+
     if (Object.keys(answers).length === 0) {
       Alert.alert('Warning', 'You haven\'t answered any questions. Are you sure you want to submit?', [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Submit', onPress: submitExam }
+        { text: 'Submit', onPress: () => submitExam(false) } // false indicates manual submit
       ]);
       return;
     }
 
-    // Check if all questions are answered
     const unansweredQuestions = exam?.questions.filter(q => !answers[q.id]) || [];
 
     if (unansweredQuestions.length > 0) {
@@ -144,22 +257,23 @@ export default function StudentExamScreen() {
         `You have ${unansweredQuestions.length} unanswered question(s). Are you sure you want to submit?`,
         [
           { text: 'Continue Editing', style: 'cancel' },
-          { text: 'Submit Anyway', onPress: submitExam }
+          { text: 'Submit Anyway', onPress: () => submitExam(false) } // false indicates manual submit
         ]
       );
     } else {
-      submitExam();
+      submitExam(false); // false indicates manual submit
     }
   };
 
-  const submitExam = async () => {
+  const submitExam = async (isAutoSubmit: boolean = false) => {
     try {
       setSubmitting(true);
-      console.log('📤 Starting exam submission...');
+      console.log('📤 Starting exam submission...', { isAutoSubmit });
 
       const response = await apiService.api.post('/submissions/submit', {
         examId: examId,
-        answers: answers
+        answers: answers,
+        imageUrls: imageUrls
       });
 
       console.log('✅ Exam submission response:', response.data);
@@ -167,20 +281,33 @@ export default function StudentExamScreen() {
       if (response.data.success) {
         const submissionData = response.data.data;
 
-        // ✅ Direct navigation without Alert
-        console.log('🎯 Navigating directly to results page...');
-        router.push({
-          pathname: '/exam/results/' + examId,
-          params: {
-            submissionId: submissionData.submission?.id,
-            examId: examId,
-            score: submissionData.score,
-            totalPoints: submissionData.totalPoints,
-            percentage: Math.round(submissionData.percentage),
-            examTitle: exam?.title || 'Exam Results'
-          }
-        });
-
+        if (submissionData.needsManualGrading) {
+          Alert.alert(
+            isAutoSubmit ? 'Auto-Submitted for Grading' : 'Submitted for Grading',
+            isAutoSubmit
+              ? 'Your exam was automatically submitted and is waiting for manual grading.'
+              : 'Your exam has been submitted and is waiting for manual grading by your teacher.',
+            [
+              {
+                text: 'OK',
+                onPress: () => router.push('/exams')
+              }
+            ]
+          );
+        } else {
+          console.log('🎯 Navigating directly to results page...');
+          router.push({
+            pathname: '/exam/results/' + examId,
+            params: {
+              submissionId: submissionData.submission?.id,
+              examId: examId,
+              score: submissionData.score,
+              totalPoints: submissionData.totalPoints,
+              percentage: Math.round(submissionData.percentage),
+              examTitle: exam?.title || 'Exam Results'
+            }
+          });
+        }
       } else {
         Alert.alert('Submission Failed', response.data.error || 'Unknown error occurred');
       }
@@ -189,6 +316,7 @@ export default function StudentExamScreen() {
       Alert.alert('Error', 'Failed to submit exam. Please try again.');
     } finally {
       setSubmitting(false);
+      isAutoSubmitting.current = false; // Reset auto-submit flag
     }
   };
 
@@ -226,7 +354,32 @@ export default function StudentExamScreen() {
   }
 
   // Check if exam is missed (past due date and not taken)
-  const isMissed = examStatus === 'missed' && !hasTaken;
+  const isMissed = examStatus === 'missed';
+
+  if (isMissed) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Exam Expired</Text>
+          <Text style={styles.subtitle}>
+            The due date for this exam has passed.
+          </Text>
+          {exam?.due_date && (
+            <Text style={styles.subtitle}>
+              Due date was: {new Date(exam.due_date).toLocaleString()}
+            </Text>
+          )}
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.push('/exams')}
+          >
+            <Text style={styles.buttonText}>Back to Exams</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
 
   if (hasTaken) {
     return (
@@ -291,7 +444,27 @@ export default function StudentExamScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container}>{
+  showWarning && (
+    <View style={styles.warningBanner}>
+      <View style={styles.warningContent}>
+        <Text style={styles.warningText}>
+          <Ionicons
+            name="warning-outline"
+            size={16}
+            color="#FFA500"
+          /> Exam will auto-submit if you leave this page or put the app in background
+        </Text>
+        <TouchableOpacity 
+          onPress={() => setShowWarning(false)}
+          style={styles.warningCloseButton}
+        >
+          <Text style={styles.warningCloseText}>×</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  )
+}
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -454,6 +627,32 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     color: '#666',
+  },  warningBanner: {
+    backgroundColor: '#FFF9E6',
+    borderBottomWidth: 1,
+    borderBottomColor: '#FFD700',
+    padding: 12,
+  },
+  warningContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  warningText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#AA7700',
+    fontWeight: '500',
+    lineHeight: 20,
+  },
+  warningCloseButton: {
+    padding: 4,
+    marginLeft: 8,
+  },
+  warningCloseText: {
+    fontSize: 18,
+    color: '#666',
+    fontWeight: 'bold',
   },
   errorContainer: {
     flex: 1,

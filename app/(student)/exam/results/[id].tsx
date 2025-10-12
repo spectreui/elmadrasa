@@ -23,6 +23,8 @@ interface ResultData {
     score: number;
     total_points: number;
     submitted_at: string;
+    needs_manual_grading?: boolean;
+    is_manually_graded?: boolean;
     answers: Array<{
       question_id: string;
       answer: string;
@@ -215,7 +217,18 @@ export default function ExamResultsScreen() {
       <Animated.ScrollView
         entering={FadeIn.duration(600)}
         style={styles.content}>
-        {/* Score Card */}
+
+        {resultData.submission.needs_manual_grading && !resultData.submission.is_manually_graded ? (
+          <View style={[styles.pendingGrading, { backgroundColor: colors.backgroundElevated }]}>
+            <Ionicons name="time" size={32} color={colors.textTertiary} />
+            <Text style={[styles.pendingText, { color: colors.textPrimary }]}>
+              Awaiting Manual Grading
+            </Text>
+            <Text style={[styles.pendingSubtext, { color: colors.textSecondary }]}>
+              Your teacher will grade this submission manually
+            </Text>
+          </View>
+        ) : (
         <View style={[styles.scoreCard, {
           backgroundColor: colors.backgroundElevated,
           ...designTokens.shadows.md
@@ -273,8 +286,8 @@ export default function ExamResultsScreen() {
             </View>
           </View>
         </View>
+        )}
 
-        {/* Answers Review */}
         {resultData.submission.answers.length > 0 && (
           <View style={[styles.answersSection, {
             backgroundColor: colors.backgroundElevated
@@ -447,7 +460,7 @@ export default function ExamResultsScreen() {
           </TouchableOpacity>
         </View>
       </Animated.ScrollView>
-    </SafeAreaView>
+    </SafeAreaView >
   );
 }
 
@@ -474,6 +487,23 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginTop: 16,
+  },
+  pendingGrading: {
+    margin: 16,
+    padding: 24,
+    borderRadius: designTokens.borderRadius.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pendingText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  pendingSubtext: {
+    fontSize: 14,
+    textAlign: 'center',
   },
   errorSubtext: {
     fontSize: 16,
@@ -608,7 +638,7 @@ const styles = StyleSheet.create({
   },
   correctBadgeText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '600', 
   },
   pointsText: {
     fontSize: 12,

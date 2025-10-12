@@ -18,25 +18,32 @@ import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '../../src/contexts/ThemeContext';
 import { designTokens } from '../../src/utils/designTokens';
-import Animated, { FadeInUp, Layout, useSharedValue, useAnimatedStyle, interpolate, Extrapolation, FadeIn } from 'react-native-reanimated';
-
-const AnimatedRefreshControl = ({ refreshing, onRefresh }: {
-  refreshing: boolean;
-  onRefresh: () => void;
-}) => {
-const { colors } = useThemeContext();
-  return (
-    <RefreshControl
-      refreshing={refreshing}
-      onRefresh={onRefresh}
-      tintColor={colors.primary}
-      colors={[colors.primary]}
-      style={{ backgroundColor: 'transparent' }}
-    />
-  );
-};
+import Animated, { FadeInUp, Layout, FadeIn } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
+
+// Add this helper function before the StudentHomeworkScreen component
+const getGradeColor = (grade: number, maxPoints: number) => {
+  const percentage = (grade / maxPoints) * 100;
+
+  if (percentage >= 70) {
+    return {
+      text: '#10B981', // green
+      bg: '#10B98115'
+    };
+  } else if (percentage >= 50) {
+    return {
+      text: '#F59E0B', // yellow
+      bg: '#F59E0B15'
+    };
+  } else {
+    return {
+      text: '#EF4444', // red
+      bg: '#EF444415'
+    };
+  }
+};
+
 
 export default function StudentHomeworkScreen() {
   const { user } = useAuth();
@@ -74,26 +81,36 @@ export default function StudentHomeworkScreen() {
     loadHomework();
   };
 
-  const getDueStatus = (dueDate: string, submitted: boolean) => {
+  const getDueStatus = (dueDate: string, submitted: boolean, grade: number | null) => {
     if (submitted) {
-      return {
-        status: 'submitted',
-        color: { bg: '#3B82F615', border: '#3B82F6', text: '#3B82F6' },
-        text: 'Submitted'
-      };
+      if (grade !== null) {
+        return {
+          status: 'graded',
+          color: { bg: '#3B82F615', border: '#3B82F6', text: '#3B82F6' },
+          text: 'Graded'
+        };
+      } else {
+        return {
+          status: 'submitted',
+          color: { bg: '#8B5CF615', border: '#8B5CF6', text: '#8B5CF6' },
+          text: 'Submitted'
+        };
+      }
     }
 
     const today = new Date();
     const due = new Date(dueDate);
     const diffTime = due.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
 
     if (diffTime < 0) return {
       status: 'overdue',
       color: { bg: '#EF444415', border: '#EF4444', text: '#EF4444' },
-      text: 'Overdue'
+      text: 'Missed'
     };
+
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
+
     if (diffHours <= 24) return {
       status: 'due',
       color: { bg: '#F59E0B15', border: '#F59E0B', text: '#F59E0B' },
@@ -120,7 +137,7 @@ export default function StudentHomeworkScreen() {
   };
 
   const HomeworkCard = ({ item }: { item: any }) => {
-    const dueStatus = getDueStatus(item.due_date, item.submitted);
+    const dueStatus = getDueStatus(item.due_date, item.submitted, item.grade);
     const isSmallScreen = width < 350;
 
     return (
@@ -129,13 +146,13 @@ export default function StudentHomeworkScreen() {
           styles.card,
           {
             backgroundColor: colors.backgroundElevated,
-            borderColor: dueStatus.color.border,
             ...designTokens.shadows.sm,
           }
         ]}
-        onPress={() => router.push(`/homework/${item.id}`)}
+        onPress={() => router.push(`/homework/${item.id}?t=${Date.now()}`)}
         activeOpacity={0.8}
       >
+        {/* Header with title and status */}
         <View style={styles.cardHeader}>
           <View style={styles.titleContainer}>
             <Text
@@ -143,7 +160,6 @@ export default function StudentHomeworkScreen() {
                 styles.title,
                 {
                   color: colors.textPrimary,
-                  fontSize: isSmallScreen ? 16 : 18,
                 }
               ]}
               numberOfLines={1}
@@ -165,7 +181,7 @@ export default function StudentHomeworkScreen() {
             styles.statusBadge,
             {
               backgroundColor: dueStatus.color.bg,
-              minWidth: isSmallScreen ? 70 : 80,
+              borderColor: dueStatus.color.border,
             }
           ]}>
             <Text style={[
@@ -177,44 +193,42 @@ export default function StudentHomeworkScreen() {
           </View>
         </View>
 
-        <View style={[styles.tagContainer, { marginBottom: designTokens.spacing.md }]}>
+        {/* Tags section */}
+        <View style={styles.tagContainer}>
           <View style={styles.tag}>
+            <Ionicons name="book" size={12} color={colors.textSecondary} />
             <Text style={[styles.tagText, { color: colors.textSecondary }]}>
               {item.subject}
             </Text>
           </View>
           <View style={styles.tag}>
+            <Ionicons name="star" size={12} color={colors.textSecondary} />
             <Text style={[styles.tagText, { color: colors.textSecondary }]}>
               {item.points} pts
             </Text>
           </View>
           {item.attachments && (
             <View style={[styles.tag, { backgroundColor: '#3B82F615' }]}>
+              <Ionicons name="attach" size={12} color="#3B82F6" />
               <Text style={[styles.tagText, { color: '#3B82F6' }]}>
                 File
               </Text>
             </View>
           )}
-          {item.submitted && (
-            <View style={[styles.tag, { backgroundColor: '#10B98115' }]}>
-              <Text style={[styles.tagText, { color: '#10B981' }]}>
-                Done
-              </Text>
-            </View>
-          )}
         </View>
 
+        {/* Footer with teacher and due date */}
         <View style={styles.cardFooter}>
           <View style={styles.footerLeft}>
             <View style={styles.footerItem}>
-              <Ionicons name="person" size={14} color={colors.textSecondary} />
+              <Ionicons name="person-circle" size={16} color={colors.textSecondary} />
               <Text style={[styles.footerText, { color: colors.textSecondary }]}>
                 {item.teacher?.profile?.name || 'Teacher'}
               </Text>
             </View>
             <View style={styles.dot} />
             <View style={styles.footerItem}>
-              <Ionicons name="calendar" size={14} color={colors.textSecondary} />
+              <Ionicons name="calendar" size={16} color={colors.textSecondary} />
               <Text style={[styles.footerText, { color: colors.textSecondary }]}>
                 {formatDueDate(item.due_date)}
               </Text>
@@ -222,13 +236,32 @@ export default function StudentHomeworkScreen() {
           </View>
 
           <View style={styles.footerRight}>
-            <Text style={[styles.actionText, { color: colors.primary }]}>
-              {item.submitted ? (item.grade ? `${item.grade}/${item.points}` : 'View') : 'Start'}
-            </Text>
+            {item.submitted && item.grade !== null ? (
+              <View style={[
+                styles.gradeBadge,
+                {
+                  backgroundColor: getGradeColor(item.grade, item.points).bg,
+                  borderColor: getGradeColor(item.grade, item.points).text + '40'
+                }
+              ]}>
+                <Text style={[
+                  styles.gradeText,
+                  { color: getGradeColor(item.grade, item.points).text }
+                ]}>
+                  {item.grade}/{item.points}
+                </Text>
+              </View>
+            ) : (
+              <Text style={[styles.actionText, { color: colors.primary }]}>
+                {item.submitted ? 'View' : 'Start'}
+              </Text>
+            )}
             <Ionicons name="chevron-forward" size={16} color={colors.primary} />
           </View>
+
         </View>
 
+        {/* Feedback section */}
         {item.feedback && (
           <View style={[
             styles.feedbackContainer,
@@ -238,9 +271,9 @@ export default function StudentHomeworkScreen() {
             }
           ]}>
             <View style={styles.feedbackHeader}>
-              <Ionicons name="chatbubble" size={14} color="#3B82F6" />
+              <Ionicons name="chatbubble-ellipses" size={14} color="#3B82F6" />
               <Text style={[styles.feedbackTitle, { color: '#3B82F6' }]}>
-                Feedback
+                Teacher Feedback
               </Text>
             </View>
             <Text style={[styles.feedbackText, { color: colors.textSecondary }]}>
@@ -271,21 +304,21 @@ export default function StudentHomeworkScreen() {
           Homework
         </Text>
         <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-          Your assigned tasks and deadlines
+          {homework.length} assignments
         </Text>
       </View>
 
       <Animated.ScrollView
         style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
-        entering={FadeIn.duration(600)} // Smooth fade-in when screen loads
+        entering={FadeIn.duration(600)}
         refreshControl={
           <RefreshControl
-      refreshing={refreshing}
-      onRefresh={onRefresh}
-      tintColor={colors.primary}
-      colors={[colors.primary]}
-    />
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
         }
       >
         <View style={styles.content}>
@@ -345,12 +378,14 @@ const styles = StyleSheet.create({
     paddingBottom: designTokens.spacing.lg,
   },
   headerTitle: {
-    fontSize: designTokens.typography.largeTitle.fontSize,
-    fontWeight: designTokens.typography.largeTitle.fontWeight,
+    fontSize: 34,
+    fontWeight: '800',
     marginBottom: designTokens.spacing.xs,
+    letterSpacing: -0.5,
   },
   headerSubtitle: {
     fontSize: designTokens.typography.body.fontSize,
+    opacity: 0.7,
   },
   content: {
     paddingHorizontal: designTokens.spacing.xl,
@@ -361,10 +396,11 @@ const styles = StyleSheet.create({
     fontSize: designTokens.typography.body.fontSize,
   },
   card: {
-    borderRadius: designTokens.borderRadius.xl,
-    borderWidth: 1,
+    borderRadius: 20,
     padding: designTokens.spacing.lg,
     marginBottom: designTokens.spacing.md,
+    borderWidth: 0.5,
+    borderColor: 'rgba(0,0,0,0.05)',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -377,13 +413,15 @@ const styles = StyleSheet.create({
     marginRight: designTokens.spacing.md,
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     marginBottom: 4,
+    lineHeight: 24,
   },
   description: {
     fontSize: designTokens.typography.body.fontSize,
     lineHeight: 20,
+    opacity: 0.8,
   },
   statusBadge: {
     paddingHorizontal: designTokens.spacing.sm,
@@ -391,33 +429,50 @@ const styles = StyleSheet.create({
     borderRadius: designTokens.borderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
   },
   statusText: {
     fontSize: designTokens.typography.caption1.fontSize,
     fontWeight: '600',
   },
+  gradeBadge: {
+    paddingHorizontal: designTokens.spacing.sm,
+    paddingVertical: designTokens.spacing.xs,
+    borderRadius: designTokens.borderRadius.full,
+    borderWidth: 1,
+    marginLeft: designTokens.spacing.xs,
+  },
+  gradeText: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    fontWeight: '600',
+  },
+
   tagContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: designTokens.spacing.xs,
+    marginBottom: designTokens.spacing.lg,
   },
   tag: {
-    backgroundColor: '#6B728015',
+    backgroundColor: 'rgba(107, 114, 128, 0.1)',
     paddingHorizontal: designTokens.spacing.sm,
     paddingVertical: designTokens.spacing.xs,
     borderRadius: designTokens.borderRadius.full,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   tagText: {
     fontSize: designTokens.typography.caption2.fontSize,
     fontWeight: '500',
+    marginLeft: 4,
   },
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTopWidth: 1,
     paddingTop: designTokens.spacing.md,
-    marginTop: designTokens.spacing.sm,
+    borderTopWidth: 0.5,
+    borderTopColor: 'rgba(0,0,0,0.05)',
   },
   footerLeft: {
     flexDirection: 'row',
@@ -430,12 +485,13 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: designTokens.typography.caption1.fontSize,
     marginLeft: 4,
+    opacity: 0.8,
   },
   dot: {
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#9CA3AF',
+    backgroundColor: 'rgba(156, 163, 175, 0.5)',
     marginHorizontal: designTokens.spacing.sm,
   },
   footerRight: {
@@ -445,12 +501,13 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: designTokens.typography.caption1.fontSize,
     fontWeight: '600',
-    marginRight: 4,
+    marginLeft: 4,
+    marginRight: 2,
   },
   feedbackContainer: {
     marginTop: designTokens.spacing.md,
     padding: designTokens.spacing.md,
-    borderRadius: designTokens.borderRadius.lg,
+    borderRadius: 16,
     borderLeftWidth: 3,
   },
   feedbackHeader: {
@@ -468,7 +525,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   emptyContainer: {
-    borderRadius: designTokens.borderRadius.xl,
+    borderRadius: 20,
     padding: designTokens.spacing.xxl,
     alignItems: 'center',
     marginTop: designTokens.spacing.xl,
@@ -491,5 +548,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
     maxWidth: 280,
+    opacity: 0.7,
   },
 } as any);

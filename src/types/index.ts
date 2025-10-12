@@ -35,8 +35,6 @@ export interface ProfileSettings {
   notifications: boolean;
   darkMode: boolean;
   language: string;
-  autoSave: boolean;
-  dataSaver: boolean;
 }
 
 export interface UserProfile {
@@ -99,6 +97,8 @@ export interface Exam {
   submissions_count?: number;
   average_score?: number; // Make this optional
   total_points?: number; // Make this optional
+  taken?: boolean; // Add this to indicate if the exam has been taken by the student
+  available_from?: string; // Add this to indicate when the exam becomes available
 }
 
 export interface ExamDetails extends Exam {
