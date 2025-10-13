@@ -1,8 +1,9 @@
 // src/contexts/AuthContext.tsx
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { apiService } from '../services/api';
 import { User, AuthState } from '../types';
 import { View, ActivityIndicator } from 'react-native';
+import { router } from 'expo-router';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -24,24 +25,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const authCheckInProgress = useRef(false);
 
-  // Refresh authentication state
+  // Clear any existing timeouts to prevent loops
+  const clearRedirectTimeout = useCallback(() => {
+    if (redirectTimeoutRef.current) {
+      clearTimeout(redirectTimeoutRef.current);
+      redirectTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Refresh authentication state with loop prevention
   const refreshAuth = useCallback(async () => {
-    console.log('🔄 Refreshing authentication...');
-
-    if (!apiService.isAuthenticated()) {
-      console.log('🚫 No token available');
-      setAuthState({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        loading: false,
-      });
+    // Prevent multiple simultaneous auth checks
+    if (authCheckInProgress.current) {
+      console.log('🔄 Auth check already in progress, skipping...');
       return;
     }
 
+    authCheckInProgress.current = true;
+    console.log('🔄 Refreshing authentication...');
+
     try {
+      if (!apiService.isAuthenticated()) {
+        console.log('🚫 No valid token available');
+        setAuthState({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          loading: false,
+        });
+        authCheckInProgress.current = false;
+        return;
+      }
+
       console.log('👤 Fetching current user...');
       const response = await apiService.getCurrentUser();
 
@@ -60,15 +78,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error: any) {
       console.error('❌ Auth refresh failed:', error);
+      
+      // Clear token and redirect to login
       await apiService.clearToken();
+      
       setAuthState({
         user: null,
         token: null,
         isAuthenticated: false,
         loading: false,
       });
+      
+      // Redirect to login with debounce
+      clearRedirectTimeout();
+      redirectTimeoutRef.current = setTimeout(() => {
+        if (!authState.isAuthenticated) {
+          console.log('➡️ Redirecting to login due to auth failure');
+          router.replace('/(auth)/login');
+        }
+      }, 100);
+    } finally {
+      authCheckInProgress.current = false;
     }
-  }, []);
+  }, [authState.isAuthenticated, clearRedirectTimeout]);
 
   // Initial auth check
   useEffect(() => {
@@ -78,11 +110,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initializeAuth();
-  }, [refreshAuth]);
+
+    // Cleanup on unmount
+    return () => {
+      clearRedirectTimeout();
+      authCheckInProgress.current = false;
+    };
+  }, [refreshAuth, clearRedirectTimeout]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
+    clearRedirectTimeout();
 
     try {
       console.log('🔐 Starting login process...');
@@ -116,6 +155,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('🚪 Logging out...');
       setIsLoading(true);
+      clearRedirectTimeout();
+      
       await apiService.clearToken();
 
       setAuthState({
@@ -127,6 +168,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
 
       console.log('✅ Logout successful');
+      
+      // Redirect to login with debounce
+      redirectTimeoutRef.current = setTimeout(() => {
+        router.replace('/(auth)/login');
+      }, 100);
     } catch (error) {
       console.error('❌ Logout error:', error);
       setError('Logout failed');
@@ -136,6 +182,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const clearError = () => setError(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      clearRedirectTimeout();
+    };
+  }, [clearRedirectTimeout]);
 
   // Show loading only during initial app load
   if (authState.loading) {

@@ -2,6 +2,7 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { LoginRequest, AuthResponse, ApiResponse, User, Exam } from "../types";
 import { storage } from "../utils/storage";
+import { router } from 'expo-router';
 
 // const API_BASE_URL = "http://192.168.1.69:5001/api";
 const API_BASE_URL = "https://elmadrasa-server.vercel.app/api";
@@ -10,6 +11,11 @@ class ApiService {
   private api: AxiosInstance;
   private token: string | null = null;
   private tokenKey = 'authToken';
+  private isRefreshing = false;
+  private failedQueue: Array<{
+    resolve: (value?: any) => void;
+    reject: (error?: any) => void;
+  }> = [];
 
   constructor() {
     this.api = axios.create({
@@ -51,11 +57,6 @@ class ApiService {
     // Request interceptor - ensure token is fresh
     this.api.interceptors.request.use(
       async (config) => {
-        // Ensure we have the latest token
-        if (!this.token) {
-          await this.initializeToken();
-        }
-
         console.log('🚀 API Request:', {
           method: config.method?.toUpperCase(),
           url: config.url,
@@ -71,7 +72,7 @@ class ApiService {
       }
     );
 
-    // Enhanced response interceptor
+    // Enhanced response interceptor with proper 401 handling
     this.api.interceptors.response.use(
       (response) => {
         console.log('✅ API Response:', {
@@ -83,30 +84,84 @@ class ApiService {
       },
       async (error) => {
         const originalRequest = error.config;
+        const status = error.response?.status;
 
         console.error('❌ API Error:', {
-          status: error.response?.status,
+          status,
           url: originalRequest?.url,
           message: error.response?.data?.error || error.message,
           code: error.code
         });
 
-        if (error.response?.status === 401) {
-          console.log('🔐 Unauthorized - clearing token and redirecting');
+        // Handle 401 Unauthorized
+        if (status === 401) {
+          console.log('🔐 Unauthorized - handling authentication error');
+
+          // Clear token immediately
           await this.clearToken();
 
-          // If we have a token but got 401, it might be expired
-          if (this.token && !originalRequest._retry) {
-            originalRequest._retry = true;
-            console.log('🔄 Retrying request with fresh token');
-            await this.initializeToken(); // Re-initialize token
-            return this.api(originalRequest);
+          // Prevent infinite retry loop
+          if (originalRequest._retry) {
+            console.log('🚫 Preventing infinite retry loop');
+            this.redirectToLogin();
+            return Promise.reject(error);
           }
+
+          // If we have a token but got 401, it's expired
+          if (this.token) {
+            originalRequest._retry = true;
+            console.log('🔄 Token expired, redirecting to login');
+            this.redirectToLogin();
+            return Promise.reject(error);
+          }
+
+          // No token, redirect to login
+          this.redirectToLogin();
+          return Promise.reject(error);
+        }
+
+        // Handle 403 Forbidden
+        if (status === 403) {
+          console.log('🚫 Forbidden - insufficient permissions');
+          // You might want to show a permission error message
+        }
+
+        // Handle network errors
+        if (!error.response) {
+          console.log('🌐 Network error - check connection');
         }
 
         return Promise.reject(error);
       }
     );
+  }
+
+  private redirectToLogin(): void {
+    console.log('➡️ Redirecting to login screen');
+
+    // Clear any existing redirect timeouts to prevent loops
+    if (typeof window !== 'undefined') {
+      // @ts-ignore
+      if (window.redirectTimeout) {
+        // @ts-ignore
+        clearTimeout(window.redirectTimeout);
+      }
+    }
+
+    // Debounce the redirect to prevent multiple redirects
+    // @ts-ignore
+    window.redirectTimeout = setTimeout(() => {
+      try {
+        // Navigate to login screen
+        router.replace('/(auth)/login');
+      } catch (error) {
+        console.error('❌ Error during redirect:', error);
+        // Fallback: reload the app
+        if (typeof window !== 'undefined') {
+          window.location.reload();
+        }
+      }
+    }, 100);
   }
 
   // Enhanced Token management
@@ -184,7 +239,7 @@ class ApiService {
   }
 
   isAuthenticated(): boolean {
-    return !!this.token;
+    return !!this.token && this.validateToken();
   }
 
   // Health check
@@ -199,7 +254,7 @@ class ApiService {
   }
 
   // Auth methods
-  async login(credentials: LoginRequest): Promise<AxiosResponse<ApiResponse<AuthResponse>>> {
+  async login(credentials: LoginRequest): Promise<AxiosResponse<ApiResponse<ApiResponse<AuthResponse>>>> {
     // Clear any existing token first
     await this.clearToken();
 

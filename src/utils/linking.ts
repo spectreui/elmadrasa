@@ -1,17 +1,182 @@
 import * as Linking from 'expo-linking';
+import { router } from 'expo-router';
 
-export const handleDeepLink = (url: string) => {
-  const { path, queryParams } = Linking.parse(url);
+export const linking = {
+  prefixes: [
+    Linking.createURL('/'),
+    'https://elmadrasa.vercel.app'
+  ],
+  config: {
+    screens: {
+      // Auth screens
+      '(auth)': {
+        screens: {
+          login: 'login',
+          signup: 'signup',
+          'signup-success': 'signup-success',
+        },
+      },
+      // Student screens
+      '(student)': {
+        screens: {
+          index: 'student',
+          homework: 'student/homework',
+          exams: 'student/exams',
+          results: 'student/results',
+          profile: 'student/profile',
+          'join-subject': 'student/join-subject',
+          // Dynamic routes
+          'homework/[id]': 'student/homework/:id',
+          'exam/[id]': 'student/exam/:id',
+          'exam/results/[id]': 'student/exam/results/:id',
+        },
+      },
+      // Teacher screens
+      '(teacher)': {
+        screens: {
+          index: 'teacher',
+          profile: 'teacher/profile',
+          'create-exam': 'teacher/create-exam',
+          statistics: 'teacher/statistics',
+          'my-classes': 'teacher/classes',
+          // Homework routes
+          'homework/index': 'teacher/homework',
+          'homework/create': 'teacher/homework/create',
+          'homework/[id]/submissions': 'teacher/homework/:id/submissions',
+          // Exam routes
+          'exams/[id]': 'teacher/exam/:id',
+          'exam-results/[id]': 'teacher/exam-results/:id',
+          'exams': 'teacher/exams',
+        },
+      },
+      // Admin screens
+      '(admin)': {
+        screens: {
+          index: 'admin',
+          settings: 'admin/settings',
+          students: 'admin/students',
+          teachers: 'admin/teachers',
+          approvals: 'admin/approvals',
+          classes: 'admin/classes',
+          users: 'admin/users',
+          'assign-teachers': 'admin/assign-teachers',
+        },
+      },
+      // Root screens
+      index: '',
+    },
+  },
+};
+
+export const handleDeepLink = async (url: string) => {
+  try {
+    console.log('Handling deep link:', url);
+    
+    // Parse the URL to extract path and parameters
+    const parsed = Linking.parse(url);
+    console.log('Parsed URL:', parsed);
+    
+    if (parsed.path) {
+      // Navigate to the appropriate screen
+      await navigateToScreen(parsed.path, parsed.queryParams || {});
+    }
+  } catch (error) {
+    console.error('Error handling deep link:', error);
+  }
+};
+
+const navigateToScreen = async (path: string, params: any = {}) => {
+  try {
+    // Remove leading slash if present
+    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    
+    console.log('Navigating to:', cleanPath, params);
+    
+    // Navigate using expo-router
+    router.push({
+      pathname: `/${cleanPath}`,
+      params
+    });
+    
+  } catch (error) {
+    console.error('Error navigating to screen:', error);
+  }
+};
+
+// Utility function to generate web URLs that work for both web and app
+export const generateUniversalLink = (path: string, params: Record<string, string> = {}) => {
+  const baseUrl = 'https://elmadrasa.vercel.app';
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
   
-  return { path, queryParams };
+  let url = `${baseUrl}${cleanPath}`;
+  
+  if (Object.keys(params).length > 0) {
+    const queryParams = new URLSearchParams(params).toString();
+    url += `?${queryParams}`;
+  }
+  
+  return url;
 };
 
-// Generate shareable links
-export const generateHomeworkLink = (homeworkId: string) => {
-  return `https://elmadrasa-link.vercel.app/api/resolve?type=homework&id=${homeworkId}`;
+// Generate universal link for current page
+export const generateCurrentPageLink = (path: string, params: Record<string, string> = {}) => {
+  const WEB_BASE_URL = 'https://elmadrasa.vercel.app';
+  
+  // Clean the path
+  const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+  
+  // Construct the URL
+  let url = `${WEB_BASE_URL}/${cleanPath}`;
+  
+  // Add query parameters
+  if (Object.keys(params).length > 0) {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      searchParams.set(key, String(value));
+    });
+    url += `?${searchParams.toString()}`;
+  }
+  
+  return url;
 };
 
-export const generateExamLink = (examId: string) => {
-  return `https://elmadrasa-link.vercel.app/api/resolve?type=exam&id=${examId}`;
+// Specific link generators for common pages
+export const generateHomeworkLink = (homeworkId: string, additionalParams: Record<string, string> = {}) => {
+  return generateCurrentPageLink(`student/homework/${homeworkId}`, additionalParams);
 };
 
+export const generateExamLink = (examId: string, additionalParams: Record<string, string> = {}) => {
+  return generateCurrentPageLink(`student/exam/${examId}`, additionalParams);
+};
+
+export const generateTeacherHomeworkLink = (homeworkId: string, additionalParams: Record<string, string> = {}) => {
+  return generateCurrentPageLink(`teacher/homework/${homeworkId}/submissions`, additionalParams);
+};
+
+// Generic function to generate link for any current route
+export const generateLinkForCurrentRoute = (routeName: string, params: Record<string, string> = {}) => {
+  const routeMap: Record<string, string> = {
+    'student-homework-detail': 'student/homework/:id',
+    'student-exam-detail': 'student/exam/:id',
+    'teacher-homework-submissions': 'teacher/homework/:id/submissions',
+    'teacher-create-exam': 'teacher/create-exam',
+    'student-dashboard': 'student',
+    'teacher-dashboard': 'teacher',
+    'login': 'login',
+    // Add more routes as needed
+  };
+
+  const basePath = routeMap[routeName];
+  if (!basePath) {
+    // Fallback to generic path construction
+    return generateCurrentPageLink(routeName.replace(/-/g, '/'), params);
+  }
+
+  // Replace parameter placeholders
+  let finalPath = basePath;
+  Object.entries(params).forEach(([key, value]) => {
+    finalPath = finalPath.replace(`:${key}`, value);
+  });
+
+  return generateCurrentPageLink(finalPath, params);
+};

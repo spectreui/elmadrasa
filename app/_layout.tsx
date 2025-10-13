@@ -1,46 +1,18 @@
 import "../global.css";
 import React, { useEffect } from "react";
-import { Stack, router } from "expo-router";
+import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet } from "react-native";
 import { AuthProvider } from "../src/contexts/AuthContext";
 import { ThemeProvider, useThemeContext } from "../src/contexts/ThemeContext";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import * as Linking from "expo-linking";
+import * as SplashScreen from 'expo-splash-screen';
+import { useFonts } from 'expo-font';
+import * as Linking from 'expo-linking';
+import { linking } from '@/src/utils/linking';
 
-const linking = {
-  prefixes: [
-    Linking.createURL("/"),                   // for development
-    "elmadrasa://",                           // app scheme
-    "https://elmadrasa-link.vercel.app",      // production universal link
-  ],
-};
-
-/**
- * Dynamically route deep links:
- * - elmadrasa://homework/123        → /(student)/homework/123
- * - elmadrasa://teacher/exams/321   → /(teacher)/exams/321
- * - elmadrasa://admin/dashboard     → /(admin)/dashboard
- */
-const handleDeepLink = (url: string) => {
-  const { path } = Linking.parse(url);
-  console.log("🔗 Deep link opened:", url, "→ path:", path);
-  if (!path) return;
-
-  let base = "(student)"; // default route group
-
-  if (path.startsWith("teacher")) base = "(teacher)";
-  if (path.startsWith("admin")) base = "(admin)";
-
-  // remove "teacher/" or "admin/" prefix if present
-  const cleanPath = path.replace(/^(teacher|admin)\//, "");
-
-  // Construct final path and navigate
-  const target = `/${base}/${cleanPath}`;
-  console.log("➡️ Navigating to:", target);
-
-  router.push(target);
-};
+// Prevent the splash screen from auto-hiding before asset loading is complete.
+SplashScreen.preventAutoHideAsync();
 
 function ThemeWrapper({ children }: { children: React.ReactNode }) {
   const { isDark } = useThemeContext();
@@ -53,27 +25,68 @@ function ThemeWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
+  const [loaded, error] = useFonts({
+    'Inter-Black': require('@/assets/fonts/Inter-Black.otf'),
+    'Inter-Bold': require('@/assets/fonts/Inter-Bold.otf'),
+    'Inter-ExtraBold': require('@/assets/fonts/Inter-ExtraBold.otf'),
+    'Inter-ExtraLight': require('@/assets/fonts/Inter-ExtraLight.otf'),
+    'Inter-Light': require('@/assets/fonts/Inter-Light.otf'),
+    'Inter-Medium': require('@/assets/fonts/Inter-Medium.otf'),
+    'Inter-Regular': require('@/assets/fonts/Inter-Regular.otf'),
+    'Inter-SemiBold': require('@/assets/fonts/Inter-SemiBold.otf'),
+    'Inter-Thin': require('@/assets/fonts/Inter-Thin.otf'),
+  });
+
+  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
-    // Handle the initial deep link if the app opened from one
-    Linking.getInitialURL().then((url) => {
-      if (url) handleDeepLink(url);
+    if (error) throw error;
+  }, [error]);
+
+  useEffect(() => {
+    if (loaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded]);
+
+  // Handle deep links
+  useEffect(() => {
+    // Handle initial URL when app is opened
+    const getUrlAsync = async () => {
+      const initialUrl = await Linking.getInitialURL();
+      if (initialUrl) {
+        console.log('Initial URL:', initialUrl);
+        // Handle the URL using expo-router's linking
+        // The linking config will automatically handle navigation
+      }
+    };
+
+    getUrlAsync();
+
+    // Listen for URL changes while app is running
+    const subscription = Linking.addEventListener('url', (event) => {
+      console.log('URL changed:', event.url);
+      // expo-router will automatically handle this through the linking config
     });
 
-    // Listen for new deep links while app is open
-    const sub = Linking.addEventListener("url", (event) => {
-      handleDeepLink(event.url);
-    });
-
-    return () => sub.remove();
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
+  if (!loaded) {
+    return null;
+  }
+  
   return (
     <SafeAreaProvider>
       <ThemeProvider>
         <ThemedSafeAreaView>
           <ThemeWrapper>
             <AuthProvider>
-              <Stack screenOptions={{ headerShown: false }}>
+              <Stack 
+                screenOptions={{ headerShown: false }}
+                linking={linking}
+              >
                 <Stack.Screen name="(auth)" />
                 <Stack.Screen name="(student)" />
                 <Stack.Screen name="(teacher)" />

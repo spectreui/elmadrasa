@@ -14,15 +14,20 @@
     "android": {
       "jsEngine": "hermes",
       "package": "com.elmadrasa.app",
-      
       "intentFilters": [
         {
           "action": "VIEW",
           "data": [
-            { "scheme": "https", "host": "elmadrasa-link.vercel.app" },
-            { "scheme": "elmadrasa" }
+            {
+              "scheme": "https",
+              "host": "elmadrasa.vercel.app",
+              "pathPrefix": "/"
+            }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -64,7 +69,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "01e5f25e-d1af-4d02-abb4-dac6931d1764"
+        "projectId": "ad027a37-a112-4f47-a201-d904f5f43de6"
       }
     }
   }

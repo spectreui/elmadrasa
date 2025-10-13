@@ -18,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { designTokens } from '../../../src/utils/designTokens';
 import * as DocumentPicker from 'expo-document-picker';
 import { useThemeContext } from '@/contexts/ThemeContext';
-import { generateHomeworkLink } from '../../../src/utils/linking';
+import { generateHomeworkLink } from '../../../src/utils/linking'; // Updated import
 import * as Sharing from 'expo-sharing';
 
 interface Question {
@@ -262,19 +262,65 @@ export default function HomeworkDetailScreen() {
   };
 
   const shareHomework = async () => {
-    const link = generateHomeworkLink(id as string);
-    
+    if (!id || !homework) {
+      Alert.alert('Error', 'Cannot share: homework not loaded');
+      return;
+    }
+
     try {
+      // Generate universal link that works for both web and app
+      const link = generateHomeworkLink(id as string, {
+        subject: homework.subject,
+        title: homework.title
+      });
+
+      console.log('Generated universal link:', link);
+
       await Sharing.shareAsync(link, {
         dialogTitle: 'Share Homework',
-        message: `Check out this homework: ${homework?.title}\n${link}`,
+        message: `Check out this homework assignment: ${homework.title}\n\n${link}`,
       });
     } catch (error) {
       console.error('Error sharing:', error);
       Alert.alert('Error', 'Could not share homework');
     }
   };
-const getDueStatus = () => {
+
+  // New function to generate and copy link to clipboard
+  const copyHomeworkLink = async () => {
+    if (!id || !homework) {
+      Alert.alert('Error', 'Cannot generate link: homework not loaded');
+      return;
+    }
+
+    try {
+      const link = generateHomeworkLink(id as string, {
+        subject: homework.subject,
+        title: homework.title
+      });
+
+      // Copy to clipboard
+      // @ts-ignore
+      const { default: Clipboard } = await import('expo-clipboard');
+      await Clipboard.setStringAsync(link);
+
+      Alert.alert('Success', 'Link copied to clipboard!');
+    } catch (error) {
+      console.error('Error copying link:', error);
+      Alert.alert('Error', 'Could not copy link to clipboard');
+    }
+  };
+
+  // New function to get current page link (can be called from anywhere in the component)
+  const getCurrentPageLink = useCallback(() => {
+    if (!id) return null;
+
+    return generateHomeworkLink(id as string, {
+      subject: homework?.subject || '',
+      title: homework?.title || ''
+    });
+  }, [id, homework]);
+  const getDueStatus = () => {
     if (!homework) return { status: 'unknown', color: '#9CA3AF', text: 'Unknown', bgColor: '#F3F4F6' };
 
     // Show graded status if homework is graded
@@ -468,6 +514,11 @@ const getDueStatus = () => {
 
               <TouchableOpacity onPress={shareHomework}>
                 <Ionicons name="share-outline" size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+
+              {/* Add copy link option */}
+              <TouchableOpacity onPress={copyHomeworkLink}>
+                <Ionicons name="link-outline" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
           </View>
