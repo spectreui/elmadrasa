@@ -269,10 +269,7 @@ export default function HomeworkDetailScreen() {
 
     try {
       // Generate universal link that works for both web and app
-      const link = generateHomeworkLink(id as string, {
-        subject: homework.subject,
-        title: homework.title
-      });
+      const link = generateHomeworkLink(id as string);
 
       console.log('Generated universal link:', link);
 

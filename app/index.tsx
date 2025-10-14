@@ -22,7 +22,9 @@ export default function Index() {
         const { path } = Linking.parse(url);
         if (path) {
           console.log('➡️ Handling deep link path:', path);
-          router.replace(`/${path}`); // or push if you want to keep history
+          if (user?.role && !path.includes('(' + user.role + ')')) {
+            router.push(`/${user.role}/${path}`);
+          } else router.push(`/${path}`); // or push if you want to keep history
         }
       }
     };

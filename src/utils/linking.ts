@@ -141,16 +141,16 @@ export const generateCurrentPageLink = (path: string, params: Record<string, str
 };
 
 // Specific link generators for common pages
-export const generateHomeworkLink = (homeworkId: string, additionalParams: Record<string, string> = {}) => {
-  return generateCurrentPageLink(`student/homework/${homeworkId}`, additionalParams);
+export const generateHomeworkLink = (homeworkId?: string, additionalParams: Record<string, string> = {}) => {
+  return generateCurrentPageLink(`homework/${homeworkId}`, additionalParams);
 };
 
 export const generateExamLink = (examId: string, additionalParams: Record<string, string> = {}) => {
-  return generateCurrentPageLink(`student/exam/${examId}`, additionalParams);
+  return generateCurrentPageLink(`exam/${examId}`, additionalParams);
 };
 
 export const generateTeacherHomeworkLink = (homeworkId: string, additionalParams: Record<string, string> = {}) => {
-  return generateCurrentPageLink(`teacher/homework/${homeworkId}/submissions`, additionalParams);
+  return generateCurrentPageLink(`homework/${homeworkId}/submissions`, additionalParams);
 };
 
 // Generic function to generate link for any current route
