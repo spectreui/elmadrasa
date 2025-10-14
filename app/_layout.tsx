@@ -47,35 +47,6 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
-
-  // Handle deep links
-  useEffect(() => {
-    // Handle initial URL when app is opened
-    const getUrlAsync = async () => {
-      const initialUrl = await Linking.getInitialURL();
-      if (initialUrl) {
-        console.log('Initial URL:', initialUrl);
-        // Handle the URL using expo-router's linking
-        // The linking config will automatically handle navigation
-      }
-    };
-
-    getUrlAsync();
-
-    // Listen for URL changes while app is running
-    const subscription = Linking.addEventListener('url', (event) => {
-      console.log('URL changed:', event.url);
-      // expo-router will automatically handle this through the linking config
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, []);
-
-  if (!loaded) {
-    return null;
-  }
   
   return (
     <SafeAreaProvider>

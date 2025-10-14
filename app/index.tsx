@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../src/contexts/AuthContext';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { useEffect } from 'react';
+import * as Linking from 'expo-linking';
 
 export default function Index() {
   const { isAuthenticated, loading, user } = useAuth();
@@ -11,8 +12,37 @@ export default function Index() {
   console.log('🔐 Auth State:', {
     isAuthenticated,
     loading,
-    userRole: user?.role
+    userRole: user?.role,
   });
+
+  // Handle deep link on app cold start
+  useEffect(() => {
+    const handleDeepLink = (url: string | null) => {
+      if (url) {
+        const { path } = Linking.parse(url);
+        if (path) {
+          console.log('➡️ Handling deep link path:', path);
+          router.replace(`/${path}`); // or push if you want to keep history
+        }
+      }
+    };
+
+    const getUrlAsync = async () => {
+      const initialUrl = await Linking.getInitialURL();
+      handleDeepLink(initialUrl);
+    };
+
+    getUrlAsync();
+
+    // Also handle links while the app is running
+    const subscription = Linking.addEventListener('url', (event) => {
+      handleDeepLink(event.url);
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   // Handle navigation based on auth state changes
   useEffect(() => {
@@ -24,7 +54,7 @@ export default function Index() {
         console.log('➡️ Redirecting teacher to teacher dashboard');
         router.replace('/(teacher)');
       } else if (user?.role === 'admin') {
-        console.log('➡️ Redirecting teacher to teacher dashboard');
+        console.log('➡️ Redirecting admin to admin dashboard');
         router.replace('/(admin)');
       } else {
         console.log('➡️ Redirecting student to tabs');

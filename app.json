@@ -17,6 +17,7 @@
       "intentFilters": [
         {
           "action": "VIEW",
+          "autoVerify": true,
           "data": [
             {
               "scheme": "https",
@@ -24,17 +25,15 @@
               "pathPrefix": "/"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
     },
     "ios": {
       "bundleIdentifier": "com.elmadrasa.app",
       "associatedDomains": [
-        "applinks:elmadrasa-link.vercel.app"
+        "applinks:elmadrasa-link.vercel.app",
+        "applinks:elmadrasa.vercel.app"
       ],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
