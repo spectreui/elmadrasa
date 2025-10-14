@@ -1,5 +1,5 @@
 import "../global.css";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet } from "react-native";
@@ -11,6 +11,7 @@ import { useFonts } from 'expo-font';
 import * as Linking from 'expo-linking';
 import { linking } from '@/src/utils/linking';
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import Splash from "@/components/Splash";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -39,15 +40,26 @@ export default function RootLayout() {
   });
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
+ const [showHelloSplash, setShowHelloSplash] = useState(true);
+
+  // Handle font loading errors
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
+  // Hide Expo’s default splash once fonts are ready
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+
+  // If splash is active, render it only
+  if (showHelloSplash) {
+    return <Splash onFinish={() => setShowHelloSplash(false)} />;
+  }
+
+  // Main layout renders after splash
 
   return (
     <SafeAreaProvider>
