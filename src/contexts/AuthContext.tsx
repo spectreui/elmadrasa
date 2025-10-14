@@ -147,7 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (response.data.success && response.data.data) {
         // Fix: Properly extract user and token from nested response
-        const authData = response.data.data.data; // Access the nested AuthResponse
+        const authData = response.data.data; // Access the nested AuthResponse
         if (authData) {
           const { user, token } = authData;
           console.log('✅ Login successful for:', user.email);

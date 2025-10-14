@@ -255,26 +255,37 @@ class ApiService {
   }
 
   // Auth methods
-  async login(credentials: LoginRequest): Promise<AxiosResponse<ApiResponse<ApiResponse<AuthResponse>>>> {
-    // Clear any existing token first
-    await this.clearToken();
+  // Fix the login method in your api.ts
+async login(credentials: LoginRequest): Promise<AxiosResponse<ApiResponse<AuthResponse>>> {
+  // Remove the double nesting: ApiResponse<ApiResponse<AuthResponse>> → ApiResponse<AuthResponse>
+  
+  // Clear any existing token first
+  await this.clearToken();
 
-    const response = await this.api.post("/auth/login", credentials);
+  const response = await this.api.post("/auth/login", credentials);
 
-    if (response.data.success && response.data.data?.token) {
-      await this.setToken(response.data.data.token);
+  console.log('🔐 Login API Response Structure:', {
+    success: response.data.success,
+    hasData: !!response.data.data,
+    dataKeys: response.data.data ? Object.keys(response.data.data) : 'no data',
+    hasUser: !!response.data.data?.user,
+    hasToken: !!response.data.data?.token
+  });
 
-      // Verify token was set
-      const verifiedToken = await storage.getItem(this.tokenKey);
-      console.log('✅ Token verification:', {
-        set: !!response.data.data.token,
-        stored: !!verifiedToken,
-        match: response.data.data.token === verifiedToken
-      });
-    }
+  if (response.data.success && response.data.data?.token) {
+    await this.setToken(response.data.data.token);
 
-    return response;
+    // Verify token was set
+    const verifiedToken = await storage.getItem(this.tokenKey);
+    console.log('✅ Token verification:', {
+      set: !!response.data.data.token,
+      stored: !!verifiedToken,
+      match: response.data.data.token === verifiedToken
+    });
   }
+
+  return response;
+}
 
   // Student methods
   async getStudentDashboard(): Promise<AxiosResponse<ApiResponse<any>>> {
