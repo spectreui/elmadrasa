@@ -48,29 +48,30 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
-  
+
   return (
     <SafeAreaProvider>
       <ThemeProvider>
         <ThemedSafeAreaView>
           <ThemeWrapper>
-            <NotificationProvider>
             <AuthProvider>
-              <Stack 
-                screenOptions={{ headerShown: false }}
-                linking={linking}
-                linkingOptions={{ prefixes: [Linking.createURL('/')], 
-                  config: linking.config 
-                }}
-              >
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="(student)" />
-                <Stack.Screen name="(teacher)" />
-                <Stack.Screen name="(admin)" />
-                <Stack.Screen name="index" />
-              </Stack>
+              <NotificationProvider>
+                <Stack
+                  screenOptions={{ headerShown: false }}
+                  linking={linking}
+                  linkingOptions={{
+                    prefixes: [Linking.createURL('/')],
+                    config: linking.config
+                  }}
+                >
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen name="(student)" />
+                  <Stack.Screen name="(teacher)" />
+                  <Stack.Screen name="(admin)" />
+                  <Stack.Screen name="index" />
+                </Stack>
+              </NotificationProvider>
             </AuthProvider>
-            </NotificationProvider>
           </ThemeWrapper>
         </ThemedSafeAreaView>
       </ThemeProvider>
