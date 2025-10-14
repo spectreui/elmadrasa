@@ -1,8 +1,8 @@
 // src/contexts/AuthContext.tsx - Fixed version
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { apiService } from '../services/api';
 import { User, AuthState } from '../types';
-import { View, ActivityIndicator, Alert } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { router, usePathname } from 'expo-router';
 
 interface AuthContextType extends AuthState {
@@ -11,7 +11,6 @@ interface AuthContextType extends AuthState {
   isLoading: boolean;
   error: string | null;
   clearError: () => void;
-  refreshAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,117 +24,95 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [authCheckInProgress, setAuthCheckInProgress] = useState(false);
   
-  // Use Expo Router's usePathname hook to get current path
+  // Refs to prevent loops
+  const authCheckInProgress = useRef(false);
+  const initialAuthCheckDone = useRef(false);
   const currentPathname = usePathname();
 
-  // Safe redirect function to prevent loops
+  // Safe redirect function
   const safeRedirect = useCallback((path: string) => {
-    // Check if we're already on the target path using currentPathname
     if (currentPathname !== path) {
       console.log(`➡️ Redirecting from ${currentPathname} to ${path}`);
       router.replace(path);
-    } else {
-      console.log(`⏸️ Already on target path: ${path}, skipping redirect`);
     }
   }, [currentPathname]);
 
-  // Refresh authentication state
-  const refreshAuth = useCallback(async () => {
-    // Prevent multiple simultaneous auth checks
-    if (authCheckInProgress) {
-      console.log('🔄 Auth check already in progress, skipping...');
-      return;
-    }
-
-    setAuthCheckInProgress(true);
-    console.log('🔄 Refreshing authentication...');
-
-    try {
-      // Check if we have a valid token first
-      const token = apiService.getToken();
-      const isValid = await apiService.validateToken();
+  // Single initial auth check - runs only once
+  useEffect(() => {
+    if (initialAuthCheckDone.current) return;
+    
+    const initializeAuth = async () => {
+      if (authCheckInProgress.current) return;
       
-      if (!token || !isValid) {
-        console.log('🚫 No valid token available');
+      authCheckInProgress.current = true;
+      initialAuthCheckDone.current = true;
+      
+      console.log('🎯 Performing initial auth check...');
+
+      try {
+        const token = apiService.getToken();
+        
+        if (!token) {
+          console.log('🚫 No token found');
+          setAuthState({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            loading: false,
+          });
+          return;
+        }
+
+        // Validate token
+        const isValid = await apiService.validateToken();
+        if (!isValid) {
+          console.log('❌ Token invalid');
+          setAuthState({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            loading: false,
+          });
+          return;
+        }
+
+        // Get user data
+        console.log('👤 Fetching current user...');
+        const response = await apiService.getCurrentUser();
+
+        if (response.data.success && response.data.data) {
+          const user = response.data.data;
+          console.log('✅ User authenticated:', user.email);
+
+          setAuthState({
+            user,
+            token,
+            isAuthenticated: true,
+            loading: false,
+          });
+        } else {
+          throw new Error('Failed to get user data');
+        }
+      } catch (error: any) {
+        console.error('❌ Initial auth check failed:', error);
+        
+        // Clear invalid token
+        await apiService.clearToken();
+        
         setAuthState({
           user: null,
           token: null,
           isAuthenticated: false,
           loading: false,
         });
-        setAuthCheckInProgress(false);
-        return;
-      }
-
-      console.log('👤 Fetching current user...');
-      const response = await apiService.getCurrentUser();
-
-      if (response.data.success && response.data.data) {
-        const user = response.data.data;
-        console.log('✅ User authenticated:', user.email);
-
-        setAuthState({
-          user,
-          token: apiService.getToken(),
-          isAuthenticated: true,
-          loading: false,
-        });
-      } else {
-        throw new Error('Invalid user data');
-      }
-    } catch (error: any) {
-      console.error('❌ Auth refresh failed:', error);
-      
-      // Clear token to prevent corrupted state
-      await apiService.clearToken();
-      
-      setAuthState({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        loading: false,
-      });
-      
-      // Only redirect if we're not already on auth screens
-      if (!currentPathname?.includes('/(auth)')) {
-        console.log('➡️ Redirecting to login due to auth failure');
-        setTimeout(() => {
-          safeRedirect('/(auth)/login');
-        }, 100);
-      }
-    } finally {
-      setAuthCheckInProgress(false);
-    }
-  }, [authCheckInProgress, safeRedirect, currentPathname]);
-
-  // Initial auth check with error boundary
-  useEffect(() => {
-    let isMounted = true;
-    
-    const initializeAuth = async () => {
-      if (!isMounted) return;
-      
-      console.log('🎯 Initializing authentication...');
-      try {
-        await refreshAuth();
-      } catch (error) {
-        console.error('❌ Initial auth failed:', error);
-        // Set loading to false to prevent infinite loading
-        if (isMounted) {
-          setAuthState(prev => ({ ...prev, loading: false }));
-        }
+      } finally {
+        authCheckInProgress.current = false;
       }
     };
 
     initializeAuth();
-
-    // Cleanup
-    return () => {
-      isMounted = false;
-    };
-  }, [refreshAuth]);
+  }, []); // Empty dependency array - runs only once
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -145,22 +122,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('🔐 Starting login process...');
       const response = await apiService.login({ email, password });
 
+      console.log('📦 Login response:', {
+        success: response.data.success,
+        hasData: !!response.data.data,
+        hasUser: !!response.data.data?.user,
+        hasToken: !!response.data.data?.token
+      });
+
       if (response.data.success && response.data.data) {
-        // Fix: Properly extract user and token from nested response
-        const authData = response.data.data; // Access the nested AuthResponse
-        if (authData) {
+        const authData = response.data.data;
+        
+        if (authData.user && authData.token) {
           const { user, token } = authData;
           console.log('✅ Login successful for:', user.email);
 
-          // Set the token explicitly
-          if (token) {
-            await apiService.setToken(token);
-          }
+          // Update auth state directly
+          setAuthState({
+            user,
+            token,
+            isAuthenticated: true,
+            loading: false,
+          });
 
-          // Refresh auth state to get the latest user data
-          await refreshAuth();
+          console.log('✅ Auth state updated successfully');
         } else {
-          throw new Error('Invalid authentication data');
+          console.error('❌ Missing user or token in auth data');
+          throw new Error('Invalid authentication data received');
         }
       } else {
         const errorMsg = response.data.error || 'Login failed';
@@ -175,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const errorMessage = error.response?.data?.error || error.message || 'Login failed';
       setError(errorMessage);
       
-      // Update auth state to ensure clean state
+      // Reset auth state
       setAuthState({
         user: null,
         token: null,
@@ -207,16 +194,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('✅ Logout successful');
       
       // Redirect to login
-      setTimeout(() => {
-        safeRedirect('/(auth)/login');
-      }, 100);
+      safeRedirect('/(auth)/login');
     } catch (error) {
       console.error('❌ Logout error:', error);
       setError('Logout failed');
-      // Still redirect to login even if cleanup fails
-      setTimeout(() => {
-        safeRedirect('/(auth)/login');
-      }, 100);
+      // Still reset state and redirect
+      setAuthState({
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        loading: false,
+      });
+      safeRedirect('/(auth)/login');
     } finally {
       setIsLoading(false);
     }
@@ -229,9 +218,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8fafc' }}>
         <ActivityIndicator size="large" color="#0ea5e9" />
-        <View style={{ marginTop: 16 }}>
-          <ActivityIndicator size="small" color="#94a3b8" />
-        </View>
       </View>
     );
   }
@@ -243,7 +229,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     error,
     clearError,
-    refreshAuth,
   };
 
   return (
