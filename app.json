@@ -6,7 +6,17 @@
     "userInterfaceStyle": "automatic",
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#3b82f6",
+          "sounds": [
+            "./assets/sounds/notification-sound.wav"
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
@@ -14,6 +24,9 @@
     "android": {
       "jsEngine": "hermes",
       "package": "com.elmadrasa.app",
+      "permissions": [
+        "NOTIFICATIONS"
+      ],
       "intentFilters": [
         {
           "action": "VIEW",
@@ -22,6 +35,18 @@
             {
               "scheme": "https",
               "host": "elmadrasa.vercel.app",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "elmadrasa-link.vercel.app",
               "pathPrefix": "/"
             }
           ],
@@ -36,6 +61,9 @@
         "applinks:elmadrasa.vercel.app"
       ],
       "infoPlist": {
+        " UIBackgroundModes": [
+          "remote-notification"
+        ],
         "ITSAppUsesNonExemptEncryption": false
       },
       "buildNumber": "3"

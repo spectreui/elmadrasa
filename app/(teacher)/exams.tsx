@@ -186,7 +186,7 @@ export default function TeacherExamsScreen() {
           <View>
             <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>My Exams</Text>
             <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-              {allExams.length} total exams • Manage your assessments
+              {allExams.length} total exams
             </Text>
           </View>
           <TouchableOpacity

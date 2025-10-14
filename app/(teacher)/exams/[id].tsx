@@ -110,6 +110,38 @@ export default function ExamDetailScreen() {
 
       if (response.data.success) {
         setExam(prev => prev ? { ...prev, is_active: newStatus } : null);
+                // ✅ Send push notification when exam status changes
+        if (newStatus) {
+          // Exam activated - notify students
+          try {
+            // Get exam submissions to find students who should be notified
+            const submissionsResponse = await apiService.getExamSubmissions(exam.id);
+            if (submissionsResponse.data.success) {
+              const submissions = submissionsResponse.data.data || [];
+              const studentIds = [...new Set(submissions.map((sub: any) => sub.student_id))];
+              
+              // Notify each student
+              for (const studentId of studentIds) {
+                try {
+                  await apiService.sendNotificationToUser(
+                    studentId,
+                    'Exam Activated',
+                    `The exam "${exam.title}" is now available for you to take`,
+                    {
+                      screen: 'exam',
+                      examId: exam.id,
+                      type: 'exam_activated'
+                    }
+                  );
+                } catch (notificationError) {
+                  console.log(`Failed to notify student ${studentId}:`, notificationError);
+                }
+              }
+            }
+          } catch (error) {
+            console.log('Failed to send exam activation notifications:', error);
+          }
+        }
         Alert.alert('Success', `Exam ${newStatus ? 'activated' : 'deactivated'} successfully`);
       } else {
         Alert.alert('Error', response.data.error || 'Failed to update exam status');

@@ -94,6 +94,10 @@ export interface Exam {
   updated_at: string;
   teacher?: Teacher;
   questions?: Question[];
+  attachment_url?: string;
+  allow_image_submissions?: boolean;
+  attachment_type?: string | null;
+  attachment_name?: string;
   submissions_count?: number;
   average_score?: number; // Make this optional
   total_points?: number; // Make this optional

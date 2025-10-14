@@ -10,6 +10,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
 import * as Linking from 'expo-linking';
 import { linking } from '@/src/utils/linking';
+import { NotificationProvider } from "@/contexts/NotificationContext";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -53,10 +54,14 @@ export default function RootLayout() {
       <ThemeProvider>
         <ThemedSafeAreaView>
           <ThemeWrapper>
+            <NotificationProvider>
             <AuthProvider>
               <Stack 
                 screenOptions={{ headerShown: false }}
                 linking={linking}
+                linkingOptions={{ prefixes: [Linking.createURL('/')], 
+                  config: linking.config 
+                }}
               >
                 <Stack.Screen name="(auth)" />
                 <Stack.Screen name="(student)" />
@@ -65,6 +70,7 @@ export default function RootLayout() {
                 <Stack.Screen name="index" />
               </Stack>
             </AuthProvider>
+            </NotificationProvider>
           </ThemeWrapper>
         </ThemedSafeAreaView>
       </ThemeProvider>

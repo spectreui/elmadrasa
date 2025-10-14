@@ -238,8 +238,9 @@ class ApiService {
     return this.token;
   }
 
-  isAuthenticated(): boolean {
-    return !!this.token && this.validateToken();
+  async isAuthenticated(): Promise<boolean> {
+    if (!this.token) return false;
+    return await this.validateToken();
   }
 
   // Health check
@@ -676,6 +677,21 @@ class ApiService {
   async updateStudentClass(studentId: string, className: string): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.put(`/admin/students/${studentId}/class`, { class_name: className });
   }
+
+  async savePushToken(token: string): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.post("/users/save-push-token", { push_token: token });
+  }
+
+  // Add this method to send notifications from mobile (if needed)
+  async sendNotificationToUser(userId: string, title: string, body: string, data: any = {}): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.post("/notifications/send-to-user", {
+      user_id: userId,
+      title,
+      body,
+      data
+    });
+  }
+
 }
 
 export const apiService = new ApiService();

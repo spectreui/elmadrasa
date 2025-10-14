@@ -93,7 +93,7 @@ export default function HomeworkSubmissionsScreen() {
   const loadHomeworkAndSubmissions = async () => {
     try {
       setLoading(true);
-      
+
       // Load homework details
       const homeworkResponse = await apiService.getHomeworkById(id as string);
       if (homeworkResponse.data.success) {
@@ -134,7 +134,7 @@ export default function HomeworkSubmissionsScreen() {
     const textGradeValue = parseInt(textGrade) || 0;
     const totalQuestionPoints = homework?.questions?.reduce((sum, q) => sum + q.points, 0) || 0;
     const maxTextGrade = (homework?.points || 0) - totalQuestionPoints;
-    
+
     if (textGradeValue < 0 || textGradeValue > maxTextGrade) {
       Alert.alert('Error', `Text submission grade must be between 0 and ${maxTextGrade}`);
       return;
@@ -153,24 +153,60 @@ export default function HomeworkSubmissionsScreen() {
 
       // Use the real grading API endpoint
       const response = await apiService.gradeSubmission(
-        gradingSubmission.id, 
-        textGradeValue, 
+        gradingSubmission.id,
+        textGradeValue,
         feedback,
         questionGradesArray
       );
 
       if (response.data.success) {
         // Update local state with the graded submission
-        setSubmissions(prev => prev.map(sub => 
-          sub.id === gradingSubmission.id 
+        setSubmissions(prev => prev.map(sub =>
+          sub.id === gradingSubmission.id
             ? {
+              ...response.data.data,
+              text_grade: textGradeValue,
+              question_grades: questionGradesArray
+            }
+            : sub
+        ));
+        const response = await apiService.gradeSubmission(
+          gradingSubmission.id,
+          textGradeValue,
+          feedback,
+          questionGradesArray
+        );
+
+        if (response.data.success) {
+          // Update local state with the graded submission
+          setSubmissions(prev => prev.map(sub =>
+            sub.id === gradingSubmission.id
+              ? {
                 ...response.data.data,
                 text_grade: textGradeValue,
                 question_grades: questionGradesArray
               }
-            : sub
-        ));
-        
+              : sub
+          ));
+
+          // ✅ Send push notification through your backend
+          try {
+            await apiService.sendNotificationToUser(
+              gradingSubmission.student_id, // Make sure this exists in your submission object
+              'Submission Graded',
+              `Your ${homework?.title || 'homework'} has been graded. Score: ${textGradeValue}`,
+              {
+                screen: 'homework',
+                homeworkId: gradingSubmission.homework_id,
+                type: 'submission_graded'
+              }
+            );
+          } catch (notificationError) {
+            console.log('Failed to send push notification:', notificationError);
+            // Don't fail the whole operation if notification fails
+          }
+        }
+
         Alert.alert('Success', 'Submission graded successfully');
         setGradingSubmission(null);
         setTextGrade('');
@@ -191,7 +227,7 @@ export default function HomeworkSubmissionsScreen() {
     setGradingSubmission(submission);
     setTextGrade(submission.text_grade?.toString() || submission.grade?.toString() || '');
     setFeedback(submission.feedback || '');
-    
+
     // Initialize question grades
     const initialQuestionGrades: Record<string, { grade: string; feedback: string }> = {};
     if (homework?.questions) {
@@ -233,7 +269,7 @@ export default function HomeworkSubmissionsScreen() {
   const calculateAverageGrade = () => {
     const gradedSubmissions = submissions.filter(s => s.grade !== undefined && s.grade !== null);
     if (gradedSubmissions.length === 0) return 0;
-    
+
     const total = gradedSubmissions.reduce((sum, sub) => sum + (sub.grade || 0), 0);
     return Math.round(total / gradedSubmissions.length);
   };
@@ -281,10 +317,10 @@ export default function HomeworkSubmissionsScreen() {
             {homework.questions.map((question, index) => {
               const answer = submission.answers?.find(a => a.question_id === question.id);
               const questionGrade = submission.question_grades?.find(qg => qg.question_id === question.id);
-              
+
               return (
-                <View 
-                  key={question.id} 
+                <View
+                  key={question.id}
                   style={{
                     padding: designTokens.spacing.md,
                     borderRadius: designTokens.borderRadius.lg,
@@ -302,7 +338,7 @@ export default function HomeworkSubmissionsScreen() {
                   }}>
                     {index + 1}. {question.text} ({question.points} pts)
                   </Text>
-                  
+
                   {question.type === 'multiple_choice' && question.options && (
                     <View style={{ marginBottom: designTokens.spacing.xs }}>
                       {question.options.map((option, optionIndex) => (
@@ -316,7 +352,7 @@ export default function HomeworkSubmissionsScreen() {
                       ))}
                     </View>
                   )}
-                  
+
                   <Text style={{
                     fontSize: designTokens.typography.body.fontSize,
                     color: colors.textSecondary,
@@ -324,7 +360,7 @@ export default function HomeworkSubmissionsScreen() {
                   }}>
                     Student's Answer: {answer ? answer.answer : 'No answer provided'}
                   </Text>
-                  
+
                   {questionGrade && (questionGrade.grade !== null && questionGrade.grade !== undefined || questionGrade.feedback) && (
                     <View style={{
                       marginTop: designTokens.spacing.xs,
@@ -371,8 +407,8 @@ export default function HomeworkSubmissionsScreen() {
             </Text>
             <View style={{ gap: designTokens.spacing.sm }}>
               {submission.attachments.map((attachment, index) => (
-                <View 
-                  key={index} 
+                <View
+                  key={index}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -382,7 +418,7 @@ export default function HomeworkSubmissionsScreen() {
                   }}
                 >
                   <Ionicons name="document" size={20} color={colors.textSecondary} />
-                  <Text 
+                  <Text
                     style={{
                       marginLeft: designTokens.spacing.sm,
                       fontSize: designTokens.typography.body.fontSize,
@@ -417,7 +453,7 @@ export default function HomeworkSubmissionsScreen() {
             }}>
               Overall Grade: {submission.grade}/{homework.points}
             </Text>
-            
+
             {/* Component grades */}
             {submission.text_grade !== undefined && submission.text_grade !== null && (
               <Text style={{
@@ -428,7 +464,7 @@ export default function HomeworkSubmissionsScreen() {
                 Text Submission: {submission.text_grade} pts
               </Text>
             )}
-            
+
             {submission.question_grades && submission.question_grades.length > 0 && (
               <Text style={{
                 fontSize: designTokens.typography.caption1.fontSize,
@@ -438,7 +474,7 @@ export default function HomeworkSubmissionsScreen() {
                 Question Points: {submission.question_grades.reduce((sum, qg) => sum + (qg.grade || 0), 0)} pts
               </Text>
             )}
-            
+
             {submission.feedback && (
               <Text style={{
                 fontSize: designTokens.typography.body.fontSize,
@@ -448,7 +484,7 @@ export default function HomeworkSubmissionsScreen() {
                 Overall Feedback: {submission.feedback}
               </Text>
             )}
-            
+
             <Text style={{
               fontSize: designTokens.typography.caption1.fontSize,
               color: '#059669',
@@ -511,8 +547,8 @@ export default function HomeworkSubmissionsScreen() {
 
   if (loading) {
     return (
-      <View style={{ 
-        flex: 1, 
+      <View style={{
+        flex: 1,
         backgroundColor: colors.background,
         justifyContent: 'center',
         alignItems: 'center',
@@ -532,7 +568,7 @@ export default function HomeworkSubmissionsScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
-      <View style={{ 
+      <View style={{
         paddingHorizontal: designTokens.spacing.xl,
         paddingTop: designTokens.spacing.xxxl,
         paddingBottom: designTokens.spacing.lg,
@@ -540,15 +576,15 @@ export default function HomeworkSubmissionsScreen() {
         borderBottomColor: colors.border,
         backgroundColor: colors.backgroundElevated,
       }}>
-        <View style={{ 
-          flexDirection: 'row', 
-          alignItems: 'center', 
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
           marginBottom: designTokens.spacing.lg,
         }}>
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => router.back()}
-            style={{ 
-              flexDirection: 'row', 
+            style={{
+              flexDirection: 'row',
               alignItems: 'center',
             }}
           >
@@ -571,7 +607,7 @@ export default function HomeworkSubmissionsScreen() {
         } as any}>
           {homework?.title}
         </Text>
-        
+
         <Text style={{
           fontSize: designTokens.typography.body.fontSize,
           color: colors.textSecondary,
@@ -581,8 +617,8 @@ export default function HomeworkSubmissionsScreen() {
         </Text>
 
         {/* Quick Stats */}
-        <View style={{ 
-          flexDirection: 'row', 
+        <View style={{
+          flexDirection: 'row',
           justifyContent: 'space-between',
           gap: designTokens.spacing.sm,
         }}>
@@ -685,18 +721,18 @@ export default function HomeworkSubmissionsScreen() {
         </View>
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={{ flex: 1 }}
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={handleRefresh} 
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}
           />
         }
       >
-        <View style={{ 
+        <View style={{
           padding: designTokens.spacing.xl,
           paddingTop: designTokens.spacing.lg,
         }}>
@@ -741,9 +777,9 @@ export default function HomeworkSubmissionsScreen() {
                   ...designTokens.shadows.sm,
                 }}
               >
-                <View style={{ 
-                  flexDirection: 'row', 
-                  justifyContent: 'space-between', 
+                <View style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
                   alignItems: 'flex-start',
                   marginBottom: designTokens.spacing.md,
                 }}>
@@ -809,12 +845,12 @@ export default function HomeworkSubmissionsScreen() {
                   style={{
                     paddingVertical: designTokens.spacing.md,
                     borderRadius: designTokens.borderRadius.lg,
-                    backgroundColor: getGradeStatus(submission) === 'graded' 
-                      ? colors.background 
+                    backgroundColor: getGradeStatus(submission) === 'graded'
+                      ? colors.background
                       : colors.primary,
                     borderWidth: 1,
-                    borderColor: getGradeStatus(submission) === 'graded' 
-                      ? colors.border 
+                    borderColor: getGradeStatus(submission) === 'graded'
+                      ? colors.border
                       : colors.primary,
                     alignItems: 'center',
                   }}
@@ -822,8 +858,8 @@ export default function HomeworkSubmissionsScreen() {
                   <Text style={{
                     fontSize: designTokens.typography.body.fontSize,
                     fontWeight: '600',
-                    color: getGradeStatus(submission) === 'graded' 
-                      ? colors.textPrimary 
+                    color: getGradeStatus(submission) === 'graded'
+                      ? colors.textPrimary
                       : 'white',
                   }}>
                     {getGradeStatus(submission) === 'graded' ? 'Edit Grade' : 'Grade Submission'}
@@ -843,7 +879,7 @@ export default function HomeworkSubmissionsScreen() {
         onRequestClose={() => setGradingSubmission(null)}
       >
         <View style={{ flex: 1, backgroundColor: colors.background }}>
-          <View style={{ 
+          <View style={{
             paddingHorizontal: designTokens.spacing.xl,
             paddingTop: designTokens.spacing.xxl,
             paddingBottom: designTokens.spacing.lg,
@@ -851,9 +887,9 @@ export default function HomeworkSubmissionsScreen() {
             borderBottomColor: colors.border,
             backgroundColor: colors.backgroundElevated,
           }}>
-            <View style={{ 
-              flexDirection: 'row', 
-              alignItems: 'center', 
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
               justifyContent: 'space-between',
               marginBottom: designTokens.spacing.lg,
             }}>
@@ -864,7 +900,7 @@ export default function HomeworkSubmissionsScreen() {
               } as any}>
                 Grade Submission
               </Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => setGradingSubmission(null)}
                 style={{
                   width: 36,
@@ -896,7 +932,7 @@ export default function HomeworkSubmissionsScreen() {
           </View>
 
           <ScrollView style={{ flex: 1 }}>
-            <View style={{ 
+            <View style={{
               padding: designTokens.spacing.xl,
               paddingBottom: designTokens.spacing.xxxl,
             }}>
@@ -943,10 +979,10 @@ export default function HomeworkSubmissionsScreen() {
                     const answer = gradingSubmission?.answers?.find(a => a.question_id === question.id);
                     const currentGrade = questionGrades[question.id]?.grade || '';
                     const currentFeedback = questionGrades[question.id]?.feedback || '';
-                    
+
                     return (
-                      <View 
-                        key={question.id} 
+                      <View
+                        key={question.id}
                         style={{
                           padding: designTokens.spacing.md,
                           borderRadius: designTokens.borderRadius.lg,
@@ -964,7 +1000,7 @@ export default function HomeworkSubmissionsScreen() {
                         }}>
                           {index + 1}. {question.text} ({question.points} pts)
                         </Text>
-                        
+
                         {question.type === 'multiple_choice' && question.options && (
                           <View style={{ marginBottom: designTokens.spacing.xs }}>
                             {question.options.map((option, optionIndex) => (
@@ -978,7 +1014,7 @@ export default function HomeworkSubmissionsScreen() {
                             ))}
                           </View>
                         )}
-                        
+
                         <Text style={{
                           fontSize: designTokens.typography.body.fontSize,
                           color: colors.textSecondary,
@@ -986,10 +1022,10 @@ export default function HomeworkSubmissionsScreen() {
                         }}>
                           Answer: {answer ? answer.answer : 'No answer provided'}
                         </Text>
-                        
+
                         {/* Question Grade Input */}
-                        <View style={{ 
-                          flexDirection: 'row', 
+                        <View style={{
+                          flexDirection: 'row',
                           alignItems: 'center',
                           marginBottom: designTokens.spacing.sm,
                         }}>
@@ -1036,7 +1072,7 @@ export default function HomeworkSubmissionsScreen() {
                             / {question.points}
                           </Text>
                         </View>
-                        
+
                         {/* Question Feedback Input */}
                         <View>
                           <Text style={{
@@ -1088,9 +1124,9 @@ export default function HomeworkSubmissionsScreen() {
                 } as any}>
                   Text Submission Grade
                 </Text>
-                
-                <View style={{ 
-                  flexDirection: 'row', 
+
+                <View style={{
+                  flexDirection: 'row',
                   alignItems: 'center',
                 }}>
                   <Text style={{
@@ -1119,7 +1155,7 @@ export default function HomeworkSubmissionsScreen() {
                       const numericValue = text.replace(/[^0-9]/g, '');
                       const totalQuestionPoints = homework?.questions?.reduce((sum, q) => sum + q.points, 0) || 0;
                       const maxTextGrade = (homework?.points || 0) - totalQuestionPoints;
-                      
+
                       if (numericValue === '' || parseInt(numericValue) <= maxTextGrade) {
                         setTextGrade(numericValue);
                       }
@@ -1165,8 +1201,8 @@ export default function HomeworkSubmissionsScreen() {
               </View>
 
               {/* Action Buttons */}
-              <View style={{ 
-                flexDirection: 'row', 
+              <View style={{
+                flexDirection: 'row',
                 gap: designTokens.spacing.md,
               }}>
                 <TouchableOpacity

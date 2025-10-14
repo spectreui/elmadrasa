@@ -1,9 +1,9 @@
-// src/contexts/AuthContext.tsx
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+// src/contexts/AuthContext.tsx - Fixed version
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { apiService } from '../services/api';
 import { User, AuthState } from '../types';
-import { View, ActivityIndicator } from 'react-native';
-import { router } from 'expo-router';
+import { View, ActivityIndicator, Alert } from 'react-native';
+import { router, usePathname } from 'expo-router';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -25,30 +25,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const authCheckInProgress = useRef(false);
+  const [authCheckInProgress, setAuthCheckInProgress] = useState(false);
+  
+  // Use Expo Router's usePathname hook to get current path
+  const currentPathname = usePathname();
 
-  // Clear any existing timeouts to prevent loops
-  const clearRedirectTimeout = useCallback(() => {
-    if (redirectTimeoutRef.current) {
-      clearTimeout(redirectTimeoutRef.current);
-      redirectTimeoutRef.current = null;
+  // Safe redirect function to prevent loops
+  const safeRedirect = useCallback((path: string) => {
+    // Check if we're already on the target path using currentPathname
+    if (currentPathname !== path) {
+      console.log(`➡️ Redirecting from ${currentPathname} to ${path}`);
+      router.replace(path);
+    } else {
+      console.log(`⏸️ Already on target path: ${path}, skipping redirect`);
     }
-  }, []);
+  }, [currentPathname]);
 
-  // Refresh authentication state with loop prevention
+  // Refresh authentication state
   const refreshAuth = useCallback(async () => {
     // Prevent multiple simultaneous auth checks
-    if (authCheckInProgress.current) {
+    if (authCheckInProgress) {
       console.log('🔄 Auth check already in progress, skipping...');
       return;
     }
 
-    authCheckInProgress.current = true;
+    setAuthCheckInProgress(true);
     console.log('🔄 Refreshing authentication...');
 
     try {
-      if (!apiService.isAuthenticated()) {
+      // Check if we have a valid token first
+      const token = apiService.getToken();
+      const isValid = await apiService.validateToken();
+      
+      if (!token || !isValid) {
         console.log('🚫 No valid token available');
         setAuthState({
           user: null,
@@ -56,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isAuthenticated: false,
           loading: false,
         });
-        authCheckInProgress.current = false;
+        setAuthCheckInProgress(false);
         return;
       }
 
@@ -79,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       console.error('❌ Auth refresh failed:', error);
       
-      // Clear token and redirect to login
+      // Clear token to prevent corrupted state
       await apiService.clearToken();
       
       setAuthState({
@@ -89,50 +98,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading: false,
       });
       
-      // Redirect to login with debounce
-      clearRedirectTimeout();
-      redirectTimeoutRef.current = setTimeout(() => {
-        if (!authState.isAuthenticated) {
-          console.log('➡️ Redirecting to login due to auth failure');
-          router.replace('/(auth)/login');
-        }
-      }, 100);
+      // Only redirect if we're not already on auth screens
+      if (!currentPathname?.includes('/(auth)')) {
+        console.log('➡️ Redirecting to login due to auth failure');
+        setTimeout(() => {
+          safeRedirect('/(auth)/login');
+        }, 100);
+      }
     } finally {
-      authCheckInProgress.current = false;
+      setAuthCheckInProgress(false);
     }
-  }, [authState.isAuthenticated, clearRedirectTimeout]);
+  }, [authCheckInProgress, safeRedirect, currentPathname]);
 
-  // Initial auth check
+  // Initial auth check with error boundary
   useEffect(() => {
+    let isMounted = true;
+    
     const initializeAuth = async () => {
+      if (!isMounted) return;
+      
       console.log('🎯 Initializing authentication...');
-      await refreshAuth();
+      try {
+        await refreshAuth();
+      } catch (error) {
+        console.error('❌ Initial auth failed:', error);
+        // Set loading to false to prevent infinite loading
+        if (isMounted) {
+          setAuthState(prev => ({ ...prev, loading: false }));
+        }
+      }
     };
 
     initializeAuth();
 
-    // Cleanup on unmount
+    // Cleanup
     return () => {
-      clearRedirectTimeout();
-      authCheckInProgress.current = false;
+      isMounted = false;
     };
-  }, [refreshAuth, clearRedirectTimeout]);
+  }, [refreshAuth]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
-    clearRedirectTimeout();
 
     try {
       console.log('🔐 Starting login process...');
       const response = await apiService.login({ email, password });
 
       if (response.data.success && response.data.data) {
-        const { user } = response.data.data;
-        console.log('✅ Login successful for:', user.email);
+        // Fix: Properly extract user and token from nested response
+        const authData = response.data.data.data; // Access the nested AuthResponse
+        if (authData) {
+          const { user, token } = authData;
+          console.log('✅ Login successful for:', user.email);
 
-        // Refresh auth state to get the latest user data
-        await refreshAuth();
+          // Set the token explicitly
+          if (token) {
+            await apiService.setToken(token);
+          }
+
+          // Refresh auth state to get the latest user data
+          await refreshAuth();
+        } else {
+          throw new Error('Invalid authentication data');
+        }
       } else {
         const errorMsg = response.data.error || 'Login failed';
         throw new Error(errorMsg);
@@ -145,6 +174,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const errorMessage = error.response?.data?.error || error.message || 'Login failed';
       setError(errorMessage);
+      
+      // Update auth state to ensure clean state
+      setAuthState({
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        loading: false,
+      });
+      
       throw error;
     } finally {
       setIsLoading(false);
@@ -155,7 +193,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('🚪 Logging out...');
       setIsLoading(true);
-      clearRedirectTimeout();
       
       await apiService.clearToken();
 
@@ -169,13 +206,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       console.log('✅ Logout successful');
       
-      // Redirect to login with debounce
-      redirectTimeoutRef.current = setTimeout(() => {
-        router.replace('/(auth)/login');
+      // Redirect to login
+      setTimeout(() => {
+        safeRedirect('/(auth)/login');
       }, 100);
     } catch (error) {
       console.error('❌ Logout error:', error);
       setError('Logout failed');
+      // Still redirect to login even if cleanup fails
+      setTimeout(() => {
+        safeRedirect('/(auth)/login');
+      }, 100);
     } finally {
       setIsLoading(false);
     }
@@ -183,18 +224,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const clearError = () => setError(null);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      clearRedirectTimeout();
-    };
-  }, [clearRedirectTimeout]);
-
   // Show loading only during initial app load
   if (authState.loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8fafc' }}>
         <ActivityIndicator size="large" color="#0ea5e9" />
+        <View style={{ marginTop: 16 }}>
+          <ActivityIndicator size="small" color="#94a3b8" />
+        </View>
       </View>
     );
   }

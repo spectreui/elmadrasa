@@ -1,7 +1,8 @@
-// src/utils/storage.ts
+// src/utils/storage.ts - Enhanced version
 class UniversalStorage {
   private isWeb: boolean;
   private initialized: boolean = false;
+  private asyncStorageModule: any = null;
 
   constructor() {
     this.isWeb = typeof window !== 'undefined' && !!window.localStorage;
@@ -13,15 +14,19 @@ class UniversalStorage {
 
     try {
       if (!this.isWeb) {
-        // Test AsyncStorage in React Native
-        const AsyncStorage = await import('@react-native-async-storage/async-storage');
-        await AsyncStorage.default.getItem('test');
+        // Lazy load AsyncStorage
+        if (!this.asyncStorageModule) {
+          this.asyncStorageModule = await import('@react-native-async-storage/async-storage');
+        }
+        // Test connection
+        await this.asyncStorageModule.default.getItem('test_connection');
       }
       this.initialized = true;
       console.log('✅ Storage fully initialized');
     } catch (error) {
-      console.error('❌ Storage initialization failed:', error);
-      throw error;
+      console.warn('⚠️ Storage initialization warning:', error);
+      // Don't throw error, just mark as initialized to prevent blocking
+      this.initialized = true;
     }
   }
 
@@ -31,13 +36,18 @@ class UniversalStorage {
       console.log(`📦 GET "${key}"`);
 
       if (this.isWeb) {
-        return localStorage.getItem(key);
+        const value = localStorage.getItem(key);
+        return value;
       } else {
-        const AsyncStorage = await import('@react-native-async-storage/async-storage');
-        return await AsyncStorage.default.getItem(key);
+        if (!this.asyncStorageModule) {
+          this.asyncStorageModule = await import('@react-native-async-storage/async-storage');
+        }
+        const value = await this.asyncStorageModule.default.getItem(key);
+        return value;
       }
     } catch (error) {
       console.error(`❌ Error getting "${key}":`, error);
+      // Return null instead of throwing to prevent app crashes
       return null;
     }
   }
@@ -50,16 +60,20 @@ class UniversalStorage {
       if (this.isWeb) {
         localStorage.setItem(key, value);
       } else {
-        const AsyncStorage = await import('@react-native-async-storage/async-storage');
-        await AsyncStorage.default.setItem(key, value);
+        if (!this.asyncStorageModule) {
+          this.asyncStorageModule = await import('@react-native-async-storage/async-storage');
+        }
+        await this.asyncStorageModule.default.setItem(key, value);
       }
       
-      // Verify write
+      // Verify write (optional)
       const stored = await this.getItem(key);
-      console.log(`✅ SET verified:`, stored ? 'SUCCESS' : 'FAILED');
+      if (stored !== value) {
+        console.warn(`⚠️ SET verification mismatch for "${key}"`);
+      }
     } catch (error) {
       console.error(`❌ Error setting "${key}":`, error);
-      throw error;
+      // Don't throw error to prevent app crashes
     }
   }
 
@@ -71,16 +85,20 @@ class UniversalStorage {
       if (this.isWeb) {
         localStorage.removeItem(key);
       } else {
-        const AsyncStorage = await import('@react-native-async-storage/async-storage');
-        await AsyncStorage.default.removeItem(key);
+        if (!this.asyncStorageModule) {
+          this.asyncStorageModule = await import('@react-native-async-storage/async-storage');
+        }
+        await this.asyncStorageModule.default.removeItem(key);
       }
 
-      // Verify removal
+      // Verify removal (optional)
       const stored = await this.getItem(key);
-      console.log(`✅ REMOVE verified:`, stored ? 'FAILED' : 'SUCCESS');
+      if (stored !== null) {
+        console.warn(`⚠️ REMOVE verification failed for "${key}"`);
+      }
     } catch (error) {
       console.error(`❌ Error removing "${key}":`, error);
-      throw error;
+      // Don't throw error to prevent app crashes
     }
   }
 
@@ -92,12 +110,33 @@ class UniversalStorage {
       if (this.isWeb) {
         localStorage.clear();
       } else {
-        const AsyncStorage = await import('@react-native-async-storage/async-storage');
-        await AsyncStorage.default.clear();
+        if (!this.asyncStorageModule) {
+          this.asyncStorageModule = await import('@react-native-async-storage/async-storage');
+        }
+        await this.asyncStorageModule.default.clear();
       }
     } catch (error) {
       console.error('❌ Error clearing storage:', error);
-      throw error;
+      // Don't throw error to prevent app crashes
+    }
+  }
+
+  // Emergency reset function
+  async emergencyReset(): Promise<void> {
+    try {
+      console.log('🚨 EMERGENCY STORAGE RESET');
+      if (this.isWeb) {
+        localStorage.clear();
+      } else {
+        if (!this.asyncStorageModule) {
+          this.asyncStorageModule = await import('@react-native-async-storage/async-storage');
+        }
+        await this.asyncStorageModule.default.clear();
+      }
+      this.initialized = false;
+      console.log('✅ Emergency reset completed');
+    } catch (error) {
+      console.error('❌ Emergency reset failed:', error);
     }
   }
 }

@@ -1,7 +1,7 @@
 // app/(teacher)/create-exam.tsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Switch, Modal, FlatList, ActivityIndicator, Image } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +14,7 @@ import * as DocumentPicker from 'expo-document-picker';
 export default function CreateExamScreen() {
   const { colors } = useThemeContext();
   const { user } = useAuth();
+  const { edit } = useLocalSearchParams(); // Get edit parameter
   const [title, setTitle] = useState('');
   const [subject, setSubject] = useState('');
   const [classLevel, setClassLevel] = useState('');
@@ -46,32 +47,88 @@ export default function CreateExamScreen() {
   const [showSubjectPicker, setShowSubjectPicker] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [loadingSubjects, setLoadingSubjects] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Load exam data for editing
+  useEffect(() => {
+    if (edit) {
+      setIsEditing(true);
+      loadExamForEditing(edit as string);
+    } else {
+      loadTeacherData();
+    }
+  }, [edit]);
+
+  const loadExamForEditing = async (examId: string) => {
+    try {
+      setLoadingData(true);
+      
+      // Load exam data
+      const examResponse = await apiService.getExamById(examId);
+      if (examResponse.data.success && examResponse.data.data) {
+        const exam = examResponse.data.data;
+        
+        // Populate form with exam data
+        setTitle(exam.title);
+        setSubject(exam.subject);
+        setClassLevel(exam.class);
+        setDueDate(exam.due_date ? new Date(exam.due_date) : null);
+        setAvailableFrom(exam.available_from ? new Date(exam.available_from) : null);
+        setAttachmentUrl(exam.attachment_url || null);
+        setAttachmentType(exam.attachment_type || null);
+        setAttachmentName(exam.attachment_name || null);
+        setAllowImageSubmissions(exam.allow_image_submissions || false);
+        
+        // Settings
+        if (exam.settings) {
+          setTimed(exam.settings.timed || false);
+          setDuration(exam.settings.duration?.toString() || '60');
+          setAllowRetake(exam.settings.allow_retake || false);
+          setRandomOrder(exam.settings.random_order || false);
+        }
+        
+        // Questions
+        if (exam.questions && exam.questions.length > 0) {
+          setQuestions(exam.questions.map((q: any) => ({
+            ...q,
+            points: q.points?.toString() || '1'
+          })));
+        }
+      }
+      
+      // Load teacher classes for dropdowns
+      await loadTeacherData();
+    } catch (error) {
+      console.error('Failed to load exam for editing:', error);
+      Alert.alert('Error', 'Failed to load exam data');
+      router.back();
+    } finally {
+      setLoadingData(false);
+    }
+  };
 
   // Load teacher's classes
-  useEffect(() => {
-    const loadTeacherData = async () => {
-      try {
-        setLoadingData(true);
-        const classesResponse = await apiService.getTeacherClasses();
-        
-        if (classesResponse.data.success) {
-          // Transform the complex structure to simple array with name property
-          const transformedClasses = (classesResponse.data.data || []).map((cls: any) => ({
-            id: cls.class_id,
-            name: cls.class_name
-          }));
-          setClasses(transformedClasses);
-        }
-      } catch (error) {
-        console.error('Failed to load teacher classes:', error);
-        Alert.alert('Error', 'Failed to load classes');
-      } finally {
+  const loadTeacherData = async () => {
+    try {
+      const classesResponse = await apiService.getTeacherClasses();
+      
+      if (classesResponse.data.success) {
+        // Transform the complex structure to simple array with name property
+        const transformedClasses = (classesResponse.data.data || []).map((cls: any) => ({
+          id: cls.class_id,
+          name: cls.class_name
+        }));
+        setClasses(transformedClasses);
+      }
+    } catch (error) {
+      console.error('Failed to load teacher classes:', error);
+      Alert.alert('Error', 'Failed to load classes');
+    } finally {
+      if (!edit) {
         setLoadingData(false);
       }
-    };
-    
-    loadTeacherData();
-  }, []);
+    }
+  };
 
   // Load subjects when class is selected
   useEffect(() => {
@@ -244,17 +301,59 @@ export default function CreateExamScreen() {
         }
       };
 
-      const response = await apiService.createExam(examData);
+      let response;
+      if (isEditing) {
+        // Update existing exam
+        response = await apiService.updateExam(edit as string, examData);
+      } else {
+        // Create new exam
+        response = await apiService.createExam(examData);
+      }
       
       if (response.data.success) {
-        Alert.alert('Success', 'Exam created successfully!', [
+        // ✅ Send push notifications when exam is created/updated
+        try {
+          // Only send notifications for new exams or when exam becomes active
+          if (!isEditing) {
+            // Get students in the class to notify them
+            const studentsResponse = await apiService.getStudentsByClass(
+              classes.find(c => c.name === classLevel)?.id || ''
+            );
+            
+            if (studentsResponse.data.success) {
+              const students = studentsResponse.data.data || [];
+              
+              // Send notification to each student
+              for (const student of students) {
+                try {
+                  await apiService.sendNotificationToUser(
+                    student.user_id,
+                    'New Exam Created',
+                    `A new exam "${title}" has been created for your ${subject} class`,
+                    {
+                      screen: 'exam',
+                      examId: response.data.data.id, // Assuming response contains exam ID
+                      type: 'exam_created'
+                    }
+                  );
+                } catch (notificationError) {
+                  console.log(`Failed to notify student ${student.id}:`, notificationError);
+                }
+              }
+            }
+          }
+        } catch (notificationError) {
+          console.log('Failed to send notifications:', notificationError);
+        }
+        
+        Alert.alert('Success', `Exam ${isEditing ? 'updated' : 'created'} successfully!`, [
           { text: 'OK', onPress: () => router.back() }
         ]);
       } else {
-        Alert.alert('Error', response.data.error || 'Failed to create exam');
+        Alert.alert('Error', response.data.error || `Failed to ${isEditing ? 'update' : 'create'} exam`);
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to create exam');
+      Alert.alert('Error', error.message || `Failed to ${isEditing ? 'update' : 'create'} exam`);
     } finally {
       setLoading(false);
     }
@@ -392,7 +491,7 @@ export default function CreateExamScreen() {
           marginTop: designTokens.spacing.md,
           fontSize: designTokens.typography.body.fontSize
         }}>
-          Loading classes...
+          {isEditing ? 'Loading exam...' : 'Loading classes...'}
         </Text>
       </View>
     );
@@ -410,7 +509,7 @@ export default function CreateExamScreen() {
           color: colors.textPrimary,
           marginBottom: designTokens.spacing.lg
         } as any}>
-          Create New Exam
+          {isEditing ? 'Edit Exam' : 'Create New Exam'}
         </Text>
 
         {/* Basic Info Card */}
@@ -1306,7 +1405,7 @@ export default function CreateExamScreen() {
             fontWeight: '600',
             color: '#fff'
           }}>
-            {loading ? 'Creating...' : 'Create Exam'}
+            {loading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Exam' : 'Create Exam')}
           </Text>
         </TouchableOpacity>
       </View>
