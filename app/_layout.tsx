@@ -6,61 +6,74 @@ import { StyleSheet } from "react-native";
 import { AuthProvider } from "../src/contexts/AuthContext";
 import { ThemeProvider, useThemeContext } from "../src/contexts/ThemeContext";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import * as SplashScreen from 'expo-splash-screen';
-import { useFonts } from 'expo-font';
-import * as Linking from 'expo-linking';
-import { linking } from '@/src/utils/linking';
+import * as SplashScreen from "expo-splash-screen";
+import { useFonts } from "expo-font";
+import { linking } from "@/src/utils/linking";
 import { NotificationProvider } from "@/contexts/NotificationContext";
-import Splash from "@/components/Splash";
+import AppleHello from "@/components/AppleHello";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // ⬅️ add this
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+// Prevent splash auto-hide
 SplashScreen.preventAutoHideAsync();
 
-function ThemeWrapper({ children }: { children: React.ReactNode }) {
-  const { isDark } = useThemeContext();
-  return (
-    <>
-      <StatusBar style={isDark ? "light" : "dark"} />
-      {children}
-    </>
-  );
-}
-
 export default function RootLayout() {
+  const [helloDone, setHelloDone] = useState(false);
+  const [showIntro, setShowIntro] = useState<boolean | null>(null);
+
   const [loaded, error] = useFonts({
-    'Inter-Black': require('@/assets/fonts/Inter-Black.otf'),
-    'Inter-Bold': require('@/assets/fonts/Inter-Bold.otf'),
-    'Inter-ExtraBold': require('@/assets/fonts/Inter-ExtraBold.otf'),
-    'Inter-ExtraLight': require('@/assets/fonts/Inter-ExtraLight.otf'),
-    'Inter-Light': require('@/assets/fonts/Inter-Light.otf'),
-    'Inter-Medium': require('@/assets/fonts/Inter-Medium.otf'),
-    'Inter-Regular': require('@/assets/fonts/Inter-Regular.otf'),
-    'Inter-SemiBold': require('@/assets/fonts/Inter-SemiBold.otf'),
-    'Inter-Thin': require('@/assets/fonts/Inter-Thin.otf'),
+    "Inter-Regular": require("@/assets/fonts/Inter-Regular.otf"),
+    "Inter-SemiBold": require("@/assets/fonts/Inter-SemiBold.otf"),
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
- const [showHelloSplash, setShowHelloSplash] = useState(true);
+  // 🧠 Check AsyncStorage on mount
+  useEffect(() => {
+    const checkIntro = async () => {
+      try {
+        const seen = await AsyncStorage.getItem("introShown");
+        setShowIntro(!seen);
+      } catch (e) {
+        console.warn("Error checking introShown:", e);
+        setShowIntro(false);
+      }
+    };
+    checkIntro();
+  }, []);
 
-  // Handle font loading errors
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
-  // Hide Expo’s default splash once fonts are ready
+  // Hide splash only after everything (fonts + hello) is ready
   useEffect(() => {
-    if (loaded) {
+    if (loaded && helloDone) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [loaded, helloDone]);
 
-  // If splash is active, render it only
-  if (showHelloSplash) {
-    return <Splash onFinish={() => setShowHelloSplash(false)} />;
+  // Handle animation complete
+  const handleHelloDone = async () => {
+    try {
+      await AsyncStorage.setItem("introShown", "true");
+    } catch (e) {
+      console.warn("Error saving introShown:", e);
+    }
+    setHelloDone(true);
+  };
+
+  // Still checking AsyncStorage? (null = unknown yet)
+  if (showIntro === null) return null;
+
+  // First-time intro
+  if (showIntro && !helloDone) {
+    return (
+      <AppleHello
+        speed={1.8}
+        onAnimationComplete={handleHelloDone}
+      />
+    );
   }
 
-  // Main layout renders after splash
-
+  // Normal app
   return (
     <SafeAreaProvider>
       <ThemeProvider>
@@ -68,10 +81,7 @@ export default function RootLayout() {
           <ThemeWrapper>
             <AuthProvider>
               <NotificationProvider>
-                <Stack
-                  screenOptions={{ headerShown: false }}
-                  linking={linking}
-                >
+                <Stack screenOptions={{ headerShown: false }} linking={linking}>
                   <Stack.Screen name="(auth)" />
                   <Stack.Screen name="(student)" />
                   <Stack.Screen name="(teacher)" />
@@ -84,6 +94,16 @@ export default function RootLayout() {
         </ThemedSafeAreaView>
       </ThemeProvider>
     </SafeAreaProvider>
+  );
+}
+
+function ThemeWrapper({ children }: { children: React.ReactNode }) {
+  const { isDark } = useThemeContext();
+  return (
+    <>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      {children}
+    </>
   );
 }
 
@@ -102,7 +122,5 @@ function ThemedSafeAreaView({ children }: { children: React.ReactNode }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
 });
