@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Animated as RNAnimated } from "react-native";
+import { View } from "react-native";
 import Svg, { Path, Defs, LinearGradient, Stop } from "react-native-svg";
 import Animated, {
   useSharedValue,
@@ -7,6 +7,8 @@ import Animated, {
   withTiming,
   Easing,
   runOnJS,
+  withDelay,
+  useAnimatedStyle,
 } from "react-native-reanimated";
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
@@ -18,59 +20,104 @@ export default function AppleHello({
   onAnimationComplete?: () => void;
   speed?: number;
 }) {
-  const [fadeAnim] = useState(new RNAnimated.Value(1));
+  const [isVisible, setIsVisible] = useState(true);
   const progress1 = useSharedValue(0);
   const progress2 = useSharedValue(0);
+  const opacity = useSharedValue(1);
 
   const duration = 6000 / speed;
 
   useEffect(() => {
-    // Animate the first path
-    progress1.value = withTiming(1, {
-      duration: duration * 0.35,
-      easing: Easing.inOut(Easing.ease),
-    });
+    let mounted = true;
 
-    // Start the second slightly before the first ends (overlap)
-    setTimeout(() => {
-      progress2.value = withTiming(
-        1,
-        { duration: duration * 0.7, easing: Easing.inOut(Easing.ease) },
-        () => {
-          RNAnimated.timing(fadeAnim, {
-            toValue: 0,
-            duration: 800,
-            useNativeDriver: true,
-          }).start(() => runOnJS(onAnimationComplete ?? (() => {}))());
-        }
+    const runAnimations = async () => {
+      // First animation
+      progress1.value = withTiming(1, {
+        duration: duration * 0.35,
+        easing: Easing.inOut(Easing.ease),
+      });
+
+      // Second animation with delay
+      progress2.value = withDelay(
+        duration * 0.206,
+        withTiming(1, {
+          duration: duration * 0.7,
+          easing: Easing.inOut(Easing.ease),
+        })
       );
-    }, duration * 0.206); // <-- overlap amount (starts early)
+
+      // Fade out and complete
+      opacity.value = withDelay(
+        duration * 0.8,
+        withTiming(
+          0,
+          {
+            duration: 800,
+            easing: Easing.out(Easing.ease),
+          },
+          (finished) => {
+            if (finished && mounted) {
+              runOnJS(handleComplete)();
+            }
+          }
+        )
+      );
+    };
+
+    const handleComplete = () => {
+      if (mounted) {
+        setIsVisible(false);
+        onAnimationComplete?.();
+      }
+    };
+
+    runAnimations();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const animatedProps1 = useAnimatedProps(() => {
     const totalLength = 600;
-    return { strokeDashoffset: totalLength * (1 - progress1.value) };
+    return { 
+      strokeDashoffset: totalLength * (1 - progress1.value) 
+    };
   });
 
   const animatedProps2 = useAnimatedProps(() => {
     const totalLength = 2400;
-    return { strokeDashoffset: totalLength * (1 - progress2.value) };
+    return { 
+      strokeDashoffset: totalLength * (1 - progress2.value) 
+    };
   });
 
+  const containerStyle = useAnimatedStyle(() => {
+    return {
+      opacity: opacity.value,
+    };
+  });
+
+  if (!isVisible) {
+    return null;
+  }
+
   return (
-    <RNAnimated.View
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "#000",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 9999,
-        opacity: fadeAnim,
-      }}
+    <Animated.View
+      style={[
+        {
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "#000",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 9999,
+        },
+        containerStyle,
+      ]}
     >
       <Svg
         width={340}
@@ -105,6 +152,6 @@ export default function AppleHello({
           strokeDasharray="2400"
         />
       </Svg>
-    </RNAnimated.View>
+    </Animated.View>
   );
 }

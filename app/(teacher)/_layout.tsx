@@ -158,19 +158,7 @@ export default function TeacherLayout() {
         }}
       />
       <Tabs.Screen
-        name="create-homework"
-        options={{
-          href: null, // This hides it from tab bar
-        }}
-      />
-      <Tabs.Screen
-        name="classes"
-        options={{
-          href: null, // This hides it from tab bar
-        }}
-      />
-      <Tabs.Screen
-        name="homework/[id]"
+        name="homework/[id]/submissions"
         options={{
           href: null, // This hides it from tab bar
         }}
@@ -183,12 +171,6 @@ export default function TeacherLayout() {
       />
       <Tabs.Screen
         name="exams/[id]"
-        options={{
-          href: null, // This hides it from tab bar
-        }}
-      />
-      <Tabs.Screen
-        name="homework/[id]/submissions"
         options={{
           href: null, // This hides it from tab bar
         }}

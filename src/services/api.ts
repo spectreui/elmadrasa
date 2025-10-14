@@ -256,36 +256,36 @@ class ApiService {
 
   // Auth methods
   // Fix the login method in your api.ts
-async login(credentials: LoginRequest): Promise<AxiosResponse<ApiResponse<AuthResponse>>> {
-  // Remove the double nesting: ApiResponse<ApiResponse<AuthResponse>> → ApiResponse<AuthResponse>
-  
-  // Clear any existing token first
-  await this.clearToken();
+  async login(credentials: LoginRequest): Promise<AxiosResponse<ApiResponse<AuthResponse>>> {
+    // Remove the double nesting: ApiResponse<ApiResponse<AuthResponse>> → ApiResponse<AuthResponse>
 
-  const response = await this.api.post("/auth/login", credentials);
+    // Clear any existing token first
+    await this.clearToken();
 
-  console.log('🔐 Login API Response Structure:', {
-    success: response.data.success,
-    hasData: !!response.data.data,
-    dataKeys: response.data.data ? Object.keys(response.data.data) : 'no data',
-    hasUser: !!response.data.data?.user,
-    hasToken: !!response.data.data?.token
-  });
+    const response = await this.api.post("/auth/login", credentials);
 
-  if (response.data.success && response.data.data?.token) {
-    await this.setToken(response.data.data.token);
-
-    // Verify token was set
-    const verifiedToken = await storage.getItem(this.tokenKey);
-    console.log('✅ Token verification:', {
-      set: !!response.data.data.token,
-      stored: !!verifiedToken,
-      match: response.data.data.token === verifiedToken
+    console.log('🔐 Login API Response Structure:', {
+      success: response.data.success,
+      hasData: !!response.data.data,
+      dataKeys: response.data.data ? Object.keys(response.data.data) : 'no data',
+      hasUser: !!response.data.data?.user,
+      hasToken: !!response.data.data?.token
     });
-  }
 
-  return response;
-}
+    if (response.data.success && response.data.data?.token) {
+      await this.setToken(response.data.data.token);
+
+      // Verify token was set
+      const verifiedToken = await storage.getItem(this.tokenKey);
+      console.log('✅ Token verification:', {
+        set: !!response.data.data.token,
+        stored: !!verifiedToken,
+        match: response.data.data.token === verifiedToken
+      });
+    }
+
+    return response;
+  }
 
   // Student methods
   async getStudentDashboard(): Promise<AxiosResponse<ApiResponse<any>>> {
@@ -397,7 +397,7 @@ async login(credentials: LoginRequest): Promise<AxiosResponse<ApiResponse<AuthRe
   public async getExamStatistics(examId: string): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.get(`/exams/${examId}/statistics`);
   }
-  
+
   // In your apiService.ts - Add this method
   async getTeacherExams(): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.get("/teachers/exams"); // Or whatever your teacher exams endpoint is
@@ -691,17 +691,17 @@ async login(credentials: LoginRequest): Promise<AxiosResponse<ApiResponse<AuthRe
 
   // Add this method to send notifications from mobile (if needed)
   async sendNotificationToUser(userId: string, title: string, body: string, data: any = {}) {
-  return this.api.post('/notifications/send-to-user', {
-    user_id: userId,
-    title,
-    body,
-    data
-  });
-}
+    return this.api.post('/notifications/send-to-user', {
+      user_id: userId,
+      title,
+      body,
+      data
+    });
+  }
 
-async getUserById(userId: string) {
-  return this.api.get(`/users/${userId}/profile`);
-}
+  async getUserById(userId: string) {
+    return this.api.get(`/users/${userId}/profile`);
+  }
 
 }
 
