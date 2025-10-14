@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.elmadrasa.app",
+    "sha256_cert_fingerprints": [
+      "7F:58:09:0A:36:AC:7A:D9:9E:65:A1:3B:D6:02:66:6F:92:F5:69:53:9B:12:3E:7B:DE:E4:CA:42:F0:31:1E:D7"
+    ]
+  }
+}]

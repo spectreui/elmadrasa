@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Madrasa - Open in App</title>
+    <meta name="description" content="Open this link in the El Madrasa app for the best experience">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 2.5rem;
+            max-width: 90%;
+            width: 480px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .subtitle {
+            font-size: 1.125rem;
+            color: #6b7280;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .app-info {
+            background: #f3f4f6;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .app-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 16px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .app-name {
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .app-description {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .fallback-message {
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .fallback-message p {
+            font-size: 0.875rem;
+            color: #92400e;
+            margin: 0;
+        }
+
+        .loading {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .instructions {
+            background: #eff6ff;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+
+        .instructions h3 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+        }
+
+        .instructions ul {
+            font-size: 0.875rem;
+            color: #374151;
+            padding-left: 1.25rem;
+            margin: 0;
+        }
+
+        .instructions li {
+            margin-bottom: 0.25rem;
+        }
+
+        .footer {
+            margin-top: 2rem;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🎓</div>
+        <h1>Continue in El Madrasa</h1>
+        <p class="subtitle">Tap below to open this link in the El Madrasa app for the best experience</p>
+
+        <div class="app-info">
+            <div class="app-icon">📚</div>
+            <div class="app-name">El Madrasa App</div>
+            <div class="app-description">Your educational platform for learning and teaching</div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <span>Opening app...</span>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-primary" id="openAppBtn">
+                <span>📱</span>
+                Open in El Madrasa App
+            </button>
+            
+            <button class="btn btn-secondary" id="continueWebBtn">
+                <span>🌐</span>
+                Continue in Browser
+            </button>
+        </div>
+
+        <div id="fallbackMessage" class="fallback-message" style="display: none;">
+            <p>If the app doesn't open, make sure it's installed and try again.</p>
+        </div>
+
+        <div class="instructions">
+            <h3>How it works:</h3>
+            <ul>
+                <li>Click "Open in El Madrasa App" to launch the app</li>
+                <li>If you don't have the app, you'll be redirected to the website</li>
+                <li>For best experience, install the El Madrasa app</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>© 2024 El Madrasa. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        class DeepLinkHandler {
+            constructor() {
+                this.deepLinkUrl = null;
+                this.fallbackUrl = 'https://elmadrasa.vercel.app';
+                this.appScheme = 'elmadrasa';
+                this.timeoutId = null;
+                this.init();
+            }
+
+            init() {
+                this.constructDeepLink();
+                this.bindEvents();
+                this.checkAutoRedirect();
+            }
+
+            constructDeepLink() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const path = urlParams.get('path') || '';
+                const params = {};
+                
+                for (const [key, value] of urlParams.entries()) {
+                    if (key !== 'path') {
+                        params[key] = value;
+                    }
+                }
+
+                let deepLink = `${this.appScheme}://`;
+                if (path) {
+                    deepLink += path;
+                }
+
+                if (Object.keys(params).length > 0) {
+                    const queryParams = new URLSearchParams(params).toString();
+                    deepLink += `?${queryParams}`;
+                }
+
+                this.deepLinkUrl = deepLink;
+                console.log('Constructed deep link:', this.deepLinkUrl);
+            }
+
+            bindEvents() {
+                document.getElementById('openAppBtn').addEventListener('click', () => {
+                    this.openApp();
+                });
+
+                document.getElementById('continueWebBtn').addEventListener('click', () => {
+                    this.continueInBrowser();
+                });
+            }
+
+            checkAutoRedirect() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const auto = urlParams.get('auto') === 'true';
+                
+                if (auto) {
+                    // Auto-redirect after a short delay
+                    setTimeout(() => {
+                        this.openApp();
+                    }, 1000);
+                }
+            }
+
+            openApp() {
+                const loading = document.getElementById('loading');
+                const openAppBtn = document.getElementById('openAppBtn');
+                const fallbackMessage = document.getElementById('fallbackMessage');
+
+                // Show loading state
+                loading.style.display = 'flex';
+                openAppBtn.disabled = true;
+                openAppBtn.innerHTML = '<span>📱</span> Opening...';
+
+                // Track app opening
+                let appOpened = false;
+
+                // Set timeout to fallback
+                this.timeoutId = setTimeout(() => {
+                    if (!appOpened) {
+                        loading.style.display = 'none';
+                        fallbackMessage.style.display = 'block';
+                        openAppBtn.disabled = false;
+                        openAppBtn.innerHTML = '<span>📱</span> Open in El Madrasa App';
+                        
+                        // Auto-redirect to web
+                        setTimeout(() => {
+                            this.continueInBrowser();
+                        }, 2000);
+                    }
+                }, 2000);
+
+                // Try to open the app
+                try {
+                    if (this.isMobile()) {
+                        // Method 1: Direct redirect
+                        window.location.href = this.deepLinkUrl;
+                        
+                        // Method 2: Iframe fallback
+                        setTimeout(() => {
+                            const iframe = document.createElement('iframe');
+                            iframe.style.display = 'none';
+                            iframe.src = this.deepLinkUrl;
+                            document.body.appendChild(iframe);
+                            
+                            setTimeout(() => {
+                                if (document.body.contains(iframe)) {
+                                    document.body.removeChild(iframe);
+                                }
+                            }, 1000);
+                        }, 100);
+                    } else {
+                        // Desktop - open in new tab
+                        window.open(this.deepLinkUrl, '_blank');
+                        appOpened = true;
+                        clearTimeout(this.timeoutId);
+                        loading.style.display = 'none';
+                        openAppBtn.disabled = false;
+                        openAppBtn.innerHTML = '<span>📱</span> Open in El Madrasa App';
+                    }
+                } catch (error) {
+                    console.error('Error opening app:', error);
+                    this.fallbackToWeb();
+                }
+            }
+
+            continueInBrowser() {
+                // Clear timeout
+                if (this.timeoutId) {
+                    clearTimeout(this.timeoutId);
+                }
+
+                // Redirect to web version
+                const urlParams = new URLSearchParams(window.location.search);
+                const path = urlParams.get('path') || '';
+                const webUrl = new URL(this.fallbackUrl);
+                
+                if (path) {
+                    const cleanPath = path.replace(/^\/+|\/+$/g, '');
+                    if (cleanPath) {
+                        webUrl.pathname = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
+                    }
+                }
+
+                // Copy all parameters except 'path' and 'auto'
+                for (const [key, value] of urlParams.entries()) {
+                    if (key !== 'path' && key !== 'auto') {
+                        webUrl.searchParams.set(key, value);
+                    }
+                }
+
+                window.location.href = webUrl.toString();
+            }
+
+            fallbackToWeb() {
+                setTimeout(() => {
+                    this.continueInBrowser();
+                }, 1000);
+            }
+
+            isMobile() {
+                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new DeepLinkHandler();
+        });
+    </script>
+</body>
+</html>
