@@ -26,16 +26,25 @@ interface Homework {
 }
 
 export default function TeacherHomeworkScreen() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [homework, setHomework] = useState<Homework[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { colors } = useThemeContext();
 
+
+
   const loadHomework = async () => {
     try {
       setLoading(true);
-      const response = await apiService.getTeacherHomework();
+      if (!loading) {
+        if (isAuthenticated && user?.role === 'student') {
+          console.log('➡️ Redirecting student to tabs');
+          router.push('/(student)/homework');
+        } else if (isAuthenticated && user?.role === "teacher") {
+          const response = await apiService.getTeacherHomework();
+        }
+      }
 
       if (response.data.success) {
         setHomework(response.data.data || []);
@@ -165,8 +174,8 @@ export default function TeacherHomeworkScreen() {
       <ScrollView
         style={styles.content}
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
+          <RefreshControl
+            refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor={colors.primary}
           />
@@ -200,7 +209,7 @@ export default function TeacherHomeworkScreen() {
                     key={item.id}
                     style={[
                       styles.homeworkCard,
-                      { 
+                      {
                         backgroundColor: colors.backgroundElevated,
                         borderColor: isOverdue ? colors.error : colors.primary,
                         ...designTokens.shadows.sm
@@ -265,7 +274,7 @@ export default function TeacherHomeworkScreen() {
                           <View
                             style={[
                               styles.progressFill,
-                              { 
+                              {
                                 backgroundColor: getStatusColor(stats.submissionRate),
                                 width: `${stats.submissionRate}%`
                               }
@@ -288,7 +297,7 @@ export default function TeacherHomeworkScreen() {
                           <View
                             style={[
                               styles.progressFill,
-                              { 
+                              {
                                 backgroundColor: colors.success,
                                 width: `${stats.submitted > 0 ? (stats.graded / stats.submitted) * 100 : 0}%`
                               }

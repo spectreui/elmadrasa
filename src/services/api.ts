@@ -7,6 +7,17 @@ import { router } from 'expo-router';
 // const API_BASE_URL = "http://192.168.1.69:5001/api";
 const API_BASE_URL = "https://elmadrasa-server.vercel.app/api";
 
+// --- Shared routing config (used by both api.ts and _layout.tsx) ---
+export const SHARED_BASE_ROUTES = ["/exams", "/homework", "/profile"];
+export const SAFE_ROUTES = [
+  "/unauthorized",
+  "/network-error",
+  "/(auth)/login",
+  "/(auth)/register",
+  "/(auth)/forgot-password",
+];
+
+
 class ApiService {
   private api: AxiosInstance;
   private token: string | null = null;
@@ -73,96 +84,114 @@ class ApiService {
     );
 
     // Enhanced response interceptor with proper 401 handling
-    this.api.interceptors.response.use(
-      (response) => {
-        console.log('✅ API Response:', {
-          status: response.status,
-          url: response.config.url,
-          data: response.data?.success ? 'success' : 'error'
-        });
-        return response;
-      },
-      async (error) => {
-        const originalRequest = error.config;
-        const status = error.response?.status;
+    // src/services/api.ts (inside setupInterceptors)
 
-        console.error('❌ API Error:', {
-          status,
-          url: originalRequest?.url,
-          message: error.response?.data?.error || error.message,
-          code: error.code
-        });
+this.api.interceptors.response.use(
+  (response) => {
+    console.log('✅ API Response:', {
+      status: response.status,
+      url: response.config.url,
+      data: response.data?.success ? 'success' : 'error'
+    });
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+    const status = error.response?.status;
 
-        // Handle 401 Unauthorized
-        if (status === 401) {
-          console.log('🔐 Unauthorized - handling authentication error');
+    console.error('❌ API Error:', {
+      status,
+      url: originalRequest?.url,
+      message: error.response?.data?.error || error.message,
+      code: error.code
+    });
 
-          // Clear token immediately
-          await this.clearToken();
+    // Avoid running twice
+    if (this.isRefreshing) return Promise.reject(error);
 
-          // Prevent infinite retry loop
-          if (originalRequest._retry) {
-            console.log('🚫 Preventing infinite retry loop');
-            this.redirectToLogin();
-            return Promise.reject(error);
-          }
+    // --- 401 Unauthorized ---
+    if (status === 401) {
+      this.isRefreshing = true;
+      console.log('🔐 401 - Unauthorized');
 
-          // If we have a token but got 401, it's expired
-          if (this.token) {
-            originalRequest._retry = true;
-            console.log('🔄 Token expired, redirecting to login');
-            this.redirectToLogin();
-            return Promise.reject(error);
-          }
+      try {
+        await this.clearToken();
+      } catch {}
 
-          // No token, redirect to login
-          this.redirectToLogin();
-          return Promise.reject(error);
+      setTimeout(() => {
+        try {
+          console.log('➡️ Redirecting to login');
+          router.replace('/(auth)/login');
+        } catch (err) {
+          console.error('❌ Login redirect failed:', err);
+        } finally {
+          this.isRefreshing = false;
         }
+      }, 300);
 
-        // Handle 403 Forbidden
-        if (status === 403) {
-          console.log('🚫 Forbidden - insufficient permissions');
-          // You might want to show a permission error message
+      return Promise.reject(error);
+    }
+
+    // --- 403 Forbidden ---
+    if (status === 403) {
+      this.isRefreshing = true;
+      console.log('🚫 403 - Forbidden (Insufficient permissions)');
+
+      setTimeout(async () => {
+        try {
+          // Retrieve user role if available (for role-aware unauthorized page)
+          let role: string | null = null;
+          try {
+            role = await storage.getItem('userRole');
+          } catch {}
+
+          const target = role ? `/${`(${role})`}/unauthorized` : '/unauthorized';
+          console.log(`➡️ Redirecting to ${target}`);
+
+          router.replace(target);
+        } catch (err) {
+          console.error('❌ 403 redirect failed:', err);
+        } finally {
+          this.isRefreshing = false;
         }
+      }, 300);
 
-        // Handle network errors
-        if (!error.response) {
-          console.log('🌐 Network error - check connection');
-        }
+      return Promise.reject(error);
+    }
 
-        return Promise.reject(error);
-      }
-    );
-  }
-
-  private redirectToLogin(): void {
-    console.log('➡️ Redirecting to login screen');
-
-    // Clear any existing redirect timeouts to prevent loops
-    if (typeof window !== 'undefined') {
-      // @ts-ignore
-      if (window.redirectTimeout) {
-        // @ts-ignore
-        clearTimeout(window.redirectTimeout);
+    // --- Network / other errors ---
+    if (!error.response) {
+      console.log('🌐 Network error');
+      try {
+        router.replace('/network-error');
+      } catch (err) {
+        console.error('❌ Failed to route to network-error:', err);
       }
     }
 
-    // Debounce the redirect to prevent multiple redirects
-    // @ts-ignore
-    window.redirectTimeout = setTimeout(() => {
-      try {
-        // Navigate to login screen
-        router.replace('/(auth)/login');
-      } catch (error) {
-        console.error('❌ Error during redirect:', error);
-        // Fallback: reload the app
-        if (typeof window !== 'undefined') {
-          window.location.reload();
-        }
-      }
-    }, 100);
+    return Promise.reject(error);
   }
+);
+
+  }
+
+  private redirectToLogin(): void {
+    console.log("➡️ Redirecting to login screen");
+
+    if (this.isRefreshing) return;
+    this.isRefreshing = true;
+
+    setTimeout(() => {
+      try {
+        router.replace("/(auth)/login");
+      } catch (error) {
+        console.error("❌ Error during redirect:", error);
+      } finally {
+        this.isRefreshing = false;
+      }
+    }, 300);
+  }
+
 
   // Enhanced Token management
   async validateToken(): Promise<boolean> {

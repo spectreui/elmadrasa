@@ -31,12 +31,22 @@ interface TeacherExam extends Exam {
 
 export default function TeacherExamsScreen() {
   const { colors } = useThemeContext();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [exams, setExams] = useState<TeacherExam[]>([]);
   const [allExams, setAllExams] = useState<TeacherExam[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<"active" | "draft" | "archived">("active");
+
+
+  useEffect(() => {
+    if (!loading) {
+      if (isAuthenticated && user?.role === 'student') {
+        console.log('➡️ Redirecting student to tabs');
+        router.replace('/(student)/homework');
+      }
+    }
+  }, [isAuthenticated, loading, user, router]);
 
   useEffect(() => {
     loadExams();
@@ -83,7 +93,7 @@ export default function TeacherExamsScreen() {
           return true;
       }
     });
-    
+
     setExams(filtered);
   };
 
@@ -123,41 +133,41 @@ export default function TeacherExamsScreen() {
 
   const getStatusBadge = (exam: TeacherExam) => {
     if (exam.status === "draft" || exam.is_active === false) {
-      return { 
-        text: "Draft", 
-        color: colors.background, 
-        textColor: colors.textSecondary 
+      return {
+        text: "Draft",
+        color: colors.background,
+        textColor: colors.textSecondary
       };
     }
-    
+
     if (exam.status === "archived") {
-      return { 
-        text: "Archived", 
-        color: colors.background, 
-        textColor: colors.textSecondary 
+      return {
+        text: "Archived",
+        color: colors.background,
+        textColor: colors.textSecondary
       };
     }
-    
-    return { 
-      text: "Active", 
-      color: `${colors.success}15`, 
-      textColor: colors.success 
+
+    return {
+      text: "Active",
+      color: `${colors.success}15`,
+      textColor: colors.success
     };
   };
 
   const getTabCounts = () => {
-    const activeCount = allExams.filter(exam => 
+    const activeCount = allExams.filter(exam =>
       exam.is_active !== false && exam.status !== "archived" && exam.status !== "draft"
     ).length;
-    
-    const draftCount = allExams.filter(exam => 
+
+    const draftCount = allExams.filter(exam =>
       exam.is_active === false || exam.status === "draft"
     ).length;
-    
-    const archivedCount = allExams.filter(exam => 
+
+    const archivedCount = allExams.filter(exam =>
       exam.status === "archived"
     ).length;
-    
+
     return { active: activeCount, draft: draftCount, archived: archivedCount };
   };
 
@@ -209,8 +219,8 @@ export default function TeacherExamsScreen() {
               key={tab.key}
               style={[
                 styles.tab,
-                activeTab === tab.key 
-                  ? { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm } 
+                activeTab === tab.key
+                  ? { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm }
                   : {}
               ]}
               onPress={() => setActiveTab(tab.key)}
@@ -223,8 +233,8 @@ export default function TeacherExamsScreen() {
               <Text
                 style={[
                   styles.tabText,
-                  activeTab === tab.key 
-                    ? { color: colors.primary } 
+                  activeTab === tab.key
+                    ? { color: colors.primary }
                     : { color: colors.textSecondary }
                 ]}
               >
@@ -233,14 +243,14 @@ export default function TeacherExamsScreen() {
               {tab.count > 0 && (
                 <View style={[
                   styles.tabBadge,
-                  activeTab === tab.key 
-                    ? { backgroundColor: `${colors.primary}15` } 
+                  activeTab === tab.key
+                    ? { backgroundColor: `${colors.primary}15` }
                     : { backgroundColor: colors.background }
                 ]}>
                   <Text style={[
                     styles.tabBadgeText,
-                    activeTab === tab.key 
-                      ? { color: colors.primary } 
+                    activeTab === tab.key
+                      ? { color: colors.primary }
                       : { color: colors.textSecondary }
                   ]}>
                     {tab.count}
@@ -256,22 +266,22 @@ export default function TeacherExamsScreen() {
       <View style={styles.content}>
         {exams.length === 0 ? (
           <View style={[styles.emptyState, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-            <Ionicons 
+            <Ionicons
               name={
                 activeTab === "active" ? "document-text-outline" :
-                activeTab === "draft" ? "create-outline" : "archive-outline"
-              } 
-              size={64} 
+                  activeTab === "draft" ? "create-outline" : "archive-outline"
+              }
+              size={64}
               color={colors.textTertiary}
             />
             <Text style={[styles.emptyStateTitle, { color: colors.textSecondary }]}>
               {activeTab === "active" && "No active exams"}
-              {activeTab === "draft" && "No draft exams"} 
+              {activeTab === "draft" && "No draft exams"}
               {activeTab === "archived" && "No archived exams"}
             </Text>
             <Text style={[styles.emptyStateSubtitle, { color: colors.textTertiary }]}>
-              {activeTab === "active" && allExams.length > 0 
-                ? "All exams are in draft or archived status" 
+              {activeTab === "active" && allExams.length > 0
+                ? "All exams are in draft or archived status"
                 : "Create your first exam to get started"}
             </Text>
             {activeTab === "active" && allExams.length === 0 && (
@@ -288,12 +298,12 @@ export default function TeacherExamsScreen() {
           <View style={styles.examsList}>
             {exams.map((exam) => {
               const statusBadge = getStatusBadge(exam);
-              
+
               return (
                 <View
                   key={exam.id}
-                  style={[styles.examCard, { 
-                    backgroundColor: colors.backgroundElevated, 
+                  style={[styles.examCard, {
+                    backgroundColor: colors.backgroundElevated,
                     borderColor: colors.border,
                     ...designTokens.shadows.sm
                   }]}
@@ -366,7 +376,7 @@ export default function TeacherExamsScreen() {
                           View
                         </Text>
                       </TouchableOpacity>
-                      
+
                       {(exam.submissions_count || 0) > 0 && (
                         <TouchableOpacity
                           style={[styles.actionButton, { backgroundColor: `${colors.success}15` }]}

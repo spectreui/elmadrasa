@@ -1,22 +1,21 @@
-// app/_layout.tsx - Modified approach
+// app/_layout.tsx
 import "../global.css";
 import React, { useEffect, useState } from "react";
 import { View, Text, ActivityIndicator } from "react-native";
-import { Slot, Redirect, useRouter } from "expo-router";
+import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
 import { ThemeProvider, useThemeContext } from "../src/contexts/ThemeContext";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import * as SplashScreen from 'expo-splash-screen';
-import { useFonts } from 'expo-font';
-import * as Linking from 'expo-linking';
-import { linking } from '@/src/utils/linking';
+import * as SplashScreen from "expo-splash-screen";
+import { useFonts } from "expo-font";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import AppleHello from "@/components/AppleHello";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "@/components/SafeAreaView";
+import { apiService } from "@/src/services/api"; // ✅ make sure import path matches
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+// Keep splash screen until ready
 SplashScreen.preventAutoHideAsync();
 
 function ThemeWrapper({ children }: { children: React.ReactNode }) {
@@ -29,19 +28,72 @@ function ThemeWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
-function RootRedirect() {
+// ✅ Role + path redirect controller
+function RoleAwareRedirect() {
   const { isAuthenticated, loading, user } = useAuth();
   const router = useRouter();
+  const segments = useSegments();
 
   useEffect(() => {
-    if (!loading) {
-      if (!isAuthenticated) {
-        router.replace('/(auth)/login');
-      } else if (user?.role) {
-        router.replace(`(${user.role})/`);
+    if (loading) return;
+
+    const first = segments[0];
+    const path = "/" + segments.join("/");
+    const inAuthGroup = first === "(auth)";
+    const inRoleGroup = ["(student)", "(teacher)", "(admin)"].includes(first);
+
+    // ✅ Shared routes that exist for both student and teacher
+    const sharedRoutes = ["/exams", "/homework", "/profile"];
+
+    // ✅ Routes that should never be prefixed
+    const safeRoutes = [
+      "/unauthorized",
+      "/network-error",
+      "/(auth)/login",
+      "/(auth)/register",
+      "/(auth)/forgot-password",
+    ];
+
+    const isSafe = safeRoutes.some((safe) => path.startsWith(safe));
+
+    // 🚫 Not logged in → redirect to login
+    if (!isAuthenticated && !inAuthGroup && !isSafe) {
+      console.log("🔒 Redirecting to login");
+      router.replace("/(auth)/login");
+      return;
+    }
+
+    // Skip redirecting safe or auth routes
+    if (isSafe || inAuthGroup) return;
+
+    // ✅ If user is authenticated, handle shared paths explicitly
+    if (isAuthenticated && user?.role) {
+      const expectedGroup = `(${user.role})`;
+      const basePath = "/" + segments.slice(1).join("/"); // remove group prefix if any
+
+      // If we're on a shared path like /homework → send to /(<role>)/homework
+      const sharedMatch = sharedRoutes.find((r) => path.startsWith(r));
+
+      if (sharedMatch) {
+        const target = `${expectedGroup}${path}`;
+        console.log(`🧭 Redirecting shared route: ${path} → ${target}`);
+        router.replace(target);
+        return;
+      }
+
+      // For all other routes, make sure we’re inside the right role group
+      if (!inRoleGroup || first !== expectedGroup) {
+        const rest = segments.join("/");
+        const normalizedRest = rest.startsWith(expectedGroup + "/")
+          ? rest.replace(`${expectedGroup}/`, "")
+          : rest;
+        const target = `${expectedGroup}/${normalizedRest}`.replace(/\/+$/, "");
+
+        console.log(`🔁 Redirecting → ${target}`);
+        router.replace("/" + target);
       }
     }
-  }, [isAuthenticated, loading, user, router]);
+  }, [isAuthenticated, loading, user, segments]);
 
   if (loading) {
     return (
@@ -54,19 +106,27 @@ function RootRedirect() {
   return null;
 }
 
-// Simple fallback component
+
+// Simple fallback if animation fails
 function IntroFallback() {
   return (
-    <View style={{ flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' }}>
-      <Text style={{ color: 'white', fontSize: 24 }}>Welcome</Text>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "#000",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <Text style={{ color: "white", fontSize: 24 }}>Welcome</Text>
     </View>
   );
 }
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    'Inter-Regular': require('@/assets/fonts/Inter-Regular.otf'),
-    'Inter-SemiBold': require('@/assets/fonts/Inter-SemiBold.otf'),
+    "Inter-Regular": require("@/assets/fonts/Inter-Regular.otf"),
+    "Inter-SemiBold": require("@/assets/fonts/Inter-SemiBold.otf"),
   });
 
   const [showIntro, setShowIntro] = useState<boolean | null>(null);
@@ -74,13 +134,18 @@ export default function RootLayout() {
   const [storageError, setStorageError] = useState(false);
   const [animationError, setAnimationError] = useState(false);
 
-  // Check if intro should be shown
+  // ✅ Pre-warm token (to avoid unauthorized flickers)
+  useEffect(() => {
+    (async () => {
+      await apiService.validateToken();
+    })();
+  }, []);
+
+  // ✅ Check if intro was seen
   useEffect(() => {
     const checkIntro = async () => {
       try {
-        console.log('🔍 Checking intro state...');
         const seen = await AsyncStorage.getItem("introShown");
-        console.log('🔍 Intro seen:', seen);
         setShowIntro(seen !== "true");
       } catch (e) {
         console.error("❌ Error checking intro:", e);
@@ -91,64 +156,46 @@ export default function RootLayout() {
     checkIntro();
   }, []);
 
-  // Handle intro completion
   const handleHelloDone = async () => {
     try {
-      console.log('✅ Hello animation done, saving state...');
       await AsyncStorage.setItem("introShown", "true");
-      console.log('✅ Intro state saved');
       setHelloDone(true);
     } catch (e) {
       console.error("❌ Error saving intro state:", e);
-      setHelloDone(true); // Continue anyway
+      setHelloDone(true);
     }
   };
 
-  // Safe wrapper for AppleHello
   const renderIntro = () => {
     try {
-      return (
-        <AppleHello
-          onAnimationComplete={handleHelloDone}
-          speed={1.8}
-        />
-      );
+      return <AppleHello onAnimationComplete={handleHelloDone} speed={1.8} />;
     } catch (error) {
-      console.error('❌ Animation error:', error);
+      console.error("❌ Animation error:", error);
       setAnimationError(true);
-      // Fallback: mark as done after a short delay
       setTimeout(() => handleHelloDone(), 1000);
       return <IntroFallback />;
     }
   };
 
-  // Hide splash screen when ready
   useEffect(() => {
     if (loaded && (showIntro === false || helloDone || storageError || animationError)) {
-      console.log('✨ Hiding splash screen');
       SplashScreen.hideAsync();
     }
   }, [loaded, showIntro, helloDone, storageError, animationError]);
 
-  // Still loading intro state
   if (showIntro === null) {
-    console.log('⏳ Waiting for intro state...');
-    return <View style={{ flex: 1, backgroundColor: '#000' }} />;
+    return <View style={{ flex: 1, backgroundColor: "#000" }} />;
   }
 
-  // Show intro animation
   if (showIntro && !helloDone && !animationError) {
-    console.log('🎬 Showing intro animation...');
     return renderIntro();
   }
 
-  // Show fallback if animation errored but we still want to show something
   if (showIntro && !helloDone && animationError) {
     return <IntroFallback />;
   }
 
-  console.log('📱 Rendering main app...');
-  // Main app
+  // ✅ Main App
   return (
     <SafeAreaProvider>
       <ThemeProvider>
@@ -156,8 +203,9 @@ export default function RootLayout() {
           <AuthProvider>
             <NotificationProvider>
               <SafeAreaView>
-              {/* Use Slot instead of Stack for root layout */}
-              <Slot />
+                {/* Only redirect if inside main routes */}
+                <RoleAwareRedirect />
+                <Slot />
               </SafeAreaView>
             </NotificationProvider>
           </AuthProvider>

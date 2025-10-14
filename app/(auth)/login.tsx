@@ -419,7 +419,7 @@ export default function LoginScreen() {
               Secure login with modern encryption
             </Text>
             <Text style={{
-              color: colors.textQuaternary,
+              color: colors.textTertiary,
               fontSize: designTokens.typography.caption1.fontSize,
               marginTop: designTokens.spacing.xs,
             }}>
