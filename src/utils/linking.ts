@@ -20,15 +20,15 @@ export const linking = {
       '(student)': {
         screens: {
           index: 'student',
-          homework: 'student/homework',
-          exams: 'student/exams',
-          results: 'student/results',
-          profile: 'student/profile',
-          'join-subject': 'student/join-subject',
+          homework: 'homework',
+          exams: 'exams',
+          results: 'results',
+          profile: 'profile',
+          'join-subject': 'join-subject',
           // Dynamic routes
-          'homework/[id]': 'student/homework/:id',
-          'exam/[id]': 'student/exam/:id',
-          'exam/results/[id]': 'student/exam/results/:id',
+          'homework/[id]': 'homework/:id',
+          'exam/[id]': 'exam/:id',
+          'exam/results/[id]': 'exam/results/:id',
         },
       },
       // Teacher screens
@@ -156,8 +156,8 @@ export const generateTeacherHomeworkLink = (homeworkId: string, additionalParams
 // Generic function to generate link for any current route
 export const generateLinkForCurrentRoute = (routeName: string, params: Record<string, string> = {}) => {
   const routeMap: Record<string, string> = {
-    'student-homework-detail': 'student/homework/:id',
-    'student-exam-detail': 'student/exam/:id',
+    'student-homework-detail': 'homework/:id',
+    'student-exam-detail': 'exam/:id',
     'teacher-homework-submissions': 'teacher/homework/:id/submissions',
     'teacher-create-exam': 'teacher/create-exam',
     'student-dashboard': 'student',

@@ -17,6 +17,7 @@ export default function Index() {
 
   // Handle deep link on app cold start
   useEffect(() => {
+    if (loading) return; // Wait until auth state is determined
     const handleDeepLink = (url: string | null) => {
       if (url) {
         const { path } = Linking.parse(url);
@@ -44,7 +45,7 @@ export default function Index() {
     return () => {
       subscription.remove();
     };
-  }, []);
+  },[isAuthenticated, loading, user, router]);
 
   // Handle navigation based on auth state changes
   useEffect(() => {
