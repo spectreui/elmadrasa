@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, ActivityIndicator, Platform } from "react-native";
+import { View, ActivityIndicator, Platform, Text } from "react-native";
 import { useRouter, useSegments } from "expo-router";
 import { useAuth } from "@/src/contexts/AuthContext";
 
@@ -8,6 +8,16 @@ export default function IndexRedirector() {
   const segments = useSegments();
   const { isAuthenticated, loading, user } = useAuth();
   const [webHandled, setWebHandled] = useState(false);
+  const [hasRedirected, setHasRedirected] = useState(false);
+
+  console.log('🔄 IndexRedirector - State:', {
+    isAuthenticated,
+    loading,
+    user: user?.email,
+    userRole: user?.role,
+    hasRedirected,
+    webHandled
+  });
 
   useEffect(() => {
     // ✅ On web: try to open native app if user is on mobile browser
@@ -18,7 +28,7 @@ export default function IndexRedirector() {
         setWebHandled(true);
         const pathname = window.location.pathname;
         const appUrl = `elmadrasa://${pathname}`;
-
+ 
         // Try to open app
         window.location.href = appUrl;
 
@@ -31,31 +41,69 @@ export default function IndexRedirector() {
   }, [webHandled]);
 
   useEffect(() => {
-    if (Platform.OS === "web" && !webHandled) return; // wait for open-in-app logic
-    if (loading) return;
+    // Prevent multiple redirects
+    if (hasRedirected) {
+      console.log('⏭️ Already redirected, skipping');
+      return;
+    }
+    
+    // Wait for loading to complete
+    if (loading) {
+      console.log('⏳ Still loading auth state...');
+      return;
+    }
+
+    // If on web and still handling app redirect, wait
+    if (Platform.OS === "web" && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && !webHandled) {
+      console.log('📱 Waiting for web app redirect handling...');
+      return;
+    }
+
+    // Get current path
+    const currentPath = segments.join("/");
+    console.log('📍 Current path:', currentPath);
+    console.log('🔐 Auth state:', { isAuthenticated, userRole: user?.role });
 
     // Not logged in → go to login screen
     if (!isAuthenticated) {
-      router.replace("/(auth)/login");
+      console.log('➡️ Redirecting to login - NOT AUTHENTICATED');
+      setHasRedirected(true);
+      router.replace('/(auth)/login');
+      return;
+    }
+
+    // No user data
+    if (!user) {
+      console.log('❌ No user data, redirecting to login');
+      setHasRedirected(true);
+      router.replace('/(auth)/login');
       return;
     }
 
     const role = user?.role; // "student" | "teacher" | "admin"
-    const currentPath = segments.join("/");
+    console.log('👤 User role:', role);
 
     // If user just opened root `/`
-    if (!currentPath || currentPath === "(root)" || currentPath === "index") {
-      router.replace(`(${role})/`);
+    if (!currentPath || currentPath === "(root)" || currentPath === "index" || currentPath === "") {
+      console.log(`🏠 Redirecting ${role} to dashboard`);
+      setHasRedirected(true);
+      const targetPath = `(${role})/`;
+      console.log('🎯 Target path:', targetPath);
+      router.replace(targetPath);
       return;
     }
 
-    // Redirect to the proper folder for their role
-    router.replace(`(${role})/${currentPath}`);
-  }, [isAuthenticated, loading, user, webHandled]);
+    console.log('✅ No redirect needed, user is authenticated');
+    setHasRedirected(true);
+  }, [isAuthenticated, loading, user, webHandled, hasRedirected, segments, router]);
 
+  // Always show something while processing
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
       <ActivityIndicator size="large" />
+      <Text style={{ marginTop: 10, color: '#666' }}>
+        {loading ? 'Loading...' : 'Redirecting...'}
+      </Text>
     </View>
   );
 }

@@ -271,7 +271,7 @@ export default function TeacherExamResultsScreen() {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading exam results...</Text>
+        <Text style={[styles.loadingText as any, { color: colors.textSecondary }]}>Loading exam results...</Text>
       </View>
     );
   }
@@ -280,16 +280,16 @@ export default function TeacherExamResultsScreen() {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <Ionicons name="alert-circle" size={64} color={colors.textTertiary} />
-        <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No results found</Text>
-        <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+        <Text style={[styles.emptyTitle as any, { color: colors.textPrimary }]}>No results found</Text>
+        <Text style={[styles.emptySubtitle as any, { color: colors.textSecondary }]}>
           Unable to load exam results. The exam may not exist or you may not have permission to view it.
         </Text>
         <TouchableOpacity 
-          style={[styles.backButton, { backgroundColor: colors.primary }]}
+          style={[styles.backButton as any, { backgroundColor: colors.primary }]}
           onPress={() => router.back()}
         >
           <Ionicons name="chevron-back" size={20} color="white" />
-          <Text style={styles.backButtonText}>Go Back</Text>
+          <Text style={styles.backButtonText as any}>Go Back</Text>
         </TouchableOpacity>
       </View>
     );
@@ -301,23 +301,23 @@ export default function TeacherExamResultsScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.backgroundElevated, borderBottomColor: colors.border }]}>
-        <View style={styles.headerContent}>
+        <View style={styles.headerContent as any}>
           <TouchableOpacity 
-            style={[styles.headerButton, { backgroundColor: colors.background }]}
+            style={[styles.headerButton as any, { backgroundColor: colors.background }]}
             onPress={() => router.back()}
           >
             <Ionicons name="chevron-back" size={20} color={colors.primary} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Exam Analytics</Text>
-          <View style={styles.headerActions}>
+          <View style={styles.headerActions as any}>
             <TouchableOpacity 
-              style={[styles.headerButton, { backgroundColor: colors.background }]}
+              style={[styles.headerButton as any, { backgroundColor: colors.background }]}
               onPress={shareResults}
             >
               <Ionicons name="share" size={18} color={colors.primary} />
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.headerButton, { backgroundColor: colors.background }]}
+              style={[styles.headerButton as any, { backgroundColor: colors.background }]}
               onPress={exportResults}
             >
               <Ionicons name="download" size={18} color={colors.primary} />
@@ -329,7 +329,7 @@ export default function TeacherExamResultsScreen() {
           <Text style={[styles.examTitle, { color: colors.textPrimary }]}>
             {results.exam.title}
           </Text>
-          <Text style={[styles.examSubtitle, { color: colors.textSecondary }]}>
+          <Text style={[styles.examSubtitle as any, { color: colors.textSecondary }]}>
             {results.exam.subject} • {results.exam.class}
           </Text>
           {results.exam.teacher && (
@@ -340,7 +340,7 @@ export default function TeacherExamResultsScreen() {
         </View>
 
         {/* Tabs */}
-        <View style={[styles.tabsContainer, { backgroundColor: colors.background }]}>
+        <View style={[styles.tabsContainer as any, { backgroundColor: colors.background }]}>
           {[
             { key: 'overview', label: 'Overview', icon: 'stats-chart' },
             { key: 'submissions', label: 'Submissions', icon: 'document-text' },
@@ -349,7 +349,7 @@ export default function TeacherExamResultsScreen() {
             <TouchableOpacity
               key={tab.key}
               style={[
-                styles.tab,
+                styles.tab  as any,
                 activeTab === tab.key 
                   ? { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm } 
                   : {}
@@ -363,7 +363,7 @@ export default function TeacherExamResultsScreen() {
               />
               <Text
                 style={[
-                  styles.tabText,
+                  styles.tabText as any,
                   activeTab === tab.key 
                     ? { color: colors.primary } 
                     : { color: colors.textSecondary }
@@ -392,10 +392,10 @@ export default function TeacherExamResultsScreen() {
             {/* Performance Insights */}
             {performanceInsights.length > 0 && (
               <View style={[styles.insightsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.warning }]}>
-                <View style={styles.insightsHeader}>
+                <View style={styles.insightsHeader as any}>
                   <Ionicons name="bulb" size={20} color={colors.warning} style={styles.insightsIcon} />
                   <View style={styles.insightsText}>
-                    <Text style={[styles.insightsTitle, { color: colors.textPrimary }]}>Performance Insights</Text>
+                    <Text style={[styles.insightsTitle as any, { color: colors.textPrimary }]}>Performance Insights</Text>
                     {performanceInsights.map((insight, index) => (
                       <Text key={index} style={[styles.insightItem, { color: colors.textSecondary }]}>• {insight}</Text>
                     ))}
@@ -405,10 +405,10 @@ export default function TeacherExamResultsScreen() {
             )}
 
             {/* Statistics Cards */}
-            <View style={styles.statsGrid}>
-              <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-                <View style={styles.statHeader}>
-                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Submissions</Text>
+            <View style={styles.statsGrid as any}>
+              <View style={[styles.statCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                <View style={styles.statHeader as any}>
+                  <Text style={[styles.statLabel as any, { color: colors.textSecondary }]}>Submissions</Text>
                   <Ionicons name="people" size={20} color={colors.primary} />
                 </View>
                 <Text style={[styles.statValue, { color: colors.textPrimary }]}>{results.statistics.totalSubmissions}</Text>
@@ -417,27 +417,27 @@ export default function TeacherExamResultsScreen() {
                 </Text>
               </View>
 
-              <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-                <View style={styles.statHeader}>
-                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Avg. Score</Text>
+              <View style={[styles.statCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                <View style={styles.statHeader as any}>
+                  <Text style={[styles.statLabel as any, { color: colors.textSecondary }]}>Avg. Score</Text>
                   <Ionicons name="trophy" size={20} color={colors.success} />
                 </View>
                 <Text style={[styles.statValue, { color: colors.textPrimary }]}>{results.statistics.averageScore}%</Text>
                 <Text style={[styles.statSubtitle, { color: colors.textTertiary }]}>Class average</Text>
               </View>
 
-              <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-                <View style={styles.statHeader}>
-                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Highest</Text>
+              <View style={[styles.statCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                <View style={styles.statHeader as any}>
+                  <Text style={[styles.statLabel as any, { color: colors.textSecondary }]}>Highest</Text>
                   <Ionicons name="trending-up" size={20} color={colors.warning} />
                 </View>
                 <Text style={[styles.statValue, { color: colors.textPrimary }]}>{results.statistics.highestScore}%</Text>
                 <Text style={[styles.statSubtitle, { color: colors.textTertiary }]}>Top score</Text>
               </View>
 
-              <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-                <View style={styles.statHeader}>
-                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Lowest</Text>
+              <View style={[styles.statCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                <View style={styles.statHeader as any}>
+                  <Text style={[styles.statLabel as any, { color: colors.textSecondary }]}>Lowest</Text>
                   <Ionicons name="trending-down" size={20} color={colors.error} />
                 </View>
                 <Text style={[styles.statValue, { color: colors.textPrimary }]}>{results.statistics.lowestScore}%</Text>
@@ -450,12 +450,12 @@ export default function TeacherExamResultsScreen() {
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Score Distribution</Text>
               <View style={styles.distributionList}>
                 {results.scoreDistribution.map((item, index) => (
-                  <View key={index} style={styles.distributionItem}>
-                    <Text style={[styles.distributionRange, { color: colors.textPrimary }]}>{item.range}</Text>
-                    <View style={[styles.distributionBar, { backgroundColor: colors.background }]}>
+                  <View key={index} style={styles.distributionItem as any}>
+                    <Text style={[styles.distributionRange as any, { color: colors.textPrimary }]}>{item.range}</Text>
+                    <View style={[styles.distributionBar as any, { backgroundColor: colors.background }]}>
                       <View 
                         style={[
-                          styles.distributionFill,
+                          styles.distributionFill as any,
                           { 
                             backgroundColor: getGradeColor(parseInt(item.range.split('-')[0])),
                             width: `${(item.count / Math.max(...results.scoreDistribution.map(s => s.count), 1) * 100)}%` 
@@ -463,7 +463,7 @@ export default function TeacherExamResultsScreen() {
                         ]}
                       />
                     </View>
-                    <Text style={[styles.distributionCount, { color: colors.textSecondary }]}>{item.count}</Text>
+                    <Text style={[styles.distributionCount as any, { color: colors.textSecondary }]}>{item.count}</Text>
                   </View>
                 ))}
               </View>
@@ -471,7 +471,7 @@ export default function TeacherExamResultsScreen() {
 
             {/* Top Performers */}
             <View style={[styles.topPerformersCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-              <View style={styles.cardHeader}>
+              <View style={styles.cardHeader as any}>
                 <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Top Performers</Text>
                 <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
                   Showing top 3 of {results.submissions.length}
@@ -484,23 +484,23 @@ export default function TeacherExamResultsScreen() {
                 <View 
                   key={submission.id}
                   style={[
-                    styles.performerItem,
+                    styles.performerItem as any,
                     { 
                       borderBottomColor: colors.border,
                       borderBottomWidth: index < 2 ? 1 : 0
                     }
                   ]}
                 >
-                  <View style={styles.performerInfo}>
-                    <View style={[styles.rankBadge, { backgroundColor: `${colors.primary}20` }]}>
-                      <Text style={[styles.rankText, { color: colors.primary }]}>{index + 1}</Text>
+                  <View style={styles.performerInfo as any}>
+                    <View style={[styles.rankBadge as any, { backgroundColor: `${colors.primary}20` }]}>
+                      <Text style={[styles.rankText as any, { color: colors.primary }]}>{index + 1}</Text>
                     </View>
                     <View style={styles.performerDetails}>
-                      <Text style={[styles.performerName, { color: colors.textPrimary }]}>{submission.student.name}</Text>
+                      <Text style={[styles.performerName as any, { color: colors.textPrimary }]}>{submission.student.name}</Text>
                       <Text style={[styles.performerId, { color: colors.textSecondary }]}>{submission.student.studentId}</Text>
                     </View>
                   </View>
-                  <Text style={[styles.performerScore, { color: getGradeColor(submission.percentage) }]}>
+                  <Text style={[styles.performerScore as any, { color: getGradeColor(submission.percentage) }]}>
                     {submission.percentage}%
                   </Text>
                 </View>
@@ -510,7 +510,7 @@ export default function TeacherExamResultsScreen() {
         ) : activeTab === 'submissions' ? (
           <View style={styles.tabContent}>
             {/* Submissions List */}
-            <View style={[styles.submissionsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+            <View style={[styles.submissionsCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
               {results.submissions.length > 0 ? (
                 results.submissions
                   .sort((a, b) => b.percentage - a.percentage)
@@ -518,7 +518,7 @@ export default function TeacherExamResultsScreen() {
                   <TouchableOpacity
                     key={submission.id}
                     style={[
-                      styles.submissionItem,
+                      styles.submissionItem as any,
                       { 
                         borderBottomColor: colors.border,
                         borderBottomWidth: index !== results.submissions.length - 1 ? 1 : 0
@@ -528,13 +528,13 @@ export default function TeacherExamResultsScreen() {
                     activeOpacity={0.7}
                   >
                     <View style={styles.submissionInfo}>
-                      <Text style={[styles.submissionName, { color: colors.textPrimary }]}>{submission.student.name}</Text>
+                      <Text style={[styles.submissionName as any, { color: colors.textPrimary }]}>{submission.student.name}</Text>
                       <Text style={[styles.submissionDetails, { color: colors.textSecondary }]}>
                         {submission.student.studentId} • {submission.student.class}
                       </Text>
                     </View>
-                    <View style={styles.submissionMeta}>
-                      <Text style={[styles.submissionScore, { color: getGradeColor(submission.percentage) }]}>
+                    <View style={styles.submissionMeta as any}>
+                      <Text style={[styles.submissionScore as any, { color: getGradeColor(submission.percentage) }]}>
                         {submission.percentage}%
                       </Text>
                       <Text style={[styles.submissionDate, { color: colors.textTertiary }]}>
@@ -545,10 +545,10 @@ export default function TeacherExamResultsScreen() {
                   </TouchableOpacity>
                 ))
               ) : (
-                <View style={styles.emptyState}>
+                <View style={styles.emptyState as any}>
                   <Ionicons name="document-text-outline" size={48} color={colors.textTertiary} />
-                  <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>No submissions yet</Text>
-                  <Text style={[styles.emptySubtitle, { color: colors.textTertiary }]}>
+                  <Text style={[styles.emptyTitle as any, { color: colors.textSecondary }]}>No submissions yet</Text>
+                  <Text style={[styles.emptySubtitle as any, { color: colors.textTertiary }]}>
                     Students haven't submitted this exam yet
                   </Text>
                 </View>
@@ -563,19 +563,19 @@ export default function TeacherExamResultsScreen() {
               <View style={[styles.analyticsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
                 <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Performance Analysis</Text>
                 <View style={styles.trendList}>
-                  <View style={[styles.trendItem, { borderBottomColor: colors.border }]}>
-                    <Text style={[styles.trendLabel, { color: colors.textSecondary }]}>Class Average</Text>
-                    <Text style={[styles.trendValue, { color: colors.textPrimary }]}>{results.statistics.averageScore}%</Text>
+                  <View style={[styles.trendItem as any, { borderBottomColor: colors.border }]}>
+                    <Text style={[styles.trendLabel as any, { color: colors.textSecondary }]}>Class Average</Text>
+                    <Text style={[styles.trendValue as any, { color: colors.textPrimary }]}>{results.statistics.averageScore}%</Text>
                   </View>
-                  <View style={[styles.trendItem, { borderBottomColor: colors.border }]}>
-                    <Text style={[styles.trendLabel, { color: colors.textSecondary }]}>Performance Range</Text>
-                    <Text style={[styles.trendValue, { color: colors.textPrimary }]}>
+                  <View style={[styles.trendItem as any, { borderBottomColor: colors.border }]}>
+                    <Text style={[styles.trendLabel as any, { color: colors.textSecondary }]}>Performance Range</Text>
+                    <Text style={[styles.trendValue as any, { color: colors.textPrimary }]}>
                       {results.statistics.lowestScore}% - {results.statistics.highestScore}%
                     </Text>
                   </View>
-                  <View style={styles.trendItem}>
-                    <Text style={[styles.trendLabel, { color: colors.textSecondary }]}>Standard Deviation</Text>
-                    <Text style={[styles.trendValue, { color: colors.textPrimary }]}>
+                  <View style={styles.trendItem as any}>
+                    <Text style={[styles.trendLabel as any, { color: colors.textSecondary }]}>Standard Deviation</Text>
+                    <Text style={[styles.trendValue as any, { color: colors.textPrimary }]}>
                       {Math.round(Math.sqrt(
                         results.submissions.reduce((acc, sub) => 
                           acc + Math.pow(sub.percentage - results.statistics.averageScore, 2), 0
@@ -592,8 +592,8 @@ export default function TeacherExamResultsScreen() {
                 <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
                   Detailed question-by-question analysis coming soon...
                 </Text>
-                <TouchableOpacity style={[styles.actionButton, { backgroundColor: `${colors.primary}15` }]}>
-                  <Text style={[styles.actionButtonText, { color: colors.primary }]}>Generate Detailed Report</Text>
+                <TouchableOpacity style={[styles.actionButton as any, { backgroundColor: `${colors.primary}15` }]}>
+                  <Text style={[styles.actionButtonText as any, { color: colors.primary }]}>Generate Detailed Report</Text>
                 </TouchableOpacity>
               </View>
 
@@ -602,13 +602,13 @@ export default function TeacherExamResultsScreen() {
                 <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Recommended Actions</Text>
                 <View style={styles.recommendationsList}>
                   {performanceInsights.map((insight, index) => (
-                    <View key={index} style={styles.recommendationItem}>
+                    <View key={index} style={styles.recommendationItem as any}>
                       <Ionicons name="checkmark-circle" size={16} color={colors.success} style={styles.recommendationIcon} />
                       <Text style={[styles.recommendationText, { color: colors.textSecondary }]}>{insight}</Text>
                     </View>
                   ))}
                   {performanceInsights.length === 0 && (
-                    <Text style={[styles.noRecommendations, { color: colors.textTertiary }]}>No specific recommendations at this time.</Text>
+                    <Text style={[styles.noRecommendations as any, { color: colors.textTertiary }]}>No specific recommendations at this time.</Text>
                   )}
                 </View>
               </View>
@@ -626,16 +626,16 @@ export default function TeacherExamResultsScreen() {
         <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
           {/* Modal Header */}
           <View style={[styles.modalHeader, { backgroundColor: colors.backgroundElevated, borderBottomColor: colors.border }]}>
-            <View style={styles.modalHeaderContent}>
+            <View style={styles.modalHeaderContent as any}>
               <TouchableOpacity 
-                style={[styles.modalButton, { backgroundColor: colors.background }]}
+                style={[styles.modalButton as any, { backgroundColor: colors.background }]}
                 onPress={() => setDetailModalVisible(false)}
               >
                 <Ionicons name="close" size={20} color={colors.primary} />
               </TouchableOpacity>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Submission Details</Text>
               <TouchableOpacity 
-                style={[styles.modalButton, { backgroundColor: `${colors.primary}15` }]}
+                style={[styles.modalButton as any, { backgroundColor: `${colors.primary}15` }]}
                 onPress={handleSendFeedback}
               >
                 <Ionicons name="chatbubble" size={18} color={colors.primary} />
@@ -646,9 +646,9 @@ export default function TeacherExamResultsScreen() {
           {selectedSubmission && (
             <ScrollView style={styles.modalContent}>
               <View style={[styles.studentCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-                <View style={styles.studentHeader}>
+                <View style={styles.studentHeader as any}>
                   <View style={styles.studentInfo}>
-                    <Text style={[styles.studentName, { color: colors.textPrimary }]}>{selectedSubmission.student.name}</Text>
+                    <Text style={[styles.studentName as any, { color: colors.textPrimary }]}>{selectedSubmission.student.name}</Text>
                     <Text style={[styles.studentDetails, { color: colors.textSecondary }]}>
                       {selectedSubmission.student.studentId} • {selectedSubmission.student.class}
                     </Text>
@@ -658,7 +658,7 @@ export default function TeacherExamResultsScreen() {
                       </Text>
                     )}
                   </View>
-                  <View style={styles.studentScore}>
+                  <View style={styles.studentScore as any}>
                     <Text style={[styles.scoreValue, { color: getGradeColor(selectedSubmission.percentage) }]}>
                       {selectedSubmission.percentage}%
                     </Text>
@@ -668,7 +668,7 @@ export default function TeacherExamResultsScreen() {
                   </View>
                 </View>
 
-                <View style={styles.submissionMetaRow}>
+                <View style={styles.submissionMetaRow as any}>
                   <Text style={[styles.submissionMetaText, { color: colors.textTertiary }]}>
                     Submitted: {new Date(selectedSubmission.submitted_at).toLocaleString()}
                   </Text>
@@ -689,10 +689,10 @@ export default function TeacherExamResultsScreen() {
                       key={index} 
                       style={[styles.answerItem, { borderColor: colors.border }]}
                     >
-                      <View style={styles.answerHeader}>
-                        <Text style={[styles.questionNumber, { color: colors.textPrimary }]}>Q{index + 1}</Text>
+                      <View style={styles.answerHeader as any}>
+                        <Text style={[styles.questionNumber as any, { color: colors.textPrimary }]}>Q{index + 1}</Text>
                         <View style={[styles.answerStatus, { backgroundColor: answer.is_correct ? `${colors.success}20` : `${colors.error}20` }]}>
-                          <Text style={[styles.statusText, { color: answer.is_correct ? colors.success : colors.error }]}>
+                          <Text style={[styles.statusText as any, { color: answer.is_correct ? colors.success : colors.error }]}>
                             {answer.is_correct ? 'Correct' : 'Incorrect'}
                           </Text>
                         </View>
@@ -711,18 +711,18 @@ export default function TeacherExamResultsScreen() {
               </View>
 
               {/* Action Buttons */}
-              <View style={styles.modalActions}>
+              <View style={styles.modalActions as any}>
                 <TouchableOpacity 
-                  style={[styles.modalActionButton, { backgroundColor: colors.primary }]}
+                  style={[styles.modalActionButton as any, { backgroundColor: colors.primary }]}
                   onPress={exportResults}
                 >
-                  <Text style={styles.modalActionText}>Download PDF</Text>
+                  <Text style={styles.modalActionText as any}>Download PDF</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  style={[styles.modalActionButton, { backgroundColor: colors.background }]}
+                  style={[styles.modalActionButton as any, { backgroundColor: colors.background }]}
                   onPress={handleSendFeedback}
                 >
-                  <Text style={[styles.modalActionText, { color: colors.textPrimary }]}>Send Feedback</Text>
+                  <Text style={[styles.modalActionText as any, { color: colors.textPrimary }]}>Send Feedback</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -736,8 +736,8 @@ export default function TeacherExamResultsScreen() {
         animationType="slide"
         transparent={true}
       >
-        <View style={[styles.feedbackOverlay, { backgroundColor: `${colors.textPrimary}80` }]}>
-          <View style={[styles.feedbackModal, { backgroundColor: colors.backgroundElevated }]}>
+        <View style={[styles.feedbackOverlay as any, { backgroundColor: `${colors.textPrimary}80` }]}>
+          <View style={[styles.feedbackModal as any, { backgroundColor: colors.backgroundElevated }]}>
             <Text style={[styles.feedbackTitle, { color: colors.textPrimary }]}>Send Feedback</Text>
             <Text style={[styles.feedbackSubtitle, { color: colors.textSecondary }]}>
               Send personalized feedback to {selectedSubmission?.student.name}
@@ -756,22 +756,22 @@ export default function TeacherExamResultsScreen() {
               onChangeText={setFeedback}
             />
             
-            <View style={styles.feedbackActions}>
+            <View style={styles.feedbackActions as any}>
               <TouchableOpacity 
-                style={[styles.feedbackButton, { backgroundColor: colors.background }]}
+                style={[styles.feedbackButton as any, { backgroundColor: colors.background }]}
                 onPress={() => setFeedbackModalVisible(false)}
               >
-                <Text style={[styles.feedbackButtonText, { color: colors.textPrimary }]}>Cancel</Text>
+                <Text style={[styles.feedbackButtonText as any, { color: colors.textPrimary }]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.feedbackButton, { backgroundColor: colors.primary }]}
+                style={[styles.feedbackButton as any, { backgroundColor: colors.primary }]}
                 onPress={sendFeedback}
                 disabled={!feedback.trim() || sendingFeedback}
               >
                 {sendingFeedback ? (
                   <ActivityIndicator size="small" color="white" />
                 ) : (
-                  <Text style={styles.feedbackButtonText}>Send</Text>
+                  <Text style={styles.feedbackButtonText as any}>Send</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -1280,7 +1280,7 @@ const styles = {
     maxWidth: 400,
     borderRadius: designTokens.borderRadius.xl,
     padding: designTokens.spacing.lg,
-    ...designTokens.shadows.xl,
+    ...designTokens.shadows.lg,
   },
   feedbackTitle: {
     fontSize: designTokens.typography.title3.fontSize,

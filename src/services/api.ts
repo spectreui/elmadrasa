@@ -397,11 +397,7 @@ async login(credentials: LoginRequest): Promise<AxiosResponse<ApiResponse<AuthRe
   public async getExamStatistics(examId: string): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.get(`/exams/${examId}/statistics`);
   }
-
-  public async getTeacherStatistics(): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.get("/teachers/statistics");
-  }
-
+  
   // In your apiService.ts - Add this method
   async getTeacherExams(): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.get("/teachers/exams"); // Or whatever your teacher exams endpoint is
@@ -694,14 +690,18 @@ async login(credentials: LoginRequest): Promise<AxiosResponse<ApiResponse<AuthRe
   }
 
   // Add this method to send notifications from mobile (if needed)
-  async sendNotificationToUser(userId: string, title: string, body: string, data: any = {}): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.post("/notifications/send-to-user", {
-      user_id: userId,
-      title,
-      body,
-      data
-    });
-  }
+  async sendNotificationToUser(userId: string, title: string, body: string, data: any = {}) {
+  return this.api.post('/notifications/send-to-user', {
+    user_id: userId,
+    title,
+    body,
+    data
+  });
+}
+
+async getUserById(userId: string) {
+  return this.api.get(`/users/${userId}/profile`);
+}
 
 }
 

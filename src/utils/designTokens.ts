@@ -72,6 +72,7 @@ export const designTokens = {
     caption2: { fontSize: 11, fontWeight: '400' },
   },
   spacing: {
+    xxs: 2,
     xs: 4,
     sm: 8,
     md: 12,

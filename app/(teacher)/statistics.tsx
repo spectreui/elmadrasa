@@ -39,7 +39,7 @@ export default function StatisticsScreen() {
     try {
       setLoading(true);
       
-      const response = await apiService.getTeacherStatistics();
+      const response = await apiService.getTeacherStats();
       
       if (response.data.success) {
         const data: StatisticsData = response.data.data;
@@ -99,7 +99,7 @@ export default function StatisticsScreen() {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading analytics...</Text>
+        <Text style={[styles.loadingText as any, { color: colors.textSecondary }]}>Loading analytics...</Text>
       </View>
     );
   }
@@ -113,7 +113,7 @@ export default function StatisticsScreen() {
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Analytics</Text>
 
         {/* Period Selector */}
-        <View style={[styles.periodSelector, { backgroundColor: colors.background }]}>
+        <View style={[styles.periodSelector as any, { backgroundColor: colors.background }]}>
           {[
             { key: 'week', label: 'This Week' },
             { key: 'month', label: 'This Month' },
@@ -131,7 +131,7 @@ export default function StatisticsScreen() {
             >
               <Text 
                 style={[
-                  styles.periodText,
+                  styles.periodText as any,
                   selectedPeriod === period.key 
                     ? { color: colors.primary } 
                     : { color: colors.textSecondary }
@@ -157,30 +157,30 @@ export default function StatisticsScreen() {
                     ...designTokens.shadows.sm
                   }]}
                 >
-                  <View style={styles.classStatHeader}>
-                    <Text style={[styles.className, { color: colors.textPrimary }]}>{stats.className}</Text>
-                    <View style={styles.improvementContainer}>
+                  <View style={styles.classStatHeader as any}>
+                    <Text style={[styles.className as any, { color: colors.textPrimary }]}>{stats.className as any}</Text>
+                    <View style={styles.improvementContainer as any}>
                       <Ionicons 
                         name={getImprovementIcon(stats.improvement) as any} 
                         size={16} 
                         color={getImprovementColor(stats.improvement)} 
                       />
-                      <Text style={[styles.improvementText, { color: getImprovementColor(stats.improvement) }]}>
+                      <Text style={[styles.improvementText as any, { color: getImprovementColor(stats.improvement) }]}>
                         {getImprovementValue(stats.improvement)}
                       </Text>
                     </View>
                   </View>
 
-                  <View style={styles.statsGrid}>
-                    <View style={styles.statItem}>
+                  <View style={styles.statsGrid as any}>
+                    <View style={styles.statItem as any}>
                       <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.averageScore}%</Text>
                       <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Avg. Score</Text>
                     </View>
-                    <View style={styles.statItem}>
+                    <View style={styles.statItem as any}>
                       <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.studentCount}</Text>
                       <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Students</Text>
                     </View>
-                    <View style={styles.statItem}>
+                    <View style={styles.statItem as any}>
                       <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.completedExams}</Text>
                       <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Exams</Text>
                     </View>
@@ -188,10 +188,10 @@ export default function StatisticsScreen() {
                 </View>
               ))
             ) : (
-              <View style={[styles.emptyState, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+              <View style={[styles.emptyState as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
                 <Ionicons name="stats-chart" size={48} color={colors.textTertiary} />
-                <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>No class data available</Text>
-                <Text style={[styles.emptySubtitle, { color: colors.textTertiary }]}>
+                <Text style={[styles.emptyTitle as any, { color: colors.textSecondary }]}>No class data available</Text>
+                <Text style={[styles.emptySubtitle as any, { color: colors.textTertiary }]}>
                   Class performance data will appear here once available
                 </Text>
               </View>
@@ -206,13 +206,13 @@ export default function StatisticsScreen() {
           {performanceTrend.length > 0 ? (
             <View style={styles.trendList}>
               {performanceTrend.map((trend, index) => (
-                <View key={index} style={styles.trendItem}>
-                  <Text style={[styles.trendMonth, { color: colors.textPrimary }]}>{trend.month}</Text>
+                <View key={index} style={styles.trendItem as any}>
+                  <Text style={[styles.trendMonth as any, { color: colors.textPrimary }]}>{trend.month}</Text>
                   
-                  <View style={[styles.trendBar, { backgroundColor: colors.background }]}>
+                  <View style={[styles.trendBar as any, { backgroundColor: colors.background }]}>
                     <View 
                       style={[
-                        styles.trendFill,
+                        styles.trendFill as any,
                         { 
                           backgroundColor: colors.primary,
                           width: `${(trend.averageScore / 100) * 100}%` 
@@ -221,17 +221,17 @@ export default function StatisticsScreen() {
                     />
                   </View>
                   
-                  <View style={styles.trendScore}>
-                    <Text style={[styles.trendValue, { color: colors.textPrimary }]}>{trend.averageScore}%</Text>
+                  <View style={styles.trendScore as any}>
+                    <Text style={[styles.trendValue as any, { color: colors.textPrimary }]}>{trend.averageScore}%</Text>
                   </View>
                 </View>
               ))}
             </View>
           ) : (
-            <View style={styles.emptyState}>
+            <View style={styles.emptyState as any}>
               <Ionicons name="trending-up" size={48} color={colors.textTertiary} />
-              <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>No trend data available</Text>
-              <Text style={[styles.emptySubtitle, { color: colors.textTertiary }]}>
+              <Text style={[styles.emptyTitle as any, { color: colors.textSecondary }]}>No trend data available</Text>
+              <Text style={[styles.emptySubtitle as any, { color: colors.textTertiary }]}>
                 Performance trends will appear here once available
               </Text>
             </View>
@@ -239,21 +239,21 @@ export default function StatisticsScreen() {
         </View>
 
         {/* Quick Stats */}
-        <View style={styles.quickStatsGrid}>
-          <View style={[styles.quickStatCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-            <Text style={[styles.quickStatLabel, { color: colors.textSecondary }]}>Total Exams</Text>
+        <View style={styles.quickStatsGrid as any}>
+          <View style={[styles.quickStatCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+            <Text style={[styles.quickStatLabel as any, { color: colors.textSecondary }]}>Total Exams</Text>
             <Text style={[styles.quickStatValue, { color: colors.textPrimary }]}>{quickStats.totalExams}</Text>
           </View>
-          <View style={[styles.quickStatCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-            <Text style={[styles.quickStatLabel, { color: colors.textSecondary }]}>Avg. Completion</Text>
+          <View style={[styles.quickStatCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+            <Text style={[styles.quickStatLabel as any, { color: colors.textSecondary }]}>Avg. Completion</Text>
             <Text style={[styles.quickStatValue, { color: colors.textPrimary }]}>{quickStats.avgCompletion}%</Text>
           </View>
-          <View style={[styles.quickStatCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-            <Text style={[styles.quickStatLabel, { color: colors.textSecondary }]}>Active Students</Text>
+          <View style={[styles.quickStatCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+            <Text style={[styles.quickStatLabel as any, { color: colors.textSecondary }]}>Active Students</Text>
             <Text style={[styles.quickStatValue, { color: colors.textPrimary }]}>{quickStats.activeStudents}</Text>
           </View>
-          <View style={[styles.quickStatCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-            <Text style={[styles.quickStatLabel, { color: colors.textSecondary }]}>Pending Grading</Text>
+          <View style={[styles.quickStatCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+            <Text style={[styles.quickStatLabel as any, { color: colors.textSecondary }]}>Pending Grading</Text>
             <Text style={[styles.quickStatValue, { color: colors.textPrimary }]}>{quickStats.pendingGrading}</Text>
           </View>
         </View>

@@ -101,30 +101,35 @@ export default function ExamDetailScreen() {
     );
   };
 
-  const toggleExamStatus = async () => {
-    if (!exam) return;
+  // In your [id].tsx file, update the toggleExamStatus function:
+const toggleExamStatus = async () => {
+  if (!exam) return;
 
-    try {
-      const newStatus = !exam.is_active;
-      const response = await apiService.updateExam(exam.id, { is_active: newStatus });
+  try {
+    const newStatus = !exam.is_active;
+    const response = await apiService.updateExam(exam.id, { is_active: newStatus });
 
-      if (response.data.success) {
-        setExam(prev => prev ? { ...prev, is_active: newStatus } : null);
-                // ✅ Send push notification when exam status changes
-        if (newStatus) {
-          // Exam activated - notify students
-          try {
-            // Get exam submissions to find students who should be notified
-            const submissionsResponse = await apiService.getExamSubmissions(exam.id);
-            if (submissionsResponse.data.success) {
-              const submissions = submissionsResponse.data.data || [];
-              const studentIds = [...new Set(submissions.map((sub: any) => sub.student_id))];
-              
-              // Notify each student
-              for (const studentId of studentIds) {
-                try {
+    if (response.data.success) {
+      setExam(prev => prev ? { ...prev, is_active: newStatus } : null);
+      
+      // ✅ Send push notification when exam status changes
+      if (newStatus) {
+        // Exam activated - notify students
+        try {
+          // Get exam submissions to find students who should be notified
+          const submissionsResponse = await apiService.getExamSubmissions(exam.id);
+          if (submissionsResponse.data.success) {
+            const submissions = submissionsResponse.data.data || [];
+            const studentIds = [...new Set(submissions.map((sub: any) => sub.student_id))];
+            
+            // Notify each student
+            for (const studentId of studentIds) {
+              try {
+                // Get the student's user ID
+                const studentResponse = await apiService.getUserById(studentId);
+                if (studentResponse.data.success) {
                   await apiService.sendNotificationToUser(
-                    studentId,
+                    studentResponse.data.data.id, // user_id
                     'Exam Activated',
                     `The exam "${exam.title}" is now available for you to take`,
                     {
@@ -133,24 +138,26 @@ export default function ExamDetailScreen() {
                       type: 'exam_activated'
                     }
                   );
-                } catch (notificationError) {
-                  console.log(`Failed to notify student ${studentId}:`, notificationError);
                 }
+              } catch (notificationError) {
+                console.log(`Failed to notify student ${studentId}:`, notificationError);
               }
             }
-          } catch (error) {
-            console.log('Failed to send exam activation notifications:', error);
           }
+        } catch (error) {
+          console.log('Failed to send exam activation notifications:', error);
         }
-        Alert.alert('Success', `Exam ${newStatus ? 'activated' : 'deactivated'} successfully`);
-      } else {
-        Alert.alert('Error', response.data.error || 'Failed to update exam status');
       }
-    } catch (error) {
-      console.error('Toggle exam status error:', error);
-      Alert.alert('Error', 'Failed to update exam status');
+      Alert.alert('Success', `Exam ${newStatus ? 'activated' : 'deactivated'} successfully`);
+    } else {
+      Alert.alert('Error', response.data.error || 'Failed to update exam status');
     }
-  };
+  } catch (error) {
+    console.error('Toggle exam status error:', error);
+    Alert.alert('Error', 'Failed to update exam status');
+  }
+};
+
 
   const getTotalPoints = () => {
     if (!exam?.questions) return 0;

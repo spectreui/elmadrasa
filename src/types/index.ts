@@ -96,7 +96,7 @@ export interface Exam {
   questions?: Question[];
   attachment_url?: string;
   allow_image_submissions?: boolean;
-  attachment_type?: string | null;
+  attachment_type?: string;
   attachment_name?: string;
   submissions_count?: number;
   average_score?: number; // Make this optional
