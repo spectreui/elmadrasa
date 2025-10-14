@@ -59,10 +59,6 @@ export default function RootLayout() {
                 <Stack
                   screenOptions={{ headerShown: false }}
                   linking={linking}
-                  linkingOptions={{
-                    prefixes: [Linking.createURL('/')],
-                    config: linking.config
-                  }}
                 >
                   <Stack.Screen name="(auth)" />
                   <Stack.Screen name="(student)" />

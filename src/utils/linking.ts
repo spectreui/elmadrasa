@@ -2,10 +2,7 @@ import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 
 export const linking = {
-  prefixes: [
-    Linking.createURL('/'),
-    'https://elmadrasa.vercel.app'
-  ],
+  prefixes: ['https://elmadrasa.vercel.app', 'elmadrasa://'],
   config: {
     screens: {
       // Auth screens
