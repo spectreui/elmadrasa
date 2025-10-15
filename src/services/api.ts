@@ -351,7 +351,7 @@ class ApiService {
       return false;
     }
   }
-  
+
   // Student methods
   public async getStudentStats(): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.get("/students/stats");
@@ -496,7 +496,7 @@ class ApiService {
 
   // Student Management
   async getStudentsByClass(classId: string): Promise<AxiosResponse<ApiResponse<any[]>>> {
-    return this.api.get(`/classes/${classId}/students`);
+    return this.api.get(`/teachers/classes/${classId}/students`);
   }
 
   // User management
