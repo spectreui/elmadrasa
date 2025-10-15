@@ -7,10 +7,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   Modal,
   TextInput,
 } from 'react-native';
+import Alert from "@blazejkustra/react-native-alert";
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { apiService } from '../../../src/services/api';

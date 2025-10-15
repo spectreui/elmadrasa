@@ -7,10 +7,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   StyleSheet,
   Dimensions
 } from 'react-native';
+import Alert from "@blazejkustra/react-native-alert";
 
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';

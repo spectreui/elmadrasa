@@ -1,6 +1,7 @@
 // app/(teacher)/create-exam.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Switch, Modal, FlatList, ActivityIndicator, Image, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Switch, Modal, FlatList, ActivityIndicator, Image, Platform } from 'react-native';
+import Alert from "@blazejkustra/react-native-alert";
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';

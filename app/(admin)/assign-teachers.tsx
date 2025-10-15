@@ -1,6 +1,7 @@
 // app/(admin)/assign-teachers.tsx - Updated with copyable join codes
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, Modal, ActivityIndicator, ToastAndroid } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Modal, ActivityIndicator, ToastAndroid } from 'react-native';
+import Alert from "@blazejkustra/react-native-alert";
 import { router } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { apiService } from '../../src/services/api';
@@ -124,14 +125,14 @@ export default function AssignTeachersScreen() {
       });
 
       // Handle both response structures
-      const success = response.data?.success || response.success;
+      const success = response.data?.success;
       if (success) {
         Alert.alert('Success', 'Teacher assigned successfully!');
         setShowTeacherModal(false);
         setSelectedClassSubject(null);
         loadData();
       } else {
-        throw new Error(response.data?.error || response.error || 'Failed to assign teacher');
+        throw new Error(response.data?.error || 'Failed to assign teacher');
       }
     } catch (error: any) {
       Alert.alert('Error', error.response?.data?.error || error.message || 'Failed to assign teacher');
@@ -153,12 +154,12 @@ export default function AssignTeachersScreen() {
               const response = await apiService.removeTeacherAssignment(assignmentId);
 
               // Handle both response structures
-              const success = response.data?.success || response.success;
+              const success = response.data?.success;
               if (success) {
                 Alert.alert('Success', 'Assignment removed successfully');
                 loadData();
               } else {
-                throw new Error(response.data?.error || response.error || 'Failed to remove assignment');
+                throw new Error(response.data?.error || 'Failed to remove assignment');
               }
             } catch (error: any) {
               console.error('Remove assignment error:', error);

@@ -8,8 +8,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   SafeAreaView,
-  Alert,
 } from 'react-native';
+import Alert from "@blazejkustra/react-native-alert";
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { apiService } from '../../../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';

@@ -1,6 +1,7 @@
 // app/(teacher)/homework/[id]/submissions.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput, Modal, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, Modal, RefreshControl } from 'react-native';
+import Alert from "@blazejkustra/react-native-alert";
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../../../src/contexts/AuthContext';
 import { apiService } from '../../../../src/services/api';

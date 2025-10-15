@@ -6,13 +6,13 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
   Switch,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Modal
 } from 'react-native';
+import Alert from "@blazejkustra/react-native-alert";
 import { router } from 'expo-router';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { apiService } from '../../../src/services/api';

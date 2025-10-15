@@ -4,7 +4,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
+
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -12,6 +12,7 @@ import {
   StatusBar,
   Dimensions,
 } from "react-native";
+import Alert from "@blazejkustra/react-native-alert";
 import { router } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";

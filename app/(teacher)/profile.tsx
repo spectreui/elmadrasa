@@ -6,10 +6,10 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
-  Alert,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import Alert from "@blazejkustra/react-native-alert";
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useThemeContext } from '../../src/contexts/ThemeContext';
@@ -30,7 +30,6 @@ export default function TeacherProfileScreen() {
   const [activeTab, setActiveTab] = useState<'profile' | 'settings'>('profile');
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
 
   useEffect(() => {
     if (!loading) {
@@ -165,6 +164,10 @@ export default function TeacherProfileScreen() {
       </View>
     </View>
   );
+
+    const toggleLanguage = () => {
+    changeLanguage(currentLocale === 'en' ? 'ar' : 'en');
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>

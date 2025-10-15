@@ -37,7 +37,7 @@ export function Button({
     primary: 'text-white',
     secondary: 'text-white',
     outline: 'text-blue-500 dark:text-blue-400',
-    ghost: `${theme.colors.textPrimary}`,
+    ghost: `${theme.colors.text.primary}`,
     destructive: 'text-white',
   };
 

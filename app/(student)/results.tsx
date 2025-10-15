@@ -7,8 +7,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from "react-native";
+import Alert from "@blazejkustra/react-native-alert";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { apiService } from "../../src/services/api";
 import { Ionicons } from "@expo/vector-icons";

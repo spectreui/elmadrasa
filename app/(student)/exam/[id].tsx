@@ -6,12 +6,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   SafeAreaView,
   AppState,
   AppStateStatus,
 } from 'react-native';
+import Alert from "@blazejkustra/react-native-alert";
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { apiService } from '../../../src/services/api';
 import { Exam, Question, ApiResponse } from '../../../src/types'; // Fixed import path

@@ -6,11 +6,11 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
+import Alert from "@blazejkustra/react-native-alert";
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { apiService } from '../../../src/services/api';

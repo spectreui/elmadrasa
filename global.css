@@ -10,25 +10,28 @@
   --color-primary-500: 0, 122, 255;
   --color-primary-600: 0, 102, 214;
   --color-primary-700: 0, 86, 179;
-  
+
   --color-background: 255, 255, 255;
   --color-background-elevated: 242, 242, 247;
   --color-background-card: 255, 255, 255;
-  
+
   --color-text-primary: 0, 0, 0;
   --color-text-secondary: 142, 142, 147;
   --color-text-tertiary: 199, 199, 204;
-  
+
   --color-system-red: 255, 59, 48;
   --color-system-green: 52, 199, 89;
   --color-system-orange: 255, 149, 0;
   --color-system-blue: 0, 122, 255;
   --color-system-purple: 175, 82, 222;
-  
+
   /* Glass morphism - light */
   --color-glass-light: 255, 255, 255, 0.1;
   --color-glass-dark: 0, 0, 0, 0.1;
   --color-glass-border: 255, 255, 255, 0.2;
+
+  --rn-alert-bg: 242, 242, 247 !important;
+
 }
 
 /* Dark theme colors */
@@ -39,24 +42,41 @@
     --color-primary-500: 10, 132, 255;
     --color-primary-600: 0, 122, 255;
     --color-primary-700: 0, 102, 214;
-    
+
     --color-background: 0, 0, 0;
     --color-background-elevated: 28, 28, 30;
     --color-background-card: 44, 44, 46;
-    
+
     --color-text-primary: 255, 255, 255;
     --color-text-secondary: 152, 152, 159;
     --color-text-tertiary: 99, 99, 102;
-    
+
     --color-system-red: 255, 69, 58;
     --color-system-green: 48, 209, 88;
     --color-system-orange: 255, 159, 10;
     --color-system-blue: 10, 132, 255;
     --color-system-purple: 191, 90, 242;
-    
+
     /* Glass morphism - dark */
     --color-glass-light: 255, 255, 255, 0.05;
     --color-glass-dark: 0, 0, 0, 0.2;
     --color-glass-border: 255, 255, 255, 0.1;
+
+    
   }
+}
+
+.rn-alert__content, .rn-alert__actions {
+  --rn-alert-bg: #1c1c1ef2;
+  background: #1c1c1ef2 !important;
+}
+
+.rn-alert__button--destructive {
+  background: rgb(185 28 28);
+  border-color: rgb(185 28 28);
+}
+.rn-alert__button--primary {
+  background: #F1F5F9;
+  color: #000;
+  border-color: #48484A
 }

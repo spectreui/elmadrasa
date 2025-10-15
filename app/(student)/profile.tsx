@@ -6,10 +6,10 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
-  Alert,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import Alert from "@blazejkustra/react-native-alert";
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useThemeContext } from '../../src/contexts/ThemeContext';

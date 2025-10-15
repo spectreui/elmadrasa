@@ -1,6 +1,7 @@
 // app/(admin)/settings.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Switch } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Switch } from 'react-native';
+import Alert from "@blazejkustra/react-native-alert";
 import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';

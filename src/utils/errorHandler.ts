@@ -1,4 +1,4 @@
-import { Alert } from 'react-native';
+import Alert from "@blazejkustra/react-native-alert";
 
 export class AppError extends Error {
   public code: string;
