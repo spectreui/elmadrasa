@@ -1,13 +1,12 @@
-// app/index.tsx
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { Redirect } from "expo-router";
+import { Redirect, usePathname } from "expo-router";
 import { useAuth } from "@/src/contexts/AuthContext";
 
 export default function Index() {
   const { isAuthenticated, loading, user } = useAuth();
+  const pathname = usePathname();
 
-  // Show loading while checking auth state
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -16,11 +15,15 @@ export default function Index() {
     );
   }
 
-  // If authenticated, redirect to appropriate dashboard
-  if (isAuthenticated && user?.role) {
+  // Only redirect if the user is actually at root "/"
+  if (pathname === "/" && isAuthenticated && user?.role) {
     return <Redirect href={`(${user.role})/`} />;
   }
 
-  // Otherwise, redirect to login
-  return <Redirect href="/(auth)/login" />;
+  if (pathname === "/" && !isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
+  // Otherwise, render nothing (or fallback)
+  return null;
 }
