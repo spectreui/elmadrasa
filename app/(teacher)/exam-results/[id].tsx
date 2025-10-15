@@ -195,7 +195,7 @@ export default function TeacherExamResultsScreen() {
     if (percentage >= 90) return colors.success;
     if (percentage >= 80) return colors.primary;
     if (percentage >= 70) return colors.warning;
-    if (percentage >= 60) return colors.orange;
+    if (percentage >= 60) return colors.error;
     return colors.error;
   };
 

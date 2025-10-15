@@ -1,4 +1,4 @@
-// app/(teacher)/homeworks/index.tsx - Updated with Full Dark Mode Support
+// app/(teacher)/homework/index.tsx - Updated with Full Dark Mode Support
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { useAuth } from '../../../src/contexts/AuthContext';
@@ -92,11 +92,11 @@ export default function TeacherHomeworkScreen() {
   };
 
   const handleHomeworkPress = (homeworkItem: Homework) => {
-    router.push(`/homeworks/${homeworkItem.id}/submissions`);
+    router.push(`/homework/${homeworkItem.id}/submissions`);
   };
 
   const handleCreateHomework = () => {
-    router.push('/homeworks/create');
+    router.push('/homework/create');
   };
 
   if (loading) {

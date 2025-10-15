@@ -75,7 +75,7 @@ export default function TeacherLayout() {
         }}
       />
       <Tabs.Screen
-        name="homeworks/index"
+        name="homework/index"
         options={{
           title: "Assign",
           tabBarIcon: ({ color, size, focused }) => (
@@ -148,13 +148,13 @@ export default function TeacherLayout() {
         }}
       />
       <Tabs.Screen
-        name="homeworks/[id]/submissions"
+        name="homework/[id]/submissions"
         options={{
           href: null, // This hides it from tab bar
         }}
       />
       <Tabs.Screen
-        name="homeworks/create"
+        name="homework/create"
         options={{
           href: null, // This hides it from tab bar
         }}

@@ -1,4 +1,4 @@
-// app/(teacher)/homeworks/[id]/submissions.tsx
+// app/(teacher)/homework/[id]/submissions.tsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, Modal, RefreshControl } from 'react-native';
 import Alert from "@blazejkustra/react-native-alert";

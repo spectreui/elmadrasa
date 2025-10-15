@@ -1,4 +1,4 @@
-// app/(teacher)/homeworks/create.tsx - Updated with Questions and Date Range
+// app/(teacher)/homework/create.tsx - Updated with Questions and Date Range
 import React, { useState, useEffect } from 'react';
 import {
   View,

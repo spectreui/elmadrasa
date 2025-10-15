@@ -22,15 +22,15 @@ export const generateUniversalLink = (path: string, params?: Record<string, stri
 
 // Generate homework-specific link
 export const generateHomeworkLink = (homeworkId: string, params?: { subject?: string; title?: string }) => {
-  return generateUniversalLink(`/(student)/homework/${homeworkId}`, params);
+  return generateUniversalLink(`/homework/${homeworkId}`, params);
 };
 
 // Generate exam-specific link
 export const generateExamLink = (examId: string, params?: { subject?: string; title?: string }) => {
-  return generateUniversalLink(`/(student)/exam/${examId}`, params);
+  return generateUniversalLink(`/exam/${examId}`, params);
 };
 
 // Generate exam results link
 export const generateExamResultsLink = (submissionId: string, params?: { title?: string }) => {
-  return generateUniversalLink(`/(student)/exam/results/${submissionId}`, params);
+  return generateUniversalLink(`/exam/results/${submissionId}`, params);
 };
