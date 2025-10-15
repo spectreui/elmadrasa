@@ -1,4 +1,4 @@
-// app/(teacher)/exams-teacher/index.tsx - REDESIGNED
+// app/(teacher)/exams/index.tsx - REDESIGNED
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -378,7 +378,7 @@ export default function TeacherExamsScreen() {
                     <View style={styles.primaryActions}>
                       <TouchableOpacity
                         style={[styles.actionButton, { backgroundColor: `${colors.primary}15` }]}
-                        onPress={() => router.push(`/(teacher)/exams-teacher/${exam.id}`)}
+                        onPress={() => router.push(`/(teacher)/exams/${exam.id}`)}
                       >
                         <Ionicons name="eye" size={16} color={colors.primary} />
                         <Text style={[styles.actionText, { color: colors.primary }]}>

@@ -60,7 +60,7 @@ export default function TeacherLayout() {
         }}
       />
       <Tabs.Screen
-        name="exams-teacher/index"
+        name="exams/index"
         options={{
           title: "Exams",
           tabBarIcon: ({ color, size, focused }) => (
@@ -160,7 +160,7 @@ export default function TeacherLayout() {
         }}
       />
       <Tabs.Screen
-        name="exams-teacher/[id]"
+        name="exams/[id]"
         options={{
           href: null, // This hides it from tab bar
         }}
