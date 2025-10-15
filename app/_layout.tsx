@@ -1,4 +1,4 @@
-// app/_layout.tsx
+// app/_layout.tsx - Fixed version
 import "../global.css";
 import React, { useEffect, useState } from "react";
 import { View, Text, ActivityIndicator } from "react-native";
@@ -13,7 +13,7 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import AppleHello from "@/components/AppleHello";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "@/components/SafeAreaView";
-import { apiService } from "@/src/services/api"; // ✅ make sure import path matches
+import { apiService } from "@/src/services/api";
 
 // Keep splash screen until ready
 SplashScreen.preventAutoHideAsync();
@@ -28,72 +28,77 @@ function ThemeWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ✅ Role + path redirect controller
+// ✅ Role + path redirect controller - FIXED
 function RoleAwareRedirect() {
   const { isAuthenticated, loading, user } = useAuth();
   const router = useRouter();
   const segments = useSegments();
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || hasRedirected) return;
 
     const first = segments[0];
     const path = "/" + segments.join("/");
     const inAuthGroup = first === "(auth)";
     const inRoleGroup = ["(student)", "(teacher)", "(admin)"].includes(first);
 
-    // ✅ Shared routes that exist for both student and teacher
-    const sharedRoutes = ["/exams", "/homework", "/profile"];
-
-    // ✅ Routes that should never be prefixed
+    // ✅ Safe routes that don't need role-based redirects
     const safeRoutes = [
+      "",
+      "/",
       "/unauthorized",
       "/network-error",
+      "/not-found",
       "/(auth)/login",
       "/(auth)/register",
       "/(auth)/forgot-password",
     ];
 
-    const isSafe = safeRoutes.some((safe) => path.startsWith(safe));
+    const isSafe = safeRoutes.includes(path) || safeRoutes.some(safe => path.startsWith(safe));
 
-    // 🚫 Not logged in → redirect to login
+    console.log('📍 Route check:', { path, first, inAuthGroup, inRoleGroup, isSafe, isAuthenticated, userRole: user?.role });
+
+    // 🚫 Not logged in → redirect to login (except safe routes)
     if (!isAuthenticated && !inAuthGroup && !isSafe) {
-      console.log("🔒 Redirecting to login");
+      console.log("🔒 Redirecting to login - not authenticated");
+      setHasRedirected(true);
       router.replace("/(auth)/login");
       return;
     }
 
-    // Skip redirecting safe or auth routes
-    if (isSafe || inAuthGroup) return;
+    // ✅ Already on safe route - no redirect needed
+    if (isSafe || inAuthGroup) {
+      console.log("✅ On safe route, no redirect needed");
+      setHasRedirected(true);
+      return;
+    }
 
-    // ✅ If user is authenticated, handle shared paths explicitly
+    // ✅ If user is authenticated, handle role-based routing
     if (isAuthenticated && user?.role) {
       const expectedGroup = `(${user.role})`;
-      const basePath = "/" + segments.slice(1).join("/"); // remove group prefix if any
-
-      // If we're on a shared path like /homework → send to /(<role>)/homework
-      const sharedMatch = sharedRoutes.find((r) => path.startsWith(r));
-
-      if (sharedMatch) {
-        const target = `${expectedGroup}${path}`;
-        console.log(`🧭 Redirecting shared route: ${path} → ${target}`);
-        router.replace(target);
+      
+      // ✅ Already in correct role group
+      if (inRoleGroup && first === expectedGroup) {
+        console.log("✅ Already in correct role group");
+        setHasRedirected(true);
         return;
       }
 
-      // For all other routes, make sure we’re inside the right role group
-      if (!inRoleGroup || first !== expectedGroup) {
-        const rest = segments.join("/");
-        const normalizedRest = rest.startsWith(expectedGroup + "/")
-          ? rest.replace(`${expectedGroup}/`, "")
-          : rest;
-        const target = `${expectedGroup}/${normalizedRest}`.replace(/\/+$/, "");
-
-        console.log(`🔁 Redirecting → ${target}`);
-        router.replace("/" + target);
-      }
+      // ✅ Redirect to correct role group
+      const basePath = segments.join("/");
+      const target = basePath.startsWith(expectedGroup) 
+        ? basePath 
+        : `${expectedGroup}/${basePath === "/" ? "" : basePath}`;
+      
+      const cleanTarget = "/" + target.replace(/\/+/g, "/").replace(/^\/+|\/+$/g, "") || "/";
+      
+      console.log(`🔁 Redirecting to role group: ${path} → ${cleanTarget}`);
+      setHasRedirected(true);
+      router.replace(cleanTarget);
+      return;
     }
-  }, [isAuthenticated, loading, user, segments]);
+  }, [isAuthenticated, loading, user, segments, hasRedirected]);
 
   if (loading) {
     return (
@@ -105,7 +110,6 @@ function RoleAwareRedirect() {
 
   return null;
 }
-
 
 // Simple fallback if animation fails
 function IntroFallback() {
@@ -203,7 +207,6 @@ export default function RootLayout() {
           <AuthProvider>
             <NotificationProvider>
               <SafeAreaView>
-                {/* Only redirect if inside main routes */}
                 <RoleAwareRedirect />
                 <Slot />
               </SafeAreaView>

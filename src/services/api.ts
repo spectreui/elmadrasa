@@ -1,4 +1,4 @@
-// src/services/api.ts
+// src/services/api.ts - Fixed 403 handling
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { LoginRequest, AuthResponse, ApiResponse, User, Exam } from "../types";
 import { storage } from "../utils/storage";
@@ -12,11 +12,11 @@ export const SHARED_BASE_ROUTES = ["/exams", "/homework", "/profile"];
 export const SAFE_ROUTES = [
   "/unauthorized",
   "/network-error",
+  "/not-found",
   "/(auth)/login",
   "/(auth)/register",
   "/(auth)/forgot-password",
 ];
-
 
 class ApiService {
   private api: AxiosInstance;
@@ -83,98 +83,111 @@ class ApiService {
       }
     );
 
-    // Enhanced response interceptor with proper 401 handling
-    // src/services/api.ts (inside setupInterceptors)
+    // Enhanced response interceptor with proper error handling
+    this.api.interceptors.response.use(
+      (response) => {
+        console.log('✅ API Response:', {
+          status: response.status,
+          url: response.config.url,
+          data: response.data?.success ? 'success' : 'error'
+        });
+        return response;
+      },
+      async (error) => {
+        const originalRequest = error.config;
+        const status = error.response?.status;
 
-this.api.interceptors.response.use(
-  (response) => {
-    console.log('✅ API Response:', {
-      status: response.status,
-      url: response.config.url,
-      data: response.data?.success ? 'success' : 'error'
-    });
-    return response;
-  },
-  async (error) => {
-    const originalRequest = error.config;
-    const status = error.response?.status;
+        console.error('❌ API Error:', {
+          status,
+          url: originalRequest?.url,
+          message: error.response?.data?.error || error.message,
+          code: error.code
+        });
 
-    console.error('❌ API Error:', {
-      status,
-      url: originalRequest?.url,
-      message: error.response?.data?.error || error.message,
-      code: error.code
-    });
-
-    // Avoid running twice
-    if (this.isRefreshing) return Promise.reject(error);
-
-    // --- 401 Unauthorized ---
-    if (status === 401) {
-      this.isRefreshing = true;
-      console.log('🔐 401 - Unauthorized');
-
-      try {
-        await this.clearToken();
-      } catch {}
-
-      setTimeout(() => {
-        try {
-          console.log('➡️ Redirecting to login');
-          router.replace('/(auth)/login');
-        } catch (err) {
-          console.error('❌ Login redirect failed:', err);
-        } finally {
-          this.isRefreshing = false;
+        // Avoid running twice
+        if (this.isRefreshing && status !== 403) {
+          return Promise.reject(error);
         }
-      }, 300);
 
-      return Promise.reject(error);
-    }
+        // --- 401 Unauthorized ---
+        if (status === 401) {
+          console.log('🔐 401 - Unauthorized');
+          
+          if (!this.isRefreshing) {
+            this.isRefreshing = true;
+            try {
+              await this.clearToken();
+            } catch (clearError) {
+              console.error('❌ Error clearing token:', clearError);
+            }
+          }
 
-    // --- 403 Forbidden ---
-    if (status === 403) {
-      this.isRefreshing = true;
-      console.log('🚫 403 - Forbidden (Insufficient permissions)');
+          setTimeout(() => {
+            try {
+              console.log('➡️ Redirecting to login');
+              router.replace('/(auth)/login');
+            } catch (err) {
+              console.error('❌ Login redirect failed:', err);
+            } finally {
+              this.isRefreshing = false;
+            }
+          }, 300);
 
-      setTimeout(async () => {
-        try {
-          // Retrieve user role if available (for role-aware unauthorized page)
-          let role: string | null = null;
-          try {
-            role = await storage.getItem('userRole');
-          } catch {}
-
-          const target = role ? `/${`(${role})`}/unauthorized` : '/unauthorized';
-          console.log(`➡️ Redirecting to ${target}`);
-
-          router.replace(target);
-        } catch (err) {
-          console.error('❌ 403 redirect failed:', err);
-        } finally {
-          this.isRefreshing = false;
+          return Promise.reject(error);
         }
-      }, 300);
 
-      return Promise.reject(error);
-    }
+        // --- 403 Forbidden ---
+        if (status === 403) {
+          console.log('🚫 403 - Forbidden (Insufficient permissions)');
+          
+          // Don't set isRefreshing for 403 to avoid blocking other requests
+          setTimeout(async () => {
+            try {
+              // Check if we're already on unauthorized page to prevent loops
+              const currentPath = window.location?.pathname || '';
+              if (!currentPath.includes('/unauthorized')) {
+                console.log('➡️ Redirecting to unauthorized page');
+                router.replace('/unauthorized');
+              }
+            } catch (err) {
+              console.error('❌ 403 redirect failed:', err);
+            }
+          }, 300);
 
-    // --- Network / other errors ---
-    if (!error.response) {
-      console.log('🌐 Network error');
-      try {
-        router.replace('/network-error');
-      } catch (err) {
-        console.error('❌ Failed to route to network-error:', err);
+          return Promise.reject(error);
+        }
+
+        // --- 404 Not Found ---
+        if (status === 404) {
+          console.log('🔍 404 - Not Found');
+          setTimeout(() => {
+            try {
+              router.replace('/not-found');
+            } catch (err) {
+              console.error('❌ 404 redirect failed:', err);
+            }
+          }, 300);
+          return Promise.reject(error);
+        }
+
+        // --- Network / other errors ---
+        if (!error.response) {
+          console.log('🌐 Network error');
+          setTimeout(() => {
+            try {
+              router.replace('/network-error');
+            } catch (err) {
+              console.error('❌ Failed to route to network-error:', err);
+            }
+          }, 300);
+        }
+
+        return Promise.reject(error);
       }
-    }
-
-    return Promise.reject(error);
-  }
-);
-
+    );
   }
 
+  // Rest of your methods remain the same...
   private redirectToLogin(): void {
     console.log("➡️ Redirecting to login screen");
 
@@ -191,7 +204,6 @@ this.api.interceptors.response.use(
       }
     }, 300);
   }
-
 
   // Enhanced Token management
   async validateToken(): Promise<boolean> {
@@ -284,10 +296,7 @@ this.api.interceptors.response.use(
   }
 
   // Auth methods
-  // Fix the login method in your api.ts
   async login(credentials: LoginRequest): Promise<AxiosResponse<ApiResponse<AuthResponse>>> {
-    // Remove the double nesting: ApiResponse<ApiResponse<AuthResponse>> → ApiResponse<AuthResponse>
-
     // Clear any existing token first
     await this.clearToken();
 
@@ -316,6 +325,10 @@ this.api.interceptors.response.use(
     return response;
   }
 
+  public async getCurrentUser(): Promise<AxiosResponse<ApiResponse<User>>> {
+    return this.api.get("/auth/me");
+  }
+
   // Student methods
   async getStudentDashboard(): Promise<AxiosResponse<ApiResponse<any>>> {
     console.log('📊 Fetching dashboard data...');
@@ -338,14 +351,7 @@ this.api.interceptors.response.use(
       return false;
     }
   }
-
-  // Teacher methods
-
-
-  public async getCurrentUser(): Promise<AxiosResponse<ApiResponse<User>>> {
-    return this.api.get("/auth/me");
-  }
-
+  
   // Student methods
   public async getStudentStats(): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.get("/students/stats");
