@@ -14,7 +14,7 @@ import {
 import Alert from "@blazejkustra/react-native-alert";
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { apiService } from '../../../src/services/api';
-import { Exam, Question, ApiResponse } from '../../../src/types'; // Fixed import path
+import { Exam, Question, ApiResponse } from '../../../src/types';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
@@ -49,81 +49,43 @@ export default function StudentExamScreen() {
   // Refs to track auto-submit state
   const isAutoSubmitting = useRef(false);
   const appState = useRef(AppState.currentState);
+  const hasSubmitted = useRef(false); // Prevent multiple submissions
 
   useEffect(() => {
-  loadExamData();
-  checkExamStatus();
-  
-  // Add app state listener for background/foreground detection
-  const subscription = AppState.addEventListener('change', handleAppStateChange);
-  
-  // Cleanup function to remove listener
-  return () => {
-    if (subscription?.remove) {
-      subscription.remove();
-    } else {
-      // For older React Native versions
-      AppState.removeEventListener('change', handleAppStateChange);
-    }
-  };
-}, [examId]);
+    loadExamData();
+    checkExamStatus();
 
-  // Handle app going to background
+    // Add app state listener for background/foreground detection
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    // Cleanup function to remove listener
+    return () => {
+      subscription?.remove();
+    };
+  }, [examId]);
+
+  // Handle app going to background - THIS IS THE KEY PART
   const handleAppStateChange = (nextAppState: AppStateStatus) => {
-    if (appState.current.match(/active/) && nextAppState.match(/inactive|background/)) {
-      console.log('App went to background - auto-submitting exam');
-      handleAutoSubmit(true); // true indicates auto-submit
+    console.log('AppState changed:', appState.current, '->', nextAppState);
+
+    // App is going to background or inactive state
+    if (appState.current === 'active' && (nextAppState === 'background' || nextAppState === 'inactive')) {
+      console.log('App going to background - triggering auto-submit');
+      if (!hasSubmitted.current && !isAutoSubmitting.current) {
+        handleAutoSubmit(true); // true indicates auto-submit due to app backgrounding
+      }
     }
     appState.current = nextAppState;
   };
 
-  const pickImages = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: true,
-        quality: 0.8,
-      });
 
-      if (!result.canceled && result.assets) {
-        setUploadingImages(true);
-
-        const uploadedUrls = [];
-        for (const asset of result.assets) {
-          try {
-            const fileInfo = await FileSystem.getInfoAsync(asset.uri);
-            if (fileInfo.exists) {
-              const formData = new FormData();
-              formData.append('image', {
-                uri: asset.uri,
-                type: 'image/jpeg',
-                name: `exam-image-${Date.now()}.jpg`,
-              } as any);
-
-              const response = await apiService.api.post('/upload/exam-image', formData, {
-                headers: {
-                  'Content-Type': 'multipart/form-data',
-                },
-              });
-
-              if (response.data.success && response.data.url) {
-                uploadedUrls.push(response.data.url);
-              }
-            }
-          } catch (uploadError) {
-            console.error('Image upload error:', uploadError);
-          }
-        }
-
-        setImageUrls(prev => [...prev, ...uploadedUrls]);
-        setUploadingImages(false);
-      }
-    } catch (error) {
-      console.error('Image picker error:', error);
-      Alert.alert('Error', 'Failed to pick images');
-      setUploadingImages(false);
-    }
-  };
+  useEffect(() => {
+    return () => {
+      // Cleanup on unmount
+      isAutoSubmitting.current = false;
+      hasSubmitted.current = false;
+    };
+  }, []);
 
   const loadExamData = async () => {
     try {
@@ -186,20 +148,27 @@ export default function StudentExamScreen() {
     }
   };
 
-  // Timer effect
+  // Timer effect - THIS IS WHERE TIME-BASED AUTO-SUBMIT HAPPENS
   useEffect(() => {
-    if (timeLeft === null || timeLeft <= 0) return;
+    if (timeLeft === null || timeLeft <= 0 || hasSubmitted.current) return;
 
     const timer = setInterval(() => {
       setTimeLeft(prev => {
-        if (prev === null || prev <= 1) {
+        if (prev === null || prev <= 0) {
           clearInterval(timer);
-          if (prev === 1) {
-            handleAutoSubmit(true); // true indicates auto-submit
-          }
           return 0;
         }
-        return prev - 1;
+
+        const newTime = prev - 1;
+
+        // Auto-submit when time runs out
+        if (newTime <= 0 && !isAutoSubmitting.current) {
+          console.log('⏰ Time expired - triggering auto-submit');
+          handleAutoSubmit(true); // true indicates auto-submit due to time expiration
+          return 0;
+        }
+
+        return newTime;
       });
     }, 1000);
 
@@ -213,38 +182,45 @@ export default function StudentExamScreen() {
     }));
   };
 
+  // FIXED AUTO-SUBMIT FUNCTION
   const handleAutoSubmit = async (isAuto: boolean = false) => {
     // Prevent multiple auto-submissions
-    if (isAutoSubmitting.current) return;
+    if (isAutoSubmitting.current || hasSubmitted.current) {
+      console.log('Auto-submit blocked - already submitting');
+      return;
+    }
 
+    console.log('🚀 Starting auto-submit process...', { isAuto });
     isAutoSubmitting.current = true;
 
     if (isAuto) {
+      // For auto-submissions, show alert then immediately submit
       Alert.alert(
         'Auto-Submitted',
         'Your exam was automatically submitted due to time limit or app backgrounding.',
-        [{ text: 'OK', onPress: () => submitExam(true) }] // true indicates auto-submit
+        [{
+          text: 'OK',
+          onPress: () => {
+            submitExam(true); // true indicates auto-submit
+          }
+        }]
       );
     } else {
-      Alert.alert(
-        'Time Up!',
-        'Your exam has been automatically submitted.',
-        [{ text: 'OK', onPress: () => submitExam(true) }] // true indicates auto-submit
-      );
+      submitExam(false); // Manual submit
     }
   };
 
   const handleSubmit = async () => {
-    // Skip confirmation for auto-submissions or when no answers
-    if (isAutoSubmitting.current) {
-      submitExam(true);
+    // Skip confirmation for auto-submissions
+    if (isAutoSubmitting.current || hasSubmitted.current) {
+      console.log('Submit blocked - auto-submit in progress or already submitted');
       return;
     }
 
     if (Object.keys(answers).length === 0) {
       Alert.alert('Warning', 'You haven\'t answered any questions. Are you sure you want to submit?', [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Submit', onPress: () => submitExam(false) } // false indicates manual submit
+        { text: 'Submit', onPress: () => submitExam(false) }
       ]);
       return;
     }
@@ -257,18 +233,26 @@ export default function StudentExamScreen() {
         `You have ${unansweredQuestions.length} unanswered question(s). Are you sure you want to submit?`,
         [
           { text: 'Continue Editing', style: 'cancel' },
-          { text: 'Submit Anyway', onPress: () => submitExam(false) } // false indicates manual submit
+          { text: 'Submit Anyway', onPress: () => submitExam(false) }
         ]
       );
     } else {
-      submitExam(false); // false indicates manual submit
+      submitExam(false);
     }
   };
 
   const submitExam = async (isAutoSubmit: boolean = false) => {
+    // Prevent multiple submissions
+    if (hasSubmitted.current) {
+      console.log('Submit blocked - already submitted');
+      isAutoSubmitting.current = false;
+      return;
+    }
+
     try {
       setSubmitting(true);
-      console.log('📤 Starting exam submission...', { isAutoSubmit });
+      hasSubmitted.current = true; // Mark as submitted
+      console.log('📤 Starting exam submission...', { isAutoSubmit, answers });
 
       const response = await apiService.api.post('/submissions/submit', {
         examId: examId,
@@ -310,13 +294,15 @@ export default function StudentExamScreen() {
         }
       } else {
         Alert.alert('Submission Failed', response.data.error || 'Unknown error occurred');
+        hasSubmitted.current = false; // Reset on failure
       }
     } catch (error: any) {
       console.error('❌ Exam submission error:', error);
       Alert.alert('Error', 'Failed to submit exam. Please try again.');
+      hasSubmitted.current = false; // Reset on failure
     } finally {
       setSubmitting(false);
-      isAutoSubmitting.current = false; // Reset auto-submit flag
+      isAutoSubmitting.current = false;
     }
   };
 
@@ -445,26 +431,26 @@ export default function StudentExamScreen() {
 
   return (
     <SafeAreaView style={styles.container}>{
-  showWarning && (
-    <View style={styles.warningBanner}>
-      <View style={styles.warningContent}>
-        <Text style={styles.warningText}>
-          <Ionicons
-            name="warning-outline"
-            size={16}
-            color="#FFA500"
-          /> Exam will auto-submit if you leave this page or put the app in background
-        </Text>
-        <TouchableOpacity 
-          onPress={() => setShowWarning(false)}
-          style={styles.warningCloseButton}
-        >
-          <Text style={styles.warningCloseText}>×</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  )
-}
+      showWarning && (
+        <View style={styles.warningBanner}>
+          <View style={styles.warningContent}>
+            <Text style={styles.warningText}>
+              <Ionicons
+                name="warning-outline"
+                size={16}
+                color="#FFA500"
+              /> Exam will auto-submit if you leave this page or put the app in background
+            </Text>
+            <TouchableOpacity
+              onPress={() => setShowWarning(false)}
+              style={styles.warningCloseButton}
+            >
+              <Text style={styles.warningCloseText}>×</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )
+    }
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -627,7 +613,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     color: '#666',
-  },  warningBanner: {
+  }, warningBanner: {
     backgroundColor: '#FFF9E6',
     borderBottomWidth: 1,
     borderBottomColor: '#FFD700',
