@@ -1,4 +1,4 @@
-// app/(teacher)/exams.tsx - REDESIGNED
+// app/(teacher)/exams-teacher/index.tsx - REDESIGNED
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -10,12 +10,12 @@ import {
 } from "react-native";
 import Alert from "@blazejkustra/react-native-alert";
 import { router } from "expo-router";
-import { useAuth } from "../../src/contexts/AuthContext";
-import { apiService } from "../../src/services/api";
-import { Exam } from "../../src/types";
+import { useAuth } from "../../../src/contexts/AuthContext";
+import { apiService } from "../../../src/services/api";
+import { Exam } from "../../../src/types";
 import { Ionicons } from "@expo/vector-icons";
-import { useThemeContext } from "../../src/contexts/ThemeContext";
-import { designTokens } from "../../src/utils/designTokens";
+import { useThemeContext } from "../../../src/contexts/ThemeContext";
+import { designTokens } from "../../../src/utils/designTokens";
 
 // Extended Exam type with optional fields for teacher view
 interface TeacherExam extends Exam {
@@ -369,7 +369,7 @@ export default function TeacherExamsScreen() {
                     <View style={styles.primaryActions}>
                       <TouchableOpacity
                         style={[styles.actionButton, { backgroundColor: `${colors.primary}15` }]}
-                        onPress={() => router.push(`/(teacher)/exams/${exam.id}`)}
+                        onPress={() => router.push(`/(teacher)/exams-teacher/${exam.id}`)}
                       >
                         <Ionicons name="eye" size={16} color={colors.primary} />
                         <Text style={[styles.actionText, { color: colors.primary }]}>

@@ -1,4 +1,4 @@
-// app/(teacher)/exams/[id].tsx
+// app/(teacher)/exams-teacher/[id].tsx
 import React, { useState, useEffect } from 'react';
 import {
   View,

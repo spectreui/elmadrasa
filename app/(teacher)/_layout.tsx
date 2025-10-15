@@ -70,7 +70,7 @@ export default function TeacherLayout() {
         }}
       />
       <Tabs.Screen
-        name="exams"
+        name="exams-teacher/index"
         options={{
           title: "Exams",
           tabBarIcon: ({ color, size, focused }) => (
@@ -85,7 +85,7 @@ export default function TeacherLayout() {
         }}
       />
       <Tabs.Screen
-        name="homework/index"
+        name="homeworks/index"
         options={{
           title: "Assign",
           tabBarIcon: ({ color, size, focused }) => (
@@ -158,19 +158,19 @@ export default function TeacherLayout() {
         }}
       />
       <Tabs.Screen
-        name="homework/[id]/submissions"
+        name="homeworks/[id]/submissions"
         options={{
           href: null, // This hides it from tab bar
         }}
       />
       <Tabs.Screen
-        name="homework/create"
+        name="homeworks/create"
         options={{
           href: null, // This hides it from tab bar
         }}
       />
       <Tabs.Screen
-        name="exams/[id]"
+        name="exams-teacher/[id]"
         options={{
           href: null, // This hides it from tab bar
         }}

@@ -1,4 +1,4 @@
-// app/(teacher)/homework/index.tsx - Updated with Full Dark Mode Support
+// app/(teacher)/homeworks/index.tsx - Updated with Full Dark Mode Support
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { useAuth } from '../../../src/contexts/AuthContext';
@@ -37,14 +37,7 @@ export default function TeacherHomeworkScreen() {
   const loadHomework = async () => {
     try {
       setLoading(true);
-      if (!loading) {
-        if (isAuthenticated && user?.role === 'student') {
-          console.log('➡️ Redirecting student to tabs');
-          router.push('/(student)/homework');
-        } else if (isAuthenticated && user?.role === "teacher") {
-          const response = await apiService.getTeacherHomework();
-        }
-      }
+      const response = await apiService.getTeacherHomework();
 
       if (response.data.success) {
         setHomework(response.data.data || []);
@@ -99,11 +92,11 @@ export default function TeacherHomeworkScreen() {
   };
 
   const handleHomeworkPress = (homeworkItem: Homework) => {
-    router.push(`/homework/${homeworkItem.id}/submissions`);
+    router.push(`/homeworks/${homeworkItem.id}/submissions`);
   };
 
   const handleCreateHomework = () => {
-    router.push('/homework/create');
+    router.push('/homeworks/create');
   };
 
   if (loading) {
