@@ -4,11 +4,13 @@ import { useAuth } from "../../src/contexts/AuthContext";
 import { useThemeContext } from "@/contexts/ThemeContext";
 
 export default function TabLayout() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { isDark, colors } = useThemeContext();
 
-  if (user?.role !== "admin") {
+  if (!isAuthenticated) {
     return <Redirect href="/(auth)/login" />;
+  } else if (user?.role !== "admin" && isAuthenticated) {
+    return <Redirect href="/unauthorized" />;
   }
 
   return (
@@ -127,7 +129,7 @@ export default function TabLayout() {
           href: null
         }}
       />
-  
+
     </Tabs>
   );
 }

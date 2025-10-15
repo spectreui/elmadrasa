@@ -66,7 +66,7 @@ export default function LoginScreen() {
 
     try {
       await login(email, password);
-      router.replace("/(student)");
+      router.replace("/");
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || error.message || "Login failed. Please check your credentials.";
       

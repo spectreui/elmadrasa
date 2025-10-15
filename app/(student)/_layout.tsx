@@ -9,12 +9,10 @@ export default function TabLayout() {
   const { isDark, colors, toggleTheme } = useThemeContext();
 
 
-  if (user?.role === "teacher") {
-    return <Redirect href="/(teacher)" />;
-  } else if (user?.role === "admin") {
-    return <Redirect href="/(admin)" />;
-  } else if (!isAuthenticated) {
+  if (!isAuthenticated) {
     return <Redirect href="/(auth)/login" />;
+  } else if (user?.role !== "student" && isAuthenticated) {
+    return <Redirect href="/unauthorized" />;
   }
 
   return (

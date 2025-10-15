@@ -10,30 +10,20 @@ export default function TeacherLayout() {
   const router = useRouter();
   const { isDark, colors, toggleTheme } = useThemeContext();
 
-  console.log('🔐 Auth State:', { 
-    isAuthenticated, 
-    loading, 
-    userRole: user?.role 
+  console.log('🔐 Auth State:', {
+    isAuthenticated,
+    loading,
+    userRole: user?.role
   });
 
   // Handle navigation based on auth state changes
-  useEffect(() => {
-    if (!loading) {
-      if (!isAuthenticated) {
-        console.log('➡️ Redirecting to login');
-        router.replace('/(auth)/login');
-      } else if (isAuthenticated && user?.role === 'teacher') {
-        console.log('➡️ Redirecting teacher to teacher dashboard');
-        router.replace('/(teacher)');
-      } else if (isAuthenticated && user?.role === 'admin') {
-        console.log('➡️ Redirecting teacher to teacher dashboard');
-        router.replace('/(admin)');
-      } else if (isAuthenticated && user?.role === 'student') {
-        console.log('➡️ Redirecting student to tabs');
-        router.replace('/(student)');
-      }
-    }
-  }, [isAuthenticated, loading, user, router]);
+
+  if (!isAuthenticated) {
+    console.log('➡️ Redirecting to login');
+    router.replace('/(auth)/login');
+  } else if (user?.role !== "teacher" && isAuthenticated) {
+    return <Redirect href="/unauthorized" />;
+  }
 
   return (
     <Tabs
