@@ -121,8 +121,6 @@ export default function RootLayout() {
     return <IntroFallback />;
   }
 
-    const { isAuthenticated, user } = useAuth();
-
   // ✅ Main App
   return (
     <SafeAreaProvider>
