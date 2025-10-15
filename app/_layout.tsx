@@ -1,8 +1,8 @@
-// app/_layout.tsx - Simplified version
+// app/_layout.tsx - Fixed version
 import "../global.css";
 import React, { useEffect, useState } from "react";
-import { View, ActivityIndicator } from "react-native";
-import { Redirect, Slot } from "expo-router";
+import { View, Text, ActivityIndicator } from "react-native";
+import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
 import { ThemeProvider, useThemeContext } from "../src/contexts/ThemeContext";
@@ -13,7 +13,9 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import AppleHello from "@/components/AppleHello";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "@/components/SafeAreaView";
+import { apiService } from "@/src/services/api";
 
+// Keep splash screen until ready
 SplashScreen.preventAutoHideAsync();
 
 function ThemeWrapper({ children }: { children: React.ReactNode }) {
@@ -26,15 +28,90 @@ function ThemeWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Simple auth check for protected routes (optional)
-function AuthCheck() {
-  // const {isAuthenticated, user} = useAuth()
-  // if (!isAuthenticated || !user?.role) {
-  //   return <Redirect href="/(auth)/login" />;
-  // }
-  return null
+// ✅ Role + path redirect controller - FIXED
+function RoleAwareRedirect() {
+  const { isAuthenticated, loading, user } = useAuth();
+  const router = useRouter();
+  const segments = useSegments();
+  const [hasRedirected, setHasRedirected] = useState(false);
+
+  useEffect(() => {
+    if (loading || hasRedirected) return;
+
+    const first = segments[0];
+    const path = "/" + segments.join("/");
+    const inAuthGroup = first === "(auth)";
+    const inRoleGroup = ["(student)", "(teacher)", "(admin)"].includes(first);
+
+    // ✅ Safe routes that don't need role-based redirects
+    const safeRoutes = [
+      "",
+      "/",
+      "/unauthorized",
+      "/network-error",
+      "/not-found",
+      "/(auth)/login",
+      "/(auth)/register",
+      "/(auth)/forgot-password",
+    ];
+
+    const isSafe = safeRoutes.includes(path) || safeRoutes.some(safe => path.startsWith(safe));
+
+    console.log('📍 Route check:', { path, first, inAuthGroup, inRoleGroup, isSafe, isAuthenticated, userRole: user?.role });
+
+    // 🚫 Not logged in → redirect to login (except safe routes)
+    if (!isAuthenticated && !inAuthGroup && !isSafe) {
+      console.log("🔒 Redirecting to login - not authenticated");
+      setHasRedirected(true);
+      router.replace("/(auth)/login");
+      return;
+    }
+
+    // ✅ Already on safe route - no redirect needed
+    if (isSafe || inAuthGroup) {
+      console.log("✅ On safe route, no redirect needed");
+      setHasRedirected(true);
+      return;
+    }
+
+    // ✅ If user is authenticated, handle role-based routing
+    if (isAuthenticated && user?.role) {
+      const expectedGroup = `(${user.role})`;
+      
+      // ✅ Already in correct role group
+      if (inRoleGroup && first === expectedGroup) {
+        console.log("✅ Already in correct role group");
+        setHasRedirected(true);
+        return;
+      }
+
+      // ✅ Redirect to correct role group
+      const basePath = segments.join("/");
+      const target = basePath.startsWith(expectedGroup) 
+        ? basePath 
+        : `${expectedGroup}/${basePath === "/" ? "" : basePath}`;
+      
+      const cleanTarget = "/" + target.replace(/\/+/g, "/").replace(/^\/+|\/+$/g, "") || "/";
+      
+      console.log(`🔁 Redirecting to role group: ${path} → ${cleanTarget}`);
+      setHasRedirected(true);
+      router.replace(cleanTarget);
+      return;
+    }
+  }, [isAuthenticated, loading, user, segments, hasRedirected]);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  return null;
 }
 
+// Simple fallback if animation fails
 function IntroFallback() {
   return (
     <View
@@ -51,7 +128,7 @@ function IntroFallback() {
 }
 
 export default function RootLayout() {
-  const [loaded] = useFonts({
+  const [loaded, error] = useFonts({
     "Inter-Regular": require("@/assets/fonts/Inter-Regular.otf"),
     "Inter-SemiBold": require("@/assets/fonts/Inter-SemiBold.otf"),
   });
@@ -61,6 +138,14 @@ export default function RootLayout() {
   const [storageError, setStorageError] = useState(false);
   const [animationError, setAnimationError] = useState(false);
 
+  // ✅ Pre-warm token (to avoid unauthorized flickers)
+  useEffect(() => {
+    (async () => {
+      await apiService.validateToken();
+    })();
+  }, []);
+
+  // ✅ Check if intro was seen
   useEffect(() => {
     const checkIntro = async () => {
       try {
@@ -122,7 +207,7 @@ export default function RootLayout() {
           <AuthProvider>
             <NotificationProvider>
               <SafeAreaView>
-                {/* <AuthCheck /> */}
+                <RoleAwareRedirect />
                 <Slot />
               </SafeAreaView>
             </NotificationProvider>

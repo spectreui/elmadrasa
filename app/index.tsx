@@ -1,20 +1,14 @@
 // app/index.tsx
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useAuth } from "@/src/contexts/AuthContext";
 
 export default function Index() {
   const { isAuthenticated, loading, user } = useAuth();
-  const [checked, setChecked] = useState(false);
 
-  useEffect(() => {
-    if (!loading) {
-      setChecked(true);
-    }
-  }, [loading]);
-
-  if (loading || !checked) {
+  // Show loading while checking auth state
+  if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" />
