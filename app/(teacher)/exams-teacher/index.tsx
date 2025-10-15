@@ -16,6 +16,8 @@ import { Exam } from "../../../src/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeContext } from "../../../src/contexts/ThemeContext";
 import { designTokens } from "../../../src/utils/designTokens";
+import { ShareModal } from "@/components/ShareModal";
+import { generateExamLink } from "@/utils/linking";
 
 // Extended Exam type with optional fields for teacher view
 interface TeacherExam extends Exam {
@@ -37,7 +39,14 @@ export default function TeacherExamsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<"active" | "draft" | "archived">("active");
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [currentExam, setCurrentExam] = useState<TeacherExam | null>(null);
 
+  // Add share function
+  const shareExam = (exam: TeacherExam) => {
+    setCurrentExam(exam);
+    setShowShareModal(true);
+  };
 
   useEffect(() => {
     if (!loading) {
@@ -392,9 +401,14 @@ export default function TeacherExamsScreen() {
                     <View style={styles.secondaryActions}>
                       <TouchableOpacity
                         style={[styles.iconButton, { backgroundColor: colors.background }]}
-                        onPress={() => Alert.alert("Info", "Duplicate feature coming soon")}
+                        onPress={() => {
+                          if (exam) {
+                            setCurrentExam(exam);
+                            setShowShareModal(true);
+                          }
+                        }}
                       >
-                        <Ionicons name="copy" size={18} color={colors.textTertiary} />
+                        <Ionicons name="share" size={18} color={colors.textTertiary} />
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[styles.iconButton, { backgroundColor: `${colors.error}15` }]}
@@ -432,6 +446,18 @@ export default function TeacherExamsScreen() {
           </View>
         )}
       </View>
+      {currentExam && (
+        <ShareModal
+          visible={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          title={`Exam: ${currentExam.title}`}
+          link={generateExamLink(
+            currentExam.id,
+            { subject: currentExam.subject, title: currentExam.title }
+          )}
+          subject={currentExam.subject}
+        />
+      )}
     </ScrollView>
   );
 }

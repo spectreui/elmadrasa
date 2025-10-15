@@ -14,6 +14,8 @@ import { useAuth } from '../../../src/contexts/AuthContext';
 import { apiService } from '../../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Exam, Question } from '../../../src/types';
+import { ShareModal } from '@/components/ShareModal';
+import { generateExamLink } from '@/utils/linking';
 
 interface ExamDetails extends Exam {
   questions: Question[];
@@ -29,6 +31,7 @@ export default function ExamDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'questions' | 'submissions'>('overview');
+  const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -102,61 +105,61 @@ export default function ExamDetailScreen() {
   };
 
   // In your [id].tsx file, update the toggleExamStatus function:
-const toggleExamStatus = async () => {
-  if (!exam) return;
+  const toggleExamStatus = async () => {
+    if (!exam) return;
 
-  try {
-    const newStatus = !exam.is_active;
-    const response = await apiService.updateExam(exam.id, { is_active: newStatus });
+    try {
+      const newStatus = !exam.is_active;
+      const response = await apiService.updateExam(exam.id, { is_active: newStatus });
 
-    if (response.data.success) {
-      setExam(prev => prev ? { ...prev, is_active: newStatus } : null);
-      
-      // ✅ Send push notification when exam status changes
-      if (newStatus) {
-        // Exam activated - notify students
-        try {
-          // Get exam submissions to find students who should be notified
-          const submissionsResponse = await apiService.getExamSubmissions(exam.id);
-          if (submissionsResponse.data.success) {
-            const submissions = submissionsResponse.data.data || [];
-            const studentIds = [...new Set(submissions.map((sub: any) => sub.student_id))];
-            
-            // Notify each student
-            for (const studentId of studentIds) {
-              try {
-                // Get the student's user ID
-                const studentResponse = await apiService.getUserById(studentId);
-                if (studentResponse.data.success) {
-                  await apiService.sendNotificationToUser(
-                    studentResponse.data.data.id, // user_id
-                    'Exam Activated',
-                    `The exam "${exam.title}" is now available for you to take`,
-                    {
-                      screen: 'exam',
-                      examId: exam.id,
-                      type: 'exam_activated'
-                    }
-                  );
+      if (response.data.success) {
+        setExam(prev => prev ? { ...prev, is_active: newStatus } : null);
+
+        // ✅ Send push notification when exam status changes
+        if (newStatus) {
+          // Exam activated - notify students
+          try {
+            // Get exam submissions to find students who should be notified
+            const submissionsResponse = await apiService.getExamSubmissions(exam.id);
+            if (submissionsResponse.data.success) {
+              const submissions = submissionsResponse.data.data || [];
+              const studentIds = [...new Set(submissions.map((sub: any) => sub.student_id))];
+
+              // Notify each student
+              for (const studentId of studentIds) {
+                try {
+                  // Get the student's user ID
+                  const studentResponse = await apiService.getUserById(studentId);
+                  if (studentResponse.data.success) {
+                    await apiService.sendNotificationToUser(
+                      studentResponse.data.data.id, // user_id
+                      'Exam Activated',
+                      `The exam "${exam.title}" is now available for you to take`,
+                      {
+                        screen: 'exam',
+                        examId: exam.id,
+                        type: 'exam_activated'
+                      }
+                    );
+                  }
+                } catch (notificationError) {
+                  console.log(`Failed to notify student ${studentId}:`, notificationError);
                 }
-              } catch (notificationError) {
-                console.log(`Failed to notify student ${studentId}:`, notificationError);
               }
             }
+          } catch (error) {
+            console.log('Failed to send exam activation notifications:', error);
           }
-        } catch (error) {
-          console.log('Failed to send exam activation notifications:', error);
         }
+        Alert.alert('Success', `Exam ${newStatus ? 'activated' : 'deactivated'} successfully`);
+      } else {
+        Alert.alert('Error', response.data.error || 'Failed to update exam status');
       }
-      Alert.alert('Success', `Exam ${newStatus ? 'activated' : 'deactivated'} successfully`);
-    } else {
-      Alert.alert('Error', response.data.error || 'Failed to update exam status');
+    } catch (error) {
+      console.error('Toggle exam status error:', error);
+      Alert.alert('Error', 'Failed to update exam status');
     }
-  } catch (error) {
-    console.error('Toggle exam status error:', error);
-    Alert.alert('Error', 'Failed to update exam status');
-  }
-};
+  };
 
 
   const getTotalPoints = () => {
@@ -372,19 +375,19 @@ const toggleExamStatus = async () => {
 
                 <TouchableOpacity
                   className="bg-purple-50 rounded-xl p-4 flex-row items-center justify-center border border-purple-200"
-                  onPress={() => Alert.alert('Info', 'Share feature coming soon')}
+                  onPress={() => setShowShareModal(true)}
                 >
                   <Ionicons name="share" size={20} color="#8B5CF6" />
                   <Text className="text-purple-700 font-medium ml-2 text-sm">Share Exam</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   className="bg-orange-50 rounded-xl p-4 flex-row items-center justify-center border border-orange-200"
-                  onPress={() => Alert.alert('Info', 'Analytics feature coming soon')}
+                  onPress={() => router.push('/(teacher)/statistics')}
                 >
                   <Ionicons name="analytics" size={20} color="#F59E0B" />
                   <Text className="text-orange-700 font-medium ml-2 text-sm">Analytics</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
             </View>
           </View>
@@ -427,12 +430,12 @@ const toggleExamStatus = async () => {
                           {question.options.map((option, optIndex) => (
                             <View key={optIndex} className="flex-row items-center space-x-2">
                               <View className={`w-5 h-5 rounded-full border-2 ${option === question.correct_answer
-                                  ? 'bg-green-500 border-green-500'
-                                  : 'border-gray-300'
+                                ? 'bg-green-500 border-green-500'
+                                : 'border-gray-300'
                                 }`} />
                               <Text className={`text-sm ${option === question.correct_answer
-                                  ? 'text-green-600 font-semibold'
-                                  : 'text-gray-700'
+                                ? 'text-green-600 font-semibold'
+                                : 'text-gray-700'
                                 }`}>
                                 {option}
                               </Text>
@@ -494,6 +497,16 @@ const toggleExamStatus = async () => {
           </View>
         )}
       </View>
+      <ShareModal
+        visible={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        title={`Exam: ${exam?.title || 'Exam'}`}
+        link={generateExamLink(
+          exam?.id || '',
+          { subject: exam?.subject, title: exam?.title }
+        )}
+        subject={exam?.subject}
+      />
     </ScrollView>
   );
 }

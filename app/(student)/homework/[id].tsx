@@ -20,6 +20,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { useThemeContext } from '@/contexts/ThemeContext';
 import { generateHomeworkLink } from '../../../src/utils/linking'; // Updated import
 import * as Sharing from 'expo-sharing';
+import { ShareModal } from '@/components/ShareModal';
 
 interface Question {
   id: string;
@@ -86,6 +87,7 @@ export default function HomeworkDetailScreen() {
   const [uploading, setUploading] = useState(false);
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, string>>({});
   const { colors, isDark } = useThemeContext();
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const loadHomework = useCallback(async () => {
     if (!id) return;
@@ -509,7 +511,7 @@ export default function HomeworkDetailScreen() {
                 </Text>
               </View>
 
-              <TouchableOpacity onPress={shareHomework}>
+              <TouchableOpacity onPress={() => setShowShareModal(true)}>
                 <Ionicons name="share-outline" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
 
@@ -1122,6 +1124,16 @@ export default function HomeworkDetailScreen() {
             </View>
           )}
         </View>
+        <ShareModal
+          visible={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          title={`Homework: ${homework?.title || 'Assignment'}`}
+          link={generateHomeworkLink(
+            id as string,
+            { subject: homework?.subject, title: homework?.title }
+          )}
+          subject={homework?.subject}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );

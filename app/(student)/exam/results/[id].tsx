@@ -1,4 +1,4 @@
-// app/exam/results/[id].tsx
+// app/(student)/exam/results/[id].tsx
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -16,6 +16,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '../../../../src/contexts/ThemeContext';
 import { designTokens } from '../../../../src/utils/designTokens';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { ShareModal } from '@/components/ShareModal';
+import { generateExamResultsLink } from '@/utils/linking';
 
 interface ResultData {
   submission: {
@@ -63,6 +65,12 @@ export default function ExamResultsScreen() {
   const [resultData, setResultData] = useState<ResultData | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAllAnswers, setShowAllAnswers] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+
+  // Add this function to handle sharing
+  const handleShare = () => {
+    setShowShareModal(true);
+  };
 
   useEffect(() => {
     if (submissionId) {
@@ -211,7 +219,12 @@ export default function ExamResultsScreen() {
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
           Exam Results
         </Text>
-        <View style={{ width: 24 }} />
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={handleShare}
+        >
+          <Ionicons name="share-outline" size={24} color={colors.primary} />
+        </TouchableOpacity>
       </View>
 
       <Animated.ScrollView
@@ -229,63 +242,63 @@ export default function ExamResultsScreen() {
             </Text>
           </View>
         ) : (
-        <View style={[styles.scoreCard, {
-          backgroundColor: colors.backgroundElevated,
-          ...designTokens.shadows.md
-        }]}>
-          <Text style={[styles.examTitle, { color: colors.textPrimary }]}>
-            {resultData.exam.title}
-          </Text>
-          <Text style={[styles.examInfo, { color: colors.textSecondary }]}>
-            {resultData.exam.subject} • {resultData.exam.class}
-          </Text>
-
-          <View style={[styles.scoreCircle, {
-            backgroundColor: isDark ? '#1C1C1E' : '#F8F8F8',
-            borderColor: colors.primary
+          <View style={[styles.scoreCard, {
+            backgroundColor: colors.backgroundElevated,
+            ...designTokens.shadows.md
           }]}>
-            <Text style={[styles.scorePercentage, { color: colors.primary }]}>
-              {percentage}%
+            <Text style={[styles.examTitle, { color: colors.textPrimary }]}>
+              {resultData.exam.title}
             </Text>
-            <Text style={[styles.scoreText, { color: colors.textSecondary }]}>
-              {resultData.submission.score}/{resultData.submission.total_points}
+            <Text style={[styles.examInfo, { color: colors.textSecondary }]}>
+              {resultData.exam.subject} • {resultData.exam.class}
             </Text>
-          </View>
 
-          <Text style={[
-            styles.gradeText,
-            { color: getGradeColor(percentage) }
-          ]}>
-            {getGradeText(percentage)}
-          </Text>
+            <View style={[styles.scoreCircle, {
+              backgroundColor: isDark ? '#1C1C1E' : '#F8F8F8',
+              borderColor: colors.primary
+            }]}>
+              <Text style={[styles.scorePercentage, { color: colors.primary }]}>
+                {percentage}%
+              </Text>
+              <Text style={[styles.scoreText, { color: colors.textSecondary }]}>
+                {resultData.submission.score}/{resultData.submission.total_points}
+              </Text>
+            </View>
 
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Text style={[styles.statNumber, { color: colors.textPrimary }]}>
-                {correctAnswers}
-              </Text>
-              <Text style={[styles.statLabel, { color: colors.textTertiary }]}>
-                Correct
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={[styles.statNumber, { color: colors.textPrimary }]}>
-                {totalQuestions - correctAnswers}
-              </Text>
-              <Text style={[styles.statLabel, { color: colors.textTertiary }]}>
-                Incorrect
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={[styles.statNumber, { color: colors.textPrimary }]}>
-                {totalQuestions}
-              </Text>
-              <Text style={[styles.statLabel, { color: colors.textTertiary }]}>
-                Total
-              </Text>
+            <Text style={[
+              styles.gradeText,
+              { color: getGradeColor(percentage) }
+            ]}>
+              {getGradeText(percentage)}
+            </Text>
+
+            <View style={styles.statsGrid}>
+              <View style={styles.statItem}>
+                <Text style={[styles.statNumber, { color: colors.textPrimary }]}>
+                  {correctAnswers}
+                </Text>
+                <Text style={[styles.statLabel, { color: colors.textTertiary }]}>
+                  Correct
+                </Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={[styles.statNumber, { color: colors.textPrimary }]}>
+                  {totalQuestions - correctAnswers}
+                </Text>
+                <Text style={[styles.statLabel, { color: colors.textTertiary }]}>
+                  Incorrect
+                </Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={[styles.statNumber, { color: colors.textPrimary }]}>
+                  {totalQuestions}
+                </Text>
+                <Text style={[styles.statLabel, { color: colors.textTertiary }]}>
+                  Total
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
         )}
 
         {resultData.submission.answers.length > 0 && (
@@ -458,6 +471,16 @@ export default function ExamResultsScreen() {
               Go to Dashboard
             </Text>
           </TouchableOpacity>
+          <ShareModal
+            visible={showShareModal}
+            onClose={() => setShowShareModal(false)}
+            title={`Exam Results: ${resultData?.exam?.title || 'Results'}`}
+            link={generateExamResultsLink(
+              resultData?.submission?.id || '',
+              { title: resultData?.exam?.title }
+            )}
+            subject="Exam Results"
+          />
         </View>
       </Animated.ScrollView>
     </SafeAreaView >
@@ -638,7 +661,7 @@ const styles = StyleSheet.create({
   },
   correctBadgeText: {
     fontSize: 12,
-    fontWeight: '600', 
+    fontWeight: '600',
   },
   pointsText: {
     fontSize: 12,
