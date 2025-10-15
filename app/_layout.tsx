@@ -1,12 +1,14 @@
 // app/_layout.tsx - Fixed version
 import "../global.css";
 import React, { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text, ActivityIndicator, Platform } from "react-native";
 import { Slot, usePathname, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
 import { ThemeProvider, useThemeContext } from "../src/contexts/ThemeContext";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { NotificationProvider } from "@/contexts/NotificationContext";
@@ -15,6 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "@/components/SafeAreaView";
 import { apiService } from "@/src/services/api";
 import SmartBanner from "@/components/SmartBanner";
+import Constants from "expo-constants";
 
 // Keep splash screen until ready
 SplashScreen.preventAutoHideAsync();
@@ -117,6 +120,63 @@ export default function RootLayout() {
   if (showIntro && !helloDone && animationError) {
     return <IntroFallback />;
   }
+
+    const { isAuthenticated, user } = useAuth();
+
+  useEffect(() => {
+    const registerPushToken = async () => {
+      if (!isAuthenticated || !user) return;
+
+      try {
+        // Only run on real devices
+        if (!Device.isDevice) {
+          console.log("📱 Push notifications only work on physical devices.");
+          return;
+        }
+
+        // Request permissions
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+
+        if (existingStatus !== "granted") {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        }
+
+        if (finalStatus !== "granted") {
+          console.log("🚫 Push notification permission denied");
+          return;
+        }
+
+        // Create Android channel
+        if (Platform.OS === "android") {
+          await Notifications.setNotificationChannelAsync("default", {
+            name: "default",
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: "#3b82f6",
+          });
+        }
+
+        // Get Expo push token
+        const token = (
+          await Notifications.getExpoPushTokenAsync({
+            projectId: Constants.expoConfig?.extra?.eas?.projectId,
+          })
+        ).data;
+
+        console.log("📲 Push token:", token);
+
+        // Save to backend
+        await apiService.savePushToken(token);
+
+      } catch (err) {
+        console.error("❌ Error registering push token:", err);
+      }
+    };
+
+    registerPushToken();
+  }, [isAuthenticated, user]);
 
   // ✅ Main App
   return (

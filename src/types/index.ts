@@ -9,6 +9,7 @@ export interface User {
   profile: UserProfile;
   created_at: string;
   updated_at: string;
+  push_token?: string;
 }
 
 // Add to existing types
