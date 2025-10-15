@@ -123,61 +123,6 @@ export default function RootLayout() {
 
     const { isAuthenticated, user } = useAuth();
 
-  useEffect(() => {
-    const registerPushToken = async () => {
-      if (!isAuthenticated || !user) return;
-
-      try {
-        // Only run on real devices
-        if (!Device.isDevice) {
-          console.log("📱 Push notifications only work on physical devices.");
-          return;
-        }
-
-        // Request permissions
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
-        let finalStatus = existingStatus;
-
-        if (existingStatus !== "granted") {
-          const { status } = await Notifications.requestPermissionsAsync();
-          finalStatus = status;
-        }
-
-        if (finalStatus !== "granted") {
-          console.log("🚫 Push notification permission denied");
-          return;
-        }
-
-        // Create Android channel
-        if (Platform.OS === "android") {
-          await Notifications.setNotificationChannelAsync("default", {
-            name: "default",
-            importance: Notifications.AndroidImportance.MAX,
-            vibrationPattern: [0, 250, 250, 250],
-            lightColor: "#3b82f6",
-          });
-        }
-
-        // Get Expo push token
-        const token = (
-          await Notifications.getExpoPushTokenAsync({
-            projectId: Constants.expoConfig?.extra?.eas?.projectId,
-          })
-        ).data;
-
-        console.log("📲 Push token:", token);
-
-        // Save to backend
-        await apiService.savePushToken(token);
-
-      } catch (err) {
-        console.error("❌ Error registering push token:", err);
-      }
-    };
-
-    registerPushToken();
-  }, [isAuthenticated, user]);
-
   // ✅ Main App
   return (
     <SafeAreaProvider>
