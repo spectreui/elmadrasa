@@ -2,7 +2,7 @@
 import "../global.css";
 import React, { useEffect, useState } from "react";
 import { View, Text, ActivityIndicator } from "react-native";
-import { Slot, useRouter, useSegments } from "expo-router";
+import { Slot, usePathname, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
 import { ThemeProvider, useThemeContext } from "../src/contexts/ThemeContext";
@@ -14,6 +14,7 @@ import AppleHello from "@/components/AppleHello";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "@/components/SafeAreaView";
 import { apiService } from "@/src/services/api";
+import SmartBanner from "@/components/SmartBanner";
 
 // Keep splash screen until ready
 SplashScreen.preventAutoHideAsync();
@@ -77,7 +78,7 @@ function RoleAwareRedirect() {
     // ✅ If user is authenticated, handle role-based routing
     if (isAuthenticated && user?.role) {
       const expectedGroup = `(${user.role})`;
-      
+
       // ✅ Already in correct role group
       if (inRoleGroup && first === expectedGroup) {
         console.log("✅ Already in correct role group");
@@ -87,12 +88,12 @@ function RoleAwareRedirect() {
 
       // ✅ Redirect to correct role group
       const basePath = segments.join("/");
-      const target = basePath.startsWith(expectedGroup) 
-        ? basePath 
+      const target = basePath.startsWith(expectedGroup)
+        ? basePath
         : `${expectedGroup}/${basePath === "/" ? "" : basePath}`;
-      
+
       const cleanTarget = "/" + target.replace(/\/+/g, "/").replace(/^\/+|\/+$/g, "") || "/";
-      
+
       console.log(`🔁 Redirecting to role group: ${path} → ${cleanTarget}`);
       setHasRedirected(true);
       router.replace(cleanTarget);
@@ -137,6 +138,7 @@ export default function RootLayout() {
   const [helloDone, setHelloDone] = useState(false);
   const [storageError, setStorageError] = useState(false);
   const [animationError, setAnimationError] = useState(false);
+  const pathname = usePathname();
 
   // ✅ Pre-warm token (to avoid unauthorized flickers)
   useEffect(() => {
@@ -206,6 +208,11 @@ export default function RootLayout() {
         <ThemeWrapper>
           <AuthProvider>
             <NotificationProvider>
+              <SmartBanner
+                appName="El Madrasa"
+                appScheme="elmadrasa" // Your app's custom scheme from app.json
+                currentPath={pathname}
+              />
               <SafeAreaView>
                 <RoleAwareRedirect />
                 <Slot />

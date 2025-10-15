@@ -408,7 +408,7 @@ export default function TeacherExamsScreen() {
                           }
                         }}
                       >
-                        <Ionicons name="share" size={18} color={colors.textTertiary} />
+                        <Ionicons name="share" size={18} color={colors.textSecondary} />
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[styles.iconButton, { backgroundColor: `${colors.error}15` }]}
