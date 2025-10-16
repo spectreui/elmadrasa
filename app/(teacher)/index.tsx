@@ -279,7 +279,7 @@ export default function TeacherDashboard() {
             description="Manage students"
             icon="people"
             color={colors.purple}
-            onPress={() => router.push('/(teacher)/classes')}
+            onPress={() => router.push('/(teacher)/my-classes')}
           />
           <QuickActionCard
             title="Analytics"
