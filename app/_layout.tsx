@@ -18,12 +18,23 @@ import { SafeAreaView } from "@/components/SafeAreaView";
 import { apiService } from "@/src/services/api";
 import SmartBanner from "@/components/SmartBanner";
 import Constants from "expo-constants";
+import { setUniversalPromptFunction } from "@/components/UniversalAlert";
 import { UniversalPromptProvider, useUniversalPrompt } from "@/components/UniversalPrompt";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import { setUniversalPromptFunction } from "@/utils/UniversalAlert";
 
 // Keep splash screen until ready
 SplashScreen.preventAutoHideAsync();
+
+// Move PromptSetup component BEFORE the RootLayout
+function PromptSetup() {
+  const { showUniversalPrompt } = useUniversalPrompt();
+
+  React.useEffect(() => {
+    setUniversalPromptFunction(showUniversalPrompt);
+  }, [showUniversalPrompt]);
+
+  return null;
+}
 
 function ThemeWrapper({ children }: { children: React.ReactNode }) {
   const { isDark } = useThemeContext();
@@ -123,16 +134,6 @@ export default function RootLayout() {
 
   if (showIntro && !helloDone && animationError) {
     return <IntroFallback />;
-  }
-
-  function PromptSetup() {
-    const { showUniversalPrompt } = useUniversalPrompt();
-
-    React.useEffect(() => {
-      setUniversalPromptFunction(showUniversalPrompt);
-    }, [showUniversalPrompt]);
-
-    return null;
   }
 
   // ✅ Main App
