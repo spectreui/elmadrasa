@@ -12,7 +12,7 @@ import {
   Platform,
   Modal
 } from 'react-native';
-import { Alert } from '@/components/UniversalAlert';
+import Alert from '@/components/Alert';
 import { router } from 'expo-router';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { apiService } from '../../../src/services/api';

@@ -1,7 +1,7 @@
 // app/(admin)/students.tsx - Fixed version
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
-import { Alert } from '@/components/UniversalAlert';
+import Alert from '@/components/Alert';
 import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';

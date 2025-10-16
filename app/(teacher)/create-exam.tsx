@@ -1,7 +1,7 @@
 // app/(teacher)/create-exam.tsx - RTL SUPPORT ADDED
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Switch, Modal, FlatList, ActivityIndicator, Image, Platform, I18nManager } from 'react-native';
-import { Alert } from '@/components/UniversalAlert';
+import Alert from '@/components/Alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';

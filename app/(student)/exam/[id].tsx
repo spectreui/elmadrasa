@@ -11,7 +11,7 @@ import {
   AppState,
   AppStateStatus } from
 'react-native';
-import { Alert } from '@/components/UniversalAlert';
+import Alert from '@/components/Alert';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { apiService } from '../../../src/services/api';
 import { Exam, Question, ApiResponse } from '../../../src/types';

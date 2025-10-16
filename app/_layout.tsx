@@ -18,6 +18,7 @@ import SmartBanner from "@/components/SmartBanner";
 import { setUniversalPromptFunction } from "@/components/UniversalAlert";
 import { UniversalPromptProvider, useUniversalPrompt } from "@/components/UniversalPrompt";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { AlertProvider } from "@/components/Alert";
 
 // Keep splash screen until ready
 SplashScreen.preventAutoHideAsync();
@@ -144,8 +145,7 @@ export default function RootLayout() {
         <LanguageProvider>
           <ThemeProvider>
             <ThemeWrapper>
-              <UniversalPromptProvider>
-                <PromptSetup />
+            <AlertProvider>
                 <NotificationProvider>
                   <SmartBanner
                     appName="El Madrasa"
@@ -156,7 +156,7 @@ export default function RootLayout() {
                     <Slot />
                   </SafeAreaView>
                 </NotificationProvider>
-              </UniversalPromptProvider>
+              </AlertProvider>
             </ThemeWrapper>
           </ThemeProvider>
         </LanguageProvider>
