@@ -6,7 +6,7 @@ import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { designTokens } from '../../src/utils/designTokens';
 import { useThemeContext } from '@/contexts/ThemeContext';
-import { Alert } from '@/utils/UniversalAlert';
+import { Alert } from '@/components/UniversalAlert';
 
 interface PendingUser {
   id: string;

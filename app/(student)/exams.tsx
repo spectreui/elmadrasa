@@ -9,7 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '../../src/contexts/ThemeContext';
 import { designTokens } from '../../src/utils/designTokens';
 import Animated, { FadeIn, FadeInUp, Layout } from 'react-native-reanimated';
-import { Alert } from '@/utils/UniversalAlert';
+import { Alert } from '@/components/UniversalAlert';
 
 export default function ExamsScreen() {
   const { user } = useAuth();

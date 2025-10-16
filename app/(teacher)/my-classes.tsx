@@ -1,7 +1,7 @@
 // app/(teacher)/my-classes.tsx - RTL SUPPORT ADDED
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { Alert } from '@/utils/UniversalAlert';
+import { Alert } from '@/components/UniversalAlert';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';

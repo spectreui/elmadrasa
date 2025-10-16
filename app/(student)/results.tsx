@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
-import { Alert } from '@/utils/UniversalAlert';
+import { Alert } from '@/components/UniversalAlert';
 import { useAuth } from "../../src/contexts/AuthContext";
 import { apiService } from "../../src/services/api";
 import { Ionicons } from "@expo/vector-icons";

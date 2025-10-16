@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '@/contexts/ThemeContext';
 import { designTokens } from '../../../src/utils/designTokens';
 import { router } from 'expo-router';
-import { Alert } from '@/utils/UniversalAlert';import { useTranslation } from "@/hooks/useTranslation";
+import { Alert } from '@/components/UniversalAlert';import { useTranslation } from "@/hooks/useTranslation";
 
 interface Homework {
   id: string;

@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   SafeAreaView,
 } from 'react-native';
-import { Alert } from '@/utils/UniversalAlert';
+import { Alert } from '@/components/UniversalAlert';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { apiService } from '../../../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';

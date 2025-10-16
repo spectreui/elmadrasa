@@ -7,8 +7,6 @@ import { StatusBar } from "expo-status-bar";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
 import { ThemeProvider, useThemeContext } from "../src/contexts/ThemeContext";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import * as Notifications from "expo-notifications";
-import * as Device from "expo-device";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { NotificationProvider } from "@/contexts/NotificationContext";
@@ -17,7 +15,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "@/components/SafeAreaView";
 import { apiService } from "@/src/services/api";
 import SmartBanner from "@/components/SmartBanner";
-import Constants from "expo-constants";
 import { setUniversalPromptFunction } from "@/components/UniversalAlert";
 import { UniversalPromptProvider, useUniversalPrompt } from "@/components/UniversalPrompt";
 import { LanguageProvider } from "@/contexts/LanguageContext";
@@ -73,6 +70,10 @@ export default function RootLayout() {
   const [storageError, setStorageError] = useState(false);
   const [animationError, setAnimationError] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    SplashScreen.hide();
+  }, []);
 
   // ✅ Pre-warm token (to avoid unauthorized flickers)
   useEffect(() => {
@@ -148,7 +149,7 @@ export default function RootLayout() {
                 <NotificationProvider>
                   <SmartBanner
                     appName="El Madrasa"
-                    appScheme="elmadrasa" // Your app's custom scheme from app.json
+                    appScheme="elmadrasa"
                     currentPath={pathname}
                   />
                   <SafeAreaView>

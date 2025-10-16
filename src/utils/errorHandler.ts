@@ -1,4 +1,4 @@
-import { Alert } from '@/utils/UniversalAlert';
+import { Alert } from '@/components/UniversalAlert';
 
 export class AppError extends Error {
   public code: string;

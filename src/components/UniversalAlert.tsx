@@ -1,3 +1,4 @@
+// UniversalAlert.tsx
 import { Platform } from 'react-native';
 
 type AlertType = 'default' | 'plain-text' | 'secure-text' | 'login-password';
@@ -9,7 +10,7 @@ interface AlertButton {
   style?: AlertButtonStyle;
 }
 
-// This will be set by the provider
+// Initialize with a function that warns if used before setup
 let showUniversalPrompt: (
   title: string,
   message: string,
@@ -17,7 +18,19 @@ let showUniversalPrompt: (
   onCancel: () => void,
   defaultValue?: string,
   type?: 'plain-text' | 'secure-text'
-) => void = () => {};
+) => void = (title, message, onSubmit, onCancel, defaultValue, type) => {
+  console.warn('⚠️ UniversalPrompt not initialized yet. Please make sure UniversalPromptProvider is mounted.');
+  // Fallback to default alert for now
+  const { Alert } = require('react-native');
+  Alert.alert(
+    title, 
+    message, 
+    [
+      { text: 'Cancel', style: 'cancel', onPress: onCancel },
+      { text: 'OK', onPress: () => onSubmit(defaultValue || '') }
+    ]
+  );
+};
 
 export const setUniversalPromptFunction = (func: typeof showUniversalPrompt) => {
   showUniversalPrompt = func;
@@ -86,6 +99,7 @@ export const UniversalAlert = {
       }
     } else if (Platform.OS === 'android') {
       // Android implementation using custom modal
+      // This will now use the fallback if showUniversalPrompt hasn't been set yet
       showUniversalPrompt(
         title,
         message || '',

@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Platform } from
 'react-native';
-import { Alert } from '@/utils/UniversalAlert';
+import { Alert } from '@/components/UniversalAlert';
 import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';

@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   RefreshControl } from
 'react-native';
-import { Alert } from '@/utils/UniversalAlert';
+import { Alert } from '@/components/UniversalAlert';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useThemeContext } from '../../src/contexts/ThemeContext';
