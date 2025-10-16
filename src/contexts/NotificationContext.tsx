@@ -22,6 +22,24 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   /**
    * 🧹 Auto-remove push token on logout or account switch
    */
+  // Replace the savePushToken function with this updated version:
+  const savePushToken = async (token: string | null) => {
+    if (!user || !isAuthenticated) return;
+
+    try {
+      // Always save the token (even if null for cleanup)
+      if (user.push_token !== token) {
+        await apiService.savePushToken(token);
+        console.log("✅ Push token saved for user:", user.id, token ? "new token" : "removed");
+      } else {
+        console.log("⚙️ Token unchanged — skipping re-save");
+      }
+    } catch (error) {
+      console.error("❌ Error saving push token:", error);
+    }
+  };
+
+  // Update the cleanup useEffect to be more reliable:
   useEffect(() => {
     const cleanupPushToken = async () => {
       if (!isAuthenticated && expoPushToken) {
@@ -33,27 +51,48 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           console.error("❌ Error removing push token on logout:", err);
         }
       }
+      // Also handle case where user exists but isAuthenticated is false
+      else if (!isAuthenticated && user) {
+        try {
+          await apiService.savePushToken(null);
+          console.log("🧹 Removed push token after logout (user check).");
+          setExpoPushToken(null);
+        } catch (err) {
+          console.error("❌ Error removing push token on logout (user check):", err);
+        }
+      }
     };
     cleanupPushToken();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
-  /**
-   * 🧩 Helper: Save token to backend only if changed
-   */
-  const savePushToken = async (token: string | null) => {
-    if (!user || !isAuthenticated || !token) return;
-
-    try {
-      if (user.push_token !== token) {
-        await apiService.savePushToken(token);
-        console.log("✅ Push token saved for user:", user.id);
-      } else {
-        console.log("⚙️ Token unchanged — skipping re-save");
-      }
-    } catch (error) {
-      console.error("❌ Error saving push token:", error);
+  // Update the main notification setup useEffect:
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      console.log("🔔 Notification setup skipped - not authenticated or no user");
+      return;
     }
-  };
+
+    console.log("🔔 Setting up notifications for:", user.email);
+    getAndSaveToken();
+
+    // Listener: receive notifications while app is foregrounded
+    const notificationListener = Notifications.addNotificationReceivedListener((notif) => {
+      console.log("📩 Notification received:", notif.request.content);
+      setNotification(notif);
+    });
+
+    // Listener: user taps notification
+    const responseListener = Notifications.addNotificationResponseReceivedListener((response) => {
+      console.log("🎯 Notification tapped:", response.notification.request.content.data);
+      // navigation logic can go here
+    });
+
+    return () => {
+      if (notificationListener) notificationListener.remove();
+      if (responseListener) responseListener.remove();
+    };
+  }, [isAuthenticated, user]);
+
 
   /**
    * 🚀 Request permissions + register token
@@ -112,33 +151,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     console.log("🔁 Refreshing push token...");
     await getAndSaveToken();
   };
-
-  /**
-   * 🔔 Setup notifications after login
-   */
-  useEffect(() => {
-    if (!isAuthenticated || !user) return;
-
-    console.log("🔔 Setting up notifications for:", user.email);
-    getAndSaveToken();
-
-    // Listener: receive notifications while app is foregrounded
-    const notificationListener = Notifications.addNotificationReceivedListener((notif) => {
-      console.log("📩 Notification received:", notif.request.content);
-      setNotification(notif);
-    });
-
-    // Listener: user taps notification
-    const responseListener = Notifications.addNotificationResponseReceivedListener((response) => {
-      console.log("🎯 Notification tapped:", response.notification.request.content.data);
-      // navigation logic can go here
-    });
-
-    return () => {
-      notificationListener.remove();
-      responseListener.remove();
-    };
-  }, [isAuthenticated, user]);
 
   return (
     <NotificationContext.Provider value={{ expoPushToken, notification, refreshPushToken }}>

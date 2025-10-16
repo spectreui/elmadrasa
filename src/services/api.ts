@@ -720,7 +720,7 @@ class ApiService {
     return this.api.put(`/admin/students/${studentId}/class`, { class_name: className });
   }
 
-  async savePushToken(token: string): Promise<AxiosResponse<ApiResponse<any>>> {
+  async savePushToken(token: string | null): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.post("/users/save-push-token", { push_token: token });
   }
 
