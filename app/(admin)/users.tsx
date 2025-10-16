@@ -6,7 +6,7 @@ import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme, cn } from '../../src/utils/themeUtils';
-import { useThemeContext } from '@/contexts/ThemeContext';
+import { useThemeContext } from '@/contexts/ThemeContext';import { useTranslation } from "@/hooks/useTranslation";
 
 interface User {
   id: string;
@@ -20,7 +20,7 @@ interface User {
   created_at: string;
 }
 
-export default function UsersManagement() {
+export default function UsersManagement() {const { t } = useTranslation();
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +28,7 @@ export default function UsersManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'student' | 'teacher'>('all');
   const { colors } = useThemeContext();
-    
+
 
   useEffect(() => {
     loadUsers();
@@ -41,16 +41,16 @@ export default function UsersManagement() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      
+
       const [studentsRes, teachersRes] = await Promise.all([
-        apiService.getUsersByRole('student'),
-        apiService.getUsersByRole('teacher')
-      ]);
+      apiService.getUsersByRole('student'),
+      apiService.getUsersByRole('teacher')]
+      );
 
       const allUsers = [
-        ...(studentsRes.data.data || []),
-        ...(teachersRes.data.data || [])
-      ];
+      ...(studentsRes.data.data || []),
+      ...(teachersRes.data.data || [])];
+
 
       setUsers(allUsers);
     } catch (error) {
@@ -67,16 +67,16 @@ export default function UsersManagement() {
 
     // Filter by role
     if (roleFilter !== 'all') {
-      filtered = filtered.filter(user => user.role === roleFilter);
+      filtered = filtered.filter((user) => user.role === roleFilter);
     }
 
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(user => 
-        user.email.toLowerCase().includes(query) ||
-        user.profile?.name?.toLowerCase().includes(query) ||
-        user.profile?.class?.toLowerCase().includes(query)
+      filtered = filtered.filter((user) =>
+      user.email.toLowerCase().includes(query) ||
+      user.profile?.name?.toLowerCase().includes(query) ||
+      user.profile?.class?.toLowerCase().includes(query)
       );
     }
 
@@ -104,27 +104,27 @@ export default function UsersManagement() {
       'Delete User',
       `Are you sure you want to delete ${userName}? This action cannot be undone.`,
       [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await apiService.deleteUser(userId);
-              Alert.alert('Success', 'User deleted successfully');
-              loadUsers();
-            } catch (error) {
-              console.error('Failed to delete user:', error);
-              Alert.alert('Error', 'Failed to delete user');
-            }
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await apiService.deleteUser(userId);
+            Alert.alert('Success', 'User deleted successfully');
+            loadUsers();
+          } catch (error) {
+            console.error('Failed to delete user:', error);
+            Alert.alert('Error', 'Failed to delete user');
           }
         }
-      ]
+      }]
+
     );
   };
 
-  const UserCard = ({ user }: { user: User }) => (
-    <View className={cn('p-5 rounded-2xl border mb-3', colors.backgroundElevated, colors.border)}>
+  const UserCard = ({ user }: {user: User;}) =>
+  <View className={cn('p-5 rounded-2xl border mb-3', colors.backgroundElevated, colors.border)}>
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1">
           <Text className={cn('text-lg font-semibold mb-1', colors.textPrimary)}>
@@ -135,48 +135,48 @@ export default function UsersManagement() {
           </Text>
           <View className="flex-row items-center space-x-3 mt-2">
             <View className={cn(
-              'px-3 py-1 rounded-full',
-              user.role === 'student' ? 'bg-blue-500/10' : 'bg-green-500/10'
-            )}>
+            'px-3 py-1 rounded-full',
+            user.role === 'student' ? 'bg-blue-500/10' : 'bg-green-500/10'
+          )}>
               <Text className={cn(
-                'text-xs font-medium',
-                user.role === 'student' ? 'text-blue-600' : 'text-green-600'
-              )}>
+              'text-xs font-medium',
+              user.role === 'student' ? 'text-blue-600' : 'text-green-600'
+            )}>
                 {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
               </Text>
             </View>
             <View className={cn(
-              'px-3 py-1 rounded-full',
-              user.is_approved ? 'bg-emerald-500/10' : 'bg-amber-500/10'
-            )}>
+            'px-3 py-1 rounded-full',
+            user.is_approved ? 'bg-emerald-500/10' : 'bg-amber-500/10'
+          )}>
               <Text className={cn(
-                'text-xs font-medium',
-                user.is_approved ? 'text-emerald-600' : 'text-amber-600'
-              )}>
-                {user.is_approved ? 'Approved' : 'Pending'}
+              'text-xs font-medium',
+              user.is_approved ? 'text-emerald-600' : 'text-amber-600'
+            )}>
+                {user.is_approved ? 'Approved' : t("common.pending")}
               </Text>
             </View>
           </View>
-          {user.profile?.class && (
-            <Text className={cn('text-sm mt-2', colors.textSecondary)}>
+          {user.profile?.class &&
+        <Text className={cn('text-sm mt-2', colors.textSecondary)}>
               Class: {user.profile.class}
             </Text>
-          )}
+        }
         </View>
         
         <View className="flex-row space-x-2">
-          {!user.is_approved && (
-            <TouchableOpacity
-              onPress={() => handleApproveUser(user.id)}
-              className="w-8 h-8 rounded-full bg-emerald-500 items-center justify-center"
-            >
+          {!user.is_approved &&
+        <TouchableOpacity
+          onPress={() => handleApproveUser(user.id)}
+          className="w-8 h-8 rounded-full bg-emerald-500 items-center justify-center">
+
               <Ionicons name="checkmark" size={16} color="#FFFFFF" />
             </TouchableOpacity>
-          )}
+        }
           <TouchableOpacity
-            onPress={() => handleDeleteUser(user.id, user.profile?.name || user.email)}
-            className="w-8 h-8 rounded-full bg-rose-500 items-center justify-center"
-          >
+          onPress={() => handleDeleteUser(user.id, user.profile?.name || user.email)}
+          className="w-8 h-8 rounded-full bg-rose-500 items-center justify-center">
+
             <Ionicons name="trash" size={16} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -185,15 +185,15 @@ export default function UsersManagement() {
       <Text className={cn('text-xs', colors.textSecondary)}>
         Joined: {new Date(user.created_at).toLocaleDateString()}
       </Text>
-    </View>
-  );
+    </View>;
+
 
   if (loading) {
     return (
       <View className={cn('flex-1 items-center justify-center', colors.background)}>
         <Text className={cn('text-lg', colors.textPrimary)}>Loading users...</Text>
-      </View>
-    );
+      </View>);
+
   }
 
   return (
@@ -223,65 +223,65 @@ export default function UsersManagement() {
               colors.background,
               colors.textPrimary
             )}
-            placeholderTextColor="#9CA3AF"
-          />
+            placeholderTextColor="#9CA3AF" />
+
           
           <View className="flex-row py-2 space-x-2">
-            {(['all', 'student', 'teacher'] as const).map((role) => (
-              <TouchableOpacity
-                key={role}
-                onPress={() => setRoleFilter(role)}
-                className={cn(
-                  'px-4 mx-1 py-2 rounded-full border',
-                  roleFilter === role 
-                    ? 'bg-blue-500 border-blue-500' 
-                    : colors.border
-                )}
-              >
+            {(['all', 'student', 'teacher'] as const).map((role) =>
+            <TouchableOpacity
+              key={role}
+              onPress={() => setRoleFilter(role)}
+              className={cn(
+                'px-4 mx-1 py-2 rounded-full border',
+                roleFilter === role ?
+                'bg-blue-500 border-blue-500' :
+                colors.border
+              )}>
+
                 <Text className={
-                  roleFilter === role 
-                    ? 'text-white font-medium text-sm'
-                    : cn('font-medium text-sm', colors.textPrimary)
-                }>
+              roleFilter === role ?
+              'text-white font-medium text-sm' :
+              cn('font-medium text-sm', colors.textPrimary)
+              }>
                   {role === 'all' ? 'All' : role.charAt(0).toUpperCase() + role.slice(1)}s
                 </Text>
               </TouchableOpacity>
-            ))}
+            )}
           </View>
         </View>
       </View>
 
-      <ScrollView 
+      <ScrollView
         className="flex-1 p-6"
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        {filteredUsers.length === 0 ? (
-          <View className={cn('items-center justify-center py-12', colors.background)}>
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }>
+
+        {filteredUsers.length === 0 ?
+        <View className={cn('items-center justify-center py-12', colors.background)}>
             <Ionicons name="people-outline" size={64} className="opacity-30 mb-4" />
             <Text className={cn('text-lg font-medium mb-2', colors.textPrimary)}>
               No users found
             </Text>
             <Text className={cn('text-center opacity-70', colors.textSecondary)}>
-              {searchQuery || roleFilter !== 'all' 
-                ? 'Try adjusting your search or filters'
-                : 'No users registered yet'
-              }
+              {searchQuery || roleFilter !== 'all' ?
+            'Try adjusting your search or filters' :
+            'No users registered yet'
+            }
             </Text>
-          </View>
-        ) : (
-          <View>
+          </View> :
+
+        <View>
             <Text className={cn('text-sm font-medium mb-4', colors.textSecondary)}>
               {filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''} found
             </Text>
             
-            {filteredUsers.map((user) => (
-              <UserCard key={user.id} user={user} />
-            ))}
+            {filteredUsers.map((user) =>
+          <UserCard key={user.id} user={user} />
+          )}
           </View>
-        )}
+        }
       </ScrollView>
-    </View>
-  );
+    </View>);
+
 }

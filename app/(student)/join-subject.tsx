@@ -8,24 +8,24 @@ import {
   ActivityIndicator,
   StyleSheet,
   Dimensions,
-  RefreshControl,
-} from 'react-native';
+  RefreshControl } from
+'react-native';
 import { Alert } from '@/utils/UniversalAlert';
 import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { designTokens } from '../../src/utils/designTokens';
 import { useThemeContext } from '../../src/contexts/ThemeContext';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';import { useTranslation } from "@/hooks/useTranslation";
 
 const { width } = Dimensions.get('window');
 
-export default function JoinSubjectScreen() {
+export default function JoinSubjectScreen() {const { t } = useTranslation();
   const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
   const { colors, isDark } = useThemeContext();
   const [refreshing, setRefreshing] = useState(false);
-    
+
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -43,8 +43,8 @@ export default function JoinSubjectScreen() {
 
       if (response.data.success) {
         Alert.alert('Success', 'Successfully joined the subject!', [
-          { text: 'OK', onPress: () => router.push('/(student)') }
-        ]);
+        { text: 'OK', onPress: () => router.push('/(student)') }]
+        );
         setJoinCode('');
       } else {
         throw new Error(response.data.error);
@@ -60,27 +60,27 @@ export default function JoinSubjectScreen() {
   const responsiveStyles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: colors.background
     },
     header: {
       paddingTop: designTokens.spacing.xxxl,
       paddingHorizontal: designTokens.spacing.xl,
       paddingBottom: designTokens.spacing.lg,
       borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      borderBottomColor: colors.border
     },
     title: {
       fontSize: width < 350 ? designTokens.typography.title2.fontSize : designTokens.typography.title1.fontSize,
       fontWeight: designTokens.typography.title1.fontWeight,
       color: colors.textPrimary,
-      marginBottom: designTokens.spacing.xs,
+      marginBottom: designTokens.spacing.xs
     },
     subtitle: {
       fontSize: designTokens.typography.body.fontSize,
-      color: colors.textSecondary,
+      color: colors.textSecondary
     },
     content: {
-      padding: designTokens.spacing.xl,
+      padding: designTokens.spacing.xl
     },
     card: {
       backgroundColor: colors.backgroundElevated,
@@ -89,23 +89,23 @@ export default function JoinSubjectScreen() {
       ...designTokens.shadows.sm,
       borderWidth: 1,
       borderColor: colors.border,
-      marginBottom: designTokens.spacing.xl,
+      marginBottom: designTokens.spacing.xl
     },
     cardTitle: {
       fontSize: designTokens.typography.headline.fontSize,
       fontWeight: designTokens.typography.headline.fontWeight,
       color: colors.textPrimary,
-      marginBottom: designTokens.spacing.sm,
+      marginBottom: designTokens.spacing.sm
     },
     cardText: {
       fontSize: designTokens.typography.body.fontSize,
-      color: colors.textSecondary,
+      color: colors.textSecondary
     },
     label: {
       fontSize: designTokens.typography.footnote.fontSize,
       fontWeight: '600',
       color: colors.textPrimary,
-      marginBottom: designTokens.spacing.sm,
+      marginBottom: designTokens.spacing.sm
     },
     input: {
       backgroundColor: colors.background,
@@ -116,7 +116,7 @@ export default function JoinSubjectScreen() {
       fontSize: designTokens.typography.body.fontSize,
       color: colors.textPrimary,
       fontFamily: 'monospace',
-      minHeight: 50,
+      minHeight: 50
     },
     button: {
       backgroundColor: colors.primary,
@@ -126,14 +126,14 @@ export default function JoinSubjectScreen() {
       justifyContent: 'center',
       flexDirection: 'row',
       ...designTokens.shadows.md,
-      minHeight: 50,
+      minHeight: 50
     },
     buttonText: {
       color: 'white',
       fontSize: designTokens.typography.body.fontSize,
       fontWeight: '600',
-      marginLeft: designTokens.spacing.sm,
-    },
+      marginLeft: designTokens.spacing.sm
+    }
   } as any);
 
   return (
@@ -142,15 +142,15 @@ export default function JoinSubjectScreen() {
       showsVerticalScrollIndicator={false}
       entering={FadeIn.duration(600)} // Smooth fade-in when screen loads
       refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={colors.primary}
-          colors={[colors.primary]}
-          style={{ backgroundColor: 'transparent' }}
-        />
-      }
-    >
+      <RefreshControl
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        tintColor={colors.primary}
+        colors={[colors.primary]}
+        style={{ backgroundColor: 'transparent' }} />
+
+      }>
+
       <View style={responsiveStyles.container}>
         {/* Header */}
         <View style={responsiveStyles.header}>
@@ -171,7 +171,7 @@ export default function JoinSubjectScreen() {
 
           {/* Join Code Input */}
           <View style={{ marginBottom: designTokens.spacing.xxl }}>
-            <Text style={responsiveStyles.label}>Join Code</Text>
+            <Text style={responsiveStyles.label}>{t("classes.joinCode")}</Text>
             <TextInput
               style={responsiveStyles.input}
               placeholder="SEC-2B-PHY-7KQWZ"
@@ -180,31 +180,31 @@ export default function JoinSubjectScreen() {
               onChangeText={setJoinCode}
               autoCapitalize="characters"
               autoCorrect={false}
-              maxLength={20}
-            />
+              maxLength={20} />
+
           </View>
 
           {/* Join Button */}
           <TouchableOpacity
             style={[
-              responsiveStyles.button,
-              (!joinCode.trim() || loading) && { opacity: 0.7 }
-            ]}
+            responsiveStyles.button,
+            (!joinCode.trim() || loading) && { opacity: 0.7 }]
+            }
             onPress={handleJoinSubject}
             disabled={loading || !joinCode.trim()}
-            activeOpacity={0.8}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <>
+            activeOpacity={0.8}>
+
+            {loading ?
+            <ActivityIndicator size="small" color="white" /> :
+
+            <>
                 <Ionicons name="enter" size={20} color="white" />
                 <Text style={responsiveStyles.buttonText}>Join Subject</Text>
               </>
-            )}
+            }
           </TouchableOpacity>
         </View>
       </View>
-    </Animated.ScrollView>
-  );
+    </Animated.ScrollView>);
+
 }

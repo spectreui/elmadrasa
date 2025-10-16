@@ -6,9 +6,9 @@ import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme, cn } from '../../src/utils/themeUtils';
-import { useThemeContext } from '@/contexts/ThemeContext';
+import { useThemeContext } from '@/contexts/ThemeContext';import { useTranslation } from "@/hooks/useTranslation";
 
-export default function StudentsManagementScreen() {
+export default function StudentsManagementScreen() {const { t } = useTranslation();
   const [students, setStudents] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,7 +17,7 @@ export default function StudentsManagementScreen() {
   const [selectedClass, setSelectedClass] = useState('');
   const [assigning, setAssigning] = useState(false);
   const { colors } = useThemeContext();
-  
+
 
   useEffect(() => {
     loadData();
@@ -29,9 +29,9 @@ export default function StudentsManagementScreen() {
       console.log('🔄 Loading students and classes...');
 
       const [studentsRes, classesRes] = await Promise.all([
-        apiService.getUsersByRole('student'),
-        apiService.getClasses(),
-      ]);
+      apiService.getUsersByRole('student'),
+      apiService.getClasses()]
+      );
 
       console.log('📊 Students response:', studentsRes.data);
       console.log('🏫 Classes response:', classesRes.data);
@@ -67,7 +67,7 @@ export default function StudentsManagementScreen() {
 
     setAssigning(true);
     try {
-      const classObj = classes.find(c => c.id === selectedClass);
+      const classObj = classes.find((c) => c.id === selectedClass);
       if (!classObj) {
         Alert.alert('Error', 'Invalid class selected');
         return;
@@ -144,7 +144,7 @@ export default function StudentsManagementScreen() {
 
     setAssigning(true);
     try {
-      const classObj = classes.find(c => c.id === selectedClass);
+      const classObj = classes.find((c) => c.id === selectedClass);
       if (!classObj) {
         Alert.alert('Error', 'Invalid class selected');
         return;
@@ -179,13 +179,13 @@ export default function StudentsManagementScreen() {
       'Delete Student',
       `Are you sure you want to delete ${student.profile?.name}? This action cannot be undone.`,
       [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => deleteStudent(student.id)
-        }
-      ]
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => deleteStudent(student.id)
+      }]
+
     );
   };
 
@@ -225,8 +225,8 @@ export default function StudentsManagementScreen() {
       <View className={cn('flex-1 justify-center items-center', colors.background)}>
         <ActivityIndicator size="large" color="#3b82f6" />
         <Text className={cn('text-lg mt-4', colors.textSecondary)}>Loading students...</Text>
-      </View>
-    );
+      </View>);
+
   }
 
   return (
@@ -244,8 +244,8 @@ export default function StudentsManagementScreen() {
           </View>
           <TouchableOpacity
             onPress={loadData}
-            className={cn('w-10 h-10 rounded-full items-center justify-center', colors.backgroundElevated)}
-          >
+            className={cn('w-10 h-10 rounded-full items-center justify-center', colors.backgroundElevated)}>
+
             <Ionicons name="refresh" size={20} className={colors.textSecondary} />
           </TouchableOpacity>
         </View>
@@ -260,13 +260,13 @@ export default function StudentsManagementScreen() {
           </View>
           <View className={cn('flex-1 p-4 rounded-2xl border', colors.backgroundElevated, colors.border)}>
             <Text className={cn('text-2xl font-bold mb-1', colors.textPrimary)}>
-              {students.filter(s => s.is_approved).length}
+              {students.filter((s) => s.is_approved).length}
             </Text>
             <Text className={cn('text-sm', colors.textSecondary)}>Approved</Text>
           </View>
           <View className={cn('flex-1 p-4 rounded-2xl border', colors.backgroundElevated, colors.border)}>
             <Text className={cn('text-2xl font-bold mb-1', colors.textPrimary)}>
-              {students.filter(s => s.profile?.class).length}
+              {students.filter((s) => s.profile?.class).length}
             </Text>
             <Text className={cn('text-sm', colors.textSecondary)}>Assigned</Text>
           </View>
@@ -276,18 +276,18 @@ export default function StudentsManagementScreen() {
       {/* Scrollable Content */}
       <ScrollView
         className="flex-1"
-        showsVerticalScrollIndicator={false}
-      >
+        showsVerticalScrollIndicator={false}>
+
         <View className="p-6 space-y-4">
-          {students.map(student => (
-            <View
-              key={student.id}
-              className={cn(
-                'p-5 rounded-2xl border',
-                colors.backgroundElevated,
-                colors.border
-              )}
-            >
+          {students.map((student) =>
+          <View
+            key={student.id}
+            className={cn(
+              'p-5 rounded-2xl border',
+              colors.backgroundElevated,
+              colors.border
+            )}>
+
               <View className="flex-row items-start justify-between">
                 <View className="flex-row items-start space-x-4 flex-1">
                   <View className="w-12 h-12 bg-blue-500/10 rounded-xl items-center justify-center">
@@ -307,58 +307,58 @@ export default function StudentsManagementScreen() {
                           ID: {student.student_id || 'N/A'}
                         </Text>
                       </View>
-                      <View className={`px-3 py-1 rounded-full ${student.profile?.class ? 'bg-green-500/10' : 'bg-gray-500/10'
-                        }`}>
-                        <Text className={`text-xs font-medium ${student.profile?.class ? 'text-green-600' : 'text-gray-600'
-                          }`}>
+                      <View className={`px-3 py-1 rounded-full ${student.profile?.class ? 'bg-green-500/10' : 'bg-gray-500/10'}`
+                    }>
+                        <Text className={`text-xs font-medium ${student.profile?.class ? 'text-green-600' : 'text-gray-600'}`
+                      }>
                           {student.profile?.class || 'No class'}
                         </Text>
                       </View>
-                      <View className={`px-3 py-1 rounded-full ${student.is_approved ? 'bg-emerald-500/10' : 'bg-amber-500/10'
-                        }`}>
-                        <Text className={`text-xs font-medium ${student.is_approved ? 'text-emerald-600' : 'text-amber-600'
-                          }`}>
-                          {student.is_approved ? 'Approved' : 'Pending'}
+                      <View className={`px-3 py-1 rounded-full ${student.is_approved ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`
+                    }>
+                        <Text className={`text-xs font-medium ${student.is_approved ? 'text-emerald-600' : 'text-amber-600'}`
+                      }>
+                          {student.is_approved ? 'Approved' : t("common.pending")}
                         </Text>
                       </View>
                     </View>
 
-                    {!student.is_approved && (
-                      <TouchableOpacity
-                        onPress={() => approveStudent(student)}
-                        className="bg-emerald-500 px-4 py-2 rounded-xl self-start"
-                      >
+                    {!student.is_approved &&
+                  <TouchableOpacity
+                    onPress={() => approveStudent(student)}
+                    className="bg-emerald-500 px-4 py-2 rounded-xl self-start">
+
                         <Text className="text-white font-medium text-sm">Approve Student</Text>
                       </TouchableOpacity>
-                    )}
+                  }
                   </View>
                 </View>
 
                 <View className="flex-row space-x-2">
                   <TouchableOpacity
-                    onPress={() => openClassModal(student)}
-                    className={cn(
-                      'w-10 h-10 rounded-xl items-center justify-center',
-                      student.is_approved ? 'bg-blue-500' : 'bg-gray-400'
-                    )}
-                    disabled={!student.is_approved}
-                  >
+                  onPress={() => openClassModal(student)}
+                  className={cn(
+                    'w-10 h-10 rounded-xl items-center justify-center',
+                    student.is_approved ? 'bg-blue-500' : 'bg-gray-400'
+                  )}
+                  disabled={!student.is_approved}>
+
                     <Ionicons name="school" size={18} color="white" />
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    onPress={() => handleDeleteStudent(student)}
-                    className="w-10 h-10 rounded-xl bg-rose-500 items-center justify-center"
-                  >
+                  onPress={() => handleDeleteStudent(student)}
+                  className="w-10 h-10 rounded-xl bg-rose-500 items-center justify-center">
+
                     <Ionicons name="trash" size={18} color="white" />
                   </TouchableOpacity>
                 </View>
               </View>
             </View>
-          ))}
+          )}
 
-          {students.length === 0 && (
-            <View className={cn('items-center py-16 rounded-2xl border-2 border-dashed', colors.border)}>
+          {students.length === 0 &&
+          <View className={cn('items-center py-16 rounded-2xl border-2 border-dashed', colors.border)}>
               <Ionicons name="people-outline" size={64} className="opacity-30 mb-4" />
               <Text className={cn('text-2xl font-bold mb-2', colors.textPrimary)}>
                 No Students
@@ -370,7 +370,7 @@ export default function StudentsManagementScreen() {
                 <Text className="text-white font-semibold text-lg">Refresh</Text>
               </TouchableOpacity>
             </View>
-          )}
+          }
         </View>
       </ScrollView>
 
@@ -389,8 +389,8 @@ export default function StudentsManagementScreen() {
               </View>
               <TouchableOpacity
                 onPress={() => setShowClassModal(false)}
-                className="w-10 h-10 rounded-full items-center justify-center bg-gray-100 dark:bg-gray-800"
-              >
+                className="w-10 h-10 rounded-full items-center justify-center bg-gray-100 dark:bg-gray-800">
+
                 <Ionicons name="close" size={20} className={colors.textSecondary} />
               </TouchableOpacity>
             </View>
@@ -398,18 +398,18 @@ export default function StudentsManagementScreen() {
 
           <ScrollView className="flex-1">
             <View className="p-6 space-y-3">
-              {classes.map(classItem => (
-                <TouchableOpacity
-                  key={classItem.id}
-                  onPress={() => setSelectedClass(classItem.id)}
-                  className={cn(
-                    'p-4 rounded-2xl border flex-row items-center justify-between',
-                    selectedClass === classItem.id
-                      ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300'
-                      : colors.backgroundElevated,
-                    colors.border
-                  )}
-                >
+              {classes.map((classItem) =>
+              <TouchableOpacity
+                key={classItem.id}
+                onPress={() => setSelectedClass(classItem.id)}
+                className={cn(
+                  'p-4 rounded-2xl border flex-row items-center justify-between',
+                  selectedClass === classItem.id ?
+                  'bg-blue-50 dark:bg-blue-900/20 border-blue-300' :
+                  colors.backgroundElevated,
+                  colors.border
+                )}>
+
                   <View className="flex-row items-center space-x-4">
                     <View className="w-12 h-12 bg-blue-500/10 rounded-xl items-center justify-center">
                       <Ionicons name="school" size={24} color="#3b82f6" />
@@ -424,11 +424,11 @@ export default function StudentsManagementScreen() {
                     </View>
                   </View>
 
-                  {selectedClass === classItem.id && (
-                    <Ionicons name="checkmark-circle" size={24} color="#10b981" />
-                  )}
+                  {selectedClass === classItem.id &&
+                <Ionicons name="checkmark-circle" size={24} color="#10b981" />
+                }
                 </TouchableOpacity>
-              ))}
+              )}
             </View>
           </ScrollView>
 
@@ -439,19 +439,19 @@ export default function StudentsManagementScreen() {
                 !selectedClass || assigning ? 'bg-blue-400' : 'bg-blue-500'
               )}
               onPress={handleAssignClassSimple}
-              disabled={!selectedClass || assigning}
-            >
-              {assigning ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : (
-                <Text className="text-white font-semibold text-lg">
+              disabled={!selectedClass || assigning}>
+
+              {assigning ?
+              <ActivityIndicator size="small" color="white" /> :
+
+              <Text className="text-white font-semibold text-lg">
                   Assign to Class
                 </Text>
-              )}
+              }
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
-    </View>
-  );
+    </View>);
+
 }

@@ -1,6 +1,6 @@
-// app/(teacher)/create-exam.tsx
+// app/(teacher)/create-exam.tsx - RTL SUPPORT ADDED
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Switch, Modal, FlatList, ActivityIndicator, Image, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Switch, Modal, FlatList, ActivityIndicator, Image, Platform, I18nManager } from 'react-native';
 import { Alert } from '@/utils/UniversalAlert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -11,8 +11,10 @@ import { useThemeContext } from '../../src/contexts/ThemeContext';
 import { designTokens } from '../../src/utils/designTokens';
 import * as FileSystem from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function CreateExamScreen() {
+  const { language, isRTL, t } = useTranslation();
   const { colors } = useThemeContext();
   const { user } = useAuth();
   const { edit } = useLocalSearchParams(); // Get edit parameter
@@ -23,7 +25,6 @@ export default function CreateExamScreen() {
   const [availableFrom, setAvailableFrom] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState<'dueDate' | 'availableFrom' | null>(null);
   const [showAvailableDatePicker, setShowAvailableDatePicker] = useState(false);
-    
 
   const [timed, setTimed] = useState(false);
   const [duration, setDuration] = useState('60');
@@ -41,8 +42,8 @@ export default function CreateExamScreen() {
       options: ['', ''],
       correct_answer: '',
       points: '1'
-    }
-  ]);
+    }]
+  );
   const [loading, setLoading] = useState(false);
   const [classes, setClasses] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
@@ -103,7 +104,7 @@ export default function CreateExamScreen() {
       await loadTeacherData();
     } catch (error) {
       console.error('Failed to load exam for editing:', error);
-      Alert.alert('Error', 'Failed to load exam data');
+      Alert.alert(t('common.error'), t('exams.loadFailed'));
       router.back();
     } finally {
       setLoadingData(false);
@@ -125,7 +126,7 @@ export default function CreateExamScreen() {
       }
     } catch (error) {
       console.error('Failed to load teacher classes:', error);
-      Alert.alert('Error', 'Failed to load classes');
+      Alert.alert(t('common.error'), t('exams.loadClassesFailed'));
     } finally {
       if (!edit) {
         setLoadingData(false);
@@ -145,7 +146,7 @@ export default function CreateExamScreen() {
       try {
         setLoadingSubjects(true);
         // Find the selected class to get its subjects
-        const selectedClass = classes.find(cls => cls.name === classLevel);
+        const selectedClass = classes.find((cls) => cls.name === classLevel);
         if (selectedClass) {
           const classesResponse = await apiService.getTeacherClasses();
           if (classesResponse.data.success) {
@@ -163,7 +164,7 @@ export default function CreateExamScreen() {
         }
       } catch (error) {
         console.error('Failed to load subjects:', error);
-        Alert.alert('Error', 'Failed to load subjects');
+        Alert.alert(t('common.error'), t('exams.loadSubjectsFailed'));
       } finally {
         setLoadingSubjects(false);
       }
@@ -181,8 +182,8 @@ export default function CreateExamScreen() {
         options: ['', ''],
         correct_answer: '',
         points: '1'
-      }
-    ]);
+      }]
+    );
   };
 
   const updateQuestion = (index: number, field: string, value: any) => {
@@ -215,7 +216,7 @@ export default function CreateExamScreen() {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: ['application/pdf', 'image/*'],
-        copyToCacheDirectory: true,
+        copyToCacheDirectory: true
       });
 
       if (result.assets && result.assets.length > 0) {
@@ -225,58 +226,69 @@ export default function CreateExamScreen() {
         // For images, we can upload as base64
         if (asset.mimeType?.startsWith('image/')) {
           try {
-            // Read as base64
-            const base64 = await FileSystem.readAsStringAsync(asset.uri, {
-              encoding: "base64",
+            // Use fetch to get binary data and convert to base64
+            const response = await fetch(asset.uri);
+            const blob = await response.blob();
+
+            // Convert blob to base64
+            const base64 = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => {
+                // Remove the data URL prefix
+                const base64String = (reader.result as string).split(',')[1];
+                resolve(base64String);
+              };
+              reader.onerror = reject;
+              reader.readAsDataURL(blob);
             });
 
             // Upload to backend
-            const response = await apiService.api.post('/upload/exam-image-base64', {
+            const uploadResponse = await apiService.api.post('/upload/exam-image-base64', {
               image: `data:${asset.mimeType};base64,${base64}`,
-              fileName: asset.name,
+              fileName: asset.name
             });
 
-            if (response.data.success && response.data.url) {
-              setAttachmentUrl(response.data.url);
+            if (uploadResponse.data.success && uploadResponse.data.url) {
+              setAttachmentUrl(uploadResponse.data.url);
               setAttachmentType('image');
               setAttachmentName(asset.name);
-              Alert.alert('Success', 'Image uploaded successfully!');
+              Alert.alert(t('common.success'), t('exams.imageUploaded'));
             }
           } catch (error) {
             console.error('Image upload error:', error);
-            Alert.alert('Error', 'Failed to upload image');
+            Alert.alert(t('common.error'), t('exams.imageUploadFailed'));
           }
         }
         // For PDFs, we need to handle differently
         else if (asset.mimeType === 'application/pdf') {
-          Alert.alert('Info', 'PDF upload functionality needs to be implemented. For now, you can add image attachments.');
+          Alert.alert(t('exams.info'), t('exams.pdfUploadInfo'));
         }
 
         setUploadingAttachment(false);
       }
     } catch (error) {
       console.error('Document picker error:', error);
-      Alert.alert('Error', 'Failed to pick document');
+      Alert.alert(t('common.error'), t('exams.documentPickFailed'));
       setUploadingAttachment(false);
     }
   };
 
   const handleSubmit = async () => {
     if (!title || !subject || !classLevel) {
-      Alert.alert('Error', 'Please fill in all required fields');
+      Alert.alert(t('common.error'), t('exams.fillRequired'));
       return;
     }
 
-    if (questions.some(q => !q.question ||
-      (q.type === 'mcq' && (!q.options.some((opt: string) => opt) || !q.correct_answer)) ||
-      (q.type === 'text' && !q.correct_answer))) {
-      Alert.alert('Error', 'Please complete all questions');
+    if (questions.some((q) => !q.question ||
+      q.type === 'mcq' && (!q.options.some((opt: string) => opt) || !q.correct_answer) ||
+      q.type === 'text' && !q.correct_answer)) {
+      Alert.alert(t('common.error'), t('exams.completeQuestions'));
       return;
     }
 
     // Validate date range
     if (availableFrom && dueDate && availableFrom >= dueDate) {
-      Alert.alert('Error', 'Available date must be before due date');
+      Alert.alert(t('common.error'), t('exams.dateValidation'));
       return;
     }
 
@@ -292,7 +304,7 @@ export default function CreateExamScreen() {
         allow_image_submissions: allowImageSubmissions,
         attachment_url: attachmentUrl,
         attachment_type: attachmentType,
-        questions: questions.map(q => ({
+        questions: questions.map((q) => ({
           ...q,
           points: parseInt(q.points) || 1
         })),
@@ -320,7 +332,7 @@ export default function CreateExamScreen() {
           if (!isEditing) {
             // Get students in the class to notify them
             const studentsResponse = await apiService.getStudentsByClass(
-              classes.find(c => c.name === classLevel)?.id || ''
+              classes.find((c) => c.name === classLevel)?.id || ''
             );
 
             if (studentsResponse.data.success) {
@@ -331,8 +343,8 @@ export default function CreateExamScreen() {
                 try {
                   await apiService.sendNotificationToUser(
                     student.user_id,
-                    'New Exam Created',
-                    `A new exam "${title}" has been created for your ${subject} class`,
+                    t('exams.newExamTitle'),
+                    `${t('exams.newExamBody')} "${title}" ${t('exams.forSubject')} ${subject}`,
                     {
                       screen: 'exam',
                       examId: response.data.data.id,
@@ -349,14 +361,14 @@ export default function CreateExamScreen() {
           console.log('Failed to send notifications:', notificationError);
         }
 
-        Alert.alert('Success', `Exam ${isEditing ? 'updated' : 'created'} successfully!`, [
-          { text: 'OK', onPress: () => router.back() }
-        ]);
+        Alert.alert(t('common.success'), `${isEditing ? t('exams.updated') : t('exams.created')}!`, [
+          { text: t('common.ok'), onPress: () => router.back() }]
+        );
       } else {
-        Alert.alert('Error', response.data.error || `Failed to ${isEditing ? 'update' : 'create'} exam`);
+        Alert.alert(t('common.error'), response.data.error || `${isEditing ? t('exams.updateFailed') : t('exams.createFailed')}`);
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message || `Failed to ${isEditing ? 'update' : 'create'} exam`);
+      Alert.alert(t('common.error'), error.message || `${isEditing ? t('exams.updateFailed') : t('exams.createFailed')}`);
     } finally {
       setLoading(false);
     }
@@ -369,21 +381,15 @@ export default function CreateExamScreen() {
     initialDate,
     title,
     mode = 'date' // 'date' | 'datetime'
-  }: {
-    visible: boolean;
-    onClose: () => void;
-    onConfirm: (date: Date) => void;
-    initialDate: Date;
-    title: string;
-    mode?: 'date' | 'datetime';
-  }) => {
+  }: { visible: boolean; onClose: () => void; onConfirm: (date: Date) => void; initialDate: Date; title: string; mode?: 'date' | 'datetime'; }) => {
+    const { t, isRTL } = useTranslation();
     const { colors } = useThemeContext();
     const [tempDate, setTempDate] = useState<Date>(initialDate);
     const [selectedMonth, setSelectedMonth] = useState(initialDate.getMonth());
     const [selectedYear, setSelectedYear] = useState(initialDate.getFullYear());
     const [selectedTime, setSelectedTime] = useState({
       hours: initialDate.getHours(),
-      minutes: initialDate.getMinutes(),
+      minutes: initialDate.getMinutes()
     });
 
     useEffect(() => {
@@ -393,7 +399,7 @@ export default function CreateExamScreen() {
         setSelectedYear(initialDate.getFullYear());
         setSelectedTime({
           hours: initialDate.getHours(),
-          minutes: initialDate.getMinutes(),
+          minutes: initialDate.getMinutes()
         });
       }
     }, [visible, initialDate]);
@@ -412,8 +418,9 @@ export default function CreateExamScreen() {
     };
 
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      t('months.january'), t('months.february'), t('months.march'), t('months.april'),
+      t('months.may'), t('months.june'), t('months.july'), t('months.august'),
+      t('months.september'), t('months.october'), t('months.november'), t('months.december')
     ];
 
     const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i - 2);
@@ -438,31 +445,32 @@ export default function CreateExamScreen() {
     }
 
     // Time picker component
-    const TimePicker = () => (
+    const TimePicker = () =>
       <View style={{
         padding: 16,
         borderRadius: 12,
         backgroundColor: colors.backgroundElevated,
         borderWidth: 1,
         borderColor: colors.border,
-        marginBottom: 16,
+        marginBottom: 16
       }}>
         <Text style={{
           fontSize: 16,
           fontWeight: '600',
           color: colors.textPrimary,
           marginBottom: 12,
+          textAlign: isRTL ? 'right' : 'left'
         }}>
-          Select Time
+          {t('exams.selectTime')}
         </Text>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
+        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
           {/* Hours */}
           <View style={{ alignItems: 'center' }}>
-            <Text style={{ fontSize: 14, color: colors.textSecondary, marginBottom: 8 }}>Hours</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={{ fontSize: 14, color: colors.textSecondary, marginBottom: 8, textAlign: isRTL ? 'right' : 'left' }}>{t('exams.hours')}</Text>
+            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
               <TouchableOpacity
-                onPress={() => setSelectedTime(prev => ({
+                onPress={() => setSelectedTime((prev) => ({
                   ...prev,
                   hours: prev.hours === 0 ? 23 : prev.hours - 1
                 }))}
@@ -472,7 +480,7 @@ export default function CreateExamScreen() {
                   borderRadius: 18,
                   backgroundColor: colors.primary,
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  justifyContent: 'center'
                 }}
               >
                 <Ionicons name="remove" size={16} color="#fff" />
@@ -483,13 +491,13 @@ export default function CreateExamScreen() {
                 fontWeight: '600',
                 color: colors.textPrimary,
                 minWidth: 40,
-                textAlign: 'center',
+                textAlign: 'center'
               }}>
                 {selectedTime.hours.toString().padStart(2, '0')}
               </Text>
 
               <TouchableOpacity
-                onPress={() => setSelectedTime(prev => ({
+                onPress={() => setSelectedTime((prev) => ({
                   ...prev,
                   hours: prev.hours === 23 ? 0 : prev.hours + 1
                 }))}
@@ -499,7 +507,7 @@ export default function CreateExamScreen() {
                   borderRadius: 18,
                   backgroundColor: colors.primary,
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  justifyContent: 'center'
                 }}
               >
                 <Ionicons name="add" size={16} color="#fff" />
@@ -509,10 +517,10 @@ export default function CreateExamScreen() {
 
           {/* Minutes */}
           <View style={{ alignItems: 'center' }}>
-            <Text style={{ fontSize: 14, color: colors.textSecondary, marginBottom: 8 }}>Minutes</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={{ fontSize: 14, color: colors.textSecondary, marginBottom: 8, textAlign: isRTL ? 'right' : 'left' }}>{t('exams.minutes')}</Text>
+            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
               <TouchableOpacity
-                onPress={() => setSelectedTime(prev => ({
+                onPress={() => setSelectedTime((prev) => ({
                   ...prev,
                   minutes: prev.minutes === 0 ? 55 : prev.minutes - 5
                 }))}
@@ -522,7 +530,7 @@ export default function CreateExamScreen() {
                   borderRadius: 18,
                   backgroundColor: colors.primary,
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  justifyContent: 'center'
                 }}
               >
                 <Ionicons name="remove" size={16} color="#fff" />
@@ -533,13 +541,13 @@ export default function CreateExamScreen() {
                 fontWeight: '600',
                 color: colors.textPrimary,
                 minWidth: 40,
-                textAlign: 'center',
+                textAlign: 'center'
               }}>
                 {selectedTime.minutes.toString().padStart(2, '0')}
               </Text>
 
               <TouchableOpacity
-                onPress={() => setSelectedTime(prev => ({
+                onPress={() => setSelectedTime((prev) => ({
                   ...prev,
                   minutes: prev.minutes === 55 ? 0 : prev.minutes + 5
                 }))}
@@ -549,7 +557,7 @@ export default function CreateExamScreen() {
                   borderRadius: 18,
                   backgroundColor: colors.primary,
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  justifyContent: 'center'
                 }}
               >
                 <Ionicons name="add" size={16} color="#fff" />
@@ -567,14 +575,13 @@ export default function CreateExamScreen() {
               paddingHorizontal: 12,
               paddingVertical: 8,
               backgroundColor: colors.background,
-              borderRadius: 8,
+              borderRadius: 8
             }}>
               {selectedTime.hours >= 12 ? 'PM' : 'AM'}
             </Text>
           </View>
         </View>
-      </View>
-    );
+      </View>;
 
     return (
       <Modal
@@ -593,8 +600,8 @@ export default function CreateExamScreen() {
             borderBottomColor: colors.border,
             backgroundColor: colors.backgroundElevated
           }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.textPrimary }}>
+            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }}>
                 {title}
               </Text>
               <TouchableOpacity
@@ -616,7 +623,7 @@ export default function CreateExamScreen() {
           <ScrollView style={{ flex: 1, padding: 20 }}>
             {/* Month/Year Selector */}
             <View style={{ marginBottom: 24 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
+              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', marginBottom: 16 }}>
                 <TouchableOpacity
                   onPress={() => {
                     if (selectedMonth > 0) {
@@ -628,10 +635,10 @@ export default function CreateExamScreen() {
                   }}
                   style={{ padding: 8 }}
                 >
-                  <Ionicons name="chevron-back" size={20} color={colors.textPrimary} />
+                  <Ionicons name={isRTL ? "chevron-forward" : "chevron-back"} size={20} color={colors.textPrimary} />
                 </TouchableOpacity>
 
-                <Text style={{ fontSize: 18, fontWeight: '600', color: colors.textPrimary }}>
+                <Text style={{ fontSize: 18, fontWeight: '600', color: colors.textPrimary, textAlign: 'center' }}>
                   {months[selectedMonth]} {selectedYear}
                 </Text>
 
@@ -646,14 +653,14 @@ export default function CreateExamScreen() {
                   }}
                   style={{ padding: 8 }}
                 >
-                  <Ionicons name="chevron-forward" size={20} color={colors.textPrimary} />
+                  <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={20} color={colors.textPrimary} />
                 </TouchableOpacity>
               </View>
 
               {/* Year Selector */}
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  {years.map((year) => (
+                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 8 }}>
+                  {years.map((year) =>
                     <TouchableOpacity
                       key={year}
                       onPress={() => {
@@ -670,12 +677,13 @@ export default function CreateExamScreen() {
                     >
                       <Text style={{
                         color: selectedYear === year ? '#fff' : colors.textPrimary,
-                        fontWeight: selectedYear === year ? '600' : 'normal'
+                        fontWeight: selectedYear === year ? '600' : 'normal',
+                        textAlign: 'center'
                       }}>
                         {year}
                       </Text>
                     </TouchableOpacity>
-                  ))}
+                  )}
                 </View>
               </ScrollView>
             </View>
@@ -683,8 +691,8 @@ export default function CreateExamScreen() {
             {/* Calendar */}
             <View style={{ marginBottom: 24 }}>
               {/* Weekday Headers */}
-              <View style={{ flexDirection: 'row', marginBottom: 8 }}>
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
+              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', marginBottom: 8 }}>
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) =>
                   <View key={index} style={{ flex: 1, alignItems: 'center' }}>
                     <Text style={{
                       fontSize: 14,
@@ -696,11 +704,11 @@ export default function CreateExamScreen() {
                       {day}
                     </Text>
                   </View>
-                ))}
+                )}
               </View>
 
               {/* Calendar Grid */}
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', flexWrap: 'wrap' }}>
                 {calendarDays.map((day, index) => {
                   const isSelected = day !== null &&
                     tempDate.getDate() === day &&
@@ -738,17 +746,18 @@ export default function CreateExamScreen() {
                       }}
                       disabled={day === null || isPast}
                     >
-                      {day !== null ? (
+                      {day !== null ?
                         <Text style={{
                           fontSize: 16,
                           color: isSelected ? '#fff' :
                             isToday ? colors.primary :
                               colors.textPrimary,
-                          fontWeight: isSelected || isToday ? '600' : 'normal'
+                          fontWeight: isSelected || isToday ? '600' : 'normal',
+                          textAlign: 'center'
                         }}>
                           {day}
-                        </Text>
-                      ) : null}
+                        </Text> :
+                        null}
                     </TouchableOpacity>
                   );
                 })}
@@ -770,27 +779,29 @@ export default function CreateExamScreen() {
               <Text style={{
                 fontSize: 14,
                 color: colors.textSecondary,
-                marginBottom: 4
+                marginBottom: 4,
+                textAlign: isRTL ? 'right' : 'left'
               }}>
-                Selected Date
+                {t('exams.selectedDate')}
               </Text>
               <Text style={{
                 fontSize: 18,
                 fontWeight: '600',
-                color: colors.textPrimary
+                color: colors.textPrimary,
+                textAlign: isRTL ? 'right' : 'left'
               }}>
-                {tempDate.toLocaleDateString('en-US', {
+                {tempDate.toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', {
                   weekday: 'long',
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'
                 })}
-                {mode === 'datetime' && ` at ${selectedTime.hours.toString().padStart(2, '0')}:${selectedTime.minutes.toString().padStart(2, '0')}`}
+                {mode === 'datetime' && ` ${t('exams.at')} ${selectedTime.hours.toString().padStart(2, '0')}:${selectedTime.minutes.toString().padStart(2, '0')}`}
               </Text>
             </View>
 
             {/* Action Buttons */}
-            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
+            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 12, marginBottom: 20 }}>
               <TouchableOpacity
                 onPress={handleCancel}
                 style={{
@@ -808,7 +819,7 @@ export default function CreateExamScreen() {
                   fontWeight: '600',
                   color: colors.textPrimary
                 }}>
-                  Cancel
+                  {t("common.cancel")}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -826,7 +837,7 @@ export default function CreateExamScreen() {
                   fontWeight: '600',
                   color: '#fff'
                 }}>
-                  Confirm
+                  {t("common.confirm")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -845,15 +856,15 @@ export default function CreateExamScreen() {
     title,
     displayKey = 'name',
     loading = false
-  }: {
-    visible: boolean;
-    onClose: () => void;
-    data: any[];
-    onSelect: (item: any) => void;
-    selectedValue: string;
-    title: string;
-    displayKey?: string;
-    loading?: boolean;
+  }: { 
+    visible: boolean; 
+    onClose: () => void; 
+    data: any[]; 
+    onSelect: (item: any) => void; 
+    selectedValue: string; 
+    title: string; 
+    displayKey?: string; 
+    loading?: boolean; 
   }) => (
     <Modal
       visible={visible}
@@ -874,7 +885,7 @@ export default function CreateExamScreen() {
           maxHeight: '50%'
         }}>
           <View style={{
-            flexDirection: 'row',
+            flexDirection: isRTL ? 'row-reverse' : 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
             paddingHorizontal: 20,
@@ -885,7 +896,8 @@ export default function CreateExamScreen() {
             <Text style={{
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
-              color: colors.textPrimary
+              color: colors.textPrimary,
+              textAlign: isRTL ? 'right' : 'left'
             } as any}>
               {title}
             </Text>
@@ -894,22 +906,23 @@ export default function CreateExamScreen() {
             </TouchableOpacity>
           </View>
 
-          {loading ? (
+          {loading ?
             <View style={{ padding: 30, alignItems: 'center' }}>
               <ActivityIndicator size="large" color={colors.primary} />
               <Text style={{
                 color: colors.textSecondary,
                 marginTop: 10,
-                fontSize: designTokens.typography.body.fontSize
+                fontSize: designTokens.typography.body.fontSize,
+                textAlign: 'center'
               }}>
-                Loading...
+                {t("common.loading")}
               </Text>
-            </View>
-          ) : (
+            </View> :
+
             <FlatList
               data={data}
               keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
-              renderItem={({ item }) => (
+              renderItem={({ item }) =>
                 <TouchableOpacity
                   onPress={() => {
                     onSelect(item);
@@ -918,37 +931,40 @@ export default function CreateExamScreen() {
                   style={{
                     padding: 16,
                     borderBottomWidth: 1,
-                    borderBottomColor: colors.border
+                    borderBottomColor: colors.border,
+                    flexDirection: isRTL ? 'row-reverse' : 'row',
+                    justifyContent: 'space-between'
                   }}
                 >
                   <Text style={{
                     fontSize: designTokens.typography.body.fontSize,
-                    color: selectedValue === item[displayKey] ? colors.primary : colors.textPrimary
+                    color: selectedValue === item[displayKey] ? colors.primary : colors.textPrimary,
+                    textAlign: isRTL ? 'right' : 'left'
                   }}>
                     {item[displayKey]}
                   </Text>
-                  {selectedValue === item[displayKey] && (
+                  {selectedValue === item[displayKey] &&
                     <Ionicons
                       name="checkmark"
                       size={20}
                       color={colors.primary}
-                      style={{ position: 'absolute', right: 16, top: 16 }}
                     />
-                  )}
+                  }
                 </TouchableOpacity>
-              )}
+              }
               ListEmptyComponent={
                 <View style={{ padding: 30, alignItems: 'center' }}>
                   <Text style={{
                     color: colors.textSecondary,
-                    fontSize: designTokens.typography.body.fontSize
+                    fontSize: designTokens.typography.body.fontSize,
+                    textAlign: 'center'
                   }}>
-                    No items available
+                    {t("common.noItems")}
                   </Text>
                 </View>
               }
             />
-          )}
+          }
         </View>
       </View>
     </Modal>
@@ -966,9 +982,10 @@ export default function CreateExamScreen() {
         <Text style={{
           color: colors.textSecondary,
           marginTop: designTokens.spacing.md,
-          fontSize: designTokens.typography.body.fontSize
+          fontSize: designTokens.typography.body.fontSize,
+          textAlign: 'center'
         }}>
-          {isEditing ? 'Loading exam...' : 'Loading classes...'}
+          {isEditing ? t("exams.loadingExam") : t("exams.loadingClasses")}
         </Text>
       </View>
     );
@@ -984,9 +1001,10 @@ export default function CreateExamScreen() {
           fontSize: designTokens.typography.title1.fontSize,
           fontWeight: designTokens.typography.title1.fontWeight,
           color: colors.textPrimary,
-          marginBottom: designTokens.spacing.lg
+          marginBottom: designTokens.spacing.lg,
+          textAlign: isRTL ? 'right' : 'left'
         } as any}>
-          {isEditing ? 'Edit Exam' : 'Create New Exam'}
+          {isEditing ? t("exams.edit") : t("exams.create")}
         </Text>
 
         {/* Basic Info Card */}
@@ -1001,9 +1019,10 @@ export default function CreateExamScreen() {
             fontSize: designTokens.typography.title2.fontSize,
             fontWeight: designTokens.typography.title2.fontWeight,
             color: colors.textPrimary,
-            marginBottom: designTokens.spacing.lg
+            marginBottom: designTokens.spacing.lg,
+            textAlign: isRTL ? 'right' : 'left'
           } as any}>
-            Exam Details
+            {t("exams.details")}
           </Text>
 
           <View style={{ marginBottom: designTokens.spacing.lg }}>
@@ -1011,14 +1030,15 @@ export default function CreateExamScreen() {
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textSecondary,
               marginBottom: designTokens.spacing.xs,
-              fontWeight: '500'
+              fontWeight: '500',
+              textAlign: isRTL ? 'right' : 'left'
             }}>
-              Exam Title *
+              {t("exams.title")} *
             </Text>
             <TextInput
               value={title}
               onChangeText={setTitle}
-              placeholder="Enter exam title"
+              placeholder={t("exams.title")}
               placeholderTextColor={colors.textTertiary}
               style={{
                 backgroundColor: colors.background,
@@ -1027,7 +1047,8 @@ export default function CreateExamScreen() {
                 fontSize: designTokens.typography.body.fontSize,
                 color: colors.textPrimary,
                 borderWidth: 1,
-                borderColor: colors.border
+                borderColor: colors.border,
+                textAlign: isRTL ? 'right' : 'left'
               }}
             />
           </View>
@@ -1037,9 +1058,10 @@ export default function CreateExamScreen() {
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textSecondary,
               marginBottom: designTokens.spacing.xs,
-              fontWeight: '500'
+              fontWeight: '500',
+              textAlign: isRTL ? 'right' : 'left'
             }}>
-              Class *
+              {t("homework.classRequired")}
             </Text>
             <TouchableOpacity
               onPress={() => setShowClassPicker(true)}
@@ -1049,18 +1071,19 @@ export default function CreateExamScreen() {
                 padding: designTokens.spacing.md,
                 borderWidth: 1,
                 borderColor: colors.border,
-                flexDirection: 'row',
+                flexDirection: isRTL ? 'row-reverse' : 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center'
               }}
             >
               <Text style={{
                 fontSize: designTokens.typography.body.fontSize,
-                color: classLevel ? colors.textPrimary : colors.textTertiary
+                color: classLevel ? colors.textPrimary : colors.textTertiary,
+                textAlign: isRTL ? 'right' : 'left'
               }}>
-                {classLevel || 'Select class'}
+                {classLevel || t("homework.selectClass")}
               </Text>
-              <Ionicons name="chevron-down" size={20} color={colors.textTertiary} />
+              <Ionicons name={isRTL ? "chevron-forward" : "chevron-down"} size={20} color={colors.textTertiary} />
             </TouchableOpacity>
           </View>
 
@@ -1069,9 +1092,10 @@ export default function CreateExamScreen() {
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textSecondary,
               marginBottom: designTokens.spacing.xs,
-              fontWeight: '500'
+              fontWeight: '500',
+              textAlign: isRTL ? 'right' : 'left'
             }}>
-              Subject *
+              {t("homework.subjectRequired")}
             </Text>
             <TouchableOpacity
               onPress={() => classLevel ? setShowSubjectPicker(true) : null}
@@ -1082,7 +1106,7 @@ export default function CreateExamScreen() {
                 padding: designTokens.spacing.md,
                 borderWidth: 1,
                 borderColor: colors.border,
-                flexDirection: 'row',
+                flexDirection: isRTL ? 'row-reverse' : 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 opacity: classLevel ? 1 : 0.5
@@ -1090,25 +1114,27 @@ export default function CreateExamScreen() {
             >
               <Text style={{
                 fontSize: designTokens.typography.body.fontSize,
-                color: subject && classLevel ? colors.textPrimary : colors.textTertiary
+                color: subject && classLevel ? colors.textPrimary : colors.textTertiary,
+                textAlign: isRTL ? 'right' : 'left'
               }}>
-                {subject && classLevel ? subject : classLevel ? 'Select subject' : 'Select class first'}
+                {subject && classLevel ? subject : classLevel ? t("homework.selectSubject") : t("homework.selectClassFirst")}
               </Text>
-              <Ionicons name="chevron-down" size={20} color={colors.textTertiary} />
+              <Ionicons name={isRTL ? "chevron-forward" : "chevron-down"} size={20} color={colors.textTertiary} />
             </TouchableOpacity>
 
-            {loadingSubjects && (
-              <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center' }}>
+            {loadingSubjects &&
+              <View style={{ marginTop: 8, flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center' }}>
                 <ActivityIndicator size="small" color={colors.primary} />
                 <Text style={{
                   color: colors.textSecondary,
                   fontSize: designTokens.typography.caption1.fontSize,
-                  marginLeft: 8
+                  marginHorizontal: 8,
+                  textAlign: isRTL ? 'right' : 'left'
                 }}>
-                  Loading subjects...
+                  {t("exams.loadingSubjects")}
                 </Text>
               </View>
-            )}
+            }
           </View>
 
           {/* Available From */}
@@ -1117,9 +1143,10 @@ export default function CreateExamScreen() {
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textSecondary,
               marginBottom: designTokens.spacing.xs,
-              fontWeight: '500'
+              fontWeight: '500',
+              textAlign: isRTL ? 'right' : 'left'
             }}>
-              Available From
+              {t("exams.availableFrom")}
             </Text>
             <TouchableOpacity
               onPress={() => setShowDatePicker('availableFrom')}
@@ -1129,16 +1156,17 @@ export default function CreateExamScreen() {
                 padding: designTokens.spacing.md,
                 borderWidth: 1,
                 borderColor: colors.border,
-                flexDirection: 'row',
+                flexDirection: isRTL ? 'row-reverse' : 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center'
               }}
             >
               <Text style={{
                 fontSize: designTokens.typography.body.fontSize,
-                color: availableFrom ? colors.textPrimary : colors.textTertiary
+                color: availableFrom ? colors.textPrimary : colors.textTertiary,
+                textAlign: isRTL ? 'right' : 'left'
               }}>
-                {availableFrom ? availableFrom.toLocaleString() : 'Select available date/time'}
+                {availableFrom ? availableFrom.toLocaleString(language === 'ar' ? 'ar-SA' : 'en-US') : t("exams.selectAvailableDate")}
               </Text>
               <Ionicons name="calendar" size={20} color={colors.textTertiary} />
             </TouchableOpacity>
@@ -1150,9 +1178,10 @@ export default function CreateExamScreen() {
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textSecondary,
               marginBottom: designTokens.spacing.xs,
-              fontWeight: '500'
+              fontWeight: '500',
+              textAlign: isRTL ? 'right' : 'left'
             }}>
-              Due Date
+              {t("exams.dueDate")}
             </Text>
             <TouchableOpacity
               onPress={() => setShowDatePicker('dueDate')}
@@ -1162,16 +1191,17 @@ export default function CreateExamScreen() {
                 padding: designTokens.spacing.md,
                 borderWidth: 1,
                 borderColor: colors.border,
-                flexDirection: 'row',
+                flexDirection: isRTL ? 'row-reverse' : 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center'
               }}
             >
               <Text style={{
                 fontSize: designTokens.typography.body.fontSize,
-                color: dueDate ? colors.textPrimary : colors.textTertiary
+                color: dueDate ? colors.textPrimary : colors.textTertiary,
+                textAlign: isRTL ? 'right' : 'left'
               }}>
-                {dueDate ? dueDate.toLocaleDateString() : 'Select due date'}
+                {dueDate ? dueDate.toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US') : t("exams.selectDueDate")}
               </Text>
               <Ionicons name="calendar" size={20} color={colors.textTertiary} />
             </TouchableOpacity>
@@ -1190,31 +1220,34 @@ export default function CreateExamScreen() {
             fontSize: designTokens.typography.title2.fontSize,
             fontWeight: designTokens.typography.title2.fontWeight,
             color: colors.textPrimary,
-            marginBottom: designTokens.spacing.lg
+            marginBottom: designTokens.spacing.lg,
+            textAlign: isRTL ? 'right' : 'left'
           } as any}>
-            Exam Settings
+            {t("exams.settings")}
           </Text>
 
           <View style={{
-            flexDirection: 'row',
+            flexDirection: isRTL ? 'row-reverse' : 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: designTokens.spacing.lg
           }}>
-            <View>
+            <View style={{ flex: 1, alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
               <Text style={{
                 fontSize: designTokens.typography.body.fontSize,
                 color: colors.textPrimary,
-                fontWeight: '500'
+                fontWeight: '500',
+                textAlign: isRTL ? 'right' : 'left'
               }}>
-                Timed Exam
+                {t("exams.timed")}
               </Text>
               <Text style={{
                 fontSize: designTokens.typography.footnote.fontSize,
                 color: colors.textSecondary,
-                marginTop: 2
+                marginTop: 2,
+                textAlign: isRTL ? 'right' : 'left'
               }}>
-                Set time limit for exam
+                {t("exams.timedDesc")}
               </Text>
             </View>
             <Switch
@@ -1222,18 +1255,20 @@ export default function CreateExamScreen() {
               onValueChange={setTimed}
               trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor={timed ? '#fff' : '#f4f3f4'}
+              style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }}
             />
           </View>
 
-          {timed && (
+          {timed &&
             <View style={{ marginBottom: designTokens.spacing.lg }}>
               <Text style={{
                 fontSize: designTokens.typography.footnote.fontSize,
                 color: colors.textSecondary,
                 marginBottom: designTokens.spacing.xs,
-                fontWeight: '500'
+                fontWeight: '500',
+                textAlign: isRTL ? 'right' : 'left'
               }}>
-                Duration (minutes)
+                {t("exams.duration")} (minutes)
               </Text>
               <TextInput
                 value={duration}
@@ -1248,32 +1283,35 @@ export default function CreateExamScreen() {
                   fontSize: designTokens.typography.body.fontSize,
                   color: colors.textPrimary,
                   borderWidth: 1,
-                  borderColor: colors.border
+                  borderColor: colors.border,
+                  textAlign: isRTL ? 'right' : 'left'
                 }}
               />
             </View>
-          )}
+          }
 
           <View style={{
-            flexDirection: 'row',
+            flexDirection: isRTL ? 'row-reverse' : 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: designTokens.spacing.lg
           }}>
-            <View>
+            <View style={{ flex: 1, alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
               <Text style={{
                 fontSize: designTokens.typography.body.fontSize,
                 color: colors.textPrimary,
-                fontWeight: '500'
+                fontWeight: '500',
+                textAlign: isRTL ? 'right' : 'left'
               }}>
-                Allow Retake
+                {t("exams.allowRetake")}
               </Text>
               <Text style={{
                 fontSize: designTokens.typography.footnote.fontSize,
                 color: colors.textSecondary,
-                marginTop: 2
+                marginTop: 2,
+                textAlign: isRTL ? 'right' : 'left'
               }}>
-                Students can retake exam
+                {t("exams.allowRetakeDesc")}
               </Text>
             </View>
             <Switch
@@ -1281,29 +1319,32 @@ export default function CreateExamScreen() {
               onValueChange={setAllowRetake}
               trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor={allowRetake ? '#fff' : '#f4f3f4'}
+              style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }}
             />
           </View>
 
           <View style={{
-            flexDirection: 'row',
+            flexDirection: isRTL ? 'row-reverse' : 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: designTokens.spacing.lg
           }}>
-            <View>
+            <View style={{ flex: 1, alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
               <Text style={{
                 fontSize: designTokens.typography.body.fontSize,
                 color: colors.textPrimary,
-                fontWeight: '500'
+                fontWeight: '500',
+                textAlign: isRTL ? 'right' : 'left'
               }}>
-                Random Order
+                {t("exams.randomOrder")}
               </Text>
               <Text style={{
                 fontSize: designTokens.typography.footnote.fontSize,
                 color: colors.textSecondary,
-                marginTop: 2
+                marginTop: 2,
+                textAlign: isRTL ? 'right' : 'left'
               }}>
-                Shuffle questions order
+                {t("exams.randomOrderDesc")}
               </Text>
             </View>
             <Switch
@@ -1311,6 +1352,7 @@ export default function CreateExamScreen() {
               onValueChange={setRandomOrder}
               trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor={randomOrder ? '#fff' : '#f4f3f4'}
+              style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }}
             />
           </View>
 
@@ -1325,31 +1367,34 @@ export default function CreateExamScreen() {
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: colors.textPrimary,
-              marginBottom: designTokens.spacing.md
+              marginBottom: designTokens.spacing.md,
+              textAlign: isRTL ? 'right' : 'left'
             } as any}>
-              Advanced Options
+              {t("exams.advancedOptions")}
             </Text>
 
             <View style={{
-              flexDirection: 'row',
+              flexDirection: isRTL ? 'row-reverse' : 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
               marginBottom: designTokens.spacing.lg
             }}>
-              <View>
+              <View style={{ flex: 1, alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
                 <Text style={{
                   fontSize: designTokens.typography.body.fontSize,
                   color: colors.textPrimary,
-                  fontWeight: '500'
+                  fontWeight: '500',
+                  textAlign: isRTL ? 'right' : 'left'
                 }}>
-                  Allow Image Submissions
+                  {t("exams.allowImageSubmissions")}
                 </Text>
                 <Text style={{
                   fontSize: designTokens.typography.footnote.fontSize,
                   color: colors.textSecondary,
-                  marginTop: 2
+                  marginTop: 2,
+                  textAlign: isRTL ? 'right' : 'left'
                 }}>
-                  Students can submit photos of paper answers
+                  {t("exams.allowImageSubmissionsDesc")}
                 </Text>
               </View>
               <Switch
@@ -1357,6 +1402,7 @@ export default function CreateExamScreen() {
                 onValueChange={setAllowImageSubmissions}
                 trackColor={{ false: colors.border, true: colors.primary }}
                 thumbColor={allowImageSubmissions ? '#fff' : '#f4f3f4'}
+                style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }}
               />
             </View>
 
@@ -1365,12 +1411,13 @@ export default function CreateExamScreen() {
                 fontSize: designTokens.typography.footnote.fontSize,
                 color: colors.textSecondary,
                 marginBottom: designTokens.spacing.xs,
-                fontWeight: '500'
+                fontWeight: '500',
+                textAlign: isRTL ? 'right' : 'left'
               }}>
-                Exam Attachment (Optional)
+                {t("exams.attachment")}
               </Text>
 
-              {!attachmentUrl ? (
+              {!attachmentUrl ?
                 <TouchableOpacity
                   onPress={pickAndUploadAttachment}
                   disabled={uploadingAttachment}
@@ -1380,36 +1427,38 @@ export default function CreateExamScreen() {
                     padding: designTokens.spacing.md,
                     borderWidth: 1,
                     borderColor: colors.border,
-                    flexDirection: 'row',
+                    flexDirection: isRTL ? 'row-reverse' : 'row',
                     justifyContent: 'center',
                     alignItems: 'center'
                   }}
                 >
-                  {uploadingAttachment ? (
+                  {uploadingAttachment ?
                     <>
                       <ActivityIndicator size="small" color={colors.primary} />
                       <Text style={{
                         fontSize: designTokens.typography.body.fontSize,
                         color: colors.textPrimary,
-                        marginLeft: 8
+                        marginHorizontal: 8,
+                        textAlign: isRTL ? 'right' : 'left'
                       }}>
-                        Uploading...
+                        {t("exams.uploading")}
                       </Text>
-                    </>
-                  ) : (
+                    </> :
+
                     <>
                       <Ionicons name="attach" size={20} color={colors.textTertiary} />
                       <Text style={{
                         fontSize: designTokens.typography.body.fontSize,
                         color: colors.textPrimary,
-                        marginLeft: 8
+                        marginHorizontal: 8,
+                        textAlign: isRTL ? 'right' : 'left'
                       }}>
-                        Add PDF/Image Attachment
+                        {t("exams.addAttachment")}
                       </Text>
                     </>
-                  )}
-                </TouchableOpacity>
-              ) : (
+                  }
+                </TouchableOpacity> :
+
                 <View style={{
                   backgroundColor: colors.background,
                   borderRadius: designTokens.borderRadius.lg,
@@ -1417,20 +1466,22 @@ export default function CreateExamScreen() {
                   borderWidth: 1,
                   borderColor: colors.border
                 }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <View style={{ flex: 1, alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
                       <Text style={{
                         fontSize: designTokens.typography.body.fontSize,
                         color: colors.textPrimary,
-                        marginBottom: 4
+                        marginBottom: 4,
+                        textAlign: isRTL ? 'right' : 'left'
                       }} numberOfLines={1}>
-                        {attachmentName || 'Attachment'}
+                        {attachmentName || t("exams.attachment")}
                       </Text>
                       <Text style={{
                         fontSize: designTokens.typography.caption1.fontSize,
-                        color: colors.textSecondary
+                        color: colors.textSecondary,
+                        textAlign: isRTL ? 'right' : 'left'
                       }}>
-                        {attachmentType?.toUpperCase()} File
+                        {attachmentType?.toUpperCase()} {t("exams.file")}
                       </Text>
                     </View>
                     <TouchableOpacity
@@ -1447,7 +1498,7 @@ export default function CreateExamScreen() {
                     </TouchableOpacity>
                   </View>
 
-                  {attachmentType === 'image' && (
+                  {attachmentType === 'image' &&
                     <Image
                       source={{ uri: attachmentUrl }}
                       style={{
@@ -1458,17 +1509,18 @@ export default function CreateExamScreen() {
                       }}
                       resizeMode="cover"
                     />
-                  )}
+                  }
                 </View>
-              )}
+              }
 
               <Text style={{
                 fontSize: designTokens.typography.caption1.fontSize,
                 color: colors.textTertiary,
                 marginTop: 8,
-                fontStyle: 'italic'
+                fontStyle: 'italic',
+                textAlign: isRTL ? 'right' : 'left'
               }}>
-                Upload a PDF or image to replace questions. Students will see this file instead of individual questions.
+                {t("exams.attachmentDesc")}
               </Text>
             </View>
           </View>
@@ -1483,7 +1535,7 @@ export default function CreateExamScreen() {
           marginBottom: designTokens.spacing.lg
         }}>
           <View style={{
-            flexDirection: 'row',
+            flexDirection: isRTL ? 'row-reverse' : 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: designTokens.spacing.lg
@@ -1491,9 +1543,10 @@ export default function CreateExamScreen() {
             <Text style={{
               fontSize: designTokens.typography.title2.fontSize,
               fontWeight: designTokens.typography.title2.fontWeight,
-              color: colors.textPrimary
+              color: colors.textPrimary,
+              textAlign: isRTL ? 'right' : 'left'
             } as any}>
-              Questions ({questions.length})
+              {t("exams.questions")} ({questions.length})
             </Text>
             <TouchableOpacity
               onPress={addQuestion}
@@ -1510,7 +1563,7 @@ export default function CreateExamScreen() {
             </TouchableOpacity>
           </View>
 
-          {questions.map((question, qIndex) => (
+          {questions.map((question, qIndex) =>
             <View
               key={qIndex}
               style={{
@@ -1523,7 +1576,7 @@ export default function CreateExamScreen() {
               }}
             >
               <View style={{
-                flexDirection: 'row',
+                flexDirection: isRTL ? 'row-reverse' : 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginBottom: designTokens.spacing.md
@@ -1531,20 +1584,21 @@ export default function CreateExamScreen() {
                 <Text style={{
                   fontSize: designTokens.typography.body.fontSize,
                   color: colors.textPrimary,
-                  fontWeight: '600'
+                  fontWeight: '600',
+                  textAlign: isRTL ? 'right' : 'left'
                 }}>
-                  Question {qIndex + 1}
+                  {t("exams.question")} {qIndex + 1}
                 </Text>
-                {questions.length > 1 && (
+                {questions.length > 1 &&
                   <TouchableOpacity onPress={() => removeQuestion(qIndex)}>
                     <Ionicons name="trash" size={20} color="#EF4444" />
                   </TouchableOpacity>
-                )}
+                }
               </View>
 
               {/* Question Type Selector - Modern Pills */}
               <View style={{
-                flexDirection: 'row',
+                flexDirection: isRTL ? 'row-reverse' : 'row',
                 marginBottom: designTokens.spacing.md,
                 backgroundColor: colors.backgroundElevated,
                 borderRadius: designTokens.borderRadius.lg,
@@ -1563,9 +1617,10 @@ export default function CreateExamScreen() {
                   <Text style={{
                     fontSize: designTokens.typography.footnote.fontSize,
                     color: question.type === 'mcq' ? '#fff' : colors.textSecondary,
-                    fontWeight: question.type === 'mcq' ? '600' : 'normal'
+                    fontWeight: question.type === 'mcq' ? '600' : 'normal',
+                    textAlign: 'center'
                   }}>
-                    Multiple Choice
+                    {t("homework.multipleChoice")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -1581,9 +1636,10 @@ export default function CreateExamScreen() {
                   <Text style={{
                     fontSize: designTokens.typography.footnote.fontSize,
                     color: question.type === 'text' ? '#fff' : colors.textSecondary,
-                    fontWeight: question.type === 'text' ? '600' : 'normal'
+                    fontWeight: question.type === 'text' ? '600' : 'normal',
+                    textAlign: 'center'
                   }}>
-                    Text Answer
+                    {t("homework.textAnswer")}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -1594,14 +1650,15 @@ export default function CreateExamScreen() {
                   fontSize: designTokens.typography.footnote.fontSize,
                   color: colors.textSecondary,
                   marginBottom: designTokens.spacing.xs,
-                  fontWeight: '500'
+                  fontWeight: '500',
+                  textAlign: isRTL ? 'right' : 'left'
                 }}>
-                  Question *
+                  {t("exams.question")} *
                 </Text>
                 <TextInput
                   value={question.question}
                   onChangeText={(text) => updateQuestion(qIndex, 'question', text)}
-                  placeholder="Enter your question"
+                  placeholder={t("exams.enterQuestion")}
                   placeholderTextColor={colors.textTertiary}
                   multiline
                   style={{
@@ -1612,16 +1669,17 @@ export default function CreateExamScreen() {
                     color: colors.textPrimary,
                     borderWidth: 1,
                     borderColor: colors.border,
-                    minHeight: 80
+                    minHeight: 80,
+                    textAlign: isRTL ? 'right' : 'left'
                   }}
                 />
               </View>
 
               {/* Options for Multiple Choice */}
-              {question.type === 'mcq' && (
+              {question.type === 'mcq' &&
                 <View style={{ marginBottom: designTokens.spacing.md }}>
                   <View style={{
-                    flexDirection: 'row',
+                    flexDirection: isRTL ? 'row-reverse' : 'row',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     marginBottom: designTokens.spacing.xs
@@ -1629,14 +1687,15 @@ export default function CreateExamScreen() {
                     <Text style={{
                       fontSize: designTokens.typography.footnote.fontSize,
                       color: colors.textSecondary,
-                      fontWeight: '500'
+                      fontWeight: '500',
+                      textAlign: isRTL ? 'right' : 'left'
                     }}>
-                      Options *
+                      {t("exams.options")} *
                     </Text>
                     <TouchableOpacity
                       onPress={() => addOption(qIndex)}
                       style={{
-                        flexDirection: 'row',
+                        flexDirection: isRTL ? 'row-reverse' : 'row',
                         alignItems: 'center'
                       }}
                     >
@@ -1644,16 +1703,17 @@ export default function CreateExamScreen() {
                       <Text style={{
                         fontSize: designTokens.typography.caption1.fontSize,
                         color: colors.primary,
-                        marginLeft: 4
+                        marginHorizontal: 4,
+                        textAlign: isRTL ? 'right' : 'left'
                       }}>
-                        Add
+                        {t("common.add")}
                       </Text>
                     </TouchableOpacity>
                   </View>
 
-                  {question.options.map((option: string, optIndex: number) => (
+                  {question.options.map((option: string, optIndex: number) =>
                     <View key={optIndex} style={{
-                      flexDirection: 'row',
+                      flexDirection: isRTL ? 'row-reverse' : 'row',
                       alignItems: 'center',
                       marginBottom: 8
                     }}>
@@ -1666,11 +1726,12 @@ export default function CreateExamScreen() {
                         borderColor: colors.border,
                         alignItems: 'center',
                         justifyContent: 'center',
-                        marginRight: 8
+                        marginHorizontal: 8
                       }}>
                         <Text style={{
                           fontSize: designTokens.typography.caption2.fontSize,
-                          color: colors.textSecondary
+                          color: colors.textSecondary,
+                          textAlign: 'center'
                         }}>
                           {String.fromCharCode(65 + optIndex)}
                         </Text>
@@ -1678,7 +1739,7 @@ export default function CreateExamScreen() {
                       <TextInput
                         value={option}
                         onChangeText={(text) => updateOption(qIndex, optIndex, text)}
-                        placeholder={`Option ${String.fromCharCode(65 + optIndex)}`}
+                        placeholder={`${t("exams.option")} ${String.fromCharCode(65 + optIndex)}`}
                         placeholderTextColor={colors.textTertiary}
                         style={{
                           flex: 1,
@@ -1688,25 +1749,27 @@ export default function CreateExamScreen() {
                           fontSize: designTokens.typography.body.fontSize,
                           color: colors.textPrimary,
                           borderWidth: 1,
-                          borderColor: colors.border
+                          borderColor: colors.border,
+                          textAlign: isRTL ? 'right' : 'left'
                         }}
                       />
-                      {question.options.length > 2 && (
+
+                      {question.options.length > 2 &&
                         <TouchableOpacity
                           onPress={() => {
                             const updatedQuestions = [...questions];
                             updatedQuestions[qIndex].options.splice(optIndex, 1);
                             setQuestions(updatedQuestions);
                           }}
-                          style={{ marginLeft: 8 }}
+                          style={{ marginHorizontal: 8 }}
                         >
                           <Ionicons name="close-circle" size={24} color="#EF4444" />
                         </TouchableOpacity>
-                      )}
+                      }
                     </View>
-                  ))}
+                  )}
                 </View>
-              )}
+              }
 
               {/* Correct Answer */}
               <View style={{ marginBottom: designTokens.spacing.md }}>
@@ -1714,18 +1777,19 @@ export default function CreateExamScreen() {
                   fontSize: designTokens.typography.footnote.fontSize,
                   color: colors.textSecondary,
                   marginBottom: designTokens.spacing.xs,
-                  fontWeight: '500'
+                  fontWeight: '500',
+                  textAlign: isRTL ? 'right' : 'left'
                 }}>
-                  {question.type === 'mcq' ? 'Correct Answer *' : 'Expected Answer *'}
+                  {question.type === 'mcq' ? t("exams.correctAnswer") : t("exams.expectedAnswer")} *
                 </Text>
 
-                {question.type === 'mcq' ? (
+                {question.type === 'mcq' ?
                   <View style={{
-                    flexDirection: 'row',
+                    flexDirection: isRTL ? 'row-reverse' : 'row',
                     flexWrap: 'wrap',
                     gap: 8
                   }}>
-                    {question.options.map((option: string, optIndex: number) => (
+                    {question.options.map((option: string, optIndex: number) =>
                       <TouchableOpacity
                         key={optIndex}
                         onPress={() => updateQuestion(qIndex, 'correct_answer', option)}
@@ -1741,18 +1805,19 @@ export default function CreateExamScreen() {
                         <Text style={{
                           fontSize: designTokens.typography.footnote.fontSize,
                           color: question.correct_answer === option ? '#fff' : colors.textPrimary,
-                          fontWeight: question.correct_answer === option ? '600' : 'normal'
+                          fontWeight: question.correct_answer === option ? '600' : 'normal',
+                          textAlign: 'center'
                         }}>
                           {String.fromCharCode(65 + optIndex)}
                         </Text>
                       </TouchableOpacity>
-                    ))}
-                  </View>
-                ) : (
+                    )}
+                  </View> :
+
                   <TextInput
                     value={question.correct_answer}
                     onChangeText={(text) => updateQuestion(qIndex, 'correct_answer', text)}
-                    placeholder="Enter expected answer"
+                    placeholder={t("exams.enterExpectedAnswer")}
                     placeholderTextColor={colors.textTertiary}
                     multiline
                     style={{
@@ -1763,10 +1828,11 @@ export default function CreateExamScreen() {
                       color: colors.textPrimary,
                       borderWidth: 1,
                       borderColor: colors.border,
-                      minHeight: 60
+                      minHeight: 60,
+                      textAlign: isRTL ? 'right' : 'left'
                     }}
                   />
-                )}
+                }
               </View>
 
               {/* Points */}
@@ -1775,12 +1841,13 @@ export default function CreateExamScreen() {
                   fontSize: designTokens.typography.footnote.fontSize,
                   color: colors.textSecondary,
                   marginBottom: designTokens.spacing.xs,
-                  fontWeight: '500'
+                  fontWeight: '500',
+                  textAlign: isRTL ? 'right' : 'left'
                 }}>
-                  Points
+                  {t("homework.points")}
                 </Text>
                 <View style={{
-                  flexDirection: 'row',
+                  flexDirection: isRTL ? 'row-reverse' : 'row',
                   alignItems: 'center'
                 }}>
                   <TouchableOpacity
@@ -1835,7 +1902,7 @@ export default function CreateExamScreen() {
                 </View>
               </View>
             </View>
-          ))}
+          )}
         </View>
 
         {/* Submit Button */}
@@ -1854,9 +1921,13 @@ export default function CreateExamScreen() {
           <Text style={{
             fontSize: designTokens.typography.body.fontSize,
             fontWeight: '600',
-            color: '#fff'
+            color: '#fff',
+            textAlign: 'center'
           }}>
-            {loading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Exam' : 'Create Exam')}
+            {loading ? 
+              (isEditing ? t("exams.updating") : t("exams.creating")) : 
+              (isEditing ? t("exams.updateExam") : t("dashboard.createExam"))
+            }
           </Text>
         </TouchableOpacity>
       </View>
@@ -1871,7 +1942,7 @@ export default function CreateExamScreen() {
           setSubject(''); // Reset subject when class changes
         }}
         selectedValue={classLevel}
-        title="Select Class"
+        title={t("exams.selectClass")}
         displayKey="name"
       />
 
@@ -1881,10 +1952,11 @@ export default function CreateExamScreen() {
         data={subjects}
         onSelect={(item) => setSubject(item.name)}
         selectedValue={subject}
-        title="Select Subject"
+        title={t("exams.selectSubject")}
         displayKey="name"
         loading={loadingSubjects}
       />
+
       <DatePickerModal
         visible={showDatePicker !== null}
         onClose={() => setShowDatePicker(null)}
@@ -1896,11 +1968,11 @@ export default function CreateExamScreen() {
           }
         }}
         initialDate={
-          showDatePicker === 'dueDate'
-            ? dueDate || new Date()
-            : availableFrom || new Date()
+          showDatePicker === 'dueDate' ?
+            dueDate || new Date() :
+            availableFrom || new Date()
         }
-        title={`Select ${showDatePicker === 'dueDate' ? 'Due Date' : 'Available From'}`}
+        title={`${t("exams.select")} ${showDatePicker === 'dueDate' ? t("exams.dueDate") : t("exams.availableFrom")}`}
         mode={showDatePicker === 'availableFrom' ? 'datetime' : 'date'}
       />
     </ScrollView>

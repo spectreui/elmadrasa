@@ -1,4 +1,4 @@
-// app/(teacher)/profile.tsx
+// app/(teacher)/profile.tsx - RTL SUPPORT ADDED
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -8,13 +8,20 @@ import {
   Switch,
   ActivityIndicator,
   RefreshControl,
+  StyleSheet,
+  Dimensions,
+  I18nManager
 } from 'react-native';
 import { Alert } from '@/utils/UniversalAlert';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useThemeContext } from '../../src/contexts/ThemeContext';
+import { useLanguage } from '../../src/contexts/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { designTokens } from '../../src/utils/designTokens';
+import Animated, { FadeInUp, Layout } from 'react-native-reanimated';
+
+const { width } = Dimensions.get('window');
 
 interface TeacherStats {
   totalStudents: number;
@@ -27,10 +34,10 @@ interface TeacherStats {
 export default function TeacherProfileScreen() {
   const { user, logout, isAuthenticated } = useAuth();
   const { colors, isDark, toggleTheme } = useThemeContext();
+  const { language, setLanguage, isRTL, t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'profile' | 'settings'>('profile');
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-    
 
   useEffect(() => {
     if (!loading) {
@@ -63,12 +70,12 @@ export default function TeacherProfileScreen() {
 
   const handleLogout = () => {
     Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
+      t('auth.logOut'),
+      t('auth.logOutConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Sign Out',
+          text: t('auth.logOut'),
           style: 'destructive',
           onPress: async () => {
             setLoading(true);
@@ -77,6 +84,7 @@ export default function TeacherProfileScreen() {
               router.push('/(auth)/login');
             } catch (error) {
               console.error('Logout error:', error);
+              Alert.alert(t('common.error'), t('profile.logoutError'));
             } finally {
               setLoading(false);
             }
@@ -93,39 +101,48 @@ export default function TeacherProfileScreen() {
     }));
   };
 
-  const SettingItem = ({ title, description, value, onToggle }: {
+  const toggleLanguage = () => {
+    const newLanguage = language === 'en' ? 'ar' : 'en';
+    setLanguage(newLanguage);
+  };
+
+  const SettingItem = ({ 
+    title, 
+    description, 
+    value, 
+    onToggle,
+    icon
+  }: {
     title: string;
     description: string;
     value: boolean;
     onToggle: () => void;
+    icon?: string;
   }) => (
-    <View
-      style={{
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: designTokens.spacing.lg,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.separator,
-      }}
+    <Animated.View
+      style={[styles.settingItem, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}
+      entering={FadeInUp}
+      layout={Layout.springify()}
     >
-      <View style={{ flex: 1, marginRight: designTokens.spacing.md }}>
-        <Text
-          style={{
-            fontSize: designTokens.typography.body.fontSize,
-            color: colors.textPrimary,
-            fontWeight: '400',
-            marginBottom: 2,
-          }}
-        >
+      {icon && (
+        <View style={[
+          styles.settingIcon,
+          { backgroundColor: colors.primary + '15' }
+        ]}>
+          <Ionicons name={icon as any} size={20} color={colors.primary} />
+        </View>
+      )}
+      <View style={[
+        styles.settingContent,
+        { 
+          marginHorizontal: icon ? designTokens.spacing.md : 0,
+          alignItems: isRTL ? 'flex-end' : 'flex-start'
+        }
+      ]}>
+        <Text style={[styles.settingTitle, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
           {title}
         </Text>
-        <Text
-          style={{
-            fontSize: designTokens.typography.footnote.fontSize,
-            color: colors.textSecondary,
-          }}
-        >
+        <Text style={[styles.settingDescription, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
           {description}
         </Text>
       </View>
@@ -135,106 +152,198 @@ export default function TeacherProfileScreen() {
         trackColor={{ false: colors.separator, true: colors.primary + '40' }}
         thumbColor={value ? colors.primary : colors.backgroundElevated}
         ios_backgroundColor={colors.separator}
+        style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }}
       />
-    </View>
+    </Animated.View>
   );
 
-  const ProfileSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <View style={{ marginBottom: designTokens.spacing.xl }}>
+  const ProfileSection = ({ 
+    title, 
+    children,
+    showDivider = true
+  }: { 
+    title: string; 
+    children: React.ReactNode;
+    showDivider?: boolean;
+  }) => (
+    <Animated.View 
+      style={styles.profileSection}
+      entering={FadeInUp.duration(400)}
+      layout={Layout.springify()}
+    >
       <Text
-        style={{
-          fontSize: designTokens.typography.title3.fontSize,
-          fontWeight: designTokens.typography.title3.fontWeight,
-          color: colors.textPrimary,
-          marginBottom: designTokens.spacing.md,
-          paddingHorizontal: designTokens.spacing.xl,
-        } as any}
+        style={[
+          styles.sectionTitle,
+          { 
+            color: colors.textPrimary,
+            textAlign: isRTL ? 'right' : 'left'
+          }
+        ]}
       >
         {title}
       </Text>
       <View
-        style={{
-          backgroundColor: colors.backgroundElevated,
-          marginHorizontal: designTokens.spacing.xl,
-          borderRadius: designTokens.borderRadius.xl,
-          overflow: 'hidden',
-          ...designTokens.shadows.sm,
-        }}
+        style={[
+          styles.sectionCard,
+          {
+            backgroundColor: colors.backgroundElevated,
+            ...designTokens.shadows.sm,
+          }
+        ]}
       >
         {children}
+        {showDivider && (
+          <View style={[styles.sectionDivider, { backgroundColor: colors.separator }]} />
+        )}
+      </View>
+    </Animated.View>
+  );
+
+  const StatCard = ({ 
+    title, 
+    value, 
+    icon, 
+    color 
+  }: { 
+    title: string; 
+    value: string | number; 
+    icon: string; 
+    color: string;
+  }) => (
+    <View style={[styles.statCard, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
+      <View style={[
+        styles.statIconContainer,
+        { backgroundColor: color + '15' }
+      ]}>
+        <Ionicons name={icon as any} size={20} color={color} />
+      </View>
+      <Text style={[styles.statValue, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
+        {value}
+      </Text>
+      <Text style={[styles.statLabel, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
+        {title}
+      </Text>
+    </View>
+  );
+
+  const ProgressBar = ({ 
+    title, 
+    value, 
+    color 
+  }: { 
+    title: string; 
+    value: number; 
+    color: string;
+  }) => (
+    <View style={[styles.progressBarContainer, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
+      <View style={[styles.progressHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+        <Text style={[styles.progressTitle, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
+          {title}
+        </Text>
+        <Text style={[styles.progressValue, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
+          {value}%
+        </Text>
+      </View>
+      <View style={[
+        styles.progressBarTrack,
+        { backgroundColor: colors.separator }
+      ]}>
+        <Animated.View 
+          style={[
+            styles.progressBarFill,
+            { 
+              backgroundColor: color,
+              width: `${value}%`,
+              alignSelf: isRTL ? 'flex-end' : 'flex-start'
+            }
+          ]}
+          entering={FadeInUp.delay(300)}
+        />
       </View>
     </View>
   );
 
-    const toggleLanguage = () => {
-    changeLanguage(currentLocale === 'en' ? 'ar' : 'en');
-  };
-
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View
-        style={{
-          paddingTop: designTokens.spacing.xxxl,
-          paddingHorizontal: designTokens.spacing.xl,
-          paddingBottom: designTokens.spacing.lg,
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
+      <View style={[
+        styles.header,
+        { 
+          flexDirection: isRTL ? 'row-reverse' : 'row'
+        }
+      ]}>
         <Text
-          style={{
-            fontSize: designTokens.typography.largeTitle.fontSize,
-            fontWeight: designTokens.typography.largeTitle.fontWeight,
-            color: colors.textPrimary,
-          } as any}
+          style={[
+            styles.headerTitle,
+            { 
+              color: colors.textPrimary,
+              textAlign: isRTL ? 'right' : 'left'
+            }
+          ]}
         >
-          Profile
+          {t('profile.title')}
         </Text>
 
-        {/* Dark Mode Toggle */}
-        <TouchableOpacity
-          onPress={toggleTheme}
-          style={{
-            padding: designTokens.spacing.sm,
-            borderRadius: designTokens.borderRadius.full,
-            backgroundColor: colors.backgroundElevated,
-            ...designTokens.shadows.sm,
-          }}
-        >
-          <Ionicons
-            name={isDark ? "sunny" : "moon"}
-            size={24}
-            color={colors.textPrimary}
-          />
-        </TouchableOpacity>
+        {/* Action Buttons */}
+        <View style={[
+          styles.headerActions,
+          { 
+            flexDirection: isRTL ? 'row-reverse' : 'row'
+          }
+        ]}>
+          <TouchableOpacity
+            onPress={toggleLanguage}
+            style={[
+              styles.actionButton,
+              { backgroundColor: colors.backgroundElevated }
+            ]}
+          >
+            <Ionicons
+              name={language === 'en' ? 'language' : 'globe'}
+              size={20}
+              color={colors.textPrimary}
+            />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            onPress={toggleTheme}
+            style={[
+              styles.actionButton,
+              { backgroundColor: colors.backgroundElevated }
+            ]}
+          >
+            <Ionicons
+              name={isDark ? "sunny" : "moon"}
+              size={20}
+              color={colors.textPrimary}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Tab Navigation */}
       <View
-        style={{
-          flexDirection: 'row',
-          backgroundColor: colors.separator,
-          marginHorizontal: designTokens.spacing.xl,
-          borderRadius: designTokens.borderRadius.full,
-          padding: 2,
-          marginBottom: designTokens.spacing.xl,
-        }}
+        style={[
+          styles.tabContainer,
+          { 
+            backgroundColor: colors.separator,
+            flexDirection: isRTL ? 'row-reverse' : 'row'
+          }
+        ]}
       >
-        {[
-          { key: 'profile' as const, label: 'Profile', icon: 'person' },
-          { key: 'settings' as const, label: 'Settings', icon: 'settings' },
-        ].map((tab) => (
+        {([
+          { key: 'profile', label: t('profile.title'), icon: 'person' },
+          { key: 'settings', label: t('profile.settings'), icon: 'settings' },
+        ] as const).map((tab) => (
           <TouchableOpacity
             key={tab.key}
-            style={{
-              flex: 1,
-              paddingVertical: designTokens.spacing.md,
-              alignItems: 'center',
-              borderRadius: designTokens.borderRadius.full,
-              backgroundColor: activeTab === tab.key ? colors.backgroundElevated : 'transparent',
-            }}
+            style={[
+              styles.tab,
+              {
+                backgroundColor: activeTab === tab.key ? colors.backgroundElevated : 'transparent',
+                flexDirection: isRTL ? 'row-reverse' : 'row'
+              }
+            ]}
             onPress={() => setActiveTab(tab.key)}
           >
             <Ionicons
@@ -243,12 +352,13 @@ export default function TeacherProfileScreen() {
               color={activeTab === tab.key ? colors.primary : colors.textSecondary}
             />
             <Text
-              style={{
-                fontSize: designTokens.typography.caption1.fontSize,
-                color: activeTab === tab.key ? colors.primary : colors.textSecondary,
-                fontWeight: '600',
-                marginTop: 4,
-              }}
+              style={[
+                styles.tabText,
+                {
+                  color: activeTab === tab.key ? colors.primary : colors.textSecondary,
+                  marginHorizontal: designTokens.spacing.xs
+                }
+              ]}
             >
               {tab.label}
             </Text>
@@ -256,445 +366,238 @@ export default function TeacherProfileScreen() {
         ))}
       </View>
 
-      <ScrollView
-        style={{ flex: 1 }}
+      <Animated.ScrollView
+        style={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
+        entering={FadeInUp.duration(300)}
       >
-        <View style={{ paddingBottom: designTokens.spacing.xxxl }}>
+        <View style={styles.contentPadding}>
           {activeTab === 'profile' ? (
             <>
               {/* Profile Header */}
-              <ProfileSection title="Teacher Information">
-                <View style={{ padding: designTokens.spacing.lg }}>
-                  <View style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    marginBottom: designTokens.spacing.xl
-                  }}>
-                    <View
-                      style={{
-                        width: 70,
-                        height: 70,
-                        borderRadius: 35,
-                        backgroundColor: colors.primary + '15',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginRight: designTokens.spacing.lg,
-                      }}
+              <ProfileSection title={t('profile.teacherInfo')} showDivider={false}>
+                <View style={[styles.profileHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+                  <View style={[
+                    styles.avatarContainer,
+                    { backgroundColor: colors.primary + '15' }
+                  ]}>
+                    <Text style={[
+                      styles.avatarText,
+                      { color: colors.primary }
+                    ]}>
+                      {user?.profile?.name?.charAt(0) || 'T'}
+                    </Text>
+                  </View>
+                  <View style={[
+                    styles.profileInfo,
+                    { alignItems: isRTL ? 'flex-end' : 'flex-start' }
+                  ]}>
+                    <Text
+                      style={[
+                        styles.profileName,
+                        { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }
+                      ]}
                     >
-                      <Text style={{
-                        fontSize: 28,
-                        fontWeight: '700',
-                        color: colors.primary,
-                      }}>
-                        {user?.profile?.name?.charAt(0) || 'T'}
-                      </Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={{
-                          fontSize: designTokens.typography.title2.fontSize,
-                          fontWeight: designTokens.typography.title2.fontWeight,
-                          color: colors.textPrimary,
-                          marginBottom: 2,
-                        } as any}
-                      >
-                        {user?.profile?.name || 'Teacher'}
-                      </Text>
-                      <Text
-                        style={{
-                          fontSize: designTokens.typography.body.fontSize,
-                          color: colors.textSecondary,
-                          marginBottom: 2,
-                        }}
-                      >
-                        {user?.profile?.class ? `Class ${user.profile.class}` : 'All Classes'}
-                      </Text>
-                      <View style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
+                      {user?.profile?.name || t('profile.teacher')}
+                    </Text>
+                    <View style={[
+                      styles.statusBadge,
+                      { 
                         backgroundColor: '#34C75915',
-                        alignSelf: 'flex-start',
-                        paddingHorizontal: designTokens.spacing.sm,
-                        paddingVertical: designTokens.spacing.xs,
-                        borderRadius: designTokens.borderRadius.full,
-                      }}>
-                        <View style={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: 4,
-                          backgroundColor: '#34C759',
-                          marginRight: 4,
-                        }} />
-                        <Text
-                          style={{
-                            fontSize: designTokens.typography.caption1.fontSize,
-                            color: '#34C759',
-                            fontWeight: '600',
-                          }}
-                        >
-                          Active
-                        </Text>
-                      </View>
+                        flexDirection: isRTL ? 'row-reverse' : 'row'
+                      }
+                    ]}>
+                      <View style={styles.statusIndicator} />
+                      <Text style={[styles.statusText, { textAlign: isRTL ? 'right' : 'left' }]}>
+                        {t('common.active')}
+                      </Text>
                     </View>
                   </View>
+                </View>
 
-                  <View style={{
-                    borderTopWidth: 1,
-                    borderTopColor: colors.separator,
-                    paddingTop: designTokens.spacing.lg
-                  }}>
-                    <View style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      marginBottom: designTokens.spacing.md
-                    }}>
-                      <Text style={{
-                        fontSize: designTokens.typography.body.fontSize,
-                        color: colors.textSecondary
-                      }}>
-                        Teacher ID
-                      </Text>
-                      <Text style={{
-                        fontSize: designTokens.typography.body.fontSize,
-                        color: colors.textPrimary,
-                        fontWeight: '500'
-                      }}>
-                        {user?.teacher_id || 'Not set'}
-                      </Text>
-                    </View>
-                    <View style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      marginBottom: designTokens.spacing.md
-                    }}>
-                      <Text style={{
-                        fontSize: designTokens.typography.body.fontSize,
-                        color: colors.textSecondary
-                      }}>
-                        Email
-                      </Text>
-                      <Text style={{
-                        fontSize: designTokens.typography.body.fontSize,
-                        color: colors.textPrimary,
-                        fontWeight: '500'
-                      }}>
-                        {user?.email}
-                      </Text>
-                    </View>
-                    <View style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between'
-                    }}>
-                      <Text style={{
-                        fontSize: designTokens.typography.body.fontSize,
-                        color: colors.textSecondary
-                      }}>
-                        Account Created
-                      </Text>
-                      <Text style={{
-                        fontSize: designTokens.typography.body.fontSize,
-                        color: colors.textPrimary,
-                        fontWeight: '500'
-                      }}>
-                        {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
-                      </Text>
-                    </View>
+                <View style={[styles.profileDetails, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
+                  <View style={[
+                    styles.detailRow,
+                    { 
+                      flexDirection: isRTL ? 'row-reverse' : 'row'
+                    }
+                  ]}>
+                    <Text style={[styles.detailLabel, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
+                      {t('profile.teacherId')}
+                    </Text>
+                    <Text style={[styles.detailValue, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
+                      {user?.teacher_id || t('profile.notSet')}
+                    </Text>
+                  </View>
+                  <View style={[
+                    styles.detailRow,
+                    { 
+                      flexDirection: isRTL ? 'row-reverse' : 'row'
+                      }
+                  ]}>
+                    <Text style={[styles.detailLabel, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
+                      {t('profile.email')}
+                    </Text>
+                    <Text style={[styles.detailValue, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
+                      {user?.email}
+                    </Text>
+                  </View>
+                  <View style={[
+                    styles.detailRow,
+                    { 
+                      flexDirection: isRTL ? 'row-reverse' : 'row'
+                      }
+                  ]}>
+                    <Text style={[styles.detailLabel, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
+                      {t('profile.accountCreated')}
+                    </Text>
+                    <Text style={[styles.detailValue, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
+                      {user?.created_at ? new Date(user.created_at).toLocaleDateString(language === 'ar' ? 'ar-eg' : 'en-US') : t('profile.na')}
+                    </Text>
                   </View>
                 </View>
               </ProfileSection>
 
               {/* Teaching Stats */}
-              <ProfileSection title="Teaching Overview">
-                <View style={{ padding: designTokens.spacing.lg }}>
-                  <View style={{
-                    flexDirection: 'row',
-                    marginBottom: designTokens.spacing.lg
-                  }}>
-                    <View style={{
-                      flex: 1,
-                      alignItems: 'center',
-                      borderRightWidth: 1,
-                      borderRightColor: colors.separator,
-                      paddingRight: designTokens.spacing.lg,
-                    }}>
-                      <Text
-                        style={{
-                          fontSize: designTokens.typography.title1.fontSize,
-                          fontWeight: designTokens.typography.title1.fontWeight,
-                          color: colors.textPrimary,
-                          marginBottom: 2,
-                        } as any}
-                      >
-                        {teacherStats.totalStudents}
-                      </Text>
-                      <Text style={{
-                        fontSize: designTokens.typography.footnote.fontSize,
-                        color: colors.textSecondary
-                      }}>
-                        Students
-                      </Text>
-                    </View>
-                    <View style={{
-                      flex: 1,
-                      alignItems: 'center',
-                      borderRightWidth: 1,
-                      borderRightColor: colors.separator,
-                      paddingHorizontal: designTokens.spacing.lg,
-                    }}>
-                      <Text
-                        style={{
-                          fontSize: designTokens.typography.title1.fontSize,
-                          fontWeight: designTokens.typography.title1.fontWeight,
-                          color: colors.textPrimary,
-                          marginBottom: 2,
-                        } as any}
-                      >
-                        {teacherStats.examsCreated}
-                      </Text>
-                      <Text style={{
-                        fontSize: designTokens.typography.footnote.fontSize,
-                        color: colors.textSecondary
-                      }}>
-                        Exams Created
-                      </Text>
-                    </View>
-                    <View style={{
-                      flex: 1,
-                      alignItems: 'center',
-                      paddingLeft: designTokens.spacing.lg,
-                    }}>
-                      <Text
-                        style={{
-                          fontSize: designTokens.typography.title1.fontSize,
-                          fontWeight: designTokens.typography.title1.fontWeight,
-                          color: colors.textPrimary,
-                          marginBottom: 2,
-                        } as any}
-                      >
-                        {teacherStats.pendingGrading}
-                      </Text>
-                      <Text style={{
-                        fontSize: designTokens.typography.footnote.fontSize,
-                        color: colors.textSecondary
-                      }}>
-                        To Grade
-                      </Text>
-                    </View>
-                  </View>
+              <ProfileSection title={t('profile.teachingOverview')}>
+                <View style={[styles.statsContainer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+                  <StatCard
+                    title={t('dashboard.students')}
+                    value={teacherStats.totalStudents}
+                    icon="people"
+                    color="#3B82F6"
+                  />
+                  <StatCard
+                    title={t('profile.examsCreated')}
+                    value={teacherStats.examsCreated}
+                    icon="document-text"
+                    color="#8B5CF6"
+                  />
+                  <StatCard
+                    title={t('profile.toGrade')}
+                    value={teacherStats.pendingGrading}
+                    icon="clipboard"
+                    color="#F59E0B"
+                  />
                 </View>
               </ProfileSection>
 
               {/* Class Performance */}
-              <ProfileSection title="Class Performance">
-                <View style={{ padding: designTokens.spacing.lg }}>
-                  <View style={{ marginBottom: designTokens.spacing.lg }}>
-                    <View style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      marginBottom: designTokens.spacing.sm
-                    }}>
-                      <Text style={{
-                        fontSize: designTokens.typography.body.fontSize,
-                        color: colors.textSecondary
-                      }}>
-                        Average Class Score
-                      </Text>
-                      <Text style={{
-                        fontSize: designTokens.typography.body.fontSize,
-                        color: colors.textPrimary,
-                        fontWeight: '500'
-                      }}>
-                        {teacherStats.averageClassScore}%
-                      </Text>
-                    </View>
-                    <View style={{
-                      height: 8,
-                      backgroundColor: colors.separator,
-                      borderRadius: 4,
-                      overflow: 'hidden',
-                    }}>
-                      <View
-                        style={{
-                          height: '100%',
-                          width: `${teacherStats.averageClassScore}%`,
-                          backgroundColor: colors.primary,
-                          borderRadius: 4,
-                        }}
-                      />
-                    </View>
-                  </View>
-
-                  <View>
-                    <View style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      marginBottom: designTokens.spacing.sm
-                    }}>
-                      <Text style={{
-                        fontSize: designTokens.typography.body.fontSize,
-                        color: colors.textSecondary
-                      }}>
-                        Student Engagement
-                      </Text>
-                      <Text style={{
-                        fontSize: designTokens.typography.body.fontSize,
-                        color: colors.textPrimary,
-                        fontWeight: '500'
-                      }}>
-                        92%
-                      </Text>
-                    </View>
-                    <View style={{
-                      height: 8,
-                      backgroundColor: colors.separator,
-                      borderRadius: 4,
-                      overflow: 'hidden',
-                    }}>
-                      <View
-                        style={{
-                          height: '100%',
-                          width: '92%',
-                          backgroundColor: '#34C759',
-                          borderRadius: 4,
-                        }}
-                      />
-                    </View>
-                  </View>
+              <ProfileSection title={t('profile.classPerformance')}>
+                <View style={styles.performanceContainer}>
+                  <ProgressBar
+                    title={t('profile.averageScore')}
+                    value={teacherStats.averageClassScore}
+                    color={colors.primary}
+                  />
+                  <ProgressBar
+                    title={t('profile.studentEngagement')}
+                    value={92}
+                    color="#10B981"
+                  />
                 </View>
               </ProfileSection>
             </>
           ) : (
             <>
-              <ProfileSection title="Notification Settings">
-                <View style={{ paddingHorizontal: designTokens.spacing.lg }}>
+              <ProfileSection title={t('notifications.settings')}>
+                <View style={styles.settingsContainer}>
                   <SettingItem
-                    title="General Notifications"
-                    description="App notifications and updates"
+                    title={t('notifications.general')}
+                    description={t('notifications.generalDesc')}
                     value={settings.notifications}
                     onToggle={() => toggleSetting('notifications')}
-                  />
-                  <SettingItem
-                    title="Exam Alerts"
-                    description="Exam completion notifications"
-                    value={settings.examNotifications}
-                    onToggle={() => toggleSetting('examNotifications')}
-                  />
-                  <SettingItem
-                    title="Grading Reminders"
-                    description="Pending grading alerts"
-                    value={settings.gradingReminders}
-                    onToggle={() => toggleSetting('gradingReminders')}
+                    icon="notifications"
                   />
                 </View>
               </ProfileSection>
 
               {/* System Settings */}
-              <ProfileSection title="System Preferences">
-                <View style={{ paddingHorizontal: designTokens.spacing.lg }}>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      paddingVertical: designTokens.spacing.lg,
-                    }}
-                  >
-                    <View style={{ flex: 1, marginRight: designTokens.spacing.md }}>
-                      <Text
-                        style={{
-                          fontSize: designTokens.typography.body.fontSize,
-                          color: colors.textPrimary,
-                          fontWeight: '400',
-                          marginBottom: 2,
-                        }}
-                      >
-                        Dark Mode
-                      </Text>
-                      <Text
-                        style={{
-                          fontSize: designTokens.typography.footnote.fontSize,
-                          color: colors.textSecondary,
-                        }}
-                      >
-                        Enable dark theme
-                      </Text>
-                    </View>
-                    <Switch
-                      value={isDark}
-                      onValueChange={toggleTheme}
-                      trackColor={{ false: colors.separator, true: colors.primary + '40' }}
-                      thumbColor={isDark ? colors.primary : colors.backgroundElevated}
-                      ios_backgroundColor={colors.separator}
-                    />
-                  </View>
+              <ProfileSection title={t('system.preferences')}>
+                <View style={styles.settingsContainer}>
+                  <SettingItem
+                    title={t('system.darkMode')}
+                    description={t('system.darkModeDesc')}
+                    value={isDark}
+                    onToggle={toggleTheme}
+                    icon={isDark ? "sunny" : "moon"}
+                  />
+                  <SettingItem
+                    title={t('profile.language')}
+                    description={language === 'en' ? 'English' : 'العربية'}
+                    value={true}
+                    onToggle={toggleLanguage}
+                    icon="language"
+                  />
                 </View>
               </ProfileSection>
 
               {/* Teacher Tools */}
-              <ProfileSection title="Teacher Tools">
+              <ProfileSection title={t('tools.title')}>
                 <View>
                   <TouchableOpacity
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: designTokens.spacing.lg,
-                      borderBottomWidth: 1,
-                      borderBottomColor: colors.separator,
-                    }}
+                    style={[
+                      styles.toolItem,
+                      { 
+                        borderBottomColor: colors.separator,
+                        flexDirection: isRTL ? 'row-reverse' : 'row'
+                      }
+                    ]}
                   >
-                    <Text style={{
-                      fontSize: designTokens.typography.body.fontSize,
-                      color: colors.primary,
-                      fontWeight: '500'
-                    }}>
-                      Export Student Data
-                    </Text>
                     <Ionicons name="download" size={20} color={colors.primary} />
+                    <Text style={[styles.toolText, { color: colors.primary, textAlign: isRTL ? 'right' : 'left' }]}>
+                      {t('tools.exportData')}
+                    </Text>
+                    <Ionicons 
+                      name={isRTL ? "chevron-back" : "chevron-forward"} 
+                      size={20} 
+                      color={colors.primary} 
+                    />
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: designTokens.spacing.lg,
-                      borderBottomWidth: 1,
-                      borderBottomColor: colors.separator,
-                    }}
+                    style={[
+                      styles.toolItem,
+                      { 
+                        borderBottomColor: colors.separator,
+                        flexDirection: isRTL ? 'row-reverse' : 'row'
+                      }
+                    ]}
                   >
-                    <Text style={{
-                      fontSize: designTokens.typography.body.fontSize,
-                      color: colors.primary,
-                      fontWeight: '500'
-                    }}>
-                      Class Analytics
-                    </Text>
                     <Ionicons name="bar-chart" size={20} color={colors.primary} />
+                    <Text style={[styles.toolText, { color: colors.primary, textAlign: isRTL ? 'right' : 'left' }]}>
+                      {t('tools.classAnalytics')}
+                    </Text>
+                    <Ionicons 
+                      name={isRTL ? "chevron-back" : "chevron-forward"} 
+                      size={20} 
+                      color={colors.primary} 
+                    />
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: designTokens.spacing.lg,
-                    }}
+                    style={[
+                      styles.toolItem,
+                      { 
+                        flexDirection: isRTL ? 'row-reverse' : 'row'
+                      }
+                    ]}
                   >
-                    <Text style={{
-                      fontSize: designTokens.typography.body.fontSize,
-                      color: colors.primary,
-                      fontWeight: '500'
-                    }}>
-                      Teaching Resources
-                    </Text>
                     <Ionicons name="library" size={20} color={colors.primary} />
+                    <Text style={[styles.toolText, { color: colors.primary, textAlign: isRTL ? 'right' : 'left' }]}>
+                      {t('tools.teachingResources')}
+                    </Text>
+                    <Ionicons 
+                      name={isRTL ? "chevron-back" : "chevron-forward"} 
+                      size={20} 
+                      color={colors.primary} 
+                    />
                   </TouchableOpacity>
                 </View>
               </ProfileSection>
@@ -702,39 +605,281 @@ export default function TeacherProfileScreen() {
           )}
 
           {/* Logout Button */}
-          <View style={{
-            paddingHorizontal: designTokens.spacing.xl,
-            marginTop: designTokens.spacing.xl
-          }}>
+          <Animated.View 
+            style={styles.logoutContainer}
+            entering={FadeInUp.delay(500)}
+          >
             <TouchableOpacity
               onPress={handleLogout}
               disabled={loading}
-              style={{
-                backgroundColor: colors.error + '10',
-                padding: designTokens.spacing.lg,
-                borderRadius: designTokens.borderRadius.xl,
-                alignItems: 'center',
-                borderWidth: 1,
-                borderColor: colors.error + '20',
-              }}
+              style={[
+                styles.logoutButton,
+                { 
+                  backgroundColor: colors.error + '10',
+                  borderColor: colors.error + '20'
+                }
+              ]}
             >
               {loading ? (
                 <ActivityIndicator size="small" color={colors.error} />
               ) : (
-                <Text
-                  style={{
-                    fontSize: designTokens.typography.headline.fontSize,
-                    color: colors.error,
-                    fontWeight: '600',
-                  }}
-                >
-                  Sign Out
+                <Text style={[styles.logoutText, { color: colors.error, textAlign: isRTL ? 'right' : 'left' }]}>
+                  {t('auth.logOut')}
                 </Text>
               )}
             </TouchableOpacity>
-          </View>
+          </Animated.View>
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    paddingTop: designTokens.spacing.xxxl,
+    paddingHorizontal: designTokens.spacing.xl,
+    paddingBottom: designTokens.spacing.lg,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: designTokens.typography.largeTitle.fontSize,
+    fontWeight: designTokens.typography.largeTitle.fontWeight,
+  } as any,
+  headerActions: {
+    flexDirection: 'row',
+    gap: designTokens.spacing.sm,
+  },
+  actionButton: {
+    width: 40,
+    height: 40,
+    borderRadius: designTokens.borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...designTokens.shadows.sm,
+  },
+  tabContainer: {
+    marginHorizontal: designTokens.spacing.xl,
+    borderRadius: designTokens.borderRadius.full,
+    padding: 2,
+    marginBottom: designTokens.spacing.lg,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: designTokens.spacing.md,
+    alignItems: 'center',
+    borderRadius: designTokens.borderRadius.full,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: designTokens.spacing.xs,
+  },
+  tabText: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    fontWeight: '600',
+  },
+  content: {
+    flex: 1,
+  },
+  contentPadding: {
+    paddingBottom: designTokens.spacing.xxxl,
+  },
+  profileSection: {
+    marginBottom: designTokens.spacing.lg,
+    paddingHorizontal: designTokens.spacing.xl,
+  },
+  sectionTitle: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: designTokens.typography.title3.fontWeight,
+    marginBottom: designTokens.spacing.md,
+  } as any,
+  sectionCard: {
+    borderRadius: designTokens.borderRadius.xxl,
+    overflow: 'hidden',
+    borderWidth: 0.5,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  sectionDivider: {
+    height: 1,
+  },
+  profileHeader: {
+    flexDirection: 'row',
+    padding: designTokens.spacing.lg,
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: designTokens.spacing.lg,
+  },
+  avatarText: {
+    fontSize: 28,
+    fontWeight: '700',
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: designTokens.typography.title2.fontSize,
+    fontWeight: designTokens.typography.title2.fontWeight,
+    marginBottom: 2,
+  } as any,
+  profileClass: {
+    fontSize: designTokens.typography.body.fontSize,
+    marginBottom: designTokens.spacing.sm,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: designTokens.spacing.sm,
+    paddingVertical: designTokens.spacing.xs,
+    borderRadius: designTokens.borderRadius.full,
+  },
+  statusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#34C759',
+    marginHorizontal: 4,
+  },
+  statusText: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    color: '#34C759',
+    fontWeight: '600',
+  },
+  profileDetails: {
+    padding: designTokens.spacing.lg,
+    borderTopWidth: 1,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: designTokens.spacing.md,
+    width: '100%',
+  },
+  detailLabel: {
+    fontSize: designTokens.typography.body.fontSize,
+  },
+  detailValue: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '500',
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: designTokens.spacing.lg,
+    gap: designTokens.spacing.sm,
+  },
+  statCard: {
+    flex: 1,
+    padding: designTokens.spacing.md,
+  },
+  statIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: designTokens.spacing.sm,
+  },
+  statValue: {
+    fontSize: designTokens.typography.title2.fontSize,
+    fontWeight: designTokens.typography.title2.fontWeight,
+    marginBottom: 2,
+  } as any,
+  statLabel: {
+    fontSize: designTokens.typography.caption1.fontSize,
+  },
+  performanceContainer: {
+    padding: designTokens.spacing.lg,
+  },
+  progressBarContainer: {
+    marginBottom: designTokens.spacing.lg,
+    width: '100%',
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: designTokens.spacing.xs,
+    width: '100%',
+  },
+  progressTitle: {
+    fontSize: designTokens.typography.body.fontSize,
+  },
+  progressValue: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '500',
+  },
+  progressBarTrack: {
+    height: 8,
+    borderRadius: designTokens.borderRadius.full,
+    overflow: 'hidden',
+    width: '100%',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: designTokens.borderRadius.full,
+  },
+  settingsContainer: {
+    paddingHorizontal: designTokens.spacing.lg,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: designTokens.spacing.lg,
+  },
+  settingIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: designTokens.spacing.md,
+  },
+  settingContent: {
+    flex: 1,
+  },
+  settingTitle: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  settingDescription: {
+    fontSize: designTokens.typography.footnote.fontSize,
+  },
+  toolItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: designTokens.spacing.lg,
+    borderBottomWidth: 1,
+  },
+  toolText: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '500',
+    flex: 1,
+    marginHorizontal: designTokens.spacing.md,
+  },
+  logoutContainer: {
+    paddingHorizontal: designTokens.spacing.xl,
+    marginTop: designTokens.spacing.xl,
+  },
+  logoutButton: {
+    padding: designTokens.spacing.lg,
+    borderRadius: designTokens.borderRadius.xl,
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  logoutText: {
+    fontSize: designTokens.typography.headline.fontSize,
+    fontWeight: '600',
+  },
+});

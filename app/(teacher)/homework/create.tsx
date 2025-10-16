@@ -55,7 +55,7 @@ export default function CreateHomeworkScreen() {
   const [selectedStartDate, setSelectedStartDate] = useState<Date>(new Date());
   const [selectedDueDate, setSelectedDueDate] = useState<Date>(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)); // 7 days from now
 
-  
+
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -186,25 +186,23 @@ export default function CreateHomeworkScreen() {
         const studentsResponse = await apiService.getStudentsByClass(form.class_id);
         if (studentsResponse.data.success) {
           const students = studentsResponse.data.data || [];
+          const studentIds = students.map(student => student.user_id);
 
-          // Send notification to each student
-          for (const student of students) {
-            try {
-              await apiService.sendNotificationToUser(
-                student.user_id, // Assuming student object has user_id
-                'New Homework Assigned',
-                `You have a new homework: ${form.title} in ${form.subject_name}`,
-                {
-                  screen: 'homework',
-                  homeworkId: response.data.data.id, // Assuming response contains the created homework ID
-                  type: 'homework_assigned'
-                }
-              );
-            } catch (notificationError) {
-              console.log(`Failed to notify student ${student.id}:`, notificationError);
-              // Continue with other students even if one fails
+          // Send localized notification to all students
+          await apiService.sendBulkLocalizedNotifications(
+            studentIds,
+            'homework.newAssignment',
+            'homework.newAssignmentBody',
+            {
+              title: form.title,
+              subject: form.subject_name
+            },
+            {
+              screen: 'homework',
+              homeworkId: response.data.data.id,
+              type: 'homework_assigned'
             }
-          }
+          );
         }
       } catch (error) {
         console.log('Failed to send bulk notifications:', error);

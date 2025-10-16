@@ -6,7 +6,7 @@ import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme, cn } from '../../src/utils/themeUtils';
-import { useThemeContext } from '@/contexts/ThemeContext';
+import { useThemeContext } from '@/contexts/ThemeContext';import { useTranslation } from "@/hooks/useTranslation";
 
 interface Level {
   id: string;
@@ -33,7 +33,7 @@ interface Subject {
   level?: Level;
 }
 
-export default function SettingsPage() {
+export default function SettingsPage() {const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'levels' | 'classes' | 'subjects'>('levels');
   const [levels, setLevels] = useState<Level[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
@@ -41,8 +41,8 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const { colors } = useThemeContext();
-    
-  
+
+
   // Form states
   const [levelForm, setLevelForm] = useState({ name: '', short_name: '', description: '' });
   const [classForm, setClassForm] = useState({ name: '', level_id: '', grade: '', section: '' });
@@ -55,7 +55,7 @@ export default function SettingsPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      
+
       switch (activeTab) {
         case 'levels':
           const levelsRes = await apiService.getLevels();
@@ -136,9 +136,9 @@ export default function SettingsPage() {
     if (loading) {
       return (
         <View className="items-center justify-center py-12">
-          <Text className={cn('text-lg', colors.textPrimary)}>Loading...</Text>
-        </View>
-      );
+          <Text className={cn('text-lg', colors.textPrimary)}>{t("common.loading")}</Text>
+        </View>);
+
     }
 
     if (showCreateForm) {
@@ -149,64 +149,64 @@ export default function SettingsPage() {
       case 'levels':
         return (
           <View className="space-y-3">
-            {levels.map((level) => (
-              <View key={level.id} className={cn('p-4 rounded-2xl border', colors.backgroundElevated, colors.border)}>
+            {levels.map((level) =>
+            <View key={level.id} className={cn('p-4 rounded-2xl border', colors.backgroundElevated, colors.border)}>
                 <Text className={cn('text-lg font-semibold', colors.textPrimary)}>
                   {level.name} ({level.short_name})
                 </Text>
-                {level.description && (
-                  <Text className={cn('text-sm mt-1', colors.textSecondary)}>
+                {level.description &&
+              <Text className={cn('text-sm mt-1', colors.textSecondary)}>
                     {level.description}
                   </Text>
-                )}
+              }
               </View>
-            ))}
-          </View>
-        );
+            )}
+          </View>);
+
 
       case 'classes':
         return (
           <View className="space-y-3">
-            {classes.map((classItem) => (
-              <View key={classItem.id} className={cn('p-4 rounded-2xl border', colors.backgroundElevated, colors.border)}>
+            {classes.map((classItem) =>
+            <View key={classItem.id} className={cn('p-4 rounded-2xl border', colors.backgroundElevated, colors.border)}>
                 <Text className={cn('text-lg font-semibold', colors.textPrimary)}>
                   {classItem.name}
                 </Text>
                 <Text className={cn('text-sm mt-1', colors.textSecondary)}>
                   Grade {classItem.grade} - Section {classItem.section}
                 </Text>
-                {classItem.level && (
-                  <Text className={cn('text-sm', colors.textSecondary)}>
+                {classItem.level &&
+              <Text className={cn('text-sm', colors.textSecondary)}>
                     Level: {classItem.level.name}
                   </Text>
-                )}
+              }
               </View>
-            ))}
-          </View>
-        );
+            )}
+          </View>);
+
 
       case 'subjects':
         return (
           <View className="space-y-3">
-            {subjects.map((subject) => (
-              <View key={subject.id} className={cn('p-4 rounded-2xl border', colors.backgroundElevated, colors.border)}>
+            {subjects.map((subject) =>
+            <View key={subject.id} className={cn('p-4 rounded-2xl border', colors.backgroundElevated, colors.border)}>
                 <Text className={cn('text-lg font-semibold', colors.textPrimary)}>
                   {subject.name} ({subject.code})
                 </Text>
-                {subject.description && (
-                  <Text className={cn('text-sm mt-1', colors.textSecondary)}>
+                {subject.description &&
+              <Text className={cn('text-sm mt-1', colors.textSecondary)}>
                     {subject.description}
                   </Text>
-                )}
-                {subject.level && (
-                  <Text className={cn('text-sm', colors.textSecondary)}>
+              }
+                {subject.level &&
+              <Text className={cn('text-sm', colors.textSecondary)}>
                     Level: {subject.level.name}
                   </Text>
-                )}
+              }
               </View>
-            ))}
-          </View>
-        );
+            )}
+          </View>);
+
     }
   };
 
@@ -225,8 +225,8 @@ export default function SettingsPage() {
                 value={levelForm.name}
                 onChangeText={(text) => setLevelForm({ ...levelForm, name: text })}
                 className={cn('p-3 rounded-xl border', colors.border, colors.background, colors.textPrimary)}
-                placeholder="e.g., Primary School"
-              />
+                placeholder="e.g., Primary School" />
+
             </View>
             
             <View>
@@ -235,38 +235,38 @@ export default function SettingsPage() {
                 value={levelForm.short_name}
                 onChangeText={(text) => setLevelForm({ ...levelForm, short_name: text })}
                 className={cn('p-3 rounded-xl border', colors.border, colors.background, colors.textPrimary)}
-                placeholder="e.g., PRIMARY"
-              />
+                placeholder="e.g., PRIMARY" />
+
             </View>
             
             <View>
-              <Text className={cn('text-sm font-medium mb-2', colors.textPrimary)}>Description</Text>
+              <Text className={cn('text-sm font-medium mb-2', colors.textPrimary)}>{t("homework.description")}</Text>
               <TextInput
                 value={levelForm.description}
                 onChangeText={(text) => setLevelForm({ ...levelForm, description: text })}
                 className={cn('p-3 rounded-xl border', colors.border, colors.background, colors.textPrimary)}
                 placeholder="Optional description"
-                multiline
-              />
+                multiline />
+
             </View>
             
             <View className="flex-row space-x-3 pt-2">
               <TouchableOpacity
                 onPress={() => setShowCreateForm(false)}
-                className="flex-1 px-4 py-3 rounded-xl bg-gray-200 dark:bg-gray-700 items-center"
-              >
-                <Text className={cn('font-medium', colors.textPrimary)}>Cancel</Text>
+                className="flex-1 px-4 py-3 rounded-xl bg-gray-200 dark:bg-gray-700 items-center">
+
+                <Text className={cn('font-medium', colors.textPrimary)}>{t("common.cancel")}</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
                 onPress={handleCreateLevel}
-                className="flex-1 px-4 py-3 rounded-xl bg-blue-500 items-center"
-              >
+                className="flex-1 px-4 py-3 rounded-xl bg-blue-500 items-center">
+
                 <Text className="text-white font-medium">Create Level</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        );
+          </View>);
+
 
       case 'classes':
         return (
@@ -281,32 +281,32 @@ export default function SettingsPage() {
                 value={classForm.name}
                 onChangeText={(text) => setClassForm({ ...classForm, name: text })}
                 className={cn('p-3 rounded-xl border', colors.border, colors.background, colors.textPrimary)}
-                placeholder="e.g., 10A"
-              />
+                placeholder="e.g., 10A" />
+
             </View>
             
             <View>
               <Text className={cn('text-sm font-medium mb-2', colors.textPrimary)}>Level *</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View className="flex-row space-x-2">
-                  {levels.map((level) => (
-                    <TouchableOpacity
-                      key={level.id}
-                      onPress={() => setClassForm({ ...classForm, level_id: level.id })}
-                      className={cn(
-                        'px-4 py-2 rounded-full border',
-                        classForm.level_id === level.id ? 'bg-blue-500 border-blue-500' : colors.border
-                      )}
-                    >
+                  {levels.map((level) =>
+                  <TouchableOpacity
+                    key={level.id}
+                    onPress={() => setClassForm({ ...classForm, level_id: level.id })}
+                    className={cn(
+                      'px-4 py-2 rounded-full border',
+                      classForm.level_id === level.id ? 'bg-blue-500 border-blue-500' : colors.border
+                    )}>
+
                       <Text className={
-                        classForm.level_id === level.id 
-                          ? 'text-white text-sm'
-                          : cn('text-sm', colors.textPrimary)
-                      }>
+                    classForm.level_id === level.id ?
+                    'text-white text-sm' :
+                    cn('text-sm', colors.textPrimary)
+                    }>
                         {level.name}
                       </Text>
                     </TouchableOpacity>
-                  ))}
+                  )}
                 </View>
               </ScrollView>
             </View>
@@ -318,8 +318,8 @@ export default function SettingsPage() {
                   value={classForm.grade}
                   onChangeText={(text) => setClassForm({ ...classForm, grade: text })}
                   className={cn('p-3 rounded-xl border', colors.border, colors.background, colors.textPrimary)}
-                  placeholder="e.g., 10"
-                />
+                  placeholder="e.g., 10" />
+
               </View>
               
               <View className="flex-1">
@@ -328,28 +328,28 @@ export default function SettingsPage() {
                   value={classForm.section}
                   onChangeText={(text) => setClassForm({ ...classForm, section: text })}
                   className={cn('p-3 rounded-xl border', colors.border, colors.background, colors.textPrimary)}
-                  placeholder="e.g., A"
-                />
+                  placeholder="e.g., A" />
+
               </View>
             </View>
             
             <View className="flex-row space-x-3 pt-2">
               <TouchableOpacity
                 onPress={() => setShowCreateForm(false)}
-                className="flex-1 px-4 py-3 rounded-xl bg-gray-200 dark:bg-gray-700 items-center"
-              >
-                <Text className={cn('font-medium', colors.textPrimary)}>Cancel</Text>
+                className="flex-1 px-4 py-3 rounded-xl bg-gray-200 dark:bg-gray-700 items-center">
+
+                <Text className={cn('font-medium', colors.textPrimary)}>{t("common.cancel")}</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
                 onPress={handleCreateClass}
-                className="flex-1 px-4 py-3 rounded-xl bg-blue-500 items-center"
-              >
+                className="flex-1 px-4 py-3 rounded-xl bg-blue-500 items-center">
+
                 <Text className="text-white font-medium">Create Class</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        );
+          </View>);
+
 
       case 'subjects':
         return (
@@ -364,8 +364,8 @@ export default function SettingsPage() {
                 value={subjectForm.name}
                 onChangeText={(text) => setSubjectForm({ ...subjectForm, name: text })}
                 className={cn('p-3 rounded-xl border', colors.border, colors.background, colors.textPrimary)}
-                placeholder="e.g., Mathematics"
-              />
+                placeholder="e.g., Mathematics" />
+
             </View>
             
             <View>
@@ -374,64 +374,64 @@ export default function SettingsPage() {
                 value={subjectForm.code}
                 onChangeText={(text) => setSubjectForm({ ...subjectForm, code: text })}
                 className={cn('p-3 rounded-xl border', colors.border, colors.background, colors.textPrimary)}
-                placeholder="e.g., MATH"
-              />
+                placeholder="e.g., MATH" />
+
             </View>
             
             <View>
               <Text className={cn('text-sm font-medium mb-2', colors.textPrimary)}>Level *</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View className="flex-row space-x-2">
-                  {levels.map((level) => (
-                    <TouchableOpacity
-                      key={level.id}
-                      onPress={() => setSubjectForm({ ...subjectForm, level_id: level.id })}
-                      className={cn(
-                        'px-4 py-2 rounded-full border',
-                        subjectForm.level_id === level.id ? 'bg-blue-500 border-blue-500' : colors.border
-                      )}
-                    >
+                  {levels.map((level) =>
+                  <TouchableOpacity
+                    key={level.id}
+                    onPress={() => setSubjectForm({ ...subjectForm, level_id: level.id })}
+                    className={cn(
+                      'px-4 py-2 rounded-full border',
+                      subjectForm.level_id === level.id ? 'bg-blue-500 border-blue-500' : colors.border
+                    )}>
+
                       <Text className={
-                        subjectForm.level_id === level.id 
-                          ? 'text-white text-sm'
-                          : cn('text-sm', colors.textPrimary)
-                      }>
+                    subjectForm.level_id === level.id ?
+                    'text-white text-sm' :
+                    cn('text-sm', colors.textPrimary)
+                    }>
                         {level.name}
                       </Text>
                     </TouchableOpacity>
-                  ))}
+                  )}
                 </View>
               </ScrollView>
             </View>
             
             <View>
-              <Text className={cn('text-sm font-medium mb-2', colors.textPrimary)}>Description</Text>
+              <Text className={cn('text-sm font-medium mb-2', colors.textPrimary)}>{t("homework.description")}</Text>
               <TextInput
                 value={subjectForm.description}
                 onChangeText={(text) => setSubjectForm({ ...subjectForm, description: text })}
                 className={cn('p-3 rounded-xl border', colors.border, colors.background, colors.textPrimary)}
                 placeholder="Optional description"
-                multiline
-              />
+                multiline />
+
             </View>
             
             <View className="flex-row space-x-3 pt-2">
               <TouchableOpacity
                 onPress={() => setShowCreateForm(false)}
-                className="flex-1 px-4 py-3 rounded-xl bg-gray-200 dark:bg-gray-700 items-center"
-              >
-                <Text className={cn('font-medium', colors.textPrimary)}>Cancel</Text>
+                className="flex-1 px-4 py-3 rounded-xl bg-gray-200 dark:bg-gray-700 items-center">
+
+                <Text className={cn('font-medium', colors.textPrimary)}>{t("common.cancel")}</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
                 onPress={handleCreateSubject}
-                className="flex-1 px-4 py-3 rounded-xl bg-blue-500 items-center"
-              >
+                className="flex-1 px-4 py-3 rounded-xl bg-blue-500 items-center">
+
                 <Text className="text-white font-medium">Create Subject</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        );
+          </View>);
+
     }
   };
 
@@ -452,47 +452,47 @@ export default function SettingsPage() {
 
         {/* Tabs */}
         <View className="flex-row space-x-2">
-          {(['levels', 'classes', 'subjects'] as const).map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => {
-                setActiveTab(tab);
-                setShowCreateForm(false);
-              }}
-              className={cn(
-                'px-4 py-2 rounded-full border',
-                activeTab === tab ? 'bg-blue-500 border-blue-500' : colors.border
-              )}
-            >
+          {(['levels', 'classes', 'subjects'] as const).map((tab) =>
+          <TouchableOpacity
+            key={tab}
+            onPress={() => {
+              setActiveTab(tab);
+              setShowCreateForm(false);
+            }}
+            className={cn(
+              'px-4 py-2 rounded-full border',
+              activeTab === tab ? 'bg-blue-500 border-blue-500' : colors.border
+            )}>
+
               <Text className={
-                activeTab === tab 
-                  ? 'text-white font-medium text-sm'
-                  : cn('font-medium text-sm', colors.textPrimary)
-              }>
+            activeTab === tab ?
+            'text-white font-medium text-sm' :
+            cn('font-medium text-sm', colors.textPrimary)
+            }>
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </Text>
             </TouchableOpacity>
-          ))}
+          )}
         </View>
       </View>
 
       <ScrollView className="flex-1 p-6">
         {/* Create Button */}
-        {!showCreateForm && (
-          <TouchableOpacity
-            onPress={() => setShowCreateForm(true)}
-            className={cn('p-4 rounded-2xl border mb-6 flex-row items-center justify-center space-x-2', colors.backgroundElevated, colors.border)}
-          >
+        {!showCreateForm &&
+        <TouchableOpacity
+          onPress={() => setShowCreateForm(true)}
+          className={cn('p-4 rounded-2xl border mb-6 flex-row items-center justify-center space-x-2', colors.backgroundElevated, colors.border)}>
+
             <Ionicons name="add" size={20} className="text-blue-500" />
             <Text className="text-blue-500 font-semibold text-lg">
               Create New {activeTab.slice(0, -1).charAt(0).toUpperCase() + activeTab.slice(0, -1).slice(1)}
             </Text>
           </TouchableOpacity>
-        )}
+        }
 
         {/* Content */}
         {renderContent()}
       </ScrollView>
-    </View>
-  );
+    </View>);
+
 }

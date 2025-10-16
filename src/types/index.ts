@@ -10,6 +10,8 @@ export interface User {
   created_at: string;
   updated_at: string;
   push_token?: string;
+  language?: string;
+
 }
 
 // Add to existing types

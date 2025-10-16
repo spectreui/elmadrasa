@@ -8,8 +8,8 @@ import {
   TextInput,
   ActivityIndicator,
   KeyboardAvoidingView,
-  Platform
-} from 'react-native';
+  Platform } from
+'react-native';
 import { Alert } from '@/utils/UniversalAlert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../../src/contexts/AuthContext';
@@ -20,7 +20,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { useThemeContext } from '@/contexts/ThemeContext';
 import { generateHomeworkLink } from '../../../src/utils/linking'; // Updated import
 import * as Sharing from 'expo-sharing';
-import { ShareModal } from '@/components/ShareModal';
+import { ShareModal } from '@/components/ShareModal';import { useTranslation } from "@/hooks/useTranslation";
 
 interface Question {
   id: string;
@@ -75,7 +75,7 @@ interface Submission {
   graded_at?: string;
 }
 
-export default function HomeworkDetailScreen() {
+export default function HomeworkDetailScreen() {const { t } = useTranslation();
   const { id } = useLocalSearchParams();
   const { user } = useAuth();
   const [homework, setHomework] = useState<Homework | null>(null);
@@ -88,7 +88,7 @@ export default function HomeworkDetailScreen() {
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, string>>({});
   const { colors, isDark } = useThemeContext();
   const [showShareModal, setShowShareModal] = useState(false);
-    
+
 
   const loadHomework = useCallback(async () => {
     if (!id) return;
@@ -118,7 +118,7 @@ export default function HomeworkDetailScreen() {
           // Load question answers if they exist
           if (response.data.data.submission.answers) {
             const answersRecord: Record<string, string> = {};
-            response.data.data.submission.answers.forEach(answer => {
+            response.data.data.submission.answers.forEach((answer) => {
               answersRecord[answer.question_id] = answer.answer;
             });
             setQuestionAnswers(answersRecord);
@@ -150,7 +150,7 @@ export default function HomeworkDetailScreen() {
       setUploading(true);
       const result = await DocumentPicker.getDocumentAsync({
         type: '*/*',
-        copyToCacheDirectory: true,
+        copyToCacheDirectory: true
       });
 
       if (result.canceled) return;
@@ -160,7 +160,7 @@ export default function HomeworkDetailScreen() {
 
       // In a real app, you would upload the file to your server
       // For now, we'll just store the file name
-      setAttachments(prev => [...prev, file.name]);
+      setAttachments((prev) => [...prev, file.name]);
 
       Alert.alert('Success', 'File attached successfully');
     } catch (error) {
@@ -172,11 +172,11 @@ export default function HomeworkDetailScreen() {
   };
 
   const removeAttachment = (index: number) => {
-    setAttachments(prev => prev.filter((_, i) => i !== index));
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleQuestionAnswerChange = (questionId: string, answer: string) => {
-    setQuestionAnswers(prev => ({
+    setQuestionAnswers((prev) => ({
       ...prev,
       [questionId]: answer
     }));
@@ -209,7 +209,7 @@ export default function HomeworkDetailScreen() {
       // Prepare answers array
       const answers: Answer[] = [];
       if (homework?.allow_questions && homework.questions) {
-        homework.questions.forEach(question => {
+        homework.questions.forEach((question) => {
           if (questionAnswers[question.id]) {
             answers.push({
               question_id: question.id,
@@ -233,11 +233,11 @@ export default function HomeworkDetailScreen() {
 
       if (response.data.success) {
         Alert.alert('Success', 'Homework submitted successfully!', [
-          {
-            text: 'OK',
-            onPress: () => router.back()
-          }
-        ]);
+        {
+          text: 'OK',
+          onPress: () => router.back()
+        }]
+        );
 
         // Update local state
         setSubmission({
@@ -278,7 +278,7 @@ export default function HomeworkDetailScreen() {
 
       await Sharing.shareAsync(link, {
         dialogTitle: 'Share Homework',
-        message: `Check out this homework assignment: ${homework.title}\n\n${link}`,
+        message: `Check out this homework assignment: ${homework.title}\n\n${link}`
       });
     } catch (error) {
       console.error('Error sharing:', error);
@@ -358,7 +358,7 @@ export default function HomeworkDetailScreen() {
 
   // Function to get color based on grade percentage
   const getGradeColor = (grade: number, maxPoints: number) => {
-    const percentage = (grade / maxPoints) * 100;
+    const percentage = grade / maxPoints * 100;
 
     if (percentage < 50) {
       return '#DC2626'; // Red for grades below 50%
@@ -371,7 +371,7 @@ export default function HomeworkDetailScreen() {
 
   // Function to get background color based on grade percentage
   const getGradeBgColor = (grade: number, maxPoints: number) => {
-    const percentage = (grade / maxPoints) * 100;
+    const percentage = grade / maxPoints * 100;
 
     if (percentage < 50) {
       return '#DC262615'; // Light red
@@ -388,18 +388,18 @@ export default function HomeworkDetailScreen() {
         flex: 1,
         backgroundColor: colors.background,
         justifyContent: 'center',
-        alignItems: 'center',
+        alignItems: 'center'
       }}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={{
           marginTop: designTokens.spacing.md,
           fontSize: designTokens.typography.body.fontSize,
-          color: colors.textSecondary,
+          color: colors.textSecondary
         }}>
           Loading homework...
         </Text>
-      </View>
-    );
+      </View>);
+
   }
 
   if (!homework) {
@@ -409,7 +409,7 @@ export default function HomeworkDetailScreen() {
         backgroundColor: colors.background,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: designTokens.spacing.xl,
+        padding: designTokens.spacing.xl
       }}>
         <Ionicons name="document-text-outline" size={64} color={colors.textTertiary} />
         <Text style={{
@@ -417,7 +417,7 @@ export default function HomeworkDetailScreen() {
           fontWeight: designTokens.typography.title2.fontWeight,
           color: colors.textPrimary,
           marginTop: designTokens.spacing.md,
-          marginBottom: designTokens.spacing.sm,
+          marginBottom: designTokens.spacing.sm
         } as any}>
           Homework Not Found
         </Text>
@@ -425,7 +425,7 @@ export default function HomeworkDetailScreen() {
           fontSize: designTokens.typography.body.fontSize,
           color: colors.textSecondary,
           textAlign: 'center',
-          marginBottom: designTokens.spacing.xl,
+          marginBottom: designTokens.spacing.xl
         }}>
           The homework you're looking for doesn't exist or you don't have access to it.
         </Text>
@@ -435,19 +435,19 @@ export default function HomeworkDetailScreen() {
             backgroundColor: colors.primary,
             paddingHorizontal: designTokens.spacing.xl,
             paddingVertical: designTokens.spacing.lg,
-            borderRadius: designTokens.borderRadius.xl,
-          }}
-        >
+            borderRadius: designTokens.borderRadius.xl
+          }}>
+
           <Text style={{
             color: 'white',
             fontWeight: '600',
-            fontSize: designTokens.typography.body.fontSize,
+            fontSize: designTokens.typography.body.fontSize
           }}>
             Go Back
           </Text>
         </TouchableOpacity>
-      </View>
-    );
+      </View>);
+
   }
 
   const dueStatus = getDueStatus();
@@ -458,12 +458,12 @@ export default function HomeworkDetailScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1, backgroundColor: colors.background }}
-    >
+      style={{ flex: 1, backgroundColor: colors.background }}>
+
       <ScrollView
         style={{ flex: 1 }}
-        showsVerticalScrollIndicator={false}
-      >
+        showsVerticalScrollIndicator={false}>
+
         {/* Header */}
         <View style={{
           paddingHorizontal: designTokens.spacing.xl,
@@ -471,26 +471,26 @@ export default function HomeworkDetailScreen() {
           paddingBottom: designTokens.spacing.xl,
           borderBottomWidth: 1,
           borderBottomColor: colors.border,
-          backgroundColor: colors.background,
+          backgroundColor: colors.background
         }}>
           <View style={{
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginBottom: designTokens.spacing.lg,
+            marginBottom: designTokens.spacing.lg
           }}>
             <TouchableOpacity
               onPress={() => router.back()}
               style={{
                 flexDirection: 'row',
-                alignItems: 'center',
-              }}
-            >
+                alignItems: 'center'
+              }}>
+
               <Ionicons name="arrow-back" size={20} color={colors.textSecondary} />
               <Text style={{
                 marginLeft: designTokens.spacing.sm,
                 fontSize: designTokens.typography.footnote.fontSize,
-                color: colors.textSecondary,
+                color: colors.textSecondary
               }}>
                 Back to Homework
               </Text>
@@ -501,12 +501,12 @@ export default function HomeworkDetailScreen() {
                 paddingHorizontal: designTokens.spacing.md,
                 paddingVertical: designTokens.spacing.xs,
                 borderRadius: designTokens.borderRadius.full,
-                backgroundColor: dueStatus?.bgColor,
+                backgroundColor: dueStatus?.bgColor
               }}>
                 <Text style={{
                   fontSize: designTokens.typography.caption2.fontSize,
                   fontWeight: '600',
-                  color: dueStatus?.color,
+                  color: dueStatus?.color
                 }}>
                   {dueStatus?.text}
                 </Text>
@@ -527,7 +527,7 @@ export default function HomeworkDetailScreen() {
             fontSize: designTokens.typography.title1.fontSize,
             fontWeight: designTokens.typography.title1.fontWeight,
             color: colors.textPrimary,
-            marginBottom: designTokens.spacing.md,
+            marginBottom: designTokens.spacing.md
           } as any}>
             {homework.title}
           </Text>
@@ -535,18 +535,18 @@ export default function HomeworkDetailScreen() {
           <View style={{
             flexDirection: 'row',
             flexWrap: 'wrap',
-            gap: designTokens.spacing.sm,
+            gap: designTokens.spacing.sm
           }}>
             <View style={{
               paddingHorizontal: designTokens.spacing.md,
               paddingVertical: designTokens.spacing.xs,
               borderRadius: designTokens.borderRadius.full,
-              backgroundColor: '#6B728015',
+              backgroundColor: '#6B728015'
             }}>
               <Text style={{
                 fontSize: designTokens.typography.caption1.fontSize,
                 fontWeight: '600',
-                color: '#6B7280',
+                color: '#6B7280'
               }}>
                 {homework.subject}
               </Text>
@@ -555,12 +555,12 @@ export default function HomeworkDetailScreen() {
               paddingHorizontal: designTokens.spacing.md,
               paddingVertical: designTokens.spacing.xs,
               borderRadius: designTokens.borderRadius.full,
-              backgroundColor: '#6B728015',
+              backgroundColor: '#6B728015'
             }}>
               <Text style={{
                 fontSize: designTokens.typography.caption1.fontSize,
                 fontWeight: '600',
-                color: '#6B7280',
+                color: '#6B7280'
               }}>
                 {homework.points} points
               </Text>
@@ -569,12 +569,12 @@ export default function HomeworkDetailScreen() {
               paddingHorizontal: designTokens.spacing.md,
               paddingVertical: designTokens.spacing.xs,
               borderRadius: designTokens.borderRadius.full,
-              backgroundColor: '#6B728015',
+              backgroundColor: '#6B728015'
             }}>
               <Text style={{
                 fontSize: designTokens.typography.caption1.fontSize,
                 fontWeight: '600',
-                color: '#6B7280',
+                color: '#6B7280'
               }}>
                 By: {homework.teacher?.profile?.name || 'Teacher'}
               </Text>
@@ -584,7 +584,7 @@ export default function HomeworkDetailScreen() {
 
         <View style={{
           padding: designTokens.spacing.xl,
-          paddingTop: designTokens.spacing.lg,
+          paddingTop: designTokens.spacing.lg
         }}>
           {/* Due Date Card */}
           <View style={{
@@ -594,11 +594,11 @@ export default function HomeworkDetailScreen() {
             borderColor: dueStatus?.color + '40',
             backgroundColor: colors.backgroundElevated,
             ...designTokens.shadows.sm,
-            marginBottom: designTokens.spacing.xl,
+            marginBottom: designTokens.spacing.xl
           }}>
             <View style={{
               flexDirection: 'row',
-              alignItems: 'center',
+              alignItems: 'center'
             }}>
               <View style={{
                 width: 40,
@@ -607,7 +607,7 @@ export default function HomeworkDetailScreen() {
                 backgroundColor: dueStatus?.bgColor,
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginRight: designTokens.spacing.md,
+                marginRight: designTokens.spacing.md
               }}>
                 <Ionicons name="calendar" size={20} color={dueStatus?.color} />
               </View>
@@ -616,13 +616,13 @@ export default function HomeworkDetailScreen() {
                   fontSize: designTokens.typography.headline.fontSize,
                   fontWeight: designTokens.typography.headline.fontWeight,
                   color: colors.textPrimary,
-                  marginBottom: 2,
+                  marginBottom: 2
                 } as any}>
                   Due Date
                 </Text>
                 <Text style={{
                   fontSize: designTokens.typography.footnote.fontSize,
-                  color: colors.textSecondary,
+                  color: colors.textSecondary
                 }}>
                   {formatDate(homework.due_date)}
                 </Text>
@@ -638,492 +638,492 @@ export default function HomeworkDetailScreen() {
             borderColor: colors.border,
             backgroundColor: colors.backgroundElevated,
             ...designTokens.shadows.sm,
-            marginBottom: designTokens.spacing.xl,
+            marginBottom: designTokens.spacing.xl
           }}>
             <Text style={{
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: colors.textPrimary,
-              marginBottom: designTokens.spacing.md,
+              marginBottom: designTokens.spacing.md
             } as any}>
               Assignment Description
             </Text>
             <Text style={{
               fontSize: designTokens.typography.body.fontSize,
-              color: colors.textPrimary,
+              color: colors.textPrimary
             }}>
               {homework.description}
             </Text>
           </View>
 
           {/* Questions Section */}
-          {homework.allow_questions && homework.questions && homework.questions.length > 0 && (
-            <View style={{
-              padding: designTokens.spacing.lg,
-              borderRadius: designTokens.borderRadius.xl,
-              borderWidth: 1,
-              borderColor: colors.border,
-              backgroundColor: colors.backgroundElevated,
-              ...designTokens.shadows.sm,
-              marginBottom: designTokens.spacing.xl,
-            }}>
+          {homework.allow_questions && homework.questions && homework.questions.length > 0 &&
+          <View style={{
+            padding: designTokens.spacing.lg,
+            borderRadius: designTokens.borderRadius.xl,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.backgroundElevated,
+            ...designTokens.shadows.sm,
+            marginBottom: designTokens.spacing.xl
+          }}>
               <Text style={{
-                fontSize: designTokens.typography.title3.fontSize,
-                fontWeight: designTokens.typography.title3.fontWeight,
-                color: colors.textPrimary,
-                marginBottom: designTokens.spacing.md,
-              } as any}>
-                Questions
-              </Text>
+              fontSize: designTokens.typography.title3.fontSize,
+              fontWeight: designTokens.typography.title3.fontWeight,
+              color: colors.textPrimary,
+              marginBottom: designTokens.spacing.md
+            } as any}>{t("homework.questions")}
+
+            </Text>
 
               {homework.questions?.map((question, index) => {
-                const questionGrade = submission?.question_grades?.find(qg => qg.question_id === question.id);
-                const isLastQuestion = index === homework.questions!.length - 1;
-                return (
-                  <View
-                    key={question.id}
-                    style={{
-                      marginBottom: designTokens.spacing.lg,
-                      paddingBottom: isSubmitted || isLastQuestion ? 0 : designTokens.spacing.md,
-                      borderBottomWidth: isSubmitted || isLastQuestion ? 0 : 1,
-                      borderBottomColor: colors.border,
-                    }}
-                  >
+              const questionGrade = submission?.question_grades?.find((qg) => qg.question_id === question.id);
+              const isLastQuestion = index === homework.questions!.length - 1;
+              return (
+                <View
+                  key={question.id}
+                  style={{
+                    marginBottom: designTokens.spacing.lg,
+                    paddingBottom: isSubmitted || isLastQuestion ? 0 : designTokens.spacing.md,
+                    borderBottomWidth: isSubmitted || isLastQuestion ? 0 : 1,
+                    borderBottomColor: colors.border
+                  }}>
+
                     <Text style={{
-                      fontSize: designTokens.typography.body.fontSize,
-                      fontWeight: '600',
-                      color: colors.textPrimary,
-                      marginBottom: designTokens.spacing.sm,
-                    }}>
+                    fontSize: designTokens.typography.body.fontSize,
+                    fontWeight: '600',
+                    color: colors.textPrimary,
+                    marginBottom: designTokens.spacing.sm
+                  }}>
                       {index + 1}. {question.text} ({question.points} pts)
                     </Text>
 
-                    {question.type === 'mcq' && question.options && (
-                      <View style={{ marginBottom: designTokens.spacing.sm }}>
-                        {question.options.map((option, optionIndex) => (
-                          <Text key={optionIndex} style={{
-                            fontSize: designTokens.typography.body.fontSize,
-                            color: colors.textSecondary,
-                            marginLeft: designTokens.spacing.md,
-                          }}>
+                    {question.type === 'mcq' && question.options &&
+                  <View style={{ marginBottom: designTokens.spacing.sm }}>
+                        {question.options.map((option, optionIndex) =>
+                    <Text key={optionIndex} style={{
+                      fontSize: designTokens.typography.body.fontSize,
+                      color: colors.textSecondary,
+                      marginLeft: designTokens.spacing.md
+                    }}>
                             {String.fromCharCode(65 + optionIndex)}. {option}
                           </Text>
-                        ))}
-                      </View>
                     )}
+                      </View>
+                  }
 
-                    {isSubmitted ? (
-                      <View>
+                    {isSubmitted ?
+                  <View>
                         <View style={{
-                          padding: designTokens.spacing.md,
-                          borderRadius: designTokens.borderRadius.lg,
-                          backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
-                        }}>
+                      padding: designTokens.spacing.md,
+                      borderRadius: designTokens.borderRadius.lg,
+                      backgroundColor: isDark ? '#1F2937' : '#F9FAFB'
+                    }}>
                           <Text style={{
-                            fontSize: designTokens.typography.body.fontSize,
-                            color: colors.textPrimary,
-                          }}>
-                            {submission?.answers?.find(a => a.question_id === question.id)?.answer || 'No answer provided'}
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: colors.textPrimary
+                      }}>
+                            {submission?.answers?.find((a) => a.question_id === question.id)?.answer || t("submissions.noAnswer")}
                           </Text>
                         </View>
-                        {questionGrade && (questionGrade.grade !== null || questionGrade.feedback) && (
-                          <View
-                            key={question.id}
-                            style={{
-                              padding: designTokens.spacing.md,
-                              borderRadius: designTokens.borderRadius.lg,
-                              backgroundColor: questionGrade.grade !== null ? getGradeBgColor(questionGrade.grade, question.points) : '#F3F4F615',
-                              borderWidth: 1,
-                              borderColor: questionGrade.grade !== null ? getGradeColor(questionGrade.grade, question.points) + '40' : colors.border,
-                              marginTop: designTokens.spacing.md,
-                            }}
-                          >
+                        {questionGrade && (questionGrade.grade !== null || questionGrade.feedback) &&
+                    <View
+                      key={question.id}
+                      style={{
+                        padding: designTokens.spacing.md,
+                        borderRadius: designTokens.borderRadius.lg,
+                        backgroundColor: questionGrade.grade !== null ? getGradeBgColor(questionGrade.grade, question.points) : '#F3F4F615',
+                        borderWidth: 1,
+                        borderColor: questionGrade.grade !== null ? getGradeColor(questionGrade.grade, question.points) + '40' : colors.border,
+                        marginTop: designTokens.spacing.md
+                      }}>
 
-                            {questionGrade.grade !== null && (
-                              <Text style={{
-                                fontSize: designTokens.typography.caption1.fontSize,
-                                color: getGradeColor(questionGrade.grade, question.points),
-                                fontWeight: '600',
-                                marginBottom: designTokens.spacing.xs,
-                              }}>
+
+                            {questionGrade.grade !== null &&
+                      <Text style={{
+                        fontSize: designTokens.typography.caption1.fontSize,
+                        color: getGradeColor(questionGrade.grade, question.points),
+                        fontWeight: '600',
+                        marginBottom: designTokens.spacing.xs
+                      }}>
                                 Grade: {questionGrade.grade}/{question.points}
                               </Text>
-                            )}
+                      }
 
-                            {questionGrade.feedback && (
-                              <Text style={{
-                                fontSize: designTokens.typography.body.fontSize,
-                                color: questionGrade.grade !== null ? getGradeColor(questionGrade.grade, question.points) : colors.textSecondary,
-                                marginTop: designTokens.spacing.xs,
-                              }}>
+                            {questionGrade.feedback &&
+                      <Text style={{
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: questionGrade.grade !== null ? getGradeColor(questionGrade.grade, question.points) : colors.textSecondary,
+                        marginTop: designTokens.spacing.xs
+                      }}>
                                 Feedback: {questionGrade.feedback}
                               </Text>
-                            )}
+                      }
                           </View>
-                        )}
-                      </View>
-                    ) : (
-                      <View style={{
-                        borderRadius: designTokens.borderRadius.lg,
-                        borderWidth: 1,
-                        borderColor: colors.border,
-                        backgroundColor: colors.background,
-                        minHeight: 80,
-                      }}>
+                    }
+                      </View> :
+
+                  <View style={{
+                    borderRadius: designTokens.borderRadius.lg,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    backgroundColor: colors.background,
+                    minHeight: 80
+                  }}>
                         <TextInput
-                          style={{
-                            padding: designTokens.spacing.md,
-                            fontSize: designTokens.typography.body.fontSize,
-                            color: colors.textPrimary,
-                            textAlignVertical: 'top',
-                            height: 80,
-                          }}
-                          placeholder="Type your answer here..."
-                          placeholderTextColor={colors.textTertiary}
-                          value={questionAnswers[question.id] || ''}
-                          onChangeText={(text) => handleQuestionAnswerChange(question.id, text)}
-                          multiline
-                          editable={canSubmit}
-                        />
+                      style={{
+                        padding: designTokens.spacing.md,
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: colors.textPrimary,
+                        textAlignVertical: 'top',
+                        height: 80
+                      }}
+                      placeholder="Type your answer here..."
+                      placeholderTextColor={colors.textTertiary}
+                      value={questionAnswers[question.id] || ''}
+                      onChangeText={(text) => handleQuestionAnswerChange(question.id, text)}
+                      multiline
+                      editable={canSubmit} />
+
                       </View>
-                    )}
-                  </View>
-                )
-              })}
+                  }
+                  </View>);
+
+            })}
             </View>
-          )}
+          }
 
           {/* Submission Section - Main Content */}
-          {isSubmitted ? (
-            <View style={{
-              padding: designTokens.spacing.lg,
-              borderRadius: designTokens.borderRadius.xl,
-              borderWidth: 1,
-              borderColor: colors.border,
-              backgroundColor: colors.backgroundElevated,
-              ...designTokens.shadows.sm,
-            }}>
+          {isSubmitted ?
+          <View style={{
+            padding: designTokens.spacing.lg,
+            borderRadius: designTokens.borderRadius.xl,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.backgroundElevated,
+            ...designTokens.shadows.sm
+          }}>
               <Text style={{
-                fontSize: designTokens.typography.title3.fontSize,
-                fontWeight: designTokens.typography.title3.fontWeight,
-                color: colors.textPrimary,
-                marginBottom: designTokens.spacing.md,
-              } as any}>
+              fontSize: designTokens.typography.title3.fontSize,
+              fontWeight: designTokens.typography.title3.fontWeight,
+              color: colors.textPrimary,
+              marginBottom: designTokens.spacing.md
+            } as any}>
                 Your Submission
               </Text>
 
               <View style={{ marginBottom: designTokens.spacing.md }}>
                 <Text style={{
-                  fontSize: designTokens.typography.footnote.fontSize,
-                  fontWeight: '600',
-                  color: colors.textPrimary,
-                  marginBottom: designTokens.spacing.sm,
-                }}>
+                fontSize: designTokens.typography.footnote.fontSize,
+                fontWeight: '600',
+                color: colors.textPrimary,
+                marginBottom: designTokens.spacing.sm
+              }}>
                   Submitted Content:
                 </Text>
                 <View style={{
-                  padding: designTokens.spacing.md,
-                  borderRadius: designTokens.borderRadius.lg,
-                  backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
-                }}>
+                padding: designTokens.spacing.md,
+                borderRadius: designTokens.borderRadius.lg,
+                backgroundColor: isDark ? '#1F2937' : '#F9FAFB'
+              }}>
                   <Text style={{
-                    fontSize: designTokens.typography.body.fontSize,
-                    color: colors.textPrimary,
-                  }}>
-                    {submission?.content || 'No content provided'}
+                  fontSize: designTokens.typography.body.fontSize,
+                  color: colors.textPrimary
+                }}>
+                    {submission?.content || t("submissions.noContent")}
                   </Text>
                 </View>
               </View>
 
-              {submission?.attachments && submission.attachments.length > 0 && (
-                <View style={{ marginBottom: designTokens.spacing.md }}>
+              {submission?.attachments && submission.attachments.length > 0 &&
+            <View style={{ marginBottom: designTokens.spacing.md }}>
                   <Text style={{
-                    fontSize: designTokens.typography.footnote.fontSize,
-                    fontWeight: '600',
-                    color: colors.textPrimary,
-                    marginBottom: designTokens.spacing.sm,
-                  }}>
+                fontSize: designTokens.typography.footnote.fontSize,
+                fontWeight: '600',
+                color: colors.textPrimary,
+                marginBottom: designTokens.spacing.sm
+              }}>
                     Attachments:
                   </Text>
                   <View style={{ gap: designTokens.spacing.sm }}>
-                    {submission.attachments.map((attachment, index) => (
-                      <View
-                        key={index}
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          padding: designTokens.spacing.md,
-                          borderRadius: designTokens.borderRadius.lg,
-                          backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
-                        }}
-                      >
+                    {submission.attachments.map((attachment, index) =>
+                <View
+                  key={index}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    padding: designTokens.spacing.md,
+                    borderRadius: designTokens.borderRadius.lg,
+                    backgroundColor: isDark ? '#1F2937' : '#F9FAFB'
+                  }}>
+
                         <Ionicons name="document" size={20} color={colors.textSecondary} />
                         <Text
-                          style={{
-                            marginLeft: designTokens.spacing.sm,
-                            fontSize: designTokens.typography.body.fontSize,
-                            color: colors.textPrimary,
-                            flex: 1,
-                          }}
-                          numberOfLines={1}
-                        >
+                    style={{
+                      marginLeft: designTokens.spacing.sm,
+                      fontSize: designTokens.typography.body.fontSize,
+                      color: colors.textPrimary,
+                      flex: 1
+                    }}
+                    numberOfLines={1}>
+
                           {attachment}
                         </Text>
                       </View>
-                    ))}
+                )}
                   </View>
                 </View>
-              )}
+            }
 
               <Text style={{
-                fontSize: designTokens.typography.caption1.fontSize,
-                color: colors.textSecondary,
-                marginTop: designTokens.spacing.sm,
-              }}>
+              fontSize: designTokens.typography.caption1.fontSize,
+              color: colors.textSecondary,
+              marginTop: designTokens.spacing.sm
+            }}>
                 Submitted on: {formatDate(submission?.submitted_at || '')}
               </Text>
 
               {/* Grade and Feedback Section */}
-              {(submission?.grade !== undefined && submission?.grade !== null) && (
-                <View style={{
-                  marginTop: designTokens.spacing.lg,
-                  padding: designTokens.spacing.md,
-                  borderRadius: designTokens.borderRadius.lg,
-                  backgroundColor: getGradeBgColor(submission.grade, homework.points),
-                  borderWidth: 1,
-                  borderColor: getGradeColor(submission.grade, homework.points) + '40',
-                }}>
+              {submission?.grade !== undefined && submission?.grade !== null &&
+            <View style={{
+              marginTop: designTokens.spacing.lg,
+              padding: designTokens.spacing.md,
+              borderRadius: designTokens.borderRadius.lg,
+              backgroundColor: getGradeBgColor(submission.grade, homework.points),
+              borderWidth: 1,
+              borderColor: getGradeColor(submission.grade, homework.points) + '40'
+            }}>
                   <Text style={{
-                    fontSize: designTokens.typography.body.fontSize,
-                    fontWeight: '600',
-                    color: getGradeColor(submission.grade, homework.points),
-                    marginBottom: designTokens.spacing.xs,
-                  }}>
+                fontSize: designTokens.typography.body.fontSize,
+                fontWeight: '600',
+                color: getGradeColor(submission.grade, homework.points),
+                marginBottom: designTokens.spacing.xs
+              }}>
                     Grade: {submission.grade}/{homework.points}
                   </Text>
 
                   {/* Component grades */}
-                  {submission.text_grade !== undefined && submission.text_grade !== null && (
-                    <Text style={{
-                      fontSize: designTokens.typography.caption1.fontSize,
-                      color: getGradeColor(submission.text_grade, (homework.points - (homework.questions?.reduce((sum, q) => sum + q.points, 0) || 0))),
-                      marginTop: designTokens.spacing.xs,
-                    }}>
+                  {submission.text_grade !== undefined && submission.text_grade !== null &&
+              <Text style={{
+                fontSize: designTokens.typography.caption1.fontSize,
+                color: getGradeColor(submission.text_grade, homework.points - (homework.questions?.reduce((sum, q) => sum + q.points, 0) || 0)),
+                marginTop: designTokens.spacing.xs
+              }}>
                       Text Submission: {submission.text_grade} pts
                     </Text>
-                  )}
+              }
 
-                  {submission.question_grades && submission.question_grades.length > 0 && (
-                    <Text style={{
-                      fontSize: designTokens.typography.caption1.fontSize,
-                      color: getGradeColor(submission.question_grades.reduce((sum, qg) => sum + (qg.grade || 0), 0), (homework.questions?.reduce((sum, q) => sum + q.points, 0) || 0)),
-                      marginTop: designTokens.spacing.xs,
-                    }}>
+                  {submission.question_grades && submission.question_grades.length > 0 &&
+              <Text style={{
+                fontSize: designTokens.typography.caption1.fontSize,
+                color: getGradeColor(submission.question_grades.reduce((sum, qg) => sum + (qg.grade || 0), 0), homework.questions?.reduce((sum, q) => sum + q.points, 0) || 0),
+                marginTop: designTokens.spacing.xs
+              }}>
                       Question Points: {submission.question_grades.reduce((sum, qg) => sum + (qg.grade || 0), 0)} pts
                     </Text>
-                  )}
+              }
 
-                  {submission.feedback && (
-                    <Text style={{
-                      fontSize: designTokens.typography.body.fontSize,
-                      color: getGradeColor(submission.grade, homework.points),
-                      marginTop: designTokens.spacing.sm,
-                    }}>
+                  {submission.feedback &&
+              <Text style={{
+                fontSize: designTokens.typography.body.fontSize,
+                color: getGradeColor(submission.grade, homework.points),
+                marginTop: designTokens.spacing.sm
+              }}>
                       Feedback: {submission.feedback}
                     </Text>
-                  )}
+              }
                 </View>
-              )}
-            </View>
-          ) : (
-            <View style={{
-              padding: designTokens.spacing.lg,
-              borderRadius: designTokens.borderRadius.xl,
-              borderWidth: 1,
-              borderColor: colors.border,
-              backgroundColor: colors.backgroundElevated,
-              ...designTokens.shadows.sm,
-            }}>
+            }
+            </View> :
+
+          <View style={{
+            padding: designTokens.spacing.lg,
+            borderRadius: designTokens.borderRadius.xl,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.backgroundElevated,
+            ...designTokens.shadows.sm
+          }}>
               <Text style={{
-                fontSize: designTokens.typography.title3.fontSize,
-                fontWeight: designTokens.typography.title3.fontWeight,
-                color: colors.textPrimary,
-                marginBottom: designTokens.spacing.md,
-              } as any}>
+              fontSize: designTokens.typography.title3.fontSize,
+              fontWeight: designTokens.typography.title3.fontWeight,
+              color: colors.textPrimary,
+              marginBottom: designTokens.spacing.md
+            } as any}>
                 Your Submission
               </Text>
 
               <View style={{ marginBottom: designTokens.spacing.lg }}>
                 <Text style={{
-                  fontSize: designTokens.typography.footnote.fontSize,
-                  fontWeight: '600',
-                  color: colors.textPrimary,
-                  marginBottom: designTokens.spacing.sm,
-                }}>
+                fontSize: designTokens.typography.footnote.fontSize,
+                fontWeight: '600',
+                color: colors.textPrimary,
+                marginBottom: designTokens.spacing.sm
+              }}>
                   Answer / Submission Content *
                 </Text>
                 <View style={{
-                  borderRadius: designTokens.borderRadius.lg,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  backgroundColor: colors.background,
-                  minHeight: 120,
-                }}>
+                borderRadius: designTokens.borderRadius.lg,
+                borderWidth: 1,
+                borderColor: colors.border,
+                backgroundColor: colors.background,
+                minHeight: 120
+              }}>
                   <TextInput
-                    style={{
-                      padding: designTokens.spacing.md,
-                      fontSize: designTokens.typography.body.fontSize,
-                      color: colors.textPrimary,
-                      textAlignVertical: 'top',
-                      height: 120,
-                    }}
-                    placeholder="Type your answer or submission here..."
-                    placeholderTextColor={colors.textTertiary}
-                    value={submissionContent}
-                    onChangeText={setSubmissionContent}
-                    multiline
-                    editable={canSubmit}
-                  />
+                  style={{
+                    padding: designTokens.spacing.md,
+                    fontSize: designTokens.typography.body.fontSize,
+                    color: colors.textPrimary,
+                    textAlignVertical: 'top',
+                    height: 120
+                  }}
+                  placeholder="Type your answer or submission here..."
+                  placeholderTextColor={colors.textTertiary}
+                  value={submissionContent}
+                  onChangeText={setSubmissionContent}
+                  multiline
+                  editable={canSubmit} />
+
                 </View>
               </View>
 
-              {homework.attachments && (
-                <View style={{ marginBottom: designTokens.spacing.lg }}>
+              {homework.attachments &&
+            <View style={{ marginBottom: designTokens.spacing.lg }}>
                   <Text style={{
-                    fontSize: designTokens.typography.footnote.fontSize,
-                    fontWeight: '600',
-                    color: colors.textPrimary,
-                    marginBottom: designTokens.spacing.sm,
-                  }}>
-                    Attachments
-                  </Text>
+                fontSize: designTokens.typography.footnote.fontSize,
+                fontWeight: '600',
+                color: colors.textPrimary,
+                marginBottom: designTokens.spacing.sm
+              }}>{t("submissions.attachments")}
 
-                  {attachments.length > 0 && (
-                    <View style={{ marginBottom: designTokens.spacing.md, gap: designTokens.spacing.sm }}>
-                      {attachments.map((attachment, index) => (
-                        <View
-                          key={index}
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            padding: designTokens.spacing.md,
-                            borderRadius: designTokens.borderRadius.lg,
-                            backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
-                          }}
-                        >
+              </Text>
+
+                  {attachments.length > 0 &&
+              <View style={{ marginBottom: designTokens.spacing.md, gap: designTokens.spacing.sm }}>
+                      {attachments.map((attachment, index) =>
+                <View
+                  key={index}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: designTokens.spacing.md,
+                    borderRadius: designTokens.borderRadius.lg,
+                    backgroundColor: isDark ? '#1F2937' : '#F9FAFB'
+                  }}>
+
                           <View style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            flex: 1,
-                          }}>
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    flex: 1
+                  }}>
                             <Ionicons name="document" size={20} color={colors.textSecondary} />
                             <Text
-                              style={{
-                                marginLeft: designTokens.spacing.sm,
-                                fontSize: designTokens.typography.body.fontSize,
-                                color: colors.textPrimary,
-                                flex: 1,
-                              }}
-                              numberOfLines={1}
-                            >
+                      style={{
+                        marginLeft: designTokens.spacing.sm,
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: colors.textPrimary,
+                        flex: 1
+                      }}
+                      numberOfLines={1}>
+
                               {attachment}
                             </Text>
                           </View>
                           <TouchableOpacity
-                            onPress={() => removeAttachment(index)}
-                            disabled={!canSubmit}
-                          >
+                    onPress={() => removeAttachment(index)}
+                    disabled={!canSubmit}>
+
                             <Ionicons name="close-circle" size={20} color="#EF4444" />
                           </TouchableOpacity>
                         </View>
-                      ))}
+                )}
                     </View>
-                  )}
+              }
 
                   <TouchableOpacity
-                    onPress={pickDocument}
-                    disabled={!canSubmit || uploading}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      paddingVertical: designTokens.spacing.md,
-                      borderRadius: designTokens.borderRadius.lg,
-                      borderWidth: 2,
-                      borderStyle: 'dashed',
-                      borderColor: canSubmit ? '#3B82F6' : colors.border,
-                      backgroundColor: canSubmit ? '#3B82F615' : colors.background,
-                    }}
-                  >
-                    {uploading ? (
-                      <ActivityIndicator size="small" color={colors.primary} />
-                    ) : (
-                      <>
+                onPress={pickDocument}
+                disabled={!canSubmit || uploading}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingVertical: designTokens.spacing.md,
+                  borderRadius: designTokens.borderRadius.lg,
+                  borderWidth: 2,
+                  borderStyle: 'dashed',
+                  borderColor: canSubmit ? '#3B82F6' : colors.border,
+                  backgroundColor: canSubmit ? '#3B82F615' : colors.background
+                }}>
+
+                    {uploading ?
+                <ActivityIndicator size="small" color={colors.primary} /> :
+
+                <>
                         <Ionicons
-                          name="attach"
-                          size={20}
-                          color={canSubmit ? "#3B82F6" : colors.textTertiary}
-                        />
+                    name="attach"
+                    size={20}
+                    color={canSubmit ? "#3B82F6" : colors.textTertiary} />
+
                         <Text style={{
-                          marginLeft: designTokens.spacing.sm,
-                          fontWeight: '600',
-                          color: canSubmit ? '#3B82F6' : colors.textTertiary,
-                        }}>
+                    marginLeft: designTokens.spacing.sm,
+                    fontWeight: '600',
+                    color: canSubmit ? '#3B82F6' : colors.textTertiary
+                  }}>
                           Add Attachment
                         </Text>
                       </>
-                    )}
+                }
                   </TouchableOpacity>
                 </View>
-              )}
+            }
 
-              {isOverdue && (
-                <View style={{
-                  padding: designTokens.spacing.md,
-                  borderRadius: designTokens.borderRadius.lg,
-                  backgroundColor: '#DC262615',
-                  borderWidth: 1,
-                  borderColor: '#DC262640',
-                  marginBottom: designTokens.spacing.lg,
-                }}>
+              {isOverdue &&
+            <View style={{
+              padding: designTokens.spacing.md,
+              borderRadius: designTokens.borderRadius.lg,
+              backgroundColor: '#DC262615',
+              borderWidth: 1,
+              borderColor: '#DC262640',
+              marginBottom: designTokens.spacing.lg
+            }}>
                   <Text style={{
-                    fontSize: designTokens.typography.body.fontSize,
-                    fontWeight: '600',
-                    color: '#DC2626',
-                    textAlign: 'center',
-                  }}>
+                fontSize: designTokens.typography.body.fontSize,
+                fontWeight: '600',
+                color: '#DC2626',
+                textAlign: 'center'
+              }}>
                     This assignment is overdue and can no longer be submitted.
                   </Text>
                 </View>
-              )}
+            }
 
               <TouchableOpacity
-                onPress={handleSubmitHomework}
-                disabled={!canSubmit || !submissionContent.trim() || submitting}
-                style={{
-                  paddingVertical: designTokens.spacing.lg,
-                  borderRadius: designTokens.borderRadius.xl,
-                  backgroundColor: (!canSubmit || !submissionContent.trim() || submitting)
-                    ? '#93C5FD'
-                    : colors.primary,
-                  alignItems: 'center',
-                }}
-              >
-                {submitting ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <Text style={{
-                    fontSize: designTokens.typography.body.fontSize,
-                    fontWeight: '600',
-                    color: 'white',
-                  }}>
+              onPress={handleSubmitHomework}
+              disabled={!canSubmit || !submissionContent.trim() || submitting}
+              style={{
+                paddingVertical: designTokens.spacing.lg,
+                borderRadius: designTokens.borderRadius.xl,
+                backgroundColor: !canSubmit || !submissionContent.trim() || submitting ?
+                '#93C5FD' :
+                colors.primary,
+                alignItems: 'center'
+              }}>
+
+                {submitting ?
+              <ActivityIndicator size="small" color="white" /> :
+
+              <Text style={{
+                fontSize: designTokens.typography.body.fontSize,
+                fontWeight: '600',
+                color: 'white'
+              }}>
                     {isOverdue ? 'Submission Closed' : 'Submit Homework'}
                   </Text>
-                )}
+              }
               </TouchableOpacity>
             </View>
-          )}
+          }
         </View>
         <ShareModal
           visible={showShareModal}
@@ -1133,9 +1133,9 @@ export default function HomeworkDetailScreen() {
             id as string,
             { subject: homework?.subject, title: homework?.title }
           )}
-          subject={homework?.subject}
-        />
+          subject={homework?.subject} />
+
       </ScrollView>
-    </KeyboardAvoidingView>
-  );
+    </KeyboardAvoidingView>);
+
 }

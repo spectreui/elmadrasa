@@ -3,12 +3,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { View, Text } from "react-native";
 import { useEffect } from "react";
-import { useThemeContext } from "@/contexts/ThemeContext";
+import { useThemeContext } from "@/contexts/ThemeContext"; import { useTranslation } from "@/hooks/useTranslation";
 
 export default function TeacherLayout() {
+  const { t, setLanguage } = useTranslation();
   const { isAuthenticated, loading, user } = useAuth();
   const router = useRouter();
   const { isDark, colors, toggleTheme } = useThemeContext();
+
+  // Force arabic
+  // setLanguage('ar');
 
   console.log('🔐 Auth State:', {
     isAuthenticated,
@@ -34,137 +38,137 @@ export default function TeacherLayout() {
           borderTopColor: colors.border,
           height: 70,
           paddingBottom: 0,
-          paddingTop: 8,
+          paddingTop: 8
         },
         tabBarActiveTintColor: "#3b82f6",
         tabBarInactiveTintColor: "#6b7280",
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: "500",
-        },
-      }}
-    >
+          fontWeight: "500"
+        }
+      }}>
+
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
-          tabBarIcon: ({ color, size, focused }) => (
+          title: t("home"),
+          tabBarIcon: ({ color, size, focused }) =>
             <View className="items-center justify-center">
               <Ionicons
                 name={focused ? "home" : "home-outline"}
                 size={24}
-                color={color}
-              />
+                color={color} />
+
             </View>
-          ),
-        }}
-      />
+
+        }} />
+
       <Tabs.Screen
         name="exams/index"
         options={{
-          title: "Exams",
-          tabBarIcon: ({ color, size, focused }) => (
+          title: t('exams'),
+          tabBarIcon: ({ color, size, focused }) =>
             <View className="items-center justify-center">
               <Ionicons
                 name={focused ? "document-text" : "document-text-outline"}
                 size={24}
-                color={color}
-              />
+                color={color} />
+
             </View>
-          ),
-        }}
-      />
+
+        }} />
+
       <Tabs.Screen
         name="homework/index"
         options={{
-          title: "Assign",
-          tabBarIcon: ({ color, size, focused }) => (
+          title: t("homeworks"),
+          tabBarIcon: ({ color, size, focused }) =>
             <View className="items-center justify-center">
               <Ionicons
                 name={focused ? "add-circle" : "add-circle-outline"}
                 size={26}
-                color={color}
-              />
+                color={color} />
+
             </View>
-          ),
-        }}
-      />
+
+        }} />
+
       <Tabs.Screen
         name="my-classes"
         options={{
-          title: "Classes",
-          tabBarIcon: ({ color, size, focused }) => (
+          title: t("dashboard.classes"),
+          tabBarIcon: ({ color, size, focused }) =>
             <View className="items-center justify-center">
               <Ionicons
                 name={focused ? "people" : "people-outline"}
                 size={24}
-                color={color}
-              />
+                color={color} />
+
             </View>
-          ),
-        }}
-      />
+
+        }} />
+
       <Tabs.Screen
         name="statistics"
         options={{
-          title: "Analytics",
-          tabBarIcon: ({ color, size, focused }) => (
+          title: t("dashboard.analytics"),
+          tabBarIcon: ({ color, size, focused }) =>
             <View className="items-center justify-center">
               <Ionicons
                 name={focused ? "bar-chart" : "bar-chart-outline"}
                 size={24}
-                color={color}
-              />
+                color={color} />
+
             </View>
-          ),
-        }}
-      />
+
+        }} />
+
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: t("profile.title"),
           href: null,
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ color, size, focused }) =>
             <View className="items-center justify-center">
               <Ionicons
                 name={focused ? "person" : "person-outline"}
                 size={24}
-                color={color}
-              />
+                color={color} />
+
             </View>
-          ),
-        }}
-      />
+
+        }} />
+
       <Tabs.Screen
         name="exam-results/[id]"
         options={{
-          href: null, // This hides it from tab bar
-        }}
-      />
+          href: null // This hides it from tab bar
+        }} />
+
       <Tabs.Screen
         name="create-exam"
         options={{
-          href: null, // This hides it from tab bar
-        }}
-      />
+          href: null // This hides it from tab bar
+        }} />
+
       <Tabs.Screen
         name="homework/[id]/submissions"
         options={{
-          href: null, // This hides it from tab bar
-        }}
-      />
+          href: null // This hides it from tab bar
+        }} />
+
       <Tabs.Screen
         name="homework/create"
         options={{
-          href: null, // This hides it from tab bar
-        }}
-      />
+          href: null // This hides it from tab bar
+        }} />
+
       <Tabs.Screen
         name="exams/[id]"
         options={{
-          href: null, // This hides it from tab bar
-        }}
-      />
-    </Tabs>
-  );
+          href: null // This hides it from tab bar
+        }} />
+
+    </Tabs>);
+
 }

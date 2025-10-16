@@ -10,48 +10,48 @@ import {
   Platform,
   ScrollView,
   StatusBar,
-  Dimensions,
-} from "react-native";
+  Dimensions } from
+"react-native";
 import { Alert } from '@/utils/UniversalAlert';
 import { router } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { designTokens } from "../../src/utils/designTokens";
-import { useThemeContext } from "../../src/contexts/ThemeContext";
+import { useThemeContext } from "../../src/contexts/ThemeContext";import { useTranslation } from "@/hooks/useTranslation";
 
 const { width } = Dimensions.get('window');
 
-export default function LoginScreen() {
+export default function LoginScreen() {const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const { login, isLoading, error, clearError } = useAuth();
   const { colors, isDark } = useThemeContext();
-    
+
 
   const demoLogins = [
-    { 
-      role: "Student", 
-      email: "student1@school.com", 
-      password: "student123",
-      color: "#10b981",
-      icon: "school"
-    },
-    { 
-      role: "Teacher", 
-      email: "teacher@school.com", 
-      password: "teacher123",
-      color: "#3b82f6",
-      icon: "person"
-    },
-    { 
-      role: "Admin", 
-      email: "admin@school.com", 
-      password: "admin123",
-      color: "#8b5cf6",
-      icon: "shield"
-    },
-  ];
+  {
+    role: "Student",
+    email: "student1@school.com",
+    password: "student123",
+    color: "#10b981",
+    icon: "school"
+  },
+  {
+    role: "Teacher",
+    email: "teacher@school.com",
+    password: "teacher123",
+    color: "#3b82f6",
+    icon: "person"
+  },
+  {
+    role: "Admin",
+    email: "admin@school.com",
+    password: "admin123",
+    color: "#8b5cf6",
+    icon: "shield"
+  }];
+
 
   const fillDemoCredentials = (demoEmail: string, demoPassword: string) => {
     setEmail(demoEmail);
@@ -70,9 +70,9 @@ export default function LoginScreen() {
       router.replace("/");
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || error.message || "Login failed. Please check your credentials.";
-      
+
       Alert.alert(
-        "Login Failed", 
+        "Login Failed",
         errorMessage,
         [{ text: "OK", onPress: clearError }]
       );
@@ -88,18 +88,18 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1, backgroundColor: colors.background }}
-    >
-      <StatusBar 
-        barStyle={isDark ? "light-content" : "dark-content"} 
-        backgroundColor={colors.background}
-      />
+      style={{ flex: 1, backgroundColor: colors.background }}>
+
+      <StatusBar
+        barStyle={isDark ? "light-content" : "dark-content"}
+        backgroundColor={colors.background} />
+
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
         bounces={false}
-        keyboardShouldPersistTaps="handled"
-      >
+        keyboardShouldPersistTaps="handled">
+
         <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: designTokens.spacing.xl }}>
           {/* Header */}
           <View style={{ alignItems: 'center', marginBottom: designTokens.spacing.xxxl }}>
@@ -111,7 +111,7 @@ export default function LoginScreen() {
               alignItems: 'center',
               justifyContent: 'center',
               marginBottom: designTokens.spacing.xl,
-              ...designTokens.shadows.lg,
+              ...designTokens.shadows.lg
             }}>
               <Ionicons name="school" size={48} color="white" />
             </View>
@@ -119,42 +119,42 @@ export default function LoginScreen() {
               fontSize: designTokens.typography.largeTitle.fontSize,
               fontWeight: designTokens.typography.largeTitle.fontWeight,
               color: colors.textPrimary,
-              marginBottom: designTokens.spacing.xs,
+              marginBottom: designTokens.spacing.xs
             } as any}>
               ElMadrasa
             </Text>
             <Text style={{
               fontSize: designTokens.typography.body.fontSize,
               color: colors.textSecondary,
-              textAlign: 'center',
+              textAlign: 'center'
             }}>
               Learn. Grow. Succeed.
             </Text>
           </View>
 
           {/* Error Display */}
-          {error && (
-            <View style={{
-              backgroundColor: `${colors.error}10`,
-              borderColor: `${colors.error}20`,
-              borderWidth: 1,
-              borderRadius: designTokens.borderRadius.xl,
-              padding: designTokens.spacing.lg,
-              marginBottom: designTokens.spacing.xl,
-            }}>
+          {error &&
+          <View style={{
+            backgroundColor: `${colors.error}10`,
+            borderColor: `${colors.error}20`,
+            borderWidth: 1,
+            borderRadius: designTokens.borderRadius.xl,
+            padding: designTokens.spacing.lg,
+            marginBottom: designTokens.spacing.xl
+          }}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Ionicons name="warning" size={20} color={colors.error} />
                 <Text style={{
-                  color: colors.error,
-                  fontWeight: '500',
-                  marginLeft: designTokens.spacing.sm,
-                  flex: 1,
-                }}>
+                color: colors.error,
+                fontWeight: '500',
+                marginLeft: designTokens.spacing.sm,
+                flex: 1
+              }}>
                   {error}
                 </Text>
               </View>
             </View>
-          )}
+          }
 
           {/* Login Form */}
           <View style={{ marginBottom: designTokens.spacing.xxl }}>
@@ -163,7 +163,7 @@ export default function LoginScreen() {
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textPrimary,
-                marginBottom: designTokens.spacing.sm,
+                marginBottom: designTokens.spacing.sm
               }}>
                 Email or Student ID
               </Text>
@@ -177,7 +177,7 @@ export default function LoginScreen() {
                     backgroundColor: colors.backgroundElevated,
                     color: colors.textPrimary,
                     fontSize: designTokens.typography.body.fontSize,
-                    paddingLeft: 52,
+                    paddingLeft: 52
                   }}
                   placeholder="Enter your email or student ID"
                   placeholderTextColor={colors.textTertiary}
@@ -190,18 +190,18 @@ export default function LoginScreen() {
                   keyboardType="email-address"
                   autoComplete="email"
                   returnKeyType="next"
-                  editable={!isLoading}
-                />
-                <Ionicons 
-                  name="mail" 
-                  size={20} 
-                  color={colors.textTertiary} 
-                  style={{ 
-                    position: 'absolute', 
-                    left: designTokens.spacing.lg, 
-                    top: 18 
-                  }}
-                />
+                  editable={!isLoading} />
+
+                <Ionicons
+                  name="mail"
+                  size={20}
+                  color={colors.textTertiary}
+                  style={{
+                    position: 'absolute',
+                    left: designTokens.spacing.lg,
+                    top: 18
+                  }} />
+
               </View>
             </View>
 
@@ -210,7 +210,7 @@ export default function LoginScreen() {
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textPrimary,
-                marginBottom: designTokens.spacing.sm,
+                marginBottom: designTokens.spacing.sm
               }}>
                 Password
               </Text>
@@ -225,7 +225,7 @@ export default function LoginScreen() {
                     color: colors.textPrimary,
                     fontSize: designTokens.typography.body.fontSize,
                     paddingLeft: 52,
-                    paddingRight: 52,
+                    paddingRight: 52
                   }}
                   placeholder="Enter your password"
                   placeholderTextColor={colors.textTertiary}
@@ -238,32 +238,32 @@ export default function LoginScreen() {
                   autoComplete="password"
                   returnKeyType="done"
                   onSubmitEditing={handleSubmitEditing}
-                  editable={!isLoading}
-                />
-                <Ionicons 
-                  name="lock-closed" 
-                  size={20} 
-                  color={colors.textTertiary} 
-                  style={{ 
-                    position: 'absolute', 
-                    left: designTokens.spacing.lg, 
-                    top: 18 
-                  }}
-                />
+                  editable={!isLoading} />
+
+                <Ionicons
+                  name="lock-closed"
+                  size={20}
+                  color={colors.textTertiary}
+                  style={{
+                    position: 'absolute',
+                    left: designTokens.spacing.lg,
+                    top: 18
+                  }} />
+
                 <TouchableOpacity
-                  style={{ 
-                    position: 'absolute', 
-                    right: designTokens.spacing.md, 
-                    top: 16 
+                  style={{
+                    position: 'absolute',
+                    right: designTokens.spacing.md,
+                    top: 16
                   }}
                   onPress={() => setShowPassword(!showPassword)}
-                  disabled={isLoading}
-                >
+                  disabled={isLoading}>
+
                   <Ionicons
                     name={showPassword ? "eye-off" : "eye"}
                     size={24}
-                    color={colors.textTertiary}
-                  />
+                    color={colors.textTertiary} />
+
                 </TouchableOpacity>
               </View>
             </View>
@@ -278,49 +278,49 @@ export default function LoginScreen() {
                 alignItems: 'center',
                 ...designTokens.shadows.md,
                 marginTop: designTokens.spacing.sm,
-                opacity: (!email.trim() || !password.trim()) && !isLoading ? 0.7 : 1,
+                opacity: (!email.trim() || !password.trim()) && !isLoading ? 0.7 : 1
               }}
               onPress={handleLogin}
-              disabled={isLoading || !email.trim() || !password.trim()}
-            >
-              {isLoading ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              disabled={isLoading || !email.trim() || !password.trim()}>
+
+              {isLoading ?
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <ActivityIndicator color="white" size="small" />
                   <Text style={{
-                    color: 'white',
-                    fontWeight: '600',
-                    fontSize: designTokens.typography.body.fontSize,
-                    marginLeft: designTokens.spacing.sm,
-                  }}>
+                  color: 'white',
+                  fontWeight: '600',
+                  fontSize: designTokens.typography.body.fontSize,
+                  marginLeft: designTokens.spacing.sm
+                }}>
                     Signing In...
                   </Text>
-                </View>
-              ) : (
-                <>
+                </View> :
+
+              <>
                   <Ionicons name="log-in" size={20} color="white" />
                   <Text style={{
-                    color: 'white',
-                    fontWeight: '600',
-                    fontSize: designTokens.typography.body.fontSize,
-                    marginLeft: designTokens.spacing.sm,
-                  }}>
+                  color: 'white',
+                  fontWeight: '600',
+                  fontSize: designTokens.typography.body.fontSize,
+                  marginLeft: designTokens.spacing.sm
+                }}>
                     Sign In
                   </Text>
                 </>
-              )}
+              }
             </TouchableOpacity>
           </View>
 
           {/* Signup Option */}
-          <View style={{ 
-            flexDirection: 'row', 
-            justifyContent: 'center', 
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'center',
             alignItems: 'center',
-            marginBottom: designTokens.spacing.xxl,
+            marginBottom: designTokens.spacing.xxl
           }}>
             <Text style={{
               color: colors.textSecondary,
-              fontSize: designTokens.typography.body.fontSize,
+              fontSize: designTokens.typography.body.fontSize
             }}>
               Don't have an account?{' '}
             </Text>
@@ -328,7 +328,7 @@ export default function LoginScreen() {
               <Text style={{
                 color: colors.primary,
                 fontWeight: '600',
-                fontSize: designTokens.typography.body.fontSize,
+                fontSize: designTokens.typography.body.fontSize
               }}>
                 Sign Up
               </Text>
@@ -342,72 +342,72 @@ export default function LoginScreen() {
               color: colors.textTertiary,
               fontSize: designTokens.typography.footnote.fontSize,
               fontWeight: '600',
-              marginBottom: designTokens.spacing.md,
+              marginBottom: designTokens.spacing.md
             }}>
               Demo Accounts - Tap to Auto-fill
             </Text>
             <View style={{ gap: designTokens.spacing.sm }}>
-              {demoLogins.map((demo, index) => (
-                <TouchableOpacity
-                  key={index}
+              {demoLogins.map((demo, index) =>
+              <TouchableOpacity
+                key={index}
+                style={{
+                  backgroundColor: colors.backgroundElevated,
+                  borderRadius: designTokens.borderRadius.xl,
+                  padding: designTokens.spacing.lg,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  ...designTokens.shadows.sm
+                }}
+                onPress={() => fillDemoCredentials(demo.email, demo.password)}
+                disabled={isLoading}
+                activeOpacity={0.8}>
+
+                  <View
                   style={{
-                    backgroundColor: colors.backgroundElevated,
-                    borderRadius: designTokens.borderRadius.xl,
-                    padding: designTokens.spacing.lg,
-                    flexDirection: 'row',
+                    width: 40,
+                    height: 40,
+                    borderRadius: designTokens.borderRadius.lg,
                     alignItems: 'center',
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    ...designTokens.shadows.sm,
-                  }}
-                  onPress={() => fillDemoCredentials(demo.email, demo.password)}
-                  disabled={isLoading}
-                  activeOpacity={0.8}
-                >
-                  <View 
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: designTokens.borderRadius.lg,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginRight: designTokens.spacing.md,
-                      backgroundColor: `${demo.color}15`,
-                    }}
-                  >
+                    justifyContent: 'center',
+                    marginRight: designTokens.spacing.md,
+                    backgroundColor: `${demo.color}15`
+                  }}>
+
                     <Ionicons name={demo.icon as any} size={20} color={demo.color} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={{
-                      fontWeight: '600',
-                      color: colors.textPrimary,
-                      fontSize: designTokens.typography.body.fontSize,
-                    }}>
+                    fontWeight: '600',
+                    color: colors.textPrimary,
+                    fontSize: designTokens.typography.body.fontSize
+                  }}>
                       {demo.role}
                     </Text>
                     <Text style={{
-                      color: colors.textSecondary,
-                      fontSize: designTokens.typography.caption1.fontSize,
-                    }}>
+                    color: colors.textSecondary,
+                    fontSize: designTokens.typography.caption1.fontSize
+                  }}>
                       {demo.email}
                     </Text>
                   </View>
                   <View style={{
-                    paddingHorizontal: designTokens.spacing.md,
-                    paddingVertical: designTokens.spacing.xs,
-                    borderRadius: designTokens.borderRadius.full,
-                    backgroundColor: colors.separator,
-                  }}>
+                  paddingHorizontal: designTokens.spacing.md,
+                  paddingVertical: designTokens.spacing.xs,
+                  borderRadius: designTokens.borderRadius.full,
+                  backgroundColor: colors.separator
+                }}>
                     <Text style={{
-                      color: colors.textSecondary,
-                      fontSize: designTokens.typography.caption2.fontSize,
-                      fontWeight: '500',
-                    }}>
-                      {isLoading ? 'Loading...' : 'Tap to fill'}
+                    color: colors.textSecondary,
+                    fontSize: designTokens.typography.caption2.fontSize,
+                    fontWeight: '500'
+                  }}>
+                      {isLoading ? t("common.loading") : 'Tap to fill'}
                     </Text>
                   </View>
                 </TouchableOpacity>
-              ))}
+              )}
             </View>
           </View>
 
@@ -416,20 +416,20 @@ export default function LoginScreen() {
             <Text style={{
               color: colors.textTertiary,
               fontSize: designTokens.typography.footnote.fontSize,
-              textAlign: 'center',
+              textAlign: 'center'
             }}>
               Secure login with modern encryption
             </Text>
             <Text style={{
               color: colors.textTertiary,
               fontSize: designTokens.typography.caption1.fontSize,
-              marginTop: designTokens.spacing.xs,
+              marginTop: designTokens.spacing.xs
             }}>
               Version 1.0.0
             </Text>
           </View>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
-  );
+    </KeyboardAvoidingView>);
+
 }

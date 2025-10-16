@@ -7,14 +7,14 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Platform,
-} from 'react-native';
+  Platform } from
+'react-native';
 import { Alert } from '@/utils/UniversalAlert';
 import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { designTokens } from '../../src/utils/designTokens';
-import { useThemeContext } from '../../src/contexts/ThemeContext';
+import { useThemeContext } from '../../src/contexts/ThemeContext';import { useTranslation } from "@/hooks/useTranslation";
 
 interface Level {
   id: string;
@@ -31,9 +31,9 @@ interface Class {
   level_id: string;
 }
 
-export default function SignUp() {
+export default function SignUp() {const { t } = useTranslation();
   const { colors, isDark } = useThemeContext();
-    
+
 
   // Form state
   const [formData, setFormData] = useState({
@@ -45,7 +45,7 @@ export default function SignUp() {
     studentId: '',
     levelId: '',
     grade: '',
-    classId: '',
+    classId: ''
   });
 
   // Dropdown data
@@ -105,7 +105,7 @@ export default function SignUp() {
   const mapGradeToNumeric = (grade: string, levelShortName?: string): string => {
     // Handle Prep levels (1st, 2nd, 3rd -> 1, 2, 3)
     if (levelShortName === 'PREP') {
-      const prepMap: { [key: string]: string } = {
+      const prepMap: {[key: string]: string;} = {
         '1st': '7',
         '2nd': '8',
         '3rd': '9',
@@ -118,7 +118,7 @@ export default function SignUp() {
 
     // Handle Secondary levels (1st, 2nd, 3rd -> 10, 11, 12)
     if (levelShortName === 'SEC') {
-      const secMap: { [key: string]: string } = {
+      const secMap: {[key: string]: string;} = {
         '1st': '10',
         '2nd': '11',
         '3rd': '12',
@@ -131,7 +131,7 @@ export default function SignUp() {
 
     // Handle Primary levels (keep as is)
     if (levelShortName === 'PRI') {
-      const primaryMap: { [key: string]: string } = {
+      const primaryMap: {[key: string]: string;} = {
         '1': '1',
         '2': '2',
         '3': '3',
@@ -143,7 +143,7 @@ export default function SignUp() {
     }
 
     // Default fallback mappings
-    const defaultMap: { [key: string]: string } = {
+    const defaultMap: {[key: string]: string;} = {
       '1st': '1',
       '2nd': '2',
       '3rd': '3',
@@ -153,9 +153,9 @@ export default function SignUp() {
       '4': '4',
       '5': '5',
       '6': '6',
-      '7': '1',    // Map 7 to Prep 1
-      '8': '2',    // Map 8 to Prep 2
-      '9': '3',    // Map 9 to Prep 3
+      '7': '1', // Map 7 to Prep 1
+      '8': '2', // Map 8 to Prep 2
+      '9': '3', // Map 9 to Prep 3
       '10': '10',
       '11': '11',
       '12': '12'
@@ -167,7 +167,7 @@ export default function SignUp() {
   const mapGradeToEgyptian = (grade: string, levelShortName?: string): string => {
     // For Prep levels, use 1st, 2nd, 3rd
     if (levelShortName === 'PREP') {
-      const prepMap: { [key: string]: string } = {
+      const prepMap: {[key: string]: string;} = {
         '7': '1st',
         '8': '2nd',
         '9': '3rd'
@@ -177,7 +177,7 @@ export default function SignUp() {
 
     // For Secondary levels, use 1st, 2nd, 3rd
     if (levelShortName === 'SEC') {
-      const secMap: { [key: string]: string } = {
+      const secMap: {[key: string]: string;} = {
         '10': '1st',
         '11': '2nd',
         '12': '3rd'
@@ -191,7 +191,7 @@ export default function SignUp() {
     }
 
     // Default mappings
-    const defaultMap: { [key: string]: string } = {
+    const defaultMap: {[key: string]: string;} = {
       '1': '1st',
       '2': '2nd',
       '3': '3rd',
@@ -205,30 +205,30 @@ export default function SignUp() {
 
     return defaultMap[grade] || grade;
   };
-const loadClasses = async (grade: string, levelId: string) => {
-  setDataLoading(true);
-  setClasses([]); // Clear previous classes immediately
-  try {
-    // Get level info to determine mapping
-    const selectedLevel = levels.find(l => l.id === levelId);
-    const levelShortName = selectedLevel?.short_name;
-    
-    // Map to numeric value for API call
-    const numericGrade = mapGradeToNumeric(grade, levelShortName);
-    console.log('Loading classes for:', { grade: numericGrade, levelId });
-    
-    const response = await apiService.getClassesByGrade(numericGrade, levelId);
-    if (response.success) {
-      console.log('Loaded classes:', response.data);
-      setClasses(response.data || []);
+  const loadClasses = async (grade: string, levelId: string) => {
+    setDataLoading(true);
+    setClasses([]); // Clear previous classes immediately
+    try {
+      // Get level info to determine mapping
+      const selectedLevel = levels.find((l) => l.id === levelId);
+      const levelShortName = selectedLevel?.short_name;
+
+      // Map to numeric value for API call
+      const numericGrade = mapGradeToNumeric(grade, levelShortName);
+      console.log('Loading classes for:', { grade: numericGrade, levelId });
+
+      const response = await apiService.getClassesByGrade(numericGrade, levelId);
+      if (response.success) {
+        console.log('Loaded classes:', response.data);
+        setClasses(response.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to load classes:', error);
+      Alert.alert('Error', 'Failed to load classes');
+    } finally {
+      setDataLoading(false);
     }
-  } catch (error) {
-    console.error('Failed to load classes:', error);
-    Alert.alert('Error', 'Failed to load classes');
-  } finally {
-    setDataLoading(false);
-  }
-};
+  };
 
 
   const handleLevelSelect = (levelId: string) => {
@@ -236,7 +236,7 @@ const loadClasses = async (grade: string, levelId: string) => {
       ...formData,
       levelId,
       grade: '',
-      classId: '',
+      classId: ''
     });
     setShowLevelDropdown(false);
     loadGrades(levelId);
@@ -247,7 +247,7 @@ const loadClasses = async (grade: string, levelId: string) => {
     setFormData({
       ...formData,
       grade,
-      classId: '',
+      classId: ''
     });
     setShowGradeDropdown(false);
 
@@ -261,7 +261,7 @@ const loadClasses = async (grade: string, levelId: string) => {
   const handleClassSelect = (classId: string) => {
     setFormData({
       ...formData,
-      classId,
+      classId
     });
     setShowClassDropdown(false);
   };
@@ -298,8 +298,8 @@ const loadClasses = async (grade: string, levelId: string) => {
 
     try {
       // Get selected values for API
-      const selectedLevel = levels.find(l => l.id === formData.levelId);
-      const selectedClass = classes.find(c => c.id === formData.classId);
+      const selectedLevel = levels.find((l) => l.id === formData.levelId);
+      const selectedClass = classes.find((c) => c.id === formData.classId);
 
       // Map grade to Egyptian format for display
       const egyptianGrade = mapGradeToEgyptian(formData.grade);
@@ -316,7 +316,7 @@ const loadClasses = async (grade: string, levelId: string) => {
           grade: egyptianGrade || '',
           class: selectedClass?.name || '', // Use selected class name
           subjects: []
-        },
+        }
       };
 
       console.log('Sending signup data:', signUpData); // Debug log
@@ -329,8 +329,8 @@ const loadClasses = async (grade: string, levelId: string) => {
           pathname: '/(auth)/signup-success',
           params: {
             role: formData.role,
-            name: formData.name,
-          },
+            name: formData.name
+          }
         });
       }
     } catch (error: any) {
@@ -346,7 +346,7 @@ const loadClasses = async (grade: string, levelId: string) => {
 
   // Get display names for selected items
   const getSelectedLevelName = () => {
-    const level = levels.find(l => l.id === formData.levelId);
+    const level = levels.find((l) => l.id === formData.levelId);
     return level ? level.name : 'Select Level';
   };
 
@@ -356,7 +356,7 @@ const loadClasses = async (grade: string, levelId: string) => {
   };
 
   const getSelectedClassName = () => {
-    const cls = classes.find(c => c.id === formData.classId);
+    const cls = classes.find((c) => c.id === formData.classId);
     return cls ? cls.name : 'Select Class';
   };
 
@@ -364,13 +364,13 @@ const loadClasses = async (grade: string, levelId: string) => {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ flexGrow: 1 }}
-      >
+        contentContainerStyle={{ flexGrow: 1 }}>
+
         <View style={{
           flex: 1,
           minHeight: '100%',
           paddingHorizontal: designTokens.spacing.xl,
-          paddingVertical: designTokens.spacing.xxxl,
+          paddingVertical: designTokens.spacing.xxxl
         }}>
           {/* Header */}
           <View style={{ marginBottom: designTokens.spacing.xxxl }}>
@@ -384,26 +384,26 @@ const loadClasses = async (grade: string, levelId: string) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: designTokens.spacing.xl,
-                ...designTokens.shadows.sm,
-              }}
-            >
+                ...designTokens.shadows.sm
+              }}>
+
               <Ionicons
                 name="arrow-back"
                 size={20}
-                color={colors.textPrimary}
-              />
+                color={colors.textPrimary} />
+
             </TouchableOpacity>
             <Text style={{
               fontSize: designTokens.typography.largeTitle.fontSize,
               fontWeight: designTokens.typography.largeTitle.fontWeight,
               color: colors.textPrimary,
-              marginBottom: designTokens.spacing.xs,
+              marginBottom: designTokens.spacing.xs
             } as any}>
               Create Account
             </Text>
             <Text style={{
               fontSize: designTokens.typography.body.fontSize,
-              color: colors.textSecondary,
+              color: colors.textSecondary
             }}>
               Join your school community
             </Text>
@@ -417,7 +417,7 @@ const loadClasses = async (grade: string, levelId: string) => {
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textPrimary,
-                marginBottom: designTokens.spacing.sm,
+                marginBottom: designTokens.spacing.sm
               }}>
                 Full Name *
               </Text>
@@ -429,13 +429,13 @@ const loadClasses = async (grade: string, levelId: string) => {
                   padding: designTokens.spacing.lg,
                   backgroundColor: colors.backgroundElevated,
                   color: colors.textPrimary,
-                  fontSize: designTokens.typography.body.fontSize,
+                  fontSize: designTokens.typography.body.fontSize
                 }}
                 placeholder="Enter your full name"
                 value={formData.name}
                 onChangeText={(text) => setFormData({ ...formData, name: text })}
-                placeholderTextColor={colors.textTertiary}
-              />
+                placeholderTextColor={colors.textTertiary} />
+
             </View>
 
             {/* Email */}
@@ -444,7 +444,7 @@ const loadClasses = async (grade: string, levelId: string) => {
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textPrimary,
-                marginBottom: designTokens.spacing.sm,
+                marginBottom: designTokens.spacing.sm
               }}>
                 Email Address *
               </Text>
@@ -456,15 +456,15 @@ const loadClasses = async (grade: string, levelId: string) => {
                   padding: designTokens.spacing.lg,
                   backgroundColor: colors.backgroundElevated,
                   color: colors.textPrimary,
-                  fontSize: designTokens.typography.body.fontSize,
+                  fontSize: designTokens.typography.body.fontSize
                 }}
                 placeholder="Enter your email"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 value={formData.email}
                 onChangeText={(text) => setFormData({ ...formData, email: text })}
-                placeholderTextColor={colors.textTertiary}
-              />
+                placeholderTextColor={colors.textTertiary} />
+
             </View>
 
             {/* Role Selection */}
@@ -473,13 +473,13 @@ const loadClasses = async (grade: string, levelId: string) => {
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textPrimary,
-                marginBottom: designTokens.spacing.md,
+                marginBottom: designTokens.spacing.md
               }}>
                 I am a *
               </Text>
               <View style={{
                 flexDirection: 'row',
-                gap: designTokens.spacing.sm,
+                gap: designTokens.spacing.sm
               }}>
                 <TouchableOpacity
                   style={{
@@ -492,19 +492,19 @@ const loadClasses = async (grade: string, levelId: string) => {
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: designTokens.spacing.sm,
+                    gap: designTokens.spacing.sm
                   }}
-                  onPress={() => setFormData({ ...formData, role: 'student' })}
-                >
+                  onPress={() => setFormData({ ...formData, role: 'student' })}>
+
                   <Ionicons
                     name="school"
                     size={20}
-                    color={formData.role === 'student' ? colors.primary : colors.textSecondary}
-                  />
+                    color={formData.role === 'student' ? colors.primary : colors.textSecondary} />
+
                   <Text style={{
                     fontWeight: '600',
                     color: formData.role === 'student' ? colors.primary : colors.textPrimary,
-                    fontSize: designTokens.typography.body.fontSize,
+                    fontSize: designTokens.typography.body.fontSize
                   }}>
                     Student
                   </Text>
@@ -521,19 +521,19 @@ const loadClasses = async (grade: string, levelId: string) => {
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: designTokens.spacing.sm,
+                    gap: designTokens.spacing.sm
                   }}
-                  onPress={() => setFormData({ ...formData, role: 'teacher' })}
-                >
+                  onPress={() => setFormData({ ...formData, role: 'teacher' })}>
+
                   <Ionicons
                     name="person"
                     size={20}
-                    color={formData.role === 'teacher' ? colors.primary : colors.textSecondary}
-                  />
+                    color={formData.role === 'teacher' ? colors.primary : colors.textSecondary} />
+
                   <Text style={{
                     fontWeight: '600',
                     color: formData.role === 'teacher' ? colors.primary : colors.textPrimary,
-                    fontSize: designTokens.typography.body.fontSize,
+                    fontSize: designTokens.typography.body.fontSize
                   }}>
                     Teacher
                   </Text>
@@ -542,341 +542,341 @@ const loadClasses = async (grade: string, levelId: string) => {
             </View>
 
             {/* Student-specific fields */}
-            {formData.role === 'student' && (
-              <>
+            {formData.role === 'student' &&
+            <>
                 {/* Student ID */}
                 <View>
                   <Text style={{
-                    fontSize: designTokens.typography.footnote.fontSize,
-                    fontWeight: '600',
-                    color: colors.textPrimary,
-                    marginBottom: designTokens.spacing.sm,
-                  }}>
+                  fontSize: designTokens.typography.footnote.fontSize,
+                  fontWeight: '600',
+                  color: colors.textPrimary,
+                  marginBottom: designTokens.spacing.sm
+                }}>
                     Student ID *
                   </Text>
                   <TextInput
-                    style={{
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      borderRadius: designTokens.borderRadius.xl,
-                      padding: designTokens.spacing.lg,
-                      backgroundColor: colors.backgroundElevated,
-                      color: colors.textPrimary,
-                      fontSize: designTokens.typography.body.fontSize,
-                    }}
-                    placeholder="Enter your student ID"
-                    value={formData.studentId}
-                    onChangeText={(text) => setFormData({ ...formData, studentId: text })}
-                    placeholderTextColor={colors.textTertiary}
-                    autoCapitalize="characters"
-                  />
+                  style={{
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    borderRadius: designTokens.borderRadius.xl,
+                    padding: designTokens.spacing.lg,
+                    backgroundColor: colors.backgroundElevated,
+                    color: colors.textPrimary,
+                    fontSize: designTokens.typography.body.fontSize
+                  }}
+                  placeholder="Enter your student ID"
+                  value={formData.studentId}
+                  onChangeText={(text) => setFormData({ ...formData, studentId: text })}
+                  placeholderTextColor={colors.textTertiary}
+                  autoCapitalize="characters" />
+
                 </View>
 
                 {/* Level Dropdown */}
                 <View>
                   <Text style={{
-                    fontSize: designTokens.typography.footnote.fontSize,
-                    fontWeight: '600',
-                    color: colors.textPrimary,
-                    marginBottom: designTokens.spacing.sm,
-                  }}>
+                  fontSize: designTokens.typography.footnote.fontSize,
+                  fontWeight: '600',
+                  color: colors.textPrimary,
+                  marginBottom: designTokens.spacing.sm
+                }}>
                     Level *
                   </Text>
                   <TouchableOpacity
-                    style={{
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      borderRadius: designTokens.borderRadius.xl,
-                      padding: designTokens.spacing.lg,
-                      backgroundColor: colors.backgroundElevated,
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                    onPress={() => {
-                      setShowLevelDropdown(!showLevelDropdown);
-                      setShowGradeDropdown(false);
-                      setShowClassDropdown(false);
-                    }}
-                  >
+                  style={{
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    borderRadius: designTokens.borderRadius.xl,
+                    padding: designTokens.spacing.lg,
+                    backgroundColor: colors.backgroundElevated,
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                  onPress={() => {
+                    setShowLevelDropdown(!showLevelDropdown);
+                    setShowGradeDropdown(false);
+                    setShowClassDropdown(false);
+                  }}>
+
                     <Text style={{
-                      color: formData.levelId ? colors.textPrimary : colors.textTertiary,
-                      fontSize: designTokens.typography.body.fontSize,
-                    }}>
+                    color: formData.levelId ? colors.textPrimary : colors.textTertiary,
+                    fontSize: designTokens.typography.body.fontSize
+                  }}>
                       {getSelectedLevelName()}
                     </Text>
                     <Ionicons
-                      name={showLevelDropdown ? "chevron-up" : "chevron-down"}
-                      size={20}
-                      color={colors.textSecondary}
-                    />
+                    name={showLevelDropdown ? "chevron-up" : "chevron-down"}
+                    size={20}
+                    color={colors.textSecondary} />
+
                   </TouchableOpacity>
 
-                  {showLevelDropdown && (
-                    <View style={{
-                      backgroundColor: colors.backgroundElevated,
-                      borderRadius: designTokens.borderRadius.lg,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      marginTop: designTokens.spacing.xs,
-                      maxHeight: 200,
-                      ...Platform.select({
-                        ios: {
-                          shadowColor: '#000',
-                          shadowOffset: { width: 0, height: 2 },
-                          shadowOpacity: 0.1,
-                          shadowRadius: 4,
-                        },
-                        android: {
-                          elevation: 3,
-                        },
-                      }),
-                    }}>
-                      {dataLoading ? (
-                        <View style={{ padding: designTokens.spacing.lg }}>
+                  {showLevelDropdown &&
+                <View style={{
+                  backgroundColor: colors.backgroundElevated,
+                  borderRadius: designTokens.borderRadius.lg,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  marginTop: designTokens.spacing.xs,
+                  maxHeight: 200,
+                  ...Platform.select({
+                    ios: {
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 4
+                    },
+                    android: {
+                      elevation: 3
+                    }
+                  })
+                }}>
+                      {dataLoading ?
+                  <View style={{ padding: designTokens.spacing.lg }}>
                           <ActivityIndicator size="small" color={colors.primary} />
-                        </View>
-                      ) : levels.length === 0 ? (
-                        <View style={{ padding: designTokens.spacing.lg }}>
+                        </View> :
+                  levels.length === 0 ?
+                  <View style={{ padding: designTokens.spacing.lg }}>
                           <Text style={{
-                            color: colors.textSecondary,
-                            textAlign: 'center',
-                            fontSize: designTokens.typography.body.fontSize,
-                          }}>
+                      color: colors.textSecondary,
+                      textAlign: 'center',
+                      fontSize: designTokens.typography.body.fontSize
+                    }}>
                             No levels available
                           </Text>
-                        </View>
-                      ) : (
-                        levels.map((level) => (
-                          <TouchableOpacity
-                            key={level.id}
-                            style={{
-                              padding: designTokens.spacing.lg,
-                              borderBottomWidth: levels.indexOf(level) < levels.length - 1 ? 1 : 0,
-                              borderBottomColor: colors.border,
-                            }}
-                            onPress={() => handleLevelSelect(level.id)}
-                          >
+                        </View> :
+
+                  levels.map((level) =>
+                  <TouchableOpacity
+                    key={level.id}
+                    style={{
+                      padding: designTokens.spacing.lg,
+                      borderBottomWidth: levels.indexOf(level) < levels.length - 1 ? 1 : 0,
+                      borderBottomColor: colors.border
+                    }}
+                    onPress={() => handleLevelSelect(level.id)}>
+
                             <Text style={{
-                              color: colors.textPrimary,
-                              fontSize: designTokens.typography.body.fontSize,
-                            }}>
+                      color: colors.textPrimary,
+                      fontSize: designTokens.typography.body.fontSize
+                    }}>
                               {level.name}
                             </Text>
                           </TouchableOpacity>
-                        ))
-                      )}
+                  )
+                  }
                     </View>
-                  )}
+                }
                 </View>
 
                 {/* Grade Dropdown */}
                 <View>
                   <Text style={{
-                    fontSize: designTokens.typography.footnote.fontSize,
-                    fontWeight: '600',
-                    color: colors.textPrimary,
-                    marginBottom: designTokens.spacing.sm,
-                  }}>
+                  fontSize: designTokens.typography.footnote.fontSize,
+                  fontWeight: '600',
+                  color: colors.textPrimary,
+                  marginBottom: designTokens.spacing.sm
+                }}>
                     Grade *
                   </Text>
                   <TouchableOpacity
-                    style={{
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      borderRadius: designTokens.borderRadius.xl,
-                      padding: designTokens.spacing.lg,
-                      backgroundColor: colors.backgroundElevated,
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                    onPress={() => {
-                      if (formData.levelId) {
-                        setShowGradeDropdown(!showGradeDropdown);
-                        setShowLevelDropdown(false);
-                        setShowClassDropdown(false);
-                      } else {
-                        Alert.alert('Error', 'Please select a level first');
-                      }
-                    }}
-                    disabled={!formData.levelId}
-                  >
+                  style={{
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    borderRadius: designTokens.borderRadius.xl,
+                    padding: designTokens.spacing.lg,
+                    backgroundColor: colors.backgroundElevated,
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                  onPress={() => {
+                    if (formData.levelId) {
+                      setShowGradeDropdown(!showGradeDropdown);
+                      setShowLevelDropdown(false);
+                      setShowClassDropdown(false);
+                    } else {
+                      Alert.alert(t("common.error"), 'Please select a level first');
+                    }
+                  }}
+                  disabled={!formData.levelId}>
+
                     <Text style={{
-                      color: formData.grade ? colors.textPrimary : colors.textTertiary,
-                      fontSize: designTokens.typography.body.fontSize,
-                    }}>
+                    color: formData.grade ? colors.textPrimary : colors.textTertiary,
+                    fontSize: designTokens.typography.body.fontSize
+                  }}>
                       {getSelectedGradeName()}
                     </Text>
                     <Ionicons
-                      name={showGradeDropdown ? "chevron-up" : "chevron-down"}
-                      size={20}
-                      color={formData.levelId ? colors.textSecondary : colors.textTertiary}
-                    />
+                    name={showGradeDropdown ? "chevron-up" : "chevron-down"}
+                    size={20}
+                    color={formData.levelId ? colors.textSecondary : colors.textTertiary} />
+
                   </TouchableOpacity>
 
-                  {showGradeDropdown && formData.levelId && (
-                    <View style={{
-                      backgroundColor: colors.backgroundElevated,
-                      borderRadius: designTokens.borderRadius.lg,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      marginTop: designTokens.spacing.xs,
-                      maxHeight: 200,
-                      ...Platform.select({
-                        ios: {
-                          shadowColor: '#000',
-                          shadowOffset: { width: 0, height: 2 },
-                          shadowOpacity: 0.1,
-                          shadowRadius: 4,
-                        },
-                        android: {
-                          elevation: 3,
-                        },
-                      }),
-                    }}>
-                      {dataLoading ? (
-                        <View style={{ padding: designTokens.spacing.lg }}>
+                  {showGradeDropdown && formData.levelId &&
+                <View style={{
+                  backgroundColor: colors.backgroundElevated,
+                  borderRadius: designTokens.borderRadius.lg,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  marginTop: designTokens.spacing.xs,
+                  maxHeight: 200,
+                  ...Platform.select({
+                    ios: {
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 4
+                    },
+                    android: {
+                      elevation: 3
+                    }
+                  })
+                }}>
+                      {dataLoading ?
+                  <View style={{ padding: designTokens.spacing.lg }}>
                           <ActivityIndicator size="small" color={colors.primary} />
-                        </View>
-                      ) : grades.length === 0 ? (
-                        <View style={{ padding: designTokens.spacing.lg }}>
+                        </View> :
+                  grades.length === 0 ?
+                  <View style={{ padding: designTokens.spacing.lg }}>
                           <Text style={{
-                            color: colors.textSecondary,
-                            textAlign: 'center',
-                            fontSize: designTokens.typography.body.fontSize,
-                          }}>
+                      color: colors.textSecondary,
+                      textAlign: 'center',
+                      fontSize: designTokens.typography.body.fontSize
+                    }}>
                             No grades available
                           </Text>
-                        </View>
-                      ) : (
-                        grades.map((grade, index) => (
-                          <TouchableOpacity
-                            key={index}
-                            style={{
-                              padding: designTokens.spacing.lg,
-                              borderBottomWidth: index < grades.length - 1 ? 1 : 0,
-                              borderBottomColor: colors.border,
-                            }}
-                            onPress={() => handleGradeSelect(grade)}
-                          >
+                        </View> :
+
+                  grades.map((grade, index) =>
+                  <TouchableOpacity
+                    key={index}
+                    style={{
+                      padding: designTokens.spacing.lg,
+                      borderBottomWidth: index < grades.length - 1 ? 1 : 0,
+                      borderBottomColor: colors.border
+                    }}
+                    onPress={() => handleGradeSelect(grade)}>
+
                             <Text style={{
-                              color: colors.textPrimary,
-                              fontSize: designTokens.typography.body.fontSize,
-                            }}>
+                      color: colors.textPrimary,
+                      fontSize: designTokens.typography.body.fontSize
+                    }}>
                               {mapGradeToEgyptian(grade)}
                             </Text>
                           </TouchableOpacity>
-                        ))
-                      )}
+                  )
+                  }
                     </View>
-                  )}
+                }
                 </View>
 
                 {/* Class Dropdown */}
                 <View>
                   <Text style={{
-                    fontSize: designTokens.typography.footnote.fontSize,
-                    fontWeight: '600',
-                    color: colors.textPrimary,
-                    marginBottom: designTokens.spacing.sm,
-                  }}>
-                    Class *
-                  </Text>
+                  fontSize: designTokens.typography.footnote.fontSize,
+                  fontWeight: '600',
+                  color: colors.textPrimary,
+                  marginBottom: designTokens.spacing.sm
+                }}>{t("homework.classRequired")}
+
+                </Text>
                   <TouchableOpacity
-                    style={{
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      borderRadius: designTokens.borderRadius.xl,
-                      padding: designTokens.spacing.lg,
-                      backgroundColor: colors.backgroundElevated,
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                    onPress={() => {
-                      if (formData.grade) {
-                        setShowClassDropdown(!showClassDropdown);
-                        setShowLevelDropdown(false);
-                        setShowGradeDropdown(false);
-                      } else {
-                        Alert.alert('Error', 'Please select a grade first');
-                      }
-                    }}
-                    disabled={!formData.grade}
-                  >
+                  style={{
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    borderRadius: designTokens.borderRadius.xl,
+                    padding: designTokens.spacing.lg,
+                    backgroundColor: colors.backgroundElevated,
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                  onPress={() => {
+                    if (formData.grade) {
+                      setShowClassDropdown(!showClassDropdown);
+                      setShowLevelDropdown(false);
+                      setShowGradeDropdown(false);
+                    } else {
+                      Alert.alert(t("common.error"), 'Please select a grade first');
+                    }
+                  }}
+                  disabled={!formData.grade}>
+
                     <Text style={{
-                      color: formData.classId ? colors.textPrimary : colors.textTertiary,
-                      fontSize: designTokens.typography.body.fontSize,
-                    }}>
+                    color: formData.classId ? colors.textPrimary : colors.textTertiary,
+                    fontSize: designTokens.typography.body.fontSize
+                  }}>
                       {getSelectedClassName()}
                     </Text>
                     <Ionicons
-                      name={showClassDropdown ? "chevron-up" : "chevron-down"}
-                      size={20}
-                      color={formData.grade ? colors.textSecondary : colors.textTertiary}
-                    />
+                    name={showClassDropdown ? "chevron-up" : "chevron-down"}
+                    size={20}
+                    color={formData.grade ? colors.textSecondary : colors.textTertiary} />
+
                   </TouchableOpacity>
 
-                  {showClassDropdown && formData.grade && (
-                    <View style={{
-                      backgroundColor: colors.backgroundElevated,
-                      borderRadius: designTokens.borderRadius.lg,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      marginTop: designTokens.spacing.xs,
-                      maxHeight: 200,
-                      ...Platform.select({
-                        ios: {
-                          shadowColor: '#000',
-                          shadowOffset: { width: 0, height: 2 },
-                          shadowOpacity: 0.1,
-                          shadowRadius: 4,
-                        },
-                        android: {
-                          elevation: 3,
-                        },
-                      }),
-                    }}>
-                      {dataLoading ? (
-                        <View style={{ padding: designTokens.spacing.lg }}>
+                  {showClassDropdown && formData.grade &&
+                <View style={{
+                  backgroundColor: colors.backgroundElevated,
+                  borderRadius: designTokens.borderRadius.lg,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  marginTop: designTokens.spacing.xs,
+                  maxHeight: 200,
+                  ...Platform.select({
+                    ios: {
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 4
+                    },
+                    android: {
+                      elevation: 3
+                    }
+                  })
+                }}>
+                      {dataLoading ?
+                  <View style={{ padding: designTokens.spacing.lg }}>
                           <ActivityIndicator size="small" color={colors.primary} />
-                        </View>
-                      ) : classes.length === 0 ? (
-                        <View style={{ padding: designTokens.spacing.lg }}>
+                        </View> :
+                  classes.length === 0 ?
+                  <View style={{ padding: designTokens.spacing.lg }}>
                           <Text style={{
-                            color: colors.textSecondary,
-                            textAlign: 'center',
-                            fontSize: designTokens.typography.body.fontSize,
-                          }}>
+                      color: colors.textSecondary,
+                      textAlign: 'center',
+                      fontSize: designTokens.typography.body.fontSize
+                    }}>
                             No classes available
                           </Text>
-                        </View>
-                      ) : (
-                        classes.map((cls) => (
-                          <TouchableOpacity
-                            key={cls.id}
-                            style={{
-                              padding: designTokens.spacing.lg,
-                              borderBottomWidth: classes.indexOf(cls) < classes.length - 1 ? 1 : 0,
-                              borderBottomColor: colors.border,
-                            }}
-                            onPress={() => handleClassSelect(cls.id)}
-                          >
+                        </View> :
+
+                  classes.map((cls) =>
+                  <TouchableOpacity
+                    key={cls.id}
+                    style={{
+                      padding: designTokens.spacing.lg,
+                      borderBottomWidth: classes.indexOf(cls) < classes.length - 1 ? 1 : 0,
+                      borderBottomColor: colors.border
+                    }}
+                    onPress={() => handleClassSelect(cls.id)}>
+
                             <Text style={{
-                              color: colors.textPrimary,
-                              fontSize: designTokens.typography.body.fontSize,
-                            }}>
+                      color: colors.textPrimary,
+                      fontSize: designTokens.typography.body.fontSize
+                    }}>
                               {cls.name}
                             </Text>
                           </TouchableOpacity>
-                        ))
-                      )}
+                  )
+                  }
                     </View>
-                  )}
+                }
                 </View>
               </>
-            )}
+            }
 
             {/* Password */}
             <View>
@@ -884,7 +884,7 @@ const loadClasses = async (grade: string, levelId: string) => {
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textPrimary,
-                marginBottom: designTokens.spacing.sm,
+                marginBottom: designTokens.spacing.sm
               }}>
                 Password *
               </Text>
@@ -898,27 +898,27 @@ const loadClasses = async (grade: string, levelId: string) => {
                     backgroundColor: colors.backgroundElevated,
                     color: colors.textPrimary,
                     fontSize: designTokens.typography.body.fontSize,
-                    paddingRight: 52,
+                    paddingRight: 52
                   }}
                   placeholder="Enter your password"
                   secureTextEntry={!showPassword}
                   value={formData.password}
                   onChangeText={(text) => setFormData({ ...formData, password: text })}
-                  placeholderTextColor={colors.textTertiary}
-                />
+                  placeholderTextColor={colors.textTertiary} />
+
                 <TouchableOpacity
                   style={{
                     position: 'absolute',
                     right: designTokens.spacing.md,
                     top: 16
                   }}
-                  onPress={() => setShowPassword(!showPassword)}
-                >
+                  onPress={() => setShowPassword(!showPassword)}>
+
                   <Ionicons
                     name={showPassword ? "eye-off" : "eye"}
                     size={24}
-                    color={colors.textTertiary}
-                  />
+                    color={colors.textTertiary} />
+
                 </TouchableOpacity>
               </View>
             </View>
@@ -929,7 +929,7 @@ const loadClasses = async (grade: string, levelId: string) => {
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textPrimary,
-                marginBottom: designTokens.spacing.sm,
+                marginBottom: designTokens.spacing.sm
               }}>
                 Confirm Password *
               </Text>
@@ -943,27 +943,27 @@ const loadClasses = async (grade: string, levelId: string) => {
                     backgroundColor: colors.backgroundElevated,
                     color: colors.textPrimary,
                     fontSize: designTokens.typography.body.fontSize,
-                    paddingRight: 52,
+                    paddingRight: 52
                   }}
                   placeholder="Confirm your password"
                   secureTextEntry={!showConfirmPassword}
                   value={formData.confirmPassword}
                   onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
-                  placeholderTextColor={colors.textTertiary}
-                />
+                  placeholderTextColor={colors.textTertiary} />
+
                 <TouchableOpacity
                   style={{
                     position: 'absolute',
                     right: designTokens.spacing.md,
                     top: 16
                   }}
-                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+
                   <Ionicons
                     name={showConfirmPassword ? "eye-off" : "eye"}
                     size={24}
-                    color={colors.textTertiary}
-                  />
+                    color={colors.textTertiary} />
+
                 </TouchableOpacity>
               </View>
             </View>
@@ -977,43 +977,43 @@ const loadClasses = async (grade: string, levelId: string) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 ...designTokens.shadows.md,
-                marginTop: designTokens.spacing.lg,
+                marginTop: designTokens.spacing.lg
               }}
               onPress={handleSignUp}
-              disabled={loading}
-            >
-              {loading ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              disabled={loading}>
+
+              {loading ?
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <ActivityIndicator color="white" size="small" />
                   <Text style={{
-                    color: 'white',
-                    fontWeight: '600',
-                    fontSize: designTokens.typography.body.fontSize,
-                    marginLeft: designTokens.spacing.sm,
-                  }}>
-                    Creating Account...
-                  </Text>
-                </View>
-              ) : (
-                <Text style={{
                   color: 'white',
                   fontWeight: '600',
                   fontSize: designTokens.typography.body.fontSize,
+                  marginLeft: designTokens.spacing.sm
                 }}>
+                    Creating Account...
+                  </Text>
+                </View> :
+
+              <Text style={{
+                color: 'white',
+                fontWeight: '600',
+                fontSize: designTokens.typography.body.fontSize
+              }}>
                   Create Account
                 </Text>
-              )}
+              }
             </TouchableOpacity>
 
             {/* Sign In Link */}
             <View style={{
               flexDirection: 'row',
               justifyContent: 'center',
-              marginTop: designTokens.spacing.xxl,
+              marginTop: designTokens.spacing.xxl
             }}>
               <Text style={{
                 color: colors.textSecondary,
-                fontSize: designTokens.typography.body.fontSize,
+                fontSize: designTokens.typography.body.fontSize
               }}>
                 Already have an account?{' '}
               </Text>
@@ -1021,7 +1021,7 @@ const loadClasses = async (grade: string, levelId: string) => {
                 <Text style={{
                   color: colors.primary,
                   fontWeight: '600',
-                  fontSize: designTokens.typography.body.fontSize,
+                  fontSize: designTokens.typography.body.fontSize
                 }}>
                   Sign In
                 </Text>
@@ -1030,6 +1030,6 @@ const loadClasses = async (grade: string, levelId: string) => {
           </View>
         </View>
       </ScrollView>
-    </View>
-  );
+    </View>);
+
 }

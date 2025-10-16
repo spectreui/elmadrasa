@@ -112,7 +112,7 @@ class ApiService {
         // --- 401 Unauthorized ---
         if (status === 401) {
           console.log('🔐 401 - Unauthorized');
-          
+
           if (!this.isRefreshing) {
             this.isRefreshing = true;
             try {
@@ -139,7 +139,7 @@ class ApiService {
         // --- 403 Forbidden ---
         if (status === 403) {
           console.log('🚫 403 - Forbidden (Insufficient permissions)');
-          
+
           // Don't set isRefreshing for 403 to avoid blocking other requests
           setTimeout(async () => {
             try {
@@ -716,6 +716,26 @@ class ApiService {
     return this.api.put(`/users/${userId}/profile`, data);
   }
 
+  async getUserProfile() {
+    return this.api.get('/users/me');
+  }
+
+  async updateUser(profileData: { 
+    language?: 'en' | 'ar'; 
+    name?: string;
+    avatar?: string;
+    [key: string]: any;
+  }) {
+    return this.api.patch('/users/me/profile', profileData);
+  }
+
+  /**
+   * Update only user language
+   */
+  async updateUserLanguage(language: 'en' | 'ar') {
+    return this.api.patch('/users/me/language', { language });
+  }
+
   async updateStudentClass(studentId: string, className: string): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.put(`/admin/students/${studentId}/class`, { class_name: className });
   }
@@ -731,6 +751,41 @@ class ApiService {
       title,
       body,
       data
+    });
+  }
+
+  async sendLocalizedNotification(
+    userId: string,
+    titleKey: string,
+    bodyKey: string,
+    data?: Record<string, any>,
+    extra?: any
+  ) {
+    return this.api.post('/notifications/send-localized', {
+      userId,
+      titleKey,
+      bodyKey,
+      data,
+      extra
+    });
+  }
+
+  /**
+   * Send bulk localized notifications
+   */
+  async sendBulkLocalizedNotifications(
+    userIds: string[],
+    titleKey: string,
+    bodyKey: string,
+    data?: Record<string, any>,
+    extra?: any
+  ) {
+    return this.api.post('/notifications/send-bulk-localized', {
+      userIds,
+      titleKey,
+      bodyKey,
+      data,
+      extra
     });
   }
 

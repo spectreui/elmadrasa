@@ -1,4 +1,4 @@
-// app/(teacher)/index.tsx - REDESIGNED
+// app/(teacher)/index.tsx - RTL SUPPORT ADDED
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -8,7 +8,8 @@ import {
   ActivityIndicator,
   RefreshControl,
   Pressable,
-  Image
+  Image,
+  I18nManager
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -43,7 +44,9 @@ export default function TeacherDashboard() {
 
   useEffect(() => {
     loadDashboardData();
-    setLanguage('ar');
+    // Set initial language based on system locale
+    const systemRTL = I18nManager.isRTL;
+    setLanguage(systemRTL ? 'ar' : 'en');
   }, []);
 
   const loadDashboardData = async () => {
@@ -123,7 +126,7 @@ export default function TeacherDashboard() {
     trend?: string;
   }) => (
     <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated }]}>
-      <View style={styles.statHeader}>
+      <View style={[styles.statHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
         <View style={[styles.statIcon, { backgroundColor: `${color}20` }]}>
           <Ionicons name={icon as any} size={20} color={color} />
         </View>
@@ -132,8 +135,8 @@ export default function TeacherDashboard() {
         )}
       </View>
       <Text style={[styles.statValue, { color: colors.textPrimary }]}>{value}</Text>
-      <Text style={[styles.statTitle, { color: colors.textSecondary }]}>{title}</Text>
-      <Text style={[styles.statSubtitle, { color: colors.textTertiary }]}>{subtitle}</Text>
+      <Text style={[styles.statTitle, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>{title}</Text>
+      <Text style={[styles.statSubtitle, { color: colors.textTertiary, textAlign: isRTL ? 'right' : 'left' }]}>{subtitle}</Text>
     </View>
   );
 
@@ -158,8 +161,8 @@ export default function TeacherDashboard() {
       <View style={[styles.actionIcon, { backgroundColor: color }]}>
         <Ionicons name={icon as any} size={24} color="white" />
       </View>
-      <Text style={[styles.actionTitle, { color: colors.textPrimary }]}>{title}</Text>
-      <Text style={[styles.actionDescription, { color: colors.textSecondary }]}>{description}</Text>
+      <Text style={[styles.actionTitle, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>{title}</Text>
+      <Text style={[styles.actionDescription, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>{description}</Text>
     </TouchableOpacity>
   );
 
@@ -168,7 +171,7 @@ export default function TeacherDashboard() {
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-          Loading your dashboard...
+          {t("common.loading")}
         </Text>
       </View>
     );
@@ -189,16 +192,16 @@ export default function TeacherDashboard() {
     >
       {/* Header Section */}
       <View style={[styles.header, { backgroundColor: colors.backgroundElevated }]}>
-        <View style={styles.headerContent}>
-          <View style={styles.headerText}>
-            <Text style={[styles.greeting, { color: colors.textSecondary }]}>
+        <View style={[styles.headerContent, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+          <View style={[styles.headerText, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
+            <Text style={[styles.greeting, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
               {t(getGreeting())},
             </Text>
-            <Text style={[styles.userName, { color: colors.textPrimary }]}>
+            <Text style={[styles.userName, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
               {user?.profile?.name || 'Teacher'}
             </Text>
-            <Text style={[styles.date, { color: colors.textTertiary }]}>
-              {new Date().toLocaleDateString('en-US', {
+            <Text style={[styles.date, { color: colors.textTertiary, textAlign: isRTL ? 'right' : 'left' }]}>
+              {new Date().toLocaleDateString(language === 'ar' ? 'ar-eg' : 'en-US', {
                 weekday: 'long',
                 month: 'long',
                 day: 'numeric'
@@ -223,36 +226,36 @@ export default function TeacherDashboard() {
 
       {/* Stats Grid */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Overview</Text>
-        <View style={styles.statsGrid}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>{t("dashboard.overview")}</Text>
+        <View style={[styles.statsGrid, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
           <StatCard
-            title="Active Exams"
+            title={t("dashboard.activeExams")}
             value={stats.activeExams}
-            subtitle="Currently running"
+            subtitle={t("dashboard.currentlyRunning")}
             icon="document-text"
             color={colors.primary}
             trend="+12%"
           />
           <StatCard
-            title="Students"
+            title={t('dashboard.students')}
             value={stats.totalStudents}
-            subtitle="Total enrolled"
+            subtitle={t('dashboard.totalEnrolled')}
             icon="people"
             color={colors.success}
             trend="+8%"
           />
           <StatCard
-            title="Avg. Score"
+            title={t('dashboard.avgScore')}
             value={`${stats.averageScore}%`}
-            subtitle="Class average"
+            subtitle={t('dashboard.classAverage')}
             icon="trending-up"
             color={colors.warning}
             trend="+5%"
           />
           <StatCard
-            title="Engagement"
+            title={t('dashboard.engagement')}
             value={`${stats.studentEngagement}%`}
-            subtitle="Student activity"
+            subtitle={t('dashboard.studentActivity')}
             icon="pulse"
             color={colors.error}
           />
@@ -261,32 +264,32 @@ export default function TeacherDashboard() {
 
       {/* Quick Actions */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Actions</Text>
-        <View style={styles.actionsGrid}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>{t("dashboard.quickActions")}</Text>
+        <View style={[styles.actionsGrid, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
           <QuickActionCard
-            title="Create Exam"
-            description="Design new assessment"
+            title={t("dashboard.createExam")}
+            description={t("dashboard.designAssessment")}
             icon="document-text"
             color={colors.primary}
             onPress={() => router.push('/(teacher)/create-exam')}
           />
           <QuickActionCard
-            title="Assign Work"
-            description="Create homework"
+            title={t("dashboard.assignWork")}
+            description={t("dashboard.createHomework")}
             icon="book"
             color={colors.success}
             onPress={() => router.push('/(teacher)/homework/create')}
           />
           <QuickActionCard
-            title="My Classes"
-            description="Manage students"
+            title={t("dashboard.myClasses")}
+            description={t("dashboard.manageStudents")}
             icon="people"
             color={colors.accentSecondary}
             onPress={() => router.push('/(teacher)/my-classes')}
           />
           <QuickActionCard
-            title="Analytics"
-            description="View insights"
+            title={t("dashboard.analytics")}
+            description={t("dashboard.viewInsights")}
             icon="bar-chart"
             color={colors.warning}
             onPress={() => router.push('/(teacher)/statistics')}
@@ -296,10 +299,10 @@ export default function TeacherDashboard() {
 
       {/* Recent Activity */}
       <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Activity</Text>
+        <View style={[styles.sectionHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>{t("dashboard.recentActivity")}</Text>
           <TouchableOpacity onPress={() => router.push('/(teacher)/activity')}>
-            <Text style={[styles.viewAllText, { color: colors.primary }]}>View All</Text>
+            <Text style={[styles.viewAllText, { color: colors.primary }]}>{t("common.viewAll")}</Text>
           </TouchableOpacity>
         </View>
 
@@ -312,7 +315,8 @@ export default function TeacherDashboard() {
                   styles.activityItem,
                   { 
                     borderBottomColor: colors.border,
-                    borderBottomWidth: index !== recentActivity.length - 1 ? 1 : 0
+                    borderBottomWidth: index !== recentActivity.length - 1 ? 1 : 0,
+                    flexDirection: isRTL ? 'row-reverse' : 'row'
                   }
                 ]}
                 activeOpacity={0.7}
@@ -324,15 +328,15 @@ export default function TeacherDashboard() {
                     color={getStatusColor(activity.status)}
                   />
                 </View>
-                <View style={styles.activityContent}>
-                  <Text style={[styles.activityTitle, { color: colors.textPrimary }]}>
+                <View style={[styles.activityContent, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
+                  <Text style={[styles.activityTitle, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
                     {activity.title}
                   </Text>
-                  <Text style={[styles.activityDescription, { color: colors.textSecondary }]}>
-                    {activity.description}
+                  <Text style={[styles.activityDescription, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
+                    {activity.description.replace('Created for', t("dashboard.createdFor")).replace('Score', t("dashboard.score"))}
                   </Text>
-                  <Text style={[styles.activityDate, { color: colors.textTertiary }]}>
-                    {new Date(activity.date).toLocaleDateString('en-US', {
+                  <Text style={[styles.activityDate, { color: colors.textTertiary, textAlign: isRTL ? 'right' : 'left' }]}>
+                    {new Date(activity.date).toLocaleDateString(language === 'ar' ? 'ar-eg' : 'en-US', {
                       month: 'short',
                       day: 'numeric',
                       hour: '2-digit',
@@ -344,7 +348,7 @@ export default function TeacherDashboard() {
                   <Text
                     style={[styles.statusText, { color: getStatusColor(activity.status) }]}
                   >
-                    {activity.status}
+                    {t(activity.status)}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -353,10 +357,10 @@ export default function TeacherDashboard() {
             <View style={styles.emptyState}>
               <Ionicons name="time" size={48} color={colors.textTertiary} />
               <Text style={[styles.emptyStateTitle, { color: colors.textSecondary }]}>
-                No recent activity
+                {t("dashboard.noActivity")}
               </Text>
               <Text style={[styles.emptyStateSubtitle, { color: colors.textTertiary }]}>
-                Your recent activities will appear here
+                {t("dashboard.noActivityDesc")}
               </Text>
             </View>
           )}
@@ -365,28 +369,28 @@ export default function TeacherDashboard() {
 
       {/* Additional Stats */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Performance Insights</Text>
-        <View style={styles.insightsGrid}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>{t("dashboard.performanceInsights")}</Text>
+        <View style={[styles.insightsGrid, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
           <View style={[styles.insightCard, { backgroundColor: colors.backgroundElevated }]}>
             <Ionicons name="school" size={24} color={colors.success} />
             <Text style={[styles.insightValue, { color: colors.textPrimary }]}>
               {stats.classesCount}
             </Text>
-            <Text style={[styles.insightLabel, { color: colors.textSecondary }]}>Classes</Text>
+            <Text style={[styles.insightLabel, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>{t("dashboard.classes")}</Text>
           </View>
           <View style={[styles.insightCard, { backgroundColor: colors.backgroundElevated }]}>
             <Ionicons name="library" size={24} color={colors.primary} />
             <Text style={[styles.insightValue, { color: colors.textPrimary }]}>
               {stats.subjectsCount}
             </Text>
-            <Text style={[styles.insightLabel, { color: colors.textSecondary }]}>Subjects</Text>
+            <Text style={[styles.insightLabel, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>{t("dashboard.subjects")}</Text>
           </View>
           <View style={[styles.insightCard, { backgroundColor: colors.backgroundElevated }]}>
             <Ionicons name="time" size={24} color={colors.warning} />
             <Text style={[styles.insightValue, { color: colors.textPrimary }]}>
               {stats.responseTime}
             </Text>
-            <Text style={[styles.insightLabel, { color: colors.textSecondary }]}>Avg. Response</Text>
+            <Text style={[styles.insightLabel, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>{t("dashboard.avgResponse")}</Text>
           </View>
         </View>
       </View>
@@ -556,7 +560,7 @@ const styles = {
     borderRadius: designTokens.borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: designTokens.spacing.md,
+    marginHorizontal: designTokens.spacing.md,
   } as any,
   activityContent: {
     flex: 1,

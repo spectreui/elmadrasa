@@ -138,10 +138,10 @@ export default function RootLayout() {
   // ✅ Main App
   return (
     <SafeAreaProvider>
-      <LanguageProvider>
-        <ThemeProvider>
-          <ThemeWrapper>
-            <AuthProvider>
+      <AuthProvider>
+        <LanguageProvider>
+          <ThemeProvider>
+            <ThemeWrapper>
               <UniversalPromptProvider>
                 <PromptSetup />
                 <NotificationProvider>
@@ -155,10 +155,10 @@ export default function RootLayout() {
                   </SafeAreaView>
                 </NotificationProvider>
               </UniversalPromptProvider>
-            </AuthProvider>
-          </ThemeWrapper>
-        </ThemeProvider>
-      </LanguageProvider>
+            </ThemeWrapper>
+          </ThemeProvider>
+        </LanguageProvider>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }
