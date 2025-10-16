@@ -337,22 +337,47 @@ export default function CreateExamScreen() {
 
             if (studentsResponse.data.success) {
               const students = studentsResponse.data.data || [];
+              const studentIds = students.map(student => student.user_id);
 
-              // Send notification to each student
-              for (const student of students) {
-                try {
-                  await apiService.sendNotificationToUser(
-                    student.user_id,
-                    t('exams.newExamTitle'),
-                    `${t('exams.newExamBody')} "${title}" ${t('exams.forSubject')} ${subject}`,
-                    {
-                      screen: 'exam',
-                      examId: response.data.data.id,
-                      type: 'exam_created'
-                    }
-                  );
-                } catch (notificationError) {
-                  console.log(`Failed to notify student ${student.id}:`, notificationError);
+              // Send localized bulk notification to all students
+              try {
+                await apiService.sendBulkLocalizedNotifications(
+                  studentIds,
+                  'exams.newExamTitle',
+                  'exams.newExamBody',
+                  {
+                    title: title,
+                    subject: subject
+                  },
+                  {
+                    screen: 'exam',
+                    examId: response.data.data.id,
+                    type: 'exam_created'
+                  }
+                );
+                console.log(`✅ Sent localized exam notifications to ${studentIds.length} students`);
+              } catch (notificationError) {
+                console.log('Failed to send bulk notifications:', notificationError);
+                // Fallback: try individual notifications
+                for (const student of students) {
+                  try {
+                    await apiService.sendLocalizedNotification(
+                      student.user_id,
+                      'exams.newExamTitle',
+                      'exams.newExamBody',
+                      {
+                        title: title,
+                        subject: subject
+                      },
+                      {
+                        screen: 'exam',
+                        examId: response.data.data.id,
+                        type: 'exam_created'
+                      }
+                    );
+                  } catch (individualError) {
+                    console.log(`Failed to notify student ${student.id}:`, individualError);
+                  }
                 }
               }
             }
@@ -856,15 +881,15 @@ export default function CreateExamScreen() {
     title,
     displayKey = 'name',
     loading = false
-  }: { 
-    visible: boolean; 
-    onClose: () => void; 
-    data: any[]; 
-    onSelect: (item: any) => void; 
-    selectedValue: string; 
-    title: string; 
-    displayKey?: string; 
-    loading?: boolean; 
+  }: {
+    visible: boolean;
+    onClose: () => void;
+    data: any[];
+    onSelect: (item: any) => void;
+    selectedValue: string;
+    title: string;
+    displayKey?: string;
+    loading?: boolean;
   }) => (
     <Modal
       visible={visible}
@@ -1924,8 +1949,8 @@ export default function CreateExamScreen() {
             color: '#fff',
             textAlign: 'center'
           }}>
-            {loading ? 
-              (isEditing ? t("exams.updating") : t("exams.creating")) : 
+            {loading ?
+              (isEditing ? t("exams.updating") : t("exams.creating")) :
               (isEditing ? t("exams.updateExam") : t("dashboard.createExam"))
             }
           </Text>

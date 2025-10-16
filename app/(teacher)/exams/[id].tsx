@@ -141,23 +141,43 @@ export default function ExamDetailScreen() {
               const submissions = submissionsResponse.data.data || [];
               const studentIds = [...new Set(submissions.map((sub: any) => sub.student_id))];
 
-              for (const studentId of studentIds) {
-                try {
-                  const studentResponse = await apiService.getUserById(studentId);
-                  if (studentResponse.data.success) {
-                    await apiService.sendNotificationToUser(
-                      studentResponse.data.data.id,
-                      'Exam Activated',
-                      `The exam "${exam.title}" is now available for you to take`,
+              // Send localized bulk notification to all students
+              try {
+                await apiService.sendBulkLocalizedNotifications(
+                  studentIds,
+                  'exams.activatedTitle', // You'll need to add this key to your translations
+                  'exams.activatedBody',  // You'll need to add this key to your translations
+                  {
+                    title: exam.title
+                  },
+                  {
+                    screen: 'exam',
+                    examId: exam.id,
+                    type: 'exam_activated'
+                  }
+                );
+                console.log(`✅ Sent localized exam activation notifications to ${studentIds.length} students`);
+              } catch (notificationError) {
+                console.log('Failed to send bulk exam activation notifications:', notificationError);
+                // Fallback: try individual notifications
+                for (const studentId of studentIds) {
+                  try {
+                    await apiService.sendLocalizedNotification(
+                      studentId,
+                      'exams.activatedTitle',
+                      'exams.activatedBody',
+                      {
+                        title: exam.title
+                      },
                       {
                         screen: 'exam',
                         examId: exam.id,
                         type: 'exam_activated'
                       }
                     );
+                  } catch (individualError) {
+                    console.log(`Failed to notify student ${studentId}:`, individualError);
                   }
-                } catch (notificationError) {
-                  console.log(`Failed to notify student ${studentId}:`, notificationError);
                 }
               }
             }
@@ -186,20 +206,20 @@ export default function ExamDetailScreen() {
     return value.toFixed(1);
   };
 
-  const StatCard = ({ 
-    title, 
-    value, 
-    icon, 
-    color 
-  }: { 
-    title: string; 
-    value: string; 
-    icon: string; 
-    color: { bg: string; text: string; icon: string } 
+  const StatCard = ({
+    title,
+    value,
+    icon,
+    color
+  }: {
+    title: string;
+    value: string;
+    icon: string;
+    color: { bg: string; text: string; icon: string }
   }) => (
     <View style={[
       styles.statCard,
-      { 
+      {
         backgroundColor: color.bg,
         ...designTokens.shadows.sm,
       }
@@ -216,42 +236,42 @@ export default function ExamDetailScreen() {
     </View>
   );
 
-  const ActionButton = ({ 
-    title, 
-    icon, 
-    color, 
+  const ActionButton = ({
+    title,
+    icon,
+    color,
     onPress,
     variant = 'primary'
-  }: { 
-    title: string; 
-    icon: string; 
-    color: string; 
+  }: {
+    title: string;
+    icon: string;
+    color: string;
     onPress: () => void;
     variant?: 'primary' | 'secondary';
   }) => (
     <TouchableOpacity
       style={[
         styles.actionButton,
-        variant === 'primary' 
-          ? { 
-              backgroundColor: color + '15',
-              borderColor: color + '30'
-            }
+        variant === 'primary'
+          ? {
+            backgroundColor: color + '15',
+            borderColor: color + '30'
+          }
           : {
-              backgroundColor: colors.backgroundElevated,
-              borderColor: colors.border
-            }
+            backgroundColor: colors.backgroundElevated,
+            borderColor: colors.border
+          }
       ]}
       onPress={onPress}
     >
-      <Ionicons 
-        name={icon as any} 
-        size={20} 
-        color={variant === 'primary' ? color : colors.textSecondary} 
+      <Ionicons
+        name={icon as any}
+        size={20}
+        color={variant === 'primary' ? color : colors.textSecondary}
       />
       <Text style={[
         styles.actionButtonText,
-        { 
+        {
           color: variant === 'primary' ? color : colors.textPrimary,
           fontWeight: variant === 'primary' ? '600' : '500'
         }
@@ -302,7 +322,7 @@ export default function ExamDetailScreen() {
       {/* Header */}
       <View style={[
         styles.header,
-        { 
+        {
           backgroundColor: colors.backgroundElevated,
           borderBottomColor: colors.border
         }
@@ -419,9 +439,9 @@ export default function ExamDetailScreen() {
         style={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh} 
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}
           />
@@ -430,14 +450,14 @@ export default function ExamDetailScreen() {
       >
         <View style={styles.contentPadding}>
           {activeTab === 'overview' && (
-            <Animated.View 
+            <Animated.View
               entering={FadeInUp.duration(300)}
               layout={Layout.springify()}
             >
               {/* Exam Stats */}
               <View style={[
                 styles.section,
-                { 
+                {
                   backgroundColor: colors.backgroundElevated,
                   ...designTokens.shadows.sm,
                 }
@@ -534,7 +554,7 @@ export default function ExamDetailScreen() {
               {/* Quick Actions */}
               <View style={[
                 styles.section,
-                { 
+                {
                   backgroundColor: colors.backgroundElevated,
                   ...designTokens.shadows.sm,
                 }
@@ -574,13 +594,13 @@ export default function ExamDetailScreen() {
           )}
 
           {activeTab === 'questions' && (
-            <Animated.View 
+            <Animated.View
               entering={FadeInUp.duration(300)}
               layout={Layout.springify()}
             >
               <View style={[
                 styles.section,
-                { 
+                {
                   backgroundColor: colors.backgroundElevated,
                   ...designTokens.shadows.sm,
                 }
@@ -601,7 +621,7 @@ export default function ExamDetailScreen() {
                         key={question.id}
                         style={[
                           styles.questionCard,
-                          { 
+                          {
                             backgroundColor: colors.background,
                             borderColor: colors.border
                           }
@@ -618,7 +638,7 @@ export default function ExamDetailScreen() {
                           </Text>
                           <View style={[
                             styles.pointsBadge,
-                            { 
+                            {
                               backgroundColor: '#3B82F615',
                               borderColor: '#3B82F630'
                             }
@@ -674,7 +694,7 @@ export default function ExamDetailScreen() {
                         {question.explanation && (
                           <View style={[
                             styles.explanationContainer,
-                            { 
+                            {
                               backgroundColor: isDark ? '#1E40AF20' : '#3B82F610',
                               borderLeftColor: '#3B82F6'
                             }
@@ -714,13 +734,13 @@ export default function ExamDetailScreen() {
           )}
 
           {activeTab === 'submissions' && (
-            <Animated.View 
+            <Animated.View
               entering={FadeInUp.duration(300)}
               layout={Layout.springify()}
             >
               <View style={[
                 styles.section,
-                { 
+                {
                   backgroundColor: colors.backgroundElevated,
                   ...designTokens.shadows.sm,
                 }

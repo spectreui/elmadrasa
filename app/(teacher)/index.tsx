@@ -46,7 +46,8 @@ export default function TeacherDashboard() {
     loadDashboardData();
     // Set initial language based on system locale
     const systemRTL = I18nManager.isRTL;
-    setLanguage(systemRTL ? 'ar' : 'en');
+    console.log(language)
+    // setLanguage(systemRTL ? 'ar' : 'en');
   }, []);
 
   const loadDashboardData = async () => {

@@ -297,6 +297,8 @@ const translations = {
     'exams.newExamBody': 'A new exam has been assigned',
     'exams.forClass': 'for class',
     'exams.correctAnswer': 'Correct Answer',
+    'exams.activatedTitle': 'Exam Activated',
+    'exams.activatedBody': 'The exam "{title}" is now available for you to take',
   },
   ar: {
     // General use
@@ -596,7 +598,9 @@ const translations = {
     'exams.newExamBody': 'تم تعيين اختبار جديد',
     'exams.forClass': 'لفصل',
     'exams.forSubject': 'لمادة',
-    'exams.correctAnswer': 'الاجابة الصحيحة'
+    'exams.correctAnswer': 'الاجابة الصحيحة',
+    'exams.activatedTitle': 'تم تفعيل الاختبار',
+    'exams.activatedBody': 'الاختبار "{title}" متاح الآن لتقديمه',
   }
 }
 
@@ -612,7 +616,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     const loadLanguage = async () => {
       try {
         setIsLoading(true);
-        
+
         let finalLanguage: Language = 'en';
 
         // Priority: 1. User preference from server, 2. Local storage, 3. Device locale
@@ -647,7 +651,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
         setLanguageState(finalLanguage);
         setIsRTL(finalLanguage === 'ar');
-        
+
       } catch (error) {
         console.error('Error loading language:', error);
         setLanguageState('en');
@@ -664,7 +668,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const setLanguage = async (newLanguage: Language) => {
     try {
       setIsLoading(true);
-      
+
       // Update local state immediately for responsive UI
       setLanguageState(newLanguage);
       setIsRTL(newLanguage === 'ar');
@@ -700,12 +704,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <LanguageContext.Provider value={{ 
-      language, 
-      setLanguage, 
-      t, 
+    <LanguageContext.Provider value={{
+      language,
+      setLanguage,
+      t,
       isRTL,
-      isLoading 
+      isLoading
     }}>
       {children}
     </LanguageContext.Provider>

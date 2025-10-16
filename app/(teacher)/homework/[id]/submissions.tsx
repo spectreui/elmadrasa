@@ -84,7 +84,7 @@ export default function HomeworkSubmissionsScreen() {
   const [gradingSubmission, setGradingSubmission] = useState<Submission | null>(null);
   const [textGrade, setTextGrade] = useState('');
   const [feedback, setFeedback] = useState('');
-  const [questionGrades, setQuestionGrades] = useState<Record<string, {grade: string;feedback: string;}>>({});
+  const [questionGrades, setQuestionGrades] = useState<Record<string, { grade: string; feedback: string; }>>({});
   const [grading, setGrading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const { colors, isDark } = useThemeContext();
@@ -147,12 +147,12 @@ export default function HomeworkSubmissionsScreen() {
     try {
       // Prepare question grades
       const questionGradesArray = Object.entries(questionGrades).
-      filter(([_, gradeData]) => gradeData.grade !== '') // Only include questions with grades
-      .map(([questionId, gradeData]) => ({
-        question_id: questionId,
-        grade: parseInt(gradeData.grade) || 0,
-        feedback: gradeData.feedback || null
-      }));
+        filter(([_, gradeData]) => gradeData.grade !== '') // Only include questions with grades
+        .map(([questionId, gradeData]) => ({
+          question_id: questionId,
+          grade: parseInt(gradeData.grade) || 0,
+          feedback: gradeData.feedback || null
+        }));
 
       // Use the real grading API endpoint
       const response = await apiService.gradeSubmission(
@@ -165,21 +165,25 @@ export default function HomeworkSubmissionsScreen() {
       if (response.data.success) {
         // Update local state with the graded submission
         setSubmissions((prev) => prev.map((sub) =>
-        sub.id === gradingSubmission.id ?
-        {
-          ...response.data.data,
-          text_grade: textGradeValue,
-          question_grades: questionGradesArray
-        } :
-        sub
+          sub.id === gradingSubmission.id ?
+            {
+              ...response.data.data,
+              text_grade: textGradeValue,
+              question_grades: questionGradesArray
+            } :
+            sub
         ));
 
         // ✅ Send push notification through your backend
         try {
-          await apiService.sendNotificationToUser(
-            gradingSubmission.student_id, // Make sure this exists in your submission object
-            'Submission Graded',
-            `Your ${homework?.title || 'homework'} has been graded. Score: ${textGradeValue}`,
+          await apiService.sendLocalizedNotification(
+            gradingSubmission.student_id,
+            'submissions.graded',
+            'submissions.gradedBody',
+            {
+              title: homework?.title || 'homework',
+              grade: textGradeValue
+            },
             {
               screen: 'homework',
               homeworkId: gradingSubmission.homework_id,
@@ -213,7 +217,7 @@ export default function HomeworkSubmissionsScreen() {
     setFeedback(submission.feedback || '');
 
     // Initialize question grades
-    const initialQuestionGrades: Record<string, {grade: string;feedback: string;}> = {};
+    const initialQuestionGrades: Record<string, { grade: string; feedback: string; }> = {};
     if (homework?.questions) {
       homework.questions.forEach((question) => {
         const existingGrade = submission.question_grades?.find((qg) => qg.question_id === question.id);
@@ -291,220 +295,220 @@ export default function HomeworkSubmissionsScreen() {
 
         {/* Questions and Answers Section with Grades */}
         {homework?.allow_questions && homework.questions && homework.questions.length > 0 &&
-        <View style={{ marginBottom: designTokens.spacing.md }}>
+          <View style={{ marginBottom: designTokens.spacing.md }}>
             <Text style={{
-            fontSize: designTokens.typography.title3.fontSize,
-            fontWeight: designTokens.typography.title3.fontWeight,
-            color: colors.textPrimary,
-            marginBottom: designTokens.spacing.md,
-            textAlign: isRTL ? 'right' : 'left'
-          } as any}>{t("submissions.questionsAnswers")}
+              fontSize: designTokens.typography.title3.fontSize,
+              fontWeight: designTokens.typography.title3.fontWeight,
+              color: colors.textPrimary,
+              marginBottom: designTokens.spacing.md,
+              textAlign: isRTL ? 'right' : 'left'
+            } as any}>{t("submissions.questionsAnswers")}
 
-          </Text>
+            </Text>
             {homework.questions.map((question, index) => {
-            const answer = submission.answers?.find((a) => a.question_id === question.id);
-            const questionGrade = submission.question_grades?.find((qg) => qg.question_id === question.id);
+              const answer = submission.answers?.find((a) => a.question_id === question.id);
+              const questionGrade = submission.question_grades?.find((qg) => qg.question_id === question.id);
 
-            return (
-              <View
-                key={question.id}
-                style={{
-                  padding: designTokens.spacing.md,
-                  borderRadius: designTokens.borderRadius.lg,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  backgroundColor: colors.backgroundElevated,
-                  marginBottom: designTokens.spacing.sm
-                }}>
+              return (
+                <View
+                  key={question.id}
+                  style={{
+                    padding: designTokens.spacing.md,
+                    borderRadius: designTokens.borderRadius.lg,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    backgroundColor: colors.backgroundElevated,
+                    marginBottom: designTokens.spacing.sm
+                  }}>
 
                   <Text style={{
-                  fontSize: designTokens.typography.body.fontSize,
-                  fontWeight: '600',
-                  color: colors.textPrimary,
-                  marginBottom: designTokens.spacing.xs,
-                  textAlign: isRTL ? 'right' : 'left'
-                }}>
+                    fontSize: designTokens.typography.body.fontSize,
+                    fontWeight: '600',
+                    color: colors.textPrimary,
+                    marginBottom: designTokens.spacing.xs,
+                    textAlign: isRTL ? 'right' : 'left'
+                  }}>
                     {index + 1}. {question.text} ({question.points} {t("common.points")})
                   </Text>
 
                   {question.type === 'multiple_choice' && question.options &&
-                <View style={{ marginBottom: designTokens.spacing.xs }}>
+                    <View style={{ marginBottom: designTokens.spacing.xs }}>
                       {question.options.map((option, optionIndex) =>
-                  <Text key={optionIndex} style={{
-                    fontSize: designTokens.typography.caption1.fontSize,
-                    color: colors.textSecondary,
-                    marginLeft: isRTL ? 0 : designTokens.spacing.md,
-                    marginRight: isRTL ? designTokens.spacing.md : 0,
-                    textAlign: isRTL ? 'right' : 'left'
-                  }}>
-                          {isRTL ? 
-                            `${option} .${String.fromCharCode(1632 + optionIndex)}` : 
+                        <Text key={optionIndex} style={{
+                          fontSize: designTokens.typography.caption1.fontSize,
+                          color: colors.textSecondary,
+                          marginLeft: isRTL ? 0 : designTokens.spacing.md,
+                          marginRight: isRTL ? designTokens.spacing.md : 0,
+                          textAlign: isRTL ? 'right' : 'left'
+                        }}>
+                          {isRTL ?
+                            `${option} .${String.fromCharCode(1632 + optionIndex)}` :
                             `${String.fromCharCode(65 + optionIndex)}. ${option}`
-                        }
+                          }
                         </Text>
-                  )}
+                      )}
                     </View>
-                }
+                  }
 
                   <Text style={{
-                  fontSize: designTokens.typography.body.fontSize,
-                  color: colors.textSecondary,
-                  marginBottom: designTokens.spacing.xs,
-                  textAlign: isRTL ? 'right' : 'left'
-                }}>
+                    fontSize: designTokens.typography.body.fontSize,
+                    color: colors.textSecondary,
+                    marginBottom: designTokens.spacing.xs,
+                    textAlign: isRTL ? 'right' : 'left'
+                  }}>
                     {t("submissions.studentAnswer")}: {answer ? answer.answer : t("submissions.noAnswer")}
                   </Text>
 
                   {questionGrade && (questionGrade.grade !== null && questionGrade.grade !== undefined || questionGrade.feedback) &&
-                <View style={{
-                  marginTop: designTokens.spacing.xs,
-                  padding: designTokens.spacing.sm,
-                  borderRadius: designTokens.borderRadius.md,
-                  backgroundColor: isDark ? '#374151' : '#E5E7EB'
-                }}>
+                    <View style={{
+                      marginTop: designTokens.spacing.xs,
+                      padding: designTokens.spacing.sm,
+                      borderRadius: designTokens.borderRadius.md,
+                      backgroundColor: isDark ? '#374151' : '#E5E7EB'
+                    }}>
                       {questionGrade.grade !== null && questionGrade.grade !== undefined &&
-                  <Text style={{
-                    fontSize: designTokens.typography.caption1.fontSize,
-                    color: questionGrade.grade === question.points ? '#10B981' : '#F59E0B',
-                    fontWeight: '600',
-                    textAlign: isRTL ? 'right' : 'left'
-                  }}>
+                        <Text style={{
+                          fontSize: designTokens.typography.caption1.fontSize,
+                          color: questionGrade.grade === question.points ? '#10B981' : '#F59E0B',
+                          fontWeight: '600',
+                          textAlign: isRTL ? 'right' : 'left'
+                        }}>
                           {t("submissions.grade")}: {questionGrade.grade}/{question.points}
                         </Text>
-                  }
+                      }
                       {questionGrade.feedback &&
-                  <Text style={{
-                    fontSize: designTokens.typography.caption1.fontSize,
-                    color: colors.textSecondary,
-                    marginTop: designTokens.spacing.xs,
-                    textAlign: isRTL ? 'right' : 'left'
-                  }}>
+                        <Text style={{
+                          fontSize: designTokens.typography.caption1.fontSize,
+                          color: colors.textSecondary,
+                          marginTop: designTokens.spacing.xs,
+                          textAlign: isRTL ? 'right' : 'left'
+                        }}>
                           {t("submissions.feedback")}: {questionGrade.feedback}
                         </Text>
-                  }
+                      }
                     </View>
-                }
+                  }
                 </View>);
 
-          })}
+            })}
           </View>
         }
 
         {/* Attachments */}
         {submission.attachments && submission.attachments.length > 0 &&
-        <View style={{ marginBottom: designTokens.spacing.md }}>
+          <View style={{ marginBottom: designTokens.spacing.md }}>
             <Text style={{
-            fontSize: designTokens.typography.footnote.fontSize,
-            fontWeight: '600',
-            color: colors.textPrimary,
-            marginBottom: designTokens.spacing.sm,
-            textAlign: isRTL ? 'right' : 'left'
-          }}>
+              fontSize: designTokens.typography.footnote.fontSize,
+              fontWeight: '600',
+              color: colors.textPrimary,
+              marginBottom: designTokens.spacing.sm,
+              textAlign: isRTL ? 'right' : 'left'
+            }}>
               {t("submissions.attachments")}:
             </Text>
             <View style={{ gap: designTokens.spacing.sm }}>
               {submission.attachments.map((attachment, index) =>
-            <View
-              key={index}
-              style={{
-                flexDirection: isRTL ? 'row-reverse' : 'row',
-                alignItems: 'center',
-                padding: designTokens.spacing.md,
-                borderRadius: designTokens.borderRadius.lg,
-                backgroundColor: isDark ? '#1F2937' : '#F9FAFB'
-              }}>
+                <View
+                  key={index}
+                  style={{
+                    flexDirection: isRTL ? 'row-reverse' : 'row',
+                    alignItems: 'center',
+                    padding: designTokens.spacing.md,
+                    borderRadius: designTokens.borderRadius.lg,
+                    backgroundColor: isDark ? '#1F2937' : '#F9FAFB'
+                  }}>
 
                   <Ionicons name="document" size={20} color={colors.textSecondary} />
                   <Text
-                style={{
-                  marginHorizontal: designTokens.spacing.sm,
-                  fontSize: designTokens.typography.body.fontSize,
-                  color: colors.textPrimary,
-                  flex: 1,
-                  textAlign: isRTL ? 'right' : 'left'
-                }}
-                numberOfLines={1}>
+                    style={{
+                      marginHorizontal: designTokens.spacing.sm,
+                      fontSize: designTokens.typography.body.fontSize,
+                      color: colors.textPrimary,
+                      flex: 1,
+                      textAlign: isRTL ? 'right' : 'left'
+                    }}
+                    numberOfLines={1}>
 
                     {attachment}
                   </Text>
                 </View>
-            )}
+              )}
             </View>
           </View>
         }
 
         {/* Overall Grade and Feedback */}
         {submission.grade !== undefined && submission.grade !== null &&
-        <View style={{
-          padding: designTokens.spacing.md,
-          borderRadius: designTokens.borderRadius.lg,
-          backgroundColor: '#10B98115',
-          borderWidth: 1,
-          borderColor: '#10B98140',
-          marginBottom: designTokens.spacing.md
-        }}>
-            <Text style={{
-            fontSize: designTokens.typography.body.fontSize,
-            fontWeight: '600',
-            color: '#059669',
-            marginBottom: designTokens.spacing.xs,
-            textAlign: isRTL ? 'right' : 'left'
+          <View style={{
+            padding: designTokens.spacing.md,
+            borderRadius: designTokens.borderRadius.lg,
+            backgroundColor: '#10B98115',
+            borderWidth: 1,
+            borderColor: '#10B98140',
+            marginBottom: designTokens.spacing.md
           }}>
+            <Text style={{
+              fontSize: designTokens.typography.body.fontSize,
+              fontWeight: '600',
+              color: '#059669',
+              marginBottom: designTokens.spacing.xs,
+              textAlign: isRTL ? 'right' : 'left'
+            }}>
               {t("submissions.overallGrade")}: {submission.grade}/{homework.points}
             </Text>
 
             {/* Component grades */}
             {submission.text_grade !== undefined && submission.text_grade !== null &&
-          <Text style={{
-            fontSize: designTokens.typography.caption1.fontSize,
-            color: '#059669',
-            marginTop: designTokens.spacing.xs,
-            textAlign: isRTL ? 'right' : 'left'
-          }}>
+              <Text style={{
+                fontSize: designTokens.typography.caption1.fontSize,
+                color: '#059669',
+                marginTop: designTokens.spacing.xs,
+                textAlign: isRTL ? 'right' : 'left'
+              }}>
                 {t("submissions.textSubmission")}: {submission.text_grade} {t("common.points")}
               </Text>
-          }
+            }
 
             {submission.question_grades && submission.question_grades.length > 0 &&
-          <Text style={{
-            fontSize: designTokens.typography.caption1.fontSize,
-            color: '#059669',
-            marginTop: designTokens.spacing.xs,
-            textAlign: isRTL ? 'right' : 'left'
-          }}>
+              <Text style={{
+                fontSize: designTokens.typography.caption1.fontSize,
+                color: '#059669',
+                marginTop: designTokens.spacing.xs,
+                textAlign: isRTL ? 'right' : 'left'
+              }}>
                 {t("submissions.questionPoints")}: {submission.question_grades.reduce((sum, qg) => sum + (qg.grade || 0), 0)} {t("common.points")}
               </Text>
-          }
+            }
 
             {submission.feedback &&
-          <Text style={{
-            fontSize: designTokens.typography.body.fontSize,
-            color: '#059669',
-            marginTop: designTokens.spacing.sm,
-            textAlign: isRTL ? 'right' : 'left'
-          }}>
+              <Text style={{
+                fontSize: designTokens.typography.body.fontSize,
+                color: '#059669',
+                marginTop: designTokens.spacing.sm,
+                textAlign: isRTL ? 'right' : 'left'
+              }}>
                 {t("submissions.overallFeedback")}: {submission.feedback}
               </Text>
-          }
+            }
 
             <Text style={{
-            fontSize: designTokens.typography.caption1.fontSize,
-            color: '#059669',
-            marginTop: designTokens.spacing.xs,
-            textAlign: isRTL ? 'right' : 'left'
-          }}>
+              fontSize: designTokens.typography.caption1.fontSize,
+              color: '#059669',
+              marginTop: designTokens.spacing.xs,
+              textAlign: isRTL ? 'right' : 'left'
+            }}>
               {t("submissions.submittedOn")}: {formatDate(submission.submitted_at)}
             </Text>
             {submission.graded_at &&
-          <Text style={{
-            fontSize: designTokens.typography.caption1.fontSize,
-            color: '#059669',
-            marginTop: designTokens.spacing.xs,
-            textAlign: isRTL ? 'right' : 'left'
-          }}>
+              <Text style={{
+                fontSize: designTokens.typography.caption1.fontSize,
+                color: '#059669',
+                marginTop: designTokens.spacing.xs,
+                textAlign: isRTL ? 'right' : 'left'
+              }}>
                 {t("submissions.gradedOn")}: {formatDate(submission.graded_at)}
               </Text>
-          }
+            }
           </View>
         }
       </View>);
@@ -734,11 +738,11 @@ export default function HomeworkSubmissionsScreen() {
       <ScrollView
         style={{ flex: 1 }}
         refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          tintColor={colors.primary}
-          colors={[colors.primary]} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]} />
 
         }>
 
@@ -747,70 +751,70 @@ export default function HomeworkSubmissionsScreen() {
           paddingTop: designTokens.spacing.lg
         }}>
           {submissions.length === 0 ?
-          <View style={{
-            alignItems: 'center',
-            padding: designTokens.spacing.xxl,
-            borderRadius: designTokens.borderRadius.xl,
-            borderWidth: 2,
-            borderStyle: 'dashed',
-            borderColor: colors.border,
-            backgroundColor: colors.backgroundElevated
-          }}>
+            <View style={{
+              alignItems: 'center',
+              padding: designTokens.spacing.xxl,
+              borderRadius: designTokens.borderRadius.xl,
+              borderWidth: 2,
+              borderStyle: 'dashed',
+              borderColor: colors.border,
+              backgroundColor: colors.backgroundElevated
+            }}>
               <Ionicons name="document-text-outline" size={64} color={colors.textTertiary} style={{ marginBottom: designTokens.spacing.lg }} />
               <Text style={{
-              fontSize: designTokens.typography.title2.fontSize,
-              fontWeight: designTokens.typography.title2.fontWeight,
-              color: colors.textPrimary,
-              marginBottom: designTokens.spacing.sm,
-              textAlign: 'center'
-            } as any}>{t("submissions.none")}
+                fontSize: designTokens.typography.title2.fontSize,
+                fontWeight: designTokens.typography.title2.fontWeight,
+                color: colors.textPrimary,
+                marginBottom: designTokens.spacing.sm,
+                textAlign: 'center'
+              } as any}>{t("submissions.none")}
 
-            </Text>
+              </Text>
               <Text style={{
-              fontSize: designTokens.typography.body.fontSize,
-              color: colors.textSecondary,
-              textAlign: 'center'
-            }}>{t("submissions.noneMessage")}
+                fontSize: designTokens.typography.body.fontSize,
+                color: colors.textSecondary,
+                textAlign: 'center'
+              }}>{t("submissions.noneMessage")}
 
-            </Text>
+              </Text>
             </View> :
 
-          submissions.map((submission) =>
-          <View
-            key={submission.id}
-            style={{
-              borderRadius: designTokens.borderRadius.xxl,
-              borderWidth: 1,
-              borderColor: colors.border,
-              backgroundColor: colors.backgroundElevated,
-              padding: designTokens.spacing.lg,
-              marginBottom: designTokens.spacing.md,
-              ...designTokens.shadows.sm
-            }}>
+            submissions.map((submission) =>
+              <View
+                key={submission.id}
+                style={{
+                  borderRadius: designTokens.borderRadius.xxl,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  backgroundColor: colors.backgroundElevated,
+                  padding: designTokens.spacing.lg,
+                  marginBottom: designTokens.spacing.md,
+                  ...designTokens.shadows.sm
+                }}>
 
                 <View style={{
-              flexDirection: isRTL ? 'row-reverse' : 'row',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              marginBottom: designTokens.spacing.md
-            }}>
+                  flexDirection: isRTL ? 'row-reverse' : 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  marginBottom: designTokens.spacing.md
+                }}>
                   <View style={{ flex: 1 }}>
                     <Text style={{
-                  fontSize: designTokens.typography.headline.fontSize,
-                  fontWeight: designTokens.typography.headline.fontWeight,
-                  color: colors.textPrimary,
-                  marginBottom: designTokens.spacing.xs,
-                  textAlign: isRTL ? 'right' : 'left'
-                } as any}>
+                      fontSize: designTokens.typography.headline.fontSize,
+                      fontWeight: designTokens.typography.headline.fontWeight,
+                      color: colors.textPrimary,
+                      marginBottom: designTokens.spacing.xs,
+                      textAlign: isRTL ? 'right' : 'left'
+                    } as any}>
                       {submission.student?.profile?.name || 'Student'}
                     </Text>
                     <Text style={{
-                  fontSize: designTokens.typography.caption1.fontSize,
-                  color: colors.textSecondary,
-                  textAlign: isRTL ? 'right' : 'left'
-                }}>
+                      fontSize: designTokens.typography.caption1.fontSize,
+                      color: colors.textSecondary,
+                      textAlign: isRTL ? 'right' : 'left'
+                    }}>
                       {submission.student?.profile?.class && `${submission.student.profile.class} • `}{t("submissions.submitted")}
-                  {formatDate(submission.submitted_at)}
+                      {formatDate(submission.submitted_at)}
                     </Text>
                   </View>
                   {getGradeStatusBadge(submission)}
@@ -818,71 +822,71 @@ export default function HomeworkSubmissionsScreen() {
 
                 {/* Grade Display */}
                 {getGradeStatus(submission) === 'graded' &&
-            <View style={{
-              flexDirection: isRTL ? 'row-reverse' : 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: designTokens.spacing.md,
-              borderRadius: designTokens.borderRadius.lg,
-              backgroundColor: '#10B98115',
-              borderWidth: 1,
-              borderColor: '#10B98140',
-              marginBottom: designTokens.spacing.md
-            }}>
+                  <View style={{
+                    flexDirection: isRTL ? 'row-reverse' : 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: designTokens.spacing.md,
+                    borderRadius: designTokens.borderRadius.lg,
+                    backgroundColor: '#10B98115',
+                    borderWidth: 1,
+                    borderColor: '#10B98140',
+                    marginBottom: designTokens.spacing.md
+                  }}>
                     <View>
                       <Text style={{
-                  fontSize: designTokens.typography.body.fontSize,
-                  fontWeight: '600',
-                  color: '#10B981',
-                  textAlign: isRTL ? 'right' : 'left'
-                }}>
+                        fontSize: designTokens.typography.body.fontSize,
+                        fontWeight: '600',
+                        color: '#10B981',
+                        textAlign: isRTL ? 'right' : 'left'
+                      }}>
                         {t("submissions.overallGrade")}: {submission.grade}/{homework?.points}
                       </Text>
                       {submission.question_grades && submission.question_grades.some((qg) => qg.grade !== null) &&
-                <Text style={{
-                  fontSize: designTokens.typography.caption1.fontSize,
-                  color: '#10B981',
-                  marginTop: designTokens.spacing.xs,
-                  textAlign: isRTL ? 'right' : 'left'
-                }}>
+                        <Text style={{
+                          fontSize: designTokens.typography.caption1.fontSize,
+                          color: '#10B981',
+                          marginTop: designTokens.spacing.xs,
+                          textAlign: isRTL ? 'right' : 'left'
+                        }}>
                           {t("submissions.questionGrades")}: {submission.question_grades.filter((qg) => qg.grade !== null).length} {t("submissions.graded")}
                         </Text>
-                }
+                      }
                     </View>
                   </View>
-            }
+                }
 
                 {/* Use the new render function */}
                 {renderSubmissionDetails(submission)}
 
                 <TouchableOpacity
-              onPress={() => openGradeModal(submission)}
-              style={{
-                paddingVertical: designTokens.spacing.md,
-                borderRadius: designTokens.borderRadius.lg,
-                backgroundColor: getGradeStatus(submission) === 'graded' ?
-                colors.background :
-                colors.primary,
-                borderWidth: 1,
-                borderColor: getGradeStatus(submission) === 'graded' ?
-                colors.border :
-                colors.primary,
-                alignItems: 'center'
-              }}>
+                  onPress={() => openGradeModal(submission)}
+                  style={{
+                    paddingVertical: designTokens.spacing.md,
+                    borderRadius: designTokens.borderRadius.lg,
+                    backgroundColor: getGradeStatus(submission) === 'graded' ?
+                      colors.background :
+                      colors.primary,
+                    borderWidth: 1,
+                    borderColor: getGradeStatus(submission) === 'graded' ?
+                      colors.border :
+                      colors.primary,
+                    alignItems: 'center'
+                  }}>
 
                   <Text style={{
-                fontSize: designTokens.typography.body.fontSize,
-                fontWeight: '600',
-                color: getGradeStatus(submission) === 'graded' ?
-                colors.textPrimary :
-                'white',
-                textAlign: 'center'
-              }}>
+                    fontSize: designTokens.typography.body.fontSize,
+                    fontWeight: '600',
+                    color: getGradeStatus(submission) === 'graded' ?
+                      colors.textPrimary :
+                      'white',
+                    textAlign: 'center'
+                  }}>
                     {getGradeStatus(submission) === 'graded' ? t("submissions.editGrade") : t("submissions.grade")}
                   </Text>
                 </TouchableOpacity>
               </View>
-          )
+            )
           }
         </View>
       </ScrollView>
@@ -939,13 +943,13 @@ export default function HomeworkSubmissionsScreen() {
               {gradingSubmission?.student?.profile?.name}
             </Text>
             {gradingSubmission &&
-            <Text style={{
-              fontSize: designTokens.typography.body.fontSize,
-              color: colors.textSecondary,
-              marginTop: designTokens.spacing.xs,
-              textAlign: isRTL ? 'right' : 'left'
-            }}>{t("submissions.submittedOn")}
-              {formatDate(gradingSubmission.submitted_at)}
+              <Text style={{
+                fontSize: designTokens.typography.body.fontSize,
+                color: colors.textSecondary,
+                marginTop: designTokens.spacing.xs,
+                textAlign: isRTL ? 'right' : 'left'
+              }}>{t("submissions.submittedOn")}
+                {formatDate(gradingSubmission.submitted_at)}
               </Text>
             }
           </View>
@@ -957,28 +961,28 @@ export default function HomeworkSubmissionsScreen() {
             }}>
               {/* Submission Content Preview */}
               {gradingSubmission?.content &&
-              <View style={{ marginBottom: designTokens.spacing.xl }}>
+                <View style={{ marginBottom: designTokens.spacing.xl }}>
                   <Text style={{
-                  fontSize: designTokens.typography.title3.fontSize,
-                  fontWeight: designTokens.typography.title3.fontWeight,
-                  color: colors.textPrimary,
-                  marginBottom: designTokens.spacing.md,
-                  textAlign: isRTL ? 'right' : 'left'
-                } as any}>{t("submissions.studentContent")}
-
-                </Text>
-                  <View style={{
-                  padding: designTokens.spacing.md,
-                  borderRadius: designTokens.borderRadius.lg,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  backgroundColor: colors.backgroundElevated
-                }}>
-                    <Text style={{
-                    fontSize: designTokens.typography.body.fontSize,
+                    fontSize: designTokens.typography.title3.fontSize,
+                    fontWeight: designTokens.typography.title3.fontWeight,
                     color: colors.textPrimary,
+                    marginBottom: designTokens.spacing.md,
                     textAlign: isRTL ? 'right' : 'left'
+                  } as any}>{t("submissions.studentContent")}
+
+                  </Text>
+                  <View style={{
+                    padding: designTokens.spacing.md,
+                    borderRadius: designTokens.borderRadius.lg,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    backgroundColor: colors.backgroundElevated
                   }}>
+                    <Text style={{
+                      fontSize: designTokens.typography.body.fontSize,
+                      color: colors.textPrimary,
+                      textAlign: isRTL ? 'right' : 'left'
+                    }}>
                       {gradingSubmission.content}
                     </Text>
                   </View>
@@ -987,120 +991,120 @@ export default function HomeworkSubmissionsScreen() {
 
               {/* Questions and Answers Preview with Grading */}
               {homework?.allow_questions && homework.questions && homework.questions.length > 0 &&
-              <View style={{ marginBottom: designTokens.spacing.xl }}>
+                <View style={{ marginBottom: designTokens.spacing.xl }}>
                   <Text style={{
-                  fontSize: designTokens.typography.title3.fontSize,
-                  fontWeight: designTokens.typography.title3.fontWeight,
-                  color: colors.textPrimary,
-                  marginBottom: designTokens.spacing.md,
-                  textAlign: isRTL ? 'right' : 'left'
-                } as any}>
+                    fontSize: designTokens.typography.title3.fontSize,
+                    fontWeight: designTokens.typography.title3.fontWeight,
+                    color: colors.textPrimary,
+                    marginBottom: designTokens.spacing.md,
+                    textAlign: isRTL ? 'right' : 'left'
+                  } as any}>
                     {t("submissions.questionsAnswers")}
                   </Text>
                   {homework.questions.map((question, index) => {
-                  const answer = gradingSubmission?.answers?.find((a) => a.question_id === question.id);
-                  const currentGrade = questionGrades[question.id]?.grade || '';
-                  const currentFeedback = questionGrades[question.id]?.feedback || '';
+                    const answer = gradingSubmission?.answers?.find((a) => a.question_id === question.id);
+                    const currentGrade = questionGrades[question.id]?.grade || '';
+                    const currentFeedback = questionGrades[question.id]?.feedback || '';
 
-                  return (
-                    <View
-                      key={question.id}
-                      style={{
-                        padding: designTokens.spacing.md,
-                        borderRadius: designTokens.borderRadius.lg,
-                        borderWidth: 1,
-                        borderColor: colors.border,
-                        backgroundColor: colors.backgroundElevated,
-                        marginBottom: designTokens.spacing.md
-                      }}>
+                    return (
+                      <View
+                        key={question.id}
+                        style={{
+                          padding: designTokens.spacing.md,
+                          borderRadius: designTokens.borderRadius.lg,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                          backgroundColor: colors.backgroundElevated,
+                          marginBottom: designTokens.spacing.md
+                        }}>
 
                         <Text style={{
-                        fontSize: designTokens.typography.body.fontSize,
-                        fontWeight: '600',
-                        color: colors.textPrimary,
-                        marginBottom: designTokens.spacing.xs,
-                        textAlign: isRTL ? 'right' : 'left'
-                      }}>
+                          fontSize: designTokens.typography.body.fontSize,
+                          fontWeight: '600',
+                          color: colors.textPrimary,
+                          marginBottom: designTokens.spacing.xs,
+                          textAlign: isRTL ? 'right' : 'left'
+                        }}>
                           {index + 1}. {question.text} ({question.points} {t("common.points")})
                         </Text>
 
                         {question.type === 'multiple_choice' && question.options &&
-                      <View style={{ marginBottom: designTokens.spacing.xs }}>
+                          <View style={{ marginBottom: designTokens.spacing.xs }}>
                             {question.options.map((option, optionIndex) =>
-                        <Text key={optionIndex} style={{
-                          fontSize: designTokens.typography.caption1.fontSize,
-                          color: colors.textSecondary,
-                          marginLeft: isRTL ? 0 : designTokens.spacing.md,
-                          marginRight: isRTL ? designTokens.spacing.md : 0,
-                          textAlign: isRTL ? 'right' : 'left'
-                        }}>
-                                {isRTL ? 
-                                  `${option} .${String.fromCharCode(1632 + optionIndex)}` : 
+                              <Text key={optionIndex} style={{
+                                fontSize: designTokens.typography.caption1.fontSize,
+                                color: colors.textSecondary,
+                                marginLeft: isRTL ? 0 : designTokens.spacing.md,
+                                marginRight: isRTL ? designTokens.spacing.md : 0,
+                                textAlign: isRTL ? 'right' : 'left'
+                              }}>
+                                {isRTL ?
+                                  `${option} .${String.fromCharCode(1632 + optionIndex)}` :
                                   `${String.fromCharCode(65 + optionIndex)}. ${option}`
-                              }
-                        </Text>
-                        )}
+                                }
+                              </Text>
+                            )}
                           </View>
-                      }
+                        }
 
                         <Text style={{
-                        fontSize: designTokens.typography.body.fontSize,
-                        color: colors.textSecondary,
-                        marginBottom: designTokens.spacing.md,
-                        textAlign: isRTL ? 'right' : 'left'
-                      }}>
+                          fontSize: designTokens.typography.body.fontSize,
+                          color: colors.textSecondary,
+                          marginBottom: designTokens.spacing.md,
+                          textAlign: isRTL ? 'right' : 'left'
+                        }}>
                           {t("submissions.answer")}: {answer ? answer.answer : t("submissions.noAnswer")}
                         </Text>
 
                         {/* Question Grade Input */}
                         <View style={{
-                        flexDirection: isRTL ? 'row-reverse' : 'row',
-                        alignItems: 'center',
-                        marginBottom: designTokens.spacing.sm
-                      }}>
-                          <Text style={{
-                          fontSize: designTokens.typography.body.fontSize,
-                          color: colors.textPrimary,
-                          marginHorizontal: designTokens.spacing.sm,
-                          width: 80,
-                          textAlign: isRTL ? 'right' : 'left'
+                          flexDirection: isRTL ? 'row-reverse' : 'row',
+                          alignItems: 'center',
+                          marginBottom: designTokens.spacing.sm
                         }}>
+                          <Text style={{
+                            fontSize: designTokens.typography.body.fontSize,
+                            color: colors.textPrimary,
+                            marginHorizontal: designTokens.spacing.sm,
+                            width: 80,
+                            textAlign: isRTL ? 'right' : 'left'
+                          }}>
                             {t("submissions.grade")}:
                           </Text>
                           <TextInput
-                          style={{
-                            flex: 1,
-                            borderRadius: designTokens.borderRadius.md,
-                            padding: designTokens.spacing.sm,
-                            borderWidth: 1,
-                            borderColor: colors.border,
-                            backgroundColor: colors.background,
-                            fontSize: designTokens.typography.body.fontSize,
-                            color: colors.textPrimary,
-                            textAlign: isRTL ? 'right' : 'left'
-                          }}
-                          placeholder={`0-${question.points}`}
-                          keyboardType="numeric"
-                          value={currentGrade}
-                          onChangeText={(text) => {
-                            const numericValue = text.replace(/[^0-9]/g, '');
-                            if (numericValue === '' || parseInt(numericValue) <= question.points) {
-                              setQuestionGrades((prev) => ({
-                                ...prev,
-                                [question.id]: {
-                                  ...prev[question.id],
-                                  grade: numericValue
-                                }
-                              }));
-                            }
-                          }} />
+                            style={{
+                              flex: 1,
+                              borderRadius: designTokens.borderRadius.md,
+                              padding: designTokens.spacing.sm,
+                              borderWidth: 1,
+                              borderColor: colors.border,
+                              backgroundColor: colors.background,
+                              fontSize: designTokens.typography.body.fontSize,
+                              color: colors.textPrimary,
+                              textAlign: isRTL ? 'right' : 'left'
+                            }}
+                            placeholder={`0-${question.points}`}
+                            keyboardType="numeric"
+                            value={currentGrade}
+                            onChangeText={(text) => {
+                              const numericValue = text.replace(/[^0-9]/g, '');
+                              if (numericValue === '' || parseInt(numericValue) <= question.points) {
+                                setQuestionGrades((prev) => ({
+                                  ...prev,
+                                  [question.id]: {
+                                    ...prev[question.id],
+                                    grade: numericValue
+                                  }
+                                }));
+                              }
+                            }} />
 
                           <Text style={{
-                          fontSize: designTokens.typography.body.fontSize,
-                          color: colors.textPrimary,
-                          marginHorizontal: designTokens.spacing.xs,
-                          textAlign: isRTL ? 'right' : 'left'
-                        }}>
+                            fontSize: designTokens.typography.body.fontSize,
+                            color: colors.textPrimary,
+                            marginHorizontal: designTokens.spacing.xs,
+                            textAlign: isRTL ? 'right' : 'left'
+                          }}>
                             / {question.points}
                           </Text>
                         </View>
@@ -1108,43 +1112,43 @@ export default function HomeworkSubmissionsScreen() {
                         {/* Question Feedback Input */}
                         <View>
                           <Text style={{
-                          fontSize: designTokens.typography.body.fontSize,
-                          color: colors.textPrimary,
-                          marginBottom: designTokens.spacing.xs,
-                          textAlign: isRTL ? 'right' : 'left'
-                        }}>
+                            fontSize: designTokens.typography.body.fontSize,
+                            color: colors.textPrimary,
+                            marginBottom: designTokens.spacing.xs,
+                            textAlign: isRTL ? 'right' : 'left'
+                          }}>
                             {t("submissions.feedback")}:
                           </Text>
                           <TextInput
-                          style={{
-                            borderRadius: designTokens.borderRadius.md,
-                            padding: designTokens.spacing.sm,
-                            borderWidth: 1,
-                            borderColor: colors.border,
-                            backgroundColor: colors.background,
-                            fontSize: designTokens.typography.body.fontSize,
-                            color: colors.textPrimary,
-                            minHeight: 60,
-                            textAlignVertical: 'top',
-                            textAlign: isRTL ? 'right' : 'left'
-                          }}
-                          placeholder={t("submissions.addFeedback")}
-                          value={currentFeedback}
-                          onChangeText={(text) => {
-                            setQuestionGrades((prev) => ({
-                              ...prev,
-                              [question.id]: {
-                                ...prev[question.id],
-                                feedback: text
-                              }
-                            }));
-                          }}
-                          multiline />
+                            style={{
+                              borderRadius: designTokens.borderRadius.md,
+                              padding: designTokens.spacing.sm,
+                              borderWidth: 1,
+                              borderColor: colors.border,
+                              backgroundColor: colors.background,
+                              fontSize: designTokens.typography.body.fontSize,
+                              color: colors.textPrimary,
+                              minHeight: 60,
+                              textAlignVertical: 'top',
+                              textAlign: isRTL ? 'right' : 'left'
+                            }}
+                            placeholder={t("submissions.addFeedback")}
+                            value={currentFeedback}
+                            onChangeText={(text) => {
+                              setQuestionGrades((prev) => ({
+                                ...prev,
+                                [question.id]: {
+                                  ...prev[question.id],
+                                  feedback: text
+                                }
+                              }));
+                            }}
+                            multiline />
 
                         </View>
                       </View>);
 
-                })}
+                  })}
                 </View>
               }
 
@@ -1277,13 +1281,13 @@ export default function HomeworkSubmissionsScreen() {
                   }}>
 
                   {grading ?
-                  <ActivityIndicator color="white" size="small" /> :
+                    <ActivityIndicator color="white" size="small" /> :
 
-                  <Text style={{
-                    fontSize: designTokens.typography.body.fontSize,
-                    fontWeight: '600',
-                    color: 'white'
-                  }}>
+                    <Text style={{
+                      fontSize: designTokens.typography.body.fontSize,
+                      fontWeight: '600',
+                      color: 'white'
+                    }}>
                       {t("common.save")}
                     </Text>
                   }
