@@ -627,7 +627,8 @@ export default function HomeworkSubmissionsScreen() {
           marginBottom: designTokens.spacing.md,
           textAlign: isRTL ? 'right' : 'left'
         }}>
-          {homework?.class} • {homework?.subject} • {submissions.length} {t("submissions.submissions")}
+          {homework?.class} • {t(homework?.subject)} • {isRTL ? `${t("submissions.title")} ${submissions.length}` : `${submissions.length} ${t("submissions.title")}`}
+
         </Text>
 
         {/* Quick Stats */}

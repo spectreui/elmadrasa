@@ -100,7 +100,7 @@ const translations = {
     // Profile
     'profile.title': 'Profile',
     'profile.settings': 'Settings',
-    'profile.teacherInformation': 'Teacher Information',
+    'profile.teacherInfo': 'Teacher Information',
     'profile.teacherId': 'Teacher ID',
     'profile.email': 'Email',
     'profile.accountCreated': 'Account Created',
@@ -365,6 +365,7 @@ const translations = {
     'common.loadFailed': 'فشل التحميل...',
     'common.save': 'حفظ',
     'common.cancel': 'إلغاء',
+    'common.send': 'إرسل',
     'common.back': 'رجوع',
     'common.add': 'إضافة',
     'common.error': 'خطأ',

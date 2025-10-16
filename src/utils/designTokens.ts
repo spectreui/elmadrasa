@@ -8,6 +8,7 @@ export const designTokens = {
       primary: '#007AFF',      // iOS Blue
       primaryLight: '#3399FF',
       primaryDark: '#0062CC',
+      destructive: '#dc2626',
       
       // Accent Colors
       accent: '#FF9500',       // iOS Orange
@@ -41,6 +42,7 @@ export const designTokens = {
       accent: '#FF9F0A',
       accentSecondary: '#30D158',
       accentTertiary: '#FF453A',
+      destructive: '#dc2626',
       
       // Background Colors
       background: '#000000',

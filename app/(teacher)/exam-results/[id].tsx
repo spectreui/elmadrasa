@@ -772,7 +772,7 @@ export default function TeacherExamResultsScreen() {const { t } = useTranslation
                 {sendingFeedback ?
                 <ActivityIndicator size="small" color="white" /> :
 
-                <Text style={styles.feedbackButtonText as any}>Send</Text>
+                <Text style={styles.feedbackButtonText as any}>{t("common.send")}</Text>
                 }
               </TouchableOpacity>
             </View>

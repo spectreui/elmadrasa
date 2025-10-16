@@ -269,6 +269,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
+    overflow: 'hidden',
   },
   header: {
     padding: 24,
