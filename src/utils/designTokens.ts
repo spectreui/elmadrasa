@@ -1,4 +1,6 @@
 // src/utils/designTokens.ts
+import { TextStyle } from 'react-native';
+
 export const designTokens = {
   colors: {
     light: {
@@ -59,17 +61,17 @@ export const designTokens = {
     }
   },
   typography: {
-    largeTitle: { fontSize: 34, fontWeight: '700' },
-    title1: { fontSize: 28, fontWeight: '700' },
-    title2: { fontSize: 22, fontWeight: '600' },
-    title3: { fontSize: 20, fontWeight: '600' },
-    headline: { fontSize: 17, fontWeight: '600' },
-    body: { fontSize: 17, fontWeight: '400' },
-    callout: { fontSize: 16, fontWeight: '400' },
-    subhead: { fontSize: 15, fontWeight: '400' },
-    footnote: { fontSize: 13, fontWeight: '400' },
-    caption1: { fontSize: 12, fontWeight: '400' },
-    caption2: { fontSize: 11, fontWeight: '400' },
+    largeTitle: { fontSize: 34, fontWeight: '700' as const },
+    title1: { fontSize: 28, fontWeight: '700' as const },
+    title2: { fontSize: 22, fontWeight: '600' as const },
+    title3: { fontSize: 20, fontWeight: '600' as const },
+    headline: { fontSize: 17, fontWeight: '600' as const },
+    body: { fontSize: 17, fontWeight: '400' as const },
+    callout: { fontSize: 16, fontWeight: '400' as const },
+    subhead: { fontSize: 15, fontWeight: '400' as const },
+    footnote: { fontSize: 13, fontWeight: '400' as const },
+    caption1: { fontSize: 12, fontWeight: '400' as const },
+    caption2: { fontSize: 11, fontWeight: '400' as const },
   },
   spacing: {
     xxs: 2,

@@ -11,7 +11,7 @@ import {
   AppState,
   AppStateStatus,
 } from 'react-native';
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { apiService } from '../../../src/services/api';
 import { Exam, Question, ApiResponse } from '../../../src/types';
@@ -45,6 +45,7 @@ export default function StudentExamScreen() {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [showWarning, setShowWarning] = useState(true);
+    
 
   // Refs to track auto-submit state
   const isAutoSubmitting = useRef(false);

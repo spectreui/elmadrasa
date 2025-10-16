@@ -14,6 +14,7 @@ export default function MyClassesScreen() {
   const [joinCodes, setJoinCodes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { colors } = useThemeContext();
+    
 
   useEffect(() => {
     loadTeacherClasses();
@@ -188,72 +189,72 @@ export default function MyClassesScreen() {
 const styles = {
   container: {
     flex: 1,
-  },
+  } as any,
   loadingText: {
     fontSize: designTokens.typography.body.fontSize,
     fontWeight: '500',
     marginTop: designTokens.spacing.xxl,
     textAlign: 'center',
-  },
+  } as any,
   header: {
     paddingHorizontal: designTokens.spacing.xl,
     paddingTop: designTokens.spacing.xxxl,
     paddingBottom: designTokens.spacing.lg,
     borderBottomWidth: 1,
-  },
+  } as any,
   headerTitle: {
     fontSize: designTokens.typography.title1.fontSize,
     fontWeight: designTokens.typography.title1.fontWeight as any,
     marginBottom: designTokens.spacing.xs,
-  },
+  } as any,
   headerSubtitle: {
     fontSize: designTokens.typography.body.fontSize,
     fontWeight: '500',
-  },
+  } as any,
   content: {
     flex: 1,
-  },
+  } as any,
   classesList: {
     padding: designTokens.spacing.xl,
-  },
+  } as any,
   emptyState: {
     alignItems: 'center',
     paddingVertical: designTokens.spacing.xxxl,
-  },
+  } as any,
   emptyTitle: {
     fontSize: designTokens.typography.headline.fontSize,
     fontWeight: '500',
     marginTop: designTokens.spacing.lg,
     marginBottom: designTokens.spacing.xs,
-  },
+  } as any,
   emptySubtitle: {
     fontSize: designTokens.typography.footnote.fontSize,
     textAlign: 'center',
-  },
+  } as any,
   classSection: {
     marginBottom: designTokens.spacing.xxl,
-  },
+  } as any,
   className: {
     fontSize: designTokens.typography.title3.fontSize,
     fontWeight: designTokens.typography.title3.fontWeight as any,
     marginBottom: designTokens.spacing.lg,
-  },
+  } as any,
   subjectsList: {
     gap: designTokens.spacing.md,
-  },
+  } as any,
   subjectCard: {
     borderRadius: designTokens.borderRadius.xl,
     borderWidth: 1,
     overflow: 'hidden',
     ...designTokens.shadows.sm,
-  },
+  } as any,
   subjectHeader: {
     padding: designTokens.spacing.lg,
-  },
+  } as any,
   subjectInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
+  } as any,
   subjectIcon: {
     width: 40,
     height: 40,
@@ -261,41 +262,41 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: designTokens.spacing.md,
-  },
+  } as any,
   subjectDetails: {
     flex: 1,
-  },
+  } as any,
   subjectName: {
     fontSize: designTokens.typography.headline.fontSize,
     fontWeight: '600',
     marginBottom: designTokens.spacing.xxs,
-  },
+  } as any,
   subjectClass: {
     fontSize: designTokens.typography.caption1.fontSize,
-  },
+  } as any,
   joinCodeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: designTokens.spacing.lg,
-  },
+  } as any,
   joinCodeInfo: {
     flex: 1,
-  },
+  } as any,
   joinCodeLabel: {
     fontSize: designTokens.typography.caption1.fontSize,
     fontWeight: '600',
     marginBottom: designTokens.spacing.xxs,
-  },
+  } as any,
   joinCodeValue: {
     fontSize: designTokens.typography.body.fontSize,
     fontWeight: '600',
     fontFamily: 'monospace',
     marginBottom: designTokens.spacing.xxs,
-  },
+  } as any,
   joinCodeHint: {
     fontSize: designTokens.typography.caption2.fontSize,
-  },
+  } as any,
   copyButton: {
     width: 40,
     height: 40,
@@ -303,19 +304,19 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: designTokens.spacing.md,
-  },
+  } as any,
   noCodeContainer: {
     padding: designTokens.spacing.lg,
     borderTopWidth: 1,
     borderTopColor: 'transparent',
-  },
+  } as any,
   noCodeText: {
     fontSize: designTokens.typography.caption1.fontSize,
     textAlign: 'center',
     marginBottom: designTokens.spacing.xxs,
-  },
+  } as any,
   noCodeDetails: {
     fontSize: designTokens.typography.caption2.fontSize,
     textAlign: 'center',
-  },
+  } as any,
 };

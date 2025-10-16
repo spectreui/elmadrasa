@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   SafeAreaView,
 } from 'react-native';
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { apiService } from '../../../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -66,6 +66,7 @@ export default function ExamResultsScreen() {
   const [loading, setLoading] = useState(true);
   const [showAllAnswers, setShowAllAnswers] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+    
 
   // Add this function to handle sharing
   const handleShare = () => {

@@ -17,6 +17,7 @@ import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { TeacherDashboardStats, RecentActivity } from '../../src/types';
 import { designTokens } from '../../src/utils/designTokens';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function TeacherDashboard() {
   const { user } = useAuth();
@@ -38,9 +39,11 @@ export default function TeacherDashboard() {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const { t, language, setLanguage, isRTL } = useTranslation();
 
   useEffect(() => {
     loadDashboardData();
+    setLanguage('ar');
   }, []);
 
   const loadDashboardData = async () => {
@@ -80,9 +83,9 @@ export default function TeacherDashboard() {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return 'goodMorning';
+    if (hour < 17) return 'goodAfternoon';
+    return 'goodEvening';
   };
 
   const getStatusColor = (status: string) => {
@@ -189,7 +192,7 @@ export default function TeacherDashboard() {
         <View style={styles.headerContent}>
           <View style={styles.headerText}>
             <Text style={[styles.greeting, { color: colors.textSecondary }]}>
-              {getGreeting()},
+              {t(getGreeting())},
             </Text>
             <Text style={[styles.userName, { color: colors.textPrimary }]}>
               {user?.profile?.name || 'Teacher'}
@@ -278,7 +281,7 @@ export default function TeacherDashboard() {
             title="My Classes"
             description="Manage students"
             icon="people"
-            color={colors.purple}
+            color={colors.accentSecondary}
             onPress={() => router.push('/(teacher)/my-classes')}
           />
           <QuickActionCard
@@ -397,44 +400,44 @@ export default function TeacherDashboard() {
 const styles = {
   container: {
     flex: 1,
-  },
+  } as any,
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
+  } as any,
   loadingText: {
     marginTop: designTokens.spacing.md,
     fontSize: designTokens.typography.body.fontSize,
     fontWeight: '500',
-  },
+  } as any,
   header: {
     paddingHorizontal: designTokens.spacing.xl,
     paddingTop: designTokens.spacing.xxxl,
     paddingBottom: designTokens.spacing.xl,
-  },
+  } as any,
   headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-  },
+  } as any,
   headerText: {
     flex: 1,
-  },
+  } as any,
   greeting: {
     fontSize: designTokens.typography.title3.fontSize,
     fontWeight: designTokens.typography.title3.fontWeight as any,
     marginBottom: designTokens.spacing.xs,
-  },
+  } as any,
   userName: {
     fontSize: designTokens.typography.title1.fontSize,
     fontWeight: designTokens.typography.title1.fontWeight as any,
     marginBottom: designTokens.spacing.xs,
-  },
+  } as any,
   date: {
     fontSize: designTokens.typography.body.fontSize,
     fontWeight: '500',
-  },
+  } as any,
   profileButton: {
     width: 44,
     height: 44,
@@ -442,85 +445,85 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     ...designTokens.shadows.sm,
-  },
+  } as any,
   avatar: {
     width: 32,
     height: 32,
     borderRadius: designTokens.borderRadius.full,
-  },
+  } as any,
   section: {
     paddingHorizontal: designTokens.spacing.xl,
     marginTop: designTokens.spacing.xl,
-  },
+  } as any,
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: designTokens.spacing.md,
-  },
+  } as any,
   sectionTitle: {
     fontSize: designTokens.typography.title3.fontSize,
     fontWeight: designTokens.typography.title3.fontWeight as any,
     marginBottom: designTokens.spacing.md,
-  },
+  } as any,
   viewAllText: {
     fontSize: designTokens.typography.body.fontSize,
     fontWeight: '600',
-  },
+  } as any,
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: designTokens.spacing.md,
-  },
+  } as any,
   statCard: {
     flex: 1,
     minWidth: '48%',
     borderRadius: designTokens.borderRadius.xl,
     padding: designTokens.spacing.lg,
     ...designTokens.shadows.sm,
-  },
+  } as any,
   statHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: designTokens.spacing.md,
-  },
+  } as any,
   statIcon: {
     width: 40,
     height: 40,
     borderRadius: designTokens.borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
-  },
+  } as any,
   trendText: {
     fontSize: designTokens.typography.caption1.fontSize,
     fontWeight: '600',
-  },
+  } as any,
   statValue: {
     fontSize: designTokens.typography.title2.fontSize,
     fontWeight: designTokens.typography.title2.fontWeight as any,
     marginBottom: designTokens.spacing.xs,
-  },
+  } as any,
   statTitle: {
     fontSize: designTokens.typography.body.fontSize,
     fontWeight: '600',
     marginBottom: designTokens.spacing.xs,
-  },
+  } as any,
   statSubtitle: {
     fontSize: designTokens.typography.caption1.fontSize,
-  },
+  } as any,
   actionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: designTokens.spacing.md,
-  },
+  } as any,
   quickActionCard: {
     flex: 1,
     minWidth: '48%',
     borderRadius: designTokens.borderRadius.xl,
     padding: designTokens.spacing.lg,
     ...designTokens.shadows.sm,
-  },
+  } as any,
   actionIcon: {
     width: 48,
     height: 48,
@@ -528,25 +531,25 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: designTokens.spacing.md,
-  },
+  } as any,
   actionTitle: {
     fontSize: designTokens.typography.headline.fontSize,
     fontWeight: '600',
     marginBottom: designTokens.spacing.xs,
-  },
+  } as any,
   actionDescription: {
     fontSize: designTokens.typography.caption1.fontSize,
-  },
+  } as any,
   activityCard: {
     borderRadius: designTokens.borderRadius.xl,
     ...designTokens.shadows.sm,
     overflow: 'hidden',
-  },
+  } as any,
   activityItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: designTokens.spacing.lg,
-  },
+  } as any,
   activityIcon: {
     width: 40,
     height: 40,
@@ -554,68 +557,68 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: designTokens.spacing.md,
-  },
+  } as any,
   activityContent: {
     flex: 1,
-  },
+  } as any,
   activityTitle: {
     fontSize: designTokens.typography.body.fontSize,
     fontWeight: '600',
     marginBottom: designTokens.spacing.xs,
-  },
+  } as any,
   activityDescription: {
     fontSize: designTokens.typography.caption1.fontSize,
     marginBottom: designTokens.spacing.xs,
-  },
+  } as any,
   activityDate: {
     fontSize: designTokens.typography.caption2.fontSize,
-  },
+  } as any,
   statusBadge: {
     paddingHorizontal: designTokens.spacing.sm,
     paddingVertical: designTokens.spacing.xs,
     borderRadius: designTokens.borderRadius.full,
-  },
+  } as any,
   statusText: {
     fontSize: designTokens.typography.caption2.fontSize,
     fontWeight: '600',
     textTransform: 'capitalize',
-  },
+  } as any,
   emptyState: {
     padding: designTokens.spacing.xxl,
     alignItems: 'center',
-  },
+  } as any,
   emptyStateTitle: {
     fontSize: designTokens.typography.headline.fontSize,
     fontWeight: '500',
     marginTop: designTokens.spacing.lg,
     marginBottom: designTokens.spacing.xs,
-  },
+  } as any,
   emptyStateSubtitle: {
     fontSize: designTokens.typography.caption1.fontSize,
     textAlign: 'center',
-  },
+  } as any,
   insightsGrid: {
     flexDirection: 'row',
     gap: designTokens.spacing.md,
-  },
+  } as any,
   insightCard: {
     flex: 1,
     borderRadius: designTokens.borderRadius.xl,
     padding: designTokens.spacing.lg,
     alignItems: 'center',
     ...designTokens.shadows.sm,
-  },
+  } as any,
   insightValue: {
     fontSize: designTokens.typography.title3.fontSize,
     fontWeight: designTokens.typography.title3.fontWeight as any,
     marginTop: designTokens.spacing.sm,
     marginBottom: designTokens.spacing.xs,
-  },
+  } as any,
   insightLabel: {
     fontSize: designTokens.typography.caption1.fontSize,
     textAlign: 'center',
-  },
+  } as any,
   bottomSpacing: {
     height: designTokens.spacing.xxl,
-  },
+  } as any,
 };

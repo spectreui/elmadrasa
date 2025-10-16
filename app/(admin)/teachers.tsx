@@ -1,7 +1,7 @@
 // app/(admin)/teachers.tsx - Updated to match student design
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +21,7 @@ export default function TeachersManagementScreen() {
   const [assigning, setAssigning] = useState(false);
   const [removingAssignment, setRemovingAssignment] = useState<string | null>(null);
   const { colors, isDark } = useThemeContext();
+    
 
   useEffect(() => {
     loadData();

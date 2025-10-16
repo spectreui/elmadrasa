@@ -1,7 +1,7 @@
 // app/(admin)/assign-teachers.tsx - Updated with copyable join codes
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Modal, ActivityIndicator, ToastAndroid } from 'react-native';
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 import { router } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { apiService } from '../../src/services/api';
@@ -23,6 +23,7 @@ export default function AssignTeachersScreen() {
   const [removingAssignment, setRemovingAssignment] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const { colors, isDark } = useThemeContext();
+  
 
   useEffect(() => {
     loadData();

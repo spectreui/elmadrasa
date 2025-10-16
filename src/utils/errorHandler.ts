@@ -1,4 +1,4 @@
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 
 export class AppError extends Error {
   public code: string;
@@ -13,6 +13,7 @@ export class AppError extends Error {
 }
 
 export const handleApiError = (error: any): string => {
+  
   console.error('API Error:', error);
 
   if (error.code === 'NETWORK_ERROR') {

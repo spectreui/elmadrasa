@@ -12,7 +12,7 @@ import {
   StatusBar,
   Dimensions,
 } from "react-native";
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 import { router } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -27,6 +27,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const { login, isLoading, error, clearError } = useAuth();
   const { colors, isDark } = useThemeContext();
+    
 
   const demoLogins = [
     { 

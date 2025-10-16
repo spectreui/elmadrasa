@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,6 +33,7 @@ interface Class {
 
 export default function SignUp() {
   const { colors, isDark } = useThemeContext();
+    
 
   // Form state
   const [formData, setFormData] = useState({

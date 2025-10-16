@@ -10,7 +10,7 @@ import {
   Modal,
   TextInput,
 } from 'react-native';
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { apiService } from '../../../src/services/api';
@@ -80,6 +80,7 @@ export default function TeacherExamResultsScreen() {
   const [feedback, setFeedback] = useState('');
   const [sendingFeedback, setSendingFeedback] = useState(false);
   const { colors } = useThemeContext();
+    
 
   useEffect(() => {
     loadExamResults();

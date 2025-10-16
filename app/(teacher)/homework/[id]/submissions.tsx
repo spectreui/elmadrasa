@@ -1,7 +1,7 @@
 // app/(teacher)/homework/[id]/submissions.tsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, Modal, RefreshControl } from 'react-native';
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../../../src/contexts/AuthContext';
 import { apiService } from '../../../../src/services/api';
@@ -86,6 +86,7 @@ export default function HomeworkSubmissionsScreen() {
   const [grading, setGrading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const { colors, isDark } = useThemeContext();
+    
 
   useEffect(() => {
     loadHomeworkAndSubmissions();

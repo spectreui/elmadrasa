@@ -30,7 +30,7 @@
   --color-glass-dark: 0, 0, 0, 0.1;
   --color-glass-border: 255, 255, 255, 0.2;
 
-  --rn-alert-bg: 242, 242, 247 !important;
+  /* --rn-alert-bg: 242, 242, 247 !important; */
 
 }
 
@@ -66,7 +66,7 @@
   }
 }
 
-.rn-alert__content, .rn-alert__actions {
+/* .rn-alert__content, .rn-alert__actions {
   --rn-alert-bg: #1c1c1ef2;
   background: #1c1c1ef2 !important;
 }
@@ -79,4 +79,4 @@
   background: #F1F5F9;
   color: #000;
   border-color: #48484A
-}
+} */

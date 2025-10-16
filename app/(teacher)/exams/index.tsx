@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 import { router } from "expo-router";
 import { useAuth } from "../../../src/contexts/AuthContext";
 import { apiService } from "../../../src/services/api";
@@ -41,6 +41,7 @@ export default function TeacherExamsScreen() {
   const [activeTab, setActiveTab] = useState<"active" | "draft" | "archived">("active");
   const [showShareModal, setShowShareModal] = useState(false);
   const [currentExam, setCurrentExam] = useState<TeacherExam | null>(null);
+    
 
   // Add share function
   const shareExam = (exam: TeacherExam) => {
@@ -465,33 +466,33 @@ export default function TeacherExamsScreen() {
 const styles = {
   container: {
     flex: 1,
-  },
+  } as any,
   loadingText: {
     marginTop: designTokens.spacing.md,
     fontSize: designTokens.typography.body.fontSize,
     fontWeight: '500',
-  },
+  } as any,
   header: {
     paddingHorizontal: designTokens.spacing.xl,
     paddingTop: designTokens.spacing.xxxl,
     paddingBottom: designTokens.spacing.lg,
     borderBottomWidth: 1,
-  },
+  } as any,
   headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: designTokens.spacing.xl,
-  },
+  } as any,
   headerTitle: {
     fontSize: designTokens.typography.title2.fontSize,
     fontWeight: designTokens.typography.title2.fontWeight as any,
     marginBottom: designTokens.spacing.xs,
-  },
+  } as any,
   headerSubtitle: {
     fontSize: designTokens.typography.body.fontSize,
     fontWeight: '500',
-  },
+  } as any,
   newButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -499,18 +500,18 @@ const styles = {
     paddingVertical: designTokens.spacing.sm,
     borderRadius: designTokens.borderRadius.lg,
     ...designTokens.shadows.sm,
-  },
+  } as any,
   newButtonText: {
     color: 'white',
     fontWeight: '600',
     fontSize: designTokens.typography.body.fontSize,
     marginLeft: designTokens.spacing.xs,
-  },
+  } as any,
   tabsContainer: {
     flexDirection: 'row',
     borderRadius: designTokens.borderRadius.lg,
     padding: designTokens.spacing.xs,
-  },
+  } as any,
   tab: {
     flex: 1,
     flexDirection: 'row',
@@ -518,173 +519,173 @@ const styles = {
     alignItems: 'center',
     paddingVertical: designTokens.spacing.md,
     borderRadius: designTokens.borderRadius.md,
-  },
+  } as any,
   tabText: {
     marginLeft: designTokens.spacing.xs,
     fontSize: designTokens.typography.footnote.fontSize,
     fontWeight: '600',
-  },
+  } as any,
   tabBadge: {
     paddingHorizontal: designTokens.spacing.xs,
     paddingVertical: 2,
     borderRadius: designTokens.borderRadius.full,
     marginLeft: designTokens.spacing.xs,
-  },
+  } as any,
   tabBadgeText: {
     fontSize: designTokens.typography.caption2.fontSize,
     fontWeight: '600',
-  },
+  } as any,
   content: {
     padding: designTokens.spacing.xl,
-  },
+  } as any,
   emptyState: {
     alignItems: 'center',
     borderRadius: designTokens.borderRadius.xl,
     padding: designTokens.spacing.xxxl,
     borderWidth: 1,
-  },
+  } as any,
   emptyStateTitle: {
     fontSize: designTokens.typography.headline.fontSize,
     fontWeight: '500',
     marginTop: designTokens.spacing.lg,
     marginBottom: designTokens.spacing.xs,
-  },
+  } as any,
   emptyStateSubtitle: {
     fontSize: designTokens.typography.footnote.fontSize,
     textAlign: 'center',
     marginBottom: designTokens.spacing.lg,
-  },
+  } as any,
   createButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: designTokens.spacing.xl,
     paddingVertical: designTokens.spacing.md,
     borderRadius: designTokens.borderRadius.lg,
-  },
+  } as any,
   createButtonText: {
     color: 'white',
     fontWeight: '600',
     fontSize: designTokens.typography.body.fontSize,
     marginLeft: designTokens.spacing.xs,
-  },
+  } as any,
   examsList: {
     gap: designTokens.spacing.sm,
-  },
+  } as any,
   examCard: {
     borderRadius: designTokens.borderRadius.xl,
     padding: designTokens.spacing.lg,
     borderWidth: 1,
-  },
+  } as any,
   examHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: designTokens.spacing.md,
-  },
+  } as any,
   examTextContainer: {
     flex: 1,
-  },
+  } as any,
   examTitle: {
     fontSize: designTokens.typography.headline.fontSize,
     fontWeight: '600',
     marginBottom: designTokens.spacing.xs,
-  },
+  } as any,
   examMeta: {
     flexDirection: 'row',
     flexWrap: 'wrap' as 'wrap',
     gap: designTokens.spacing.md,
-  },
+  } as any,
   metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
+  } as any,
   metaText: {
     fontSize: designTokens.typography.footnote.fontSize,
     fontWeight: '500',
     marginLeft: designTokens.spacing.xxs,
-  },
+  } as any,
   statusBadge: {
     paddingHorizontal: designTokens.spacing.sm,
     paddingVertical: designTokens.spacing.xxs,
     borderRadius: designTokens.borderRadius.full,
-  },
+  } as any,
   statusText: {
     fontSize: designTokens.typography.caption1.fontSize,
     fontWeight: '600',
-  },
+  } as any,
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: designTokens.spacing.md,
-  },
+  } as any,
   statsContainer: {
     flexDirection: 'row',
     gap: designTokens.spacing.lg,
-  },
+  } as any,
   statItem: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
+  } as any,
   statText: {
     fontSize: designTokens.typography.footnote.fontSize,
     fontWeight: '500',
     marginLeft: designTokens.spacing.xxs,
-  },
+  } as any,
   dateText: {
     fontSize: designTokens.typography.caption1.fontSize,
-  },
+  } as any,
   actionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
+  } as any,
   primaryActions: {
     flexDirection: 'row',
     gap: designTokens.spacing.sm,
-  },
+  } as any,
   secondaryActions: {
     flexDirection: 'row',
     gap: designTokens.spacing.sm,
-  },
+  } as any,
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: designTokens.spacing.md,
     paddingVertical: designTokens.spacing.sm,
     borderRadius: designTokens.borderRadius.lg,
-  },
+  } as any,
   actionText: {
     fontSize: designTokens.typography.footnote.fontSize,
     fontWeight: '600',
     marginLeft: designTokens.spacing.xs,
-  },
+  } as any,
   iconButton: {
     width: 40,
     height: 40,
     borderRadius: designTokens.borderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
-  },
+  } as any,
   statsGrid: {
     flexDirection: 'row',
     gap: designTokens.spacing.sm,
     marginTop: designTokens.spacing.xl,
-  },
+  } as any,
   statCard: {
     flex: 1,
     borderRadius: designTokens.borderRadius.xl,
     padding: designTokens.spacing.md,
     borderWidth: 1,
     ...designTokens.shadows.sm,
-  },
+  } as any,
   statLabel: {
     fontSize: designTokens.typography.caption1.fontSize,
     fontWeight: '500',
     marginBottom: designTokens.spacing.xxs,
-  },
+  } as any,
   statValue: {
     fontSize: designTokens.typography.title2.fontSize,
     fontWeight: '700',
-  },
+  } as any,
 };

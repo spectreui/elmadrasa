@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 import { useAuth } from "../../src/contexts/AuthContext";
 import { apiService } from "../../src/services/api";
 import { Ionicons } from "@expo/vector-icons";
@@ -24,6 +24,7 @@ export default function ResultsScreen() {
   const [selectedFilter, setSelectedFilter] = useState<"all" | "recent" | "top">("all");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+    
 
   useEffect(() => {
     loadResults();

@@ -1,7 +1,7 @@
 // app/(admin)/students.tsx - Fixed version
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,6 +17,7 @@ export default function StudentsManagementScreen() {
   const [selectedClass, setSelectedClass] = useState('');
   const [assigning, setAssigning] = useState(false);
   const { colors } = useThemeContext();
+  
 
   useEffect(() => {
     loadData();
@@ -26,7 +27,7 @@ export default function StudentsManagementScreen() {
     try {
       setLoading(true);
       console.log('🔄 Loading students and classes...');
-      
+
       const [studentsRes, classesRes] = await Promise.all([
         apiService.getUsersByRole('student'),
         apiService.getClasses(),
@@ -50,7 +51,7 @@ export default function StudentsManagementScreen() {
     } catch (error: any) {
       console.error('❌ Failed to load data:', error);
       Alert.alert(
-        'Error', 
+        'Error',
         error.response?.data?.error || error.message || 'Failed to load data'
       );
     } finally {
@@ -125,7 +126,7 @@ export default function StudentsManagementScreen() {
     } catch (error: any) {
       console.error('❌ Assign class error:', error);
       Alert.alert(
-        'Error', 
+        'Error',
         error.response?.data?.error || error.message || 'Failed to assign class'
       );
     } finally {
@@ -135,43 +136,43 @@ export default function StudentsManagementScreen() {
 
   // Alternative simpler approach if the above doesn't work
   // In students.tsx - replace the handleAssignClassSimple function
-const handleAssignClassSimple = async () => {
-  if (!selectedStudent || !selectedClass) {
-    Alert.alert('Error', 'Please select a class');
-    return;
-  }
-
-  setAssigning(true);
-  try {
-    const classObj = classes.find(c => c.id === selectedClass);
-    if (!classObj) {
-      Alert.alert('Error', 'Invalid class selected');
+  const handleAssignClassSimple = async () => {
+    if (!selectedStudent || !selectedClass) {
+      Alert.alert('Error', 'Please select a class');
       return;
     }
 
-    console.log(`🎯 Assigning ${selectedStudent.profile?.name} to ${classObj.name}`);
+    setAssigning(true);
+    try {
+      const classObj = classes.find(c => c.id === selectedClass);
+      if (!classObj) {
+        Alert.alert('Error', 'Invalid class selected');
+        return;
+      }
 
-    // Use the admin endpoint to update student class
-    const response = await apiService.updateStudentClass(selectedStudent.id, classObj.name);
-    
-    console.log('✅ Assignment response:', response.data);
+      console.log(`🎯 Assigning ${selectedStudent.profile?.name} to ${classObj.name}`);
 
-    Alert.alert('Success', `Assigned ${selectedStudent.profile?.name} to ${classObj.name}`);
-    setShowClassModal(false);
-    setSelectedStudent(null);
-    setSelectedClass('');
-    await loadData(); // Refresh the data
-  } catch (error: any) {
-    console.error('❌ Assign class error:', error);
-    
-    Alert.alert(
-      'Error', 
-      error.response?.data?.error || error.message || 'Failed to assign class'
-    );
-  } finally {
-    setAssigning(false);
-  }
-};
+      // Use the admin endpoint to update student class
+      const response = await apiService.updateStudentClass(selectedStudent.id, classObj.name);
+
+      console.log('✅ Assignment response:', response.data);
+
+      Alert.alert('Success', `Assigned ${selectedStudent.profile?.name} to ${classObj.name}`);
+      setShowClassModal(false);
+      setSelectedStudent(null);
+      setSelectedClass('');
+      await loadData(); // Refresh the data
+    } catch (error: any) {
+      console.error('❌ Assign class error:', error);
+
+      Alert.alert(
+        'Error',
+        error.response?.data?.error || error.message || 'Failed to assign class'
+      );
+    } finally {
+      setAssigning(false);
+    }
+  };
 
   const handleDeleteStudent = (student: any) => {
     Alert.alert(
@@ -179,8 +180,8 @@ const handleAssignClassSimple = async () => {
       `Are you sure you want to delete ${student.profile?.name}? This action cannot be undone.`,
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
+        {
+          text: 'Delete',
           style: 'destructive',
           onPress: () => deleteStudent(student.id)
         }
@@ -197,7 +198,7 @@ const handleAssignClassSimple = async () => {
     } catch (error: any) {
       console.error('Delete student error:', error);
       Alert.alert(
-        'Error', 
+        'Error',
         error.response?.data?.error || error.message || 'Failed to delete student'
       );
     }
@@ -241,8 +242,8 @@ const handleAssignClassSimple = async () => {
               Manage student assignments and classes
             </Text>
           </View>
-          <TouchableOpacity 
-            onPress={loadData} 
+          <TouchableOpacity
+            onPress={loadData}
             className={cn('w-10 h-10 rounded-full items-center justify-center', colors.backgroundElevated)}
           >
             <Ionicons name="refresh" size={20} className={colors.textSecondary} />
@@ -273,7 +274,7 @@ const handleAssignClassSimple = async () => {
       </View>
 
       {/* Scrollable Content */}
-      <ScrollView 
+      <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
       >
@@ -299,35 +300,31 @@ const handleAssignClassSimple = async () => {
                     <Text className={cn('text-sm mb-2', colors.textSecondary)}>
                       {student.email}
                     </Text>
-                    
+
                     <View className="flex-row flex-wrap gap-2 mb-3">
                       <View className="px-3 py-1 bg-blue-500/10 rounded-full">
                         <Text className="text-blue-600 text-xs font-medium">
                           ID: {student.student_id || 'N/A'}
                         </Text>
                       </View>
-                      <View className={`px-3 py-1 rounded-full ${
-                        student.profile?.class ? 'bg-green-500/10' : 'bg-gray-500/10'
-                      }`}>
-                        <Text className={`text-xs font-medium ${
-                          student.profile?.class ? 'text-green-600' : 'text-gray-600'
+                      <View className={`px-3 py-1 rounded-full ${student.profile?.class ? 'bg-green-500/10' : 'bg-gray-500/10'
                         }`}>
+                        <Text className={`text-xs font-medium ${student.profile?.class ? 'text-green-600' : 'text-gray-600'
+                          }`}>
                           {student.profile?.class || 'No class'}
                         </Text>
                       </View>
-                      <View className={`px-3 py-1 rounded-full ${
-                        student.is_approved ? 'bg-emerald-500/10' : 'bg-amber-500/10'
-                      }`}>
-                        <Text className={`text-xs font-medium ${
-                          student.is_approved ? 'text-emerald-600' : 'text-amber-600'
+                      <View className={`px-3 py-1 rounded-full ${student.is_approved ? 'bg-emerald-500/10' : 'bg-amber-500/10'
                         }`}>
+                        <Text className={`text-xs font-medium ${student.is_approved ? 'text-emerald-600' : 'text-amber-600'
+                          }`}>
                           {student.is_approved ? 'Approved' : 'Pending'}
                         </Text>
                       </View>
                     </View>
 
                     {!student.is_approved && (
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         onPress={() => approveStudent(student)}
                         className="bg-emerald-500 px-4 py-2 rounded-xl self-start"
                       >
@@ -348,7 +345,7 @@ const handleAssignClassSimple = async () => {
                   >
                     <Ionicons name="school" size={18} color="white" />
                   </TouchableOpacity>
-                  
+
                   <TouchableOpacity
                     onPress={() => handleDeleteStudent(student)}
                     className="w-10 h-10 rounded-xl bg-rose-500 items-center justify-center"
@@ -390,7 +387,7 @@ const handleAssignClassSimple = async () => {
                   {selectedStudent?.profile?.name || selectedStudent?.email}
                 </Text>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => setShowClassModal(false)}
                 className="w-10 h-10 rounded-full items-center justify-center bg-gray-100 dark:bg-gray-800"
               >
@@ -407,8 +404,8 @@ const handleAssignClassSimple = async () => {
                   onPress={() => setSelectedClass(classItem.id)}
                   className={cn(
                     'p-4 rounded-2xl border flex-row items-center justify-between',
-                    selectedClass === classItem.id 
-                      ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300' 
+                    selectedClass === classItem.id
+                      ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300'
                       : colors.backgroundElevated,
                     colors.border
                   )}
@@ -426,7 +423,7 @@ const handleAssignClassSimple = async () => {
                       </Text>
                     </View>
                   </View>
-                  
+
                   {selectedClass === classItem.id && (
                     <Ionicons name="checkmark-circle" size={24} color="#10b981" />
                   )}

@@ -18,6 +18,9 @@ import { SafeAreaView } from "@/components/SafeAreaView";
 import { apiService } from "@/src/services/api";
 import SmartBanner from "@/components/SmartBanner";
 import Constants from "expo-constants";
+import { setUniversalPromptFunction } from "@/components/UniversalAlert";
+import { UniversalPromptProvider, useUniversalPrompt } from "@/components/UniversalPrompt";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 // Keep splash screen until ready
 SplashScreen.preventAutoHideAsync();
@@ -62,6 +65,7 @@ export default function RootLayout() {
 
   // ✅ Pre-warm token (to avoid unauthorized flickers)
   useEffect(() => {
+    AsyncStorage.setItem("introShown", "true");
     (async () => {
       await apiService.validateToken();
     })();
@@ -121,25 +125,40 @@ export default function RootLayout() {
     return <IntroFallback />;
   }
 
+  function PromptSetup() {
+    const { showUniversalPrompt } = useUniversalPrompt();
+
+    React.useEffect(() => {
+      setUniversalPromptFunction(showUniversalPrompt);
+    }, [showUniversalPrompt]);
+
+    return null;
+  }
+
   // ✅ Main App
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
-        <ThemeWrapper>
-          <AuthProvider>
-            <NotificationProvider>
-              <SmartBanner
-                appName="El Madrasa"
-                appScheme="elmadrasa" // Your app's custom scheme from app.json
-                currentPath={pathname}
-              />
-              <SafeAreaView>
-                <Slot />
-              </SafeAreaView>
-            </NotificationProvider>
-          </AuthProvider>
-        </ThemeWrapper>
-      </ThemeProvider>
+      <LanguageProvider>
+        <ThemeProvider>
+          <ThemeWrapper>
+            <AuthProvider>
+              <UniversalPromptProvider>
+                <PromptSetup />
+                <NotificationProvider>
+                  <SmartBanner
+                    appName="El Madrasa"
+                    appScheme="elmadrasa" // Your app's custom scheme from app.json
+                    currentPath={pathname}
+                  />
+                  <SafeAreaView>
+                    <Slot />
+                  </SafeAreaView>
+                </NotificationProvider>
+              </UniversalPromptProvider>
+            </AuthProvider>
+          </ThemeWrapper>
+        </ThemeProvider>
+      </LanguageProvider>
     </SafeAreaProvider>
   );
 }

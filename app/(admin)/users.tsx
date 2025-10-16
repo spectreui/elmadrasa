@@ -1,7 +1,7 @@
 // app/(admin)/users.tsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, RefreshControl } from 'react-native';
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,6 +28,7 @@ export default function UsersManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'student' | 'teacher'>('all');
   const { colors } = useThemeContext();
+    
 
   useEffect(() => {
     loadUsers();

@@ -10,7 +10,7 @@ import {
   StyleSheet,
   Dimensions
 } from 'react-native';
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -51,6 +51,7 @@ export default function StudentHomeworkScreen() {
   const [homework, setHomework] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+    
 
   const loadHomework = async () => {
     try {

@@ -12,7 +12,7 @@ import {
   Platform,
   Modal
 } from 'react-native';
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 import { router } from 'expo-router';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { apiService } from '../../../src/services/api';
@@ -55,6 +55,7 @@ export default function CreateHomeworkScreen() {
   const [selectedStartDate, setSelectedStartDate] = useState<Date>(new Date());
   const [selectedDueDate, setSelectedDueDate] = useState<Date>(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)); // 7 days from now
 
+  
   const [form, setForm] = useState({
     title: '',
     description: '',

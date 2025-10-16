@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { apiService } from '../../../src/services/api';
@@ -88,6 +88,7 @@ export default function HomeworkDetailScreen() {
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, string>>({});
   const { colors, isDark } = useThemeContext();
   const [showShareModal, setShowShareModal] = useState(false);
+    
 
   const loadHomework = useCallback(async () => {
     if (!id) return;

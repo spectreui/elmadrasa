@@ -1,82 +1,55 @@
-// src/contexts/ThemeContext.tsx - FIXED VERSION
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useColorScheme, Appearance } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { designTokens } from '../utils/designTokens';
-
-type ThemeMode = 'light' | 'dark' | 'auto';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useColorScheme } from 'react-native';
+import { useLanguage } from './LanguageContext'; // Import useLanguage
+import { designTokens } from '@/utils/designTokens';
 
 interface ThemeContextType {
-  themeMode: ThemeMode;
-  setThemeMode: (mode: ThemeMode) => void;
   isDark: boolean;
-  colors: typeof designTokens.colors.light | typeof designTokens.colors.dark;
   toggleTheme: () => void;
+  colors: {
+    primary: string;
+    background: string;
+    backgroundElevated: string;
+    textPrimary: string;
+    textSecondary: string;
+    textTertiary: string;
+    border: string;
+    separator: string;
+  };
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const systemColorScheme = useColorScheme();
-  const [themeMode, setThemeModeState] = useState<ThemeMode>('auto');
-  const [systemTheme, setSystemTheme] = useState<'light' | 'dark'>(systemColorScheme || 'light');
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const colorScheme = useColorScheme();
+  const { isRTL } = useLanguage(); // Get isRTL from language context
+  const [isDark, setIsDark] = useState(colorScheme === 'dark');
 
+  // Sync with system theme changes
   useEffect(() => {
-    loadThemePreference();
-    
-    // Listen for system theme changes
-    const subscription = Appearance.addChangeListener(({ colorScheme }) => {
-      setSystemTheme(colorScheme || 'light');
-    });
+    setIsDark(colorScheme === 'dark');
+  }, [colorScheme]);
 
-    return () => subscription.remove();
-  }, []);
+  const toggleTheme = () => {
+    setIsDark(prev => !prev);
+  };
 
-  const loadThemePreference = async () => {
-    try {
-      const savedTheme = await AsyncStorage.getItem('themeMode');
-      if (savedTheme) {
-        setThemeModeState(savedTheme as ThemeMode);
+  // Define your color palette
+  const colors = isDark ? designTokens.colors.light : designTokens.colors.light;
+
+  // Apply RTL to the app
+  useEffect(() => {
+    import('react-native').then(({ I18nManager }) => {
+      if (I18nManager.isRTL !== isRTL) {
+        I18nManager.forceRTL(isRTL);
+        // Optionally restart the app for full RTL support
+        // You might want to show a restart prompt to users
       }
-    } catch (error) {
-      console.error('Failed to load theme preference:', error);
-    }
-  };
-
-  const setThemeMode = async (mode: ThemeMode) => {
-    try {
-      setThemeModeState(mode);
-      await AsyncStorage.setItem('themeMode', mode);
-    } catch (error) {
-      console.error('Failed to save theme preference:', error);
-    }
-  };
-
-  const toggleTheme = async () => {
-    if (themeMode === 'auto') {
-      // If auto, set to opposite of current system theme
-      const newMode = systemTheme === 'dark' ? 'light' : 'dark';
-      await setThemeMode(newMode);
-    } else {
-      // If explicit mode, toggle between light and dark
-      const newMode = themeMode === 'dark' ? 'light' : 'dark';
-      await setThemeMode(newMode);
-    }
-  };
-
-  const isDark = themeMode === 'auto' ? systemTheme === 'dark' : themeMode === 'dark';
-  const colors = isDark ? designTokens.colors.dark : designTokens.colors.light;
-
-  const value = {
-    themeMode,
-    setThemeMode,
-    isDark,
-    colors,
-    toggleTheme,
-  };
+    });
+  }, [isRTL]);
 
   return (
-    <ThemeContext.Provider value={value}>
+    <ThemeContext.Provider value={{ isDark, toggleTheme, colors }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -84,7 +57,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 export function useThemeContext() {
   const context = useContext(ThemeContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useThemeContext must be used within a ThemeProvider');
   }
   return context;

@@ -1,6 +1,6 @@
 // app/(student)/exams.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';
@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '../../src/contexts/ThemeContext';
 import { designTokens } from '../../src/utils/designTokens';
 import Animated, { FadeIn, FadeInUp, Layout } from 'react-native-reanimated';
+import { Alert } from '@/utils/UniversalAlert';
 
 export default function ExamsScreen() {
   const { user } = useAuth();
@@ -23,6 +24,7 @@ export default function ExamsScreen() {
     upcoming: 0,
     missed: 0
   });
+    
 
   const loadExams = useCallback(async () => {
     try {

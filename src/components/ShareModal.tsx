@@ -29,6 +29,7 @@ interface ShareModalProps {
 export const ShareModal = ({ visible, onClose, title, link, subject }: ShareModalProps) => {
   const { colors, isDark } = useThemeContext();
   const [copying, setCopying] = useState(false);
+    
 
   const copyToClipboard = async () => {
     setCopying(true);

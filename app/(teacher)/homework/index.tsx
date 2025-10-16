@@ -1,12 +1,13 @@
 // app/(teacher)/homework/index.tsx - Updated with Full Dark Mode Support
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { apiService } from '../../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '@/contexts/ThemeContext';
 import { designTokens } from '../../../src/utils/designTokens';
 import { router } from 'expo-router';
+import { Alert } from '@/utils/UniversalAlert';
 
 interface Homework {
   id: string;
@@ -31,8 +32,7 @@ export default function TeacherHomeworkScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { colors } = useThemeContext();
-
-
+  
 
   const loadHomework = async () => {
     try {
@@ -341,30 +341,30 @@ const styles = {
     marginTop: designTokens.spacing.md,
     fontSize: designTokens.typography.body.fontSize,
     fontWeight: '500',
-  },
+  } as any,
   header: {
     paddingHorizontal: designTokens.spacing.xl,
     paddingTop: designTokens.spacing.xxxl,
     paddingBottom: designTokens.spacing.lg,
-  },
+  } as any,
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: designTokens.spacing.xl,
-  },
+  } as any,
   headerText: {
     flex: 1,
-  },
+  } as any,
   headerTitle: {
     fontSize: designTokens.typography.title1.fontSize,
     fontWeight: designTokens.typography.title1.fontWeight as any,
     marginBottom: designTokens.spacing.xs,
-  },
+  } as any,
   headerSubtitle: {
     fontSize: designTokens.typography.body.fontSize,
     fontWeight: '500',
-  },
+  } as any,
   newButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -372,165 +372,163 @@ const styles = {
     paddingVertical: designTokens.spacing.sm,
     borderRadius: designTokens.borderRadius.lg,
     ...designTokens.shadows.sm,
-  },
+  } as any,
   newButtonText: {
     color: 'white',
     fontWeight: '600',
     fontSize: designTokens.typography.body.fontSize,
     marginLeft: designTokens.spacing.xs,
-  },
+  } as any,
   statsOverview: {
     borderRadius: designTokens.borderRadius.xl,
     padding: designTokens.spacing.lg,
     borderWidth: 1,
     ...designTokens.shadows.sm,
-  },
+  } as any,
   statsTitle: {
     fontSize: designTokens.typography.title3.fontSize,
     fontWeight: designTokens.typography.title3.fontWeight as any,
     marginBottom: designTokens.spacing.md,
-  },
+  } as any,
   statsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-  },
+  } as any,
   statItem: {
     alignItems: 'center',
-  },
+  } as any,
   statValue: {
     fontSize: designTokens.typography.title2.fontSize,
     fontWeight: designTokens.typography.title2.fontWeight as any,
     marginBottom: designTokens.spacing.xxs,
-  },
+  } as any,
   statLabel: {
     fontSize: designTokens.typography.caption1.fontSize,
     fontWeight: '500',
-  },
+  } as any,
   content: {
     flex: 1,
-  },
+  } as any,
   homeworkList: {
     paddingHorizontal: designTokens.spacing.xl,
     paddingBottom: designTokens.spacing.xl,
-  },
+  } as any,
   emptyState: {
     alignItems: 'center',
     borderRadius: designTokens.borderRadius.xl,
     padding: designTokens.spacing.xxxl,
     borderWidth: 1,
-  },
+  } as any,
   emptyStateTitle: {
     fontSize: designTokens.typography.headline.fontSize,
     fontWeight: '500',
     marginTop: designTokens.spacing.lg,
     marginBottom: designTokens.spacing.xs,
-  },
+  } as any,
   emptyStateSubtitle: {
     fontSize: designTokens.typography.footnote.fontSize,
     textAlign: 'center',
     marginBottom: designTokens.spacing.lg,
-    lineHeight: designTokens.typography.footnote.lineHeight,
-  },
+  } as any,
   createButton: {
     paddingHorizontal: designTokens.spacing.xl,
     paddingVertical: designTokens.spacing.md,
     borderRadius: designTokens.borderRadius.lg,
     ...designTokens.shadows.sm,
-  },
+  } as any,
   createButtonText: {
     color: 'white',
     fontWeight: '600',
     fontSize: designTokens.typography.body.fontSize,
-  },
+  } as any,
   homeworkGrid: {
     gap: designTokens.spacing.sm,
-  },
+  } as any,
   homeworkCard: {
     borderRadius: designTokens.borderRadius.xl,
     padding: designTokens.spacing.lg,
     borderWidth: 1,
-  },
+  } as any,
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: designTokens.spacing.md,
-  },
+  } as any,
   cardTextContainer: {
     flex: 1,
     marginRight: designTokens.spacing.md,
-  },
+  } as any,
   cardTitle: {
     fontSize: designTokens.typography.headline.fontSize,
     fontWeight: '600',
     marginBottom: designTokens.spacing.xs,
-  },
+  } as any,
   cardDescription: {
     fontSize: designTokens.typography.body.fontSize,
     marginBottom: designTokens.spacing.md,
-    lineHeight: designTokens.typography.body.lineHeight,
-  },
+  } as any,
   tagContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap' as 'wrap',
     gap: designTokens.spacing.xs,
-  },
+  } as any,
   tag: {
     paddingHorizontal: designTokens.spacing.sm,
     paddingVertical: designTokens.spacing.xxs,
     borderRadius: designTokens.borderRadius.full,
-  },
+  } as any,
   tagText: {
     fontSize: designTokens.typography.caption2.fontSize,
     fontWeight: '600',
-  },
+  } as any,
   progressContainer: {
     marginBottom: designTokens.spacing.md,
     gap: designTokens.spacing.md,
-  },
+  } as any,
   progressBarContainer: {
     gap: designTokens.spacing.xs,
-  },
+  } as any,
   progressHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
+  } as any,
   progressTitle: {
     fontSize: designTokens.typography.footnote.fontSize,
     fontWeight: '600',
-  },
+  } as any,
   progressSubtitle: {
     fontSize: designTokens.typography.caption1.fontSize,
-  },
+  } as any,
   progressBar: {
     height: 8,
     borderRadius: designTokens.borderRadius.full,
     overflow: 'hidden',
-  },
+  } as any,
   progressFill: {
     height: '100%',
     borderRadius: designTokens.borderRadius.full,
-  },
+  } as any,
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
+  } as any,
   footerInfo: {
     flexDirection: 'row',
     gap: designTokens.spacing.md,
-  },
+  } as any,
   footerItem: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
+  } as any,
   footerText: {
     fontSize: designTokens.typography.caption1.fontSize,
     marginLeft: designTokens.spacing.xxs,
-  },
+  } as any,
   viewText: {
     fontSize: designTokens.typography.footnote.fontSize,
     fontWeight: '600',
-  },
+  } as any,
 };

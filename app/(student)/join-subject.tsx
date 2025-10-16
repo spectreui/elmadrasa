@@ -10,7 +10,7 @@ import {
   Dimensions,
   RefreshControl,
 } from 'react-native';
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,6 +25,7 @@ export default function JoinSubjectScreen() {
   const [loading, setLoading] = useState(false);
   const { colors, isDark } = useThemeContext();
   const [refreshing, setRefreshing] = useState(false);
+    
 
   const onRefresh = () => {
     setRefreshing(true);

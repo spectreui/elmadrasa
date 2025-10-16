@@ -1,7 +1,7 @@
 // app/(teacher)/create-exam.tsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Switch, Modal, FlatList, ActivityIndicator, Image, Platform } from 'react-native';
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';
@@ -23,6 +23,7 @@ export default function CreateExamScreen() {
   const [availableFrom, setAvailableFrom] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState<'dueDate' | 'availableFrom' | null>(null);
   const [showAvailableDatePicker, setShowAvailableDatePicker] = useState(false);
+    
 
   const [timed, setTimed] = useState(false);
   const [duration, setDuration] = useState('60');

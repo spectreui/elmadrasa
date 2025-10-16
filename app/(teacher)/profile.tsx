@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import Alert from "@blazejkustra/react-native-alert";
+import { Alert } from '@/utils/UniversalAlert';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useThemeContext } from '../../src/contexts/ThemeContext';
@@ -30,6 +30,7 @@ export default function TeacherProfileScreen() {
   const [activeTab, setActiveTab] = useState<'profile' | 'settings'>('profile');
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+    
 
   useEffect(() => {
     if (!loading) {
