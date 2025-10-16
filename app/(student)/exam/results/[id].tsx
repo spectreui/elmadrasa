@@ -453,7 +453,7 @@ export default function ExamResultsScreen() {
         <View style={styles.actionButtons}>
           <TouchableOpacity
             style={[styles.primaryButton, { backgroundColor: colors.primary }]}
-            onPress={() => router.push('/exams')}
+            onPress={() => router.replace('/(student)/exams')}
           >
             <Ionicons name="list" size={20} color="#FFFFFF" />
             <Text style={styles.primaryButtonText}>Back to Exams</Text>

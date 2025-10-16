@@ -272,14 +272,14 @@ export default function TeacherDashboard() {
             description="Create homework"
             icon="book"
             color={colors.success}
-            onPress={() => router.push('/(teacher)/create-homework')}
+            onPress={() => router.push('/(teacher)/homework/create')}
           />
           <QuickActionCard
             title="My Classes"
             description="Manage students"
             icon="people"
             color={colors.purple}
-            onPress={() => router.push('/(teacher)/classes')}
+            onPress={() => router.push('/(teacher)/my-classes')}
           />
           <QuickActionCard
             title="Analytics"
