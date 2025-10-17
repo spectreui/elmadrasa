@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { View } from "react-native";
 import Svg, { Path, Defs, LinearGradient, Stop } from "react-native-svg";
 import Animated, {
   useSharedValue,

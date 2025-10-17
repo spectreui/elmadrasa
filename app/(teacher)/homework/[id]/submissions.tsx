@@ -1298,6 +1298,6 @@ export default function HomeworkSubmissionsScreen() {
           </ScrollView>
         </View>
       </Modal>
-    </View>);
-
+    </View>
+  );
 }

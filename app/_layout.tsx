@@ -10,29 +10,16 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { NotificationProvider } from "@/contexts/NotificationContext";
-import AppleHello from "@/components/AppleHello";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "@/components/SafeAreaView";
 import { apiService } from "@/src/services/api";
 import SmartBanner from "@/components/SmartBanner";
-import { setUniversalPromptFunction } from "@/components/UniversalAlert";
-import { UniversalPromptProvider, useUniversalPrompt } from "@/components/UniversalPrompt";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AlertProvider } from "@/components/Alert";
+import ElmadrasaAnimation from "@/components/AppleHello";
 
 // Keep splash screen until ready
 SplashScreen.preventAutoHideAsync();
-
-// Move PromptSetup component BEFORE the RootLayout
-function PromptSetup() {
-  const { showUniversalPrompt } = useUniversalPrompt();
-
-  React.useEffect(() => {
-    setUniversalPromptFunction(showUniversalPrompt);
-  }, [showUniversalPrompt]);
-
-  return null;
-}
 
 function ThemeWrapper({ children }: { children: React.ReactNode }) {
   const { isDark } = useThemeContext();
@@ -78,7 +65,7 @@ export default function RootLayout() {
 
   // ✅ Pre-warm token (to avoid unauthorized flickers)
   useEffect(() => {
-    AsyncStorage.setItem("introShown", "true");
+    AsyncStorage.setItem("introShown", "false");
     (async () => {
       await apiService.validateToken();
     })();
@@ -111,7 +98,7 @@ export default function RootLayout() {
 
   const renderIntro = () => {
     try {
-      return <AppleHello onAnimationComplete={handleHelloDone} speed={1.8} />;
+      return <ElmadrasaAnimation onAnimationComplete={handleHelloDone} speed={1.8} />;
     } catch (error) {
       console.error("❌ Animation error:", error);
       setAnimationError(true);
@@ -145,7 +132,7 @@ export default function RootLayout() {
         <LanguageProvider>
           <ThemeProvider>
             <ThemeWrapper>
-            <AlertProvider>
+              <AlertProvider>
                 <NotificationProvider>
                   <SmartBanner
                     appName="El Madrasa"
