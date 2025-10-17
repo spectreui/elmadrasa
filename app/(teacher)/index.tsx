@@ -216,10 +216,7 @@ export default function TeacherDashboard() {
           </View>
           <TouchableOpacity
             onPress={toggleLanguage}
-            style={[
-              styles.actionButton,
-              { backgroundColor: colors.backgroundElevated }
-            ]}
+            style={[styles.profileButton, { backgroundColor: `${colors.primary}15` }]}
           >
             <Ionicons
               name={language === 'en' ? 'language' : 'globe'}
