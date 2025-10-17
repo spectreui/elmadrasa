@@ -32,7 +32,7 @@ import { useTranslation } from "@/hooks/useTranslation";interface TeacherExam ex
 }
 
 export default function TeacherExamsScreen() {const { t } = useTranslation();
-  const { colors } = useThemeContext();
+  const { fontFamily, colors } = useThemeContext();
   const { user, isAuthenticated } = useAuth();
   const [exams, setExams] = useState<TeacherExam[]>([]);
   const [allExams, setAllExams] = useState<TeacherExam[]>([]);
@@ -184,9 +184,9 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
 
   if (loading && !refreshing) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.container, { fontFamily, backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading exams...</Text>
+        <Text style={[styles.loadingText, { fontFamily, color: colors.textSecondary }]}>Loading exams...</Text>
       </View>);
 
   }
@@ -203,8 +203,8 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
       <View style={[styles.header, { backgroundColor: colors.backgroundElevated, borderBottomColor: colors.border }]}>
         <View style={styles.headerContent}>
           <View>
-            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>My Exams</Text>
-            <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
+            <Text style={[styles.headerTitle, { fontFamily, color: colors.textPrimary }]}>My Exams</Text>
+            <Text style={[styles.headerSubtitle, { fontFamily, color: colors.textSecondary }]}>
               {allExams.length} total exams
             </Text>
           </View>
@@ -243,8 +243,8 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
               style={[
               styles.tabText,
               activeTab === tab.key ?
-              { color: colors.primary } :
-              { color: colors.textSecondary }]
+              { fontFamily, color: colors.primary } :
+              { fontFamily, color: colors.textSecondary }]
               }>
 
                 {tab.label}
@@ -259,8 +259,8 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
                   <Text style={[
               styles.tabBadgeText,
               activeTab === tab.key ?
-              { color: colors.primary } :
-              { color: colors.textSecondary }]
+              { fontFamily, color: colors.primary } :
+              { fontFamily, color: colors.textSecondary }]
               }>
                     {tab.count}
                   </Text>
@@ -283,12 +283,12 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
             size={64}
             color={colors.textTertiary} />
 
-            <Text style={[styles.emptyStateTitle, { color: colors.textSecondary }]}>
+            <Text style={[styles.emptyStateTitle, { fontFamily, color: colors.textSecondary }]}>
               {activeTab === "active" && "No active exams"}
               {activeTab === "draft" && "No draft exams"}
               {activeTab === "archived" && "No archived exams"}
             </Text>
-            <Text style={[styles.emptyStateSubtitle, { color: colors.textTertiary }]}>
+            <Text style={[styles.emptyStateSubtitle, { fontFamily, color: colors.textTertiary }]}>
               {activeTab === "active" && allExams.length > 0 ?
             "All exams are in draft or archived status" :
             "Create your first exam to get started"}
@@ -319,32 +319,32 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
 
                   <View style={styles.examHeader}>
                     <View style={styles.examTextContainer}>
-                      <Text style={[styles.examTitle, { color: colors.textPrimary }]}>
+                      <Text style={[styles.examTitle, { fontFamily, color: colors.textPrimary }]}>
                         {exam.title}
                       </Text>
                       <View style={styles.examMeta}>
                         <View style={styles.metaItem}>
                           <Ionicons name="book" size={14} color={colors.textTertiary} />
-                          <Text style={[styles.metaText, { color: colors.textSecondary }]}>
+                          <Text style={[styles.metaText, { fontFamily, color: colors.textSecondary }]}>
                             {exam.subject}
                           </Text>
                         </View>
                         <View style={styles.metaItem}>
                           <Ionicons name="people" size={14} color={colors.textTertiary} />
-                          <Text style={[styles.metaText, { color: colors.textSecondary }]}>
+                          <Text style={[styles.metaText, { fontFamily, color: colors.textSecondary }]}>
                             {exam.class}
                           </Text>
                         </View>
                         <View style={styles.metaItem}>
                           <Ionicons name="time" size={14} color={colors.textTertiary} />
-                          <Text style={[styles.metaText, { color: colors.textSecondary }]}>
+                          <Text style={[styles.metaText, { fontFamily, color: colors.textSecondary }]}>
                             {exam.settings?.timed ? `${exam.settings.duration}m` : "Untimed"}
                           </Text>
                         </View>
                       </View>
                     </View>
                     <View style={[styles.statusBadge, { backgroundColor: statusBadge.color }]}>
-                      <Text style={[styles.statusText, { color: statusBadge.textColor }]}>
+                      <Text style={[styles.statusText, { fontFamily, color: statusBadge.textColor }]}>
                         {statusBadge.text}
                       </Text>
                     </View>
@@ -355,20 +355,20 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
                     <View style={styles.statsContainer}>
                       <View style={styles.statItem}>
                         <Ionicons name="person" size={16} color={colors.primary} />
-                        <Text style={[styles.statText, { color: colors.textPrimary }]}>
+                        <Text style={[styles.statText, { fontFamily, color: colors.textPrimary }]}>
                           {exam.submissions_count || 0} submissions
                         </Text>
                       </View>
                       {exam.average_score !== undefined && exam.average_score > 0 &&
                     <View style={styles.statItem}>
                           <Ionicons name="trophy" size={16} color={colors.warning} />
-                          <Text style={[styles.statText, { color: colors.textPrimary }]}>
+                          <Text style={[styles.statText, { fontFamily, color: colors.textPrimary }]}>
                             {exam.average_score}% avg
                           </Text>
                         </View>
                     }
                     </View>
-                    <Text style={[styles.dateText, { color: colors.textTertiary }]}>
+                    <Text style={[styles.dateText, { fontFamily, color: colors.textTertiary }]}>
                       {exam.created_at ? new Date(exam.created_at).toLocaleDateString() : "Unknown"}
                     </Text>
                   </View>
@@ -381,7 +381,7 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
                       onPress={() => router.push(`/(teacher)/exams/${exam.id}`)}>
 
                         <Ionicons name="eye" size={16} color={colors.primary} />
-                        <Text style={[styles.actionText, { color: colors.primary }]}>
+                        <Text style={[styles.actionText, { fontFamily, color: colors.primary }]}>
                           View
                         </Text>
                       </TouchableOpacity>
@@ -392,7 +392,7 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
                       onPress={() => router.push(`/(teacher)/exam-results/${exam.id}`)}>
 
                           <Ionicons name="bar-chart" size={16} color={colors.success} />
-                          <Text style={[styles.actionText, { color: colors.success }]}>
+                          <Text style={[styles.actionText, { fontFamily, color: colors.success }]}>
                             Results
                           </Text>
                         </TouchableOpacity>
@@ -428,18 +428,18 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
         {exams.length > 0 &&
         <View style={styles.statsGrid}>
             <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Showing</Text>
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>{exams.length}</Text>
+              <Text style={[styles.statLabel, { fontFamily, color: colors.textSecondary }]}>Showing</Text>
+              <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>{exams.length}</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t("submissions.title")}</Text>
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+              <Text style={[styles.statLabel, { fontFamily, color: colors.textSecondary }]}>{t("submissions.title")}</Text>
+              <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>
                 {exams.reduce((sum, exam) => sum + (exam.submissions_count || 0), 0)}
               </Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t("common.active")}</Text>
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+              <Text style={[styles.statLabel, { fontFamily, color: colors.textSecondary }]}>{t("common.active")}</Text>
+              <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>
                 {tabCounts.active}
               </Text>
             </View>

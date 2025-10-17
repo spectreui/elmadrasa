@@ -9,7 +9,7 @@ import { useThemeContext } from '../../src/contexts/ThemeContext';
 export default function SignUpSuccess() {
   const { role, name } = useLocalSearchParams();
   const router = useRouter();
-  const { colors } = useThemeContext();
+  const { fontFamily, colors } = useThemeContext();
 
   return (
     <View style={{ 
@@ -39,7 +39,7 @@ export default function SignUpSuccess() {
           />
         </View>
 
-        <Text style={{
+        <Text style={{ fontFamily, 
           fontSize: designTokens.typography.largeTitle.fontSize,
           fontWeight: designTokens.typography.largeTitle.fontWeight,
           color: colors.textPrimary,
@@ -49,7 +49,7 @@ export default function SignUpSuccess() {
           Welcome, {name}!
         </Text>
 
-        <Text style={{
+        <Text style={{ fontFamily, 
           fontSize: designTokens.typography.body.fontSize,
           color: colors.textSecondary,
           textAlign: 'center',
@@ -74,7 +74,7 @@ export default function SignUpSuccess() {
           }}
           onPress={() => router.replace('/(auth)/login')}
         >
-          <Text style={{
+          <Text style={{ fontFamily, 
             color: 'white',
             fontWeight: '600',
             fontSize: designTokens.typography.body.fontSize,

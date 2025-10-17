@@ -48,7 +48,7 @@ export const SmartBanner = ({
   appScheme,
   currentPath
 }: SmartBannerProps) => {
-  const { colors, isDark } = useThemeContext();
+  const { fontFamily, colors, isDark } = useThemeContext();
   const [isVisible, setIsVisible] = useState(false);
   const [hasDismissed, setHasDismissed] = useState(false);
 
@@ -114,7 +114,7 @@ export const SmartBanner = ({
   }
 
   return (
-    <View style={[styles.container, { 
+    <View style={[styles.container, { fontFamily, 
       backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
       borderColor: colors.border,
     }]}>

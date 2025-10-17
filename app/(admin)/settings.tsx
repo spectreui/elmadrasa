@@ -40,7 +40,7 @@ export default function SettingsPage() {const { t } = useTranslation();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const { colors } = useThemeContext();
+  const { fontFamily, colors } = useThemeContext();
 
 
   // Form states

@@ -16,7 +16,7 @@ export default function StudentsManagementScreen() {const { t } = useTranslation
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [selectedClass, setSelectedClass] = useState('');
   const [assigning, setAssigning] = useState(false);
-  const { colors } = useThemeContext();
+  const { fontFamily, colors } = useThemeContext();
 
 
   useEffect(() => {

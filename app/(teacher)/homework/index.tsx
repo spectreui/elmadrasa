@@ -1,13 +1,24 @@
-// app/(teacher)/homework/index.tsx - Updated with Full Dark Mode Support
+// app/(teacher)/homework/index.tsx - iOS-like Homework Page
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
+  Dimensions
+} from 'react-native';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { apiService } from '../../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '@/contexts/ThemeContext';
 import { designTokens } from '../../../src/utils/designTokens';
 import { router } from 'expo-router';
-import Alert from '@/components/Alert';import { useTranslation } from "@/hooks/useTranslation";
+import Alert from '@/components/Alert';
+import { useTranslation } from "@/hooks/useTranslation";
+
+const { width } = Dimensions.get('window');
 
 interface Homework {
   id: string;
@@ -26,13 +37,13 @@ interface Homework {
   average_score?: number;
 }
 
-export default function TeacherHomeworkScreen() {const { t } = useTranslation();
+export default function TeacherHomeworkScreen() {
+  const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
   const [homework, setHomework] = useState<Homework[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const { colors } = useThemeContext();
-
+  const { fontFamily, colors } = useThemeContext();
 
   const loadHomework = async () => {
     try {
@@ -102,98 +113,114 @@ export default function TeacherHomeworkScreen() {const { t } = useTranslation();
   if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading homework...</Text>
-      </View>);
-
+        <View style={styles.header}>
+          <Text style={[styles.headerTitle, { fontFamily, color: colors.textPrimary }]}>
+            Homework
+          </Text>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { fontFamily, color: colors.textSecondary }]}>
+            {t("common.loading")}
+          </Text>
+        </View>
+      </View>
+    );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { fontFamily, backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.background }]}>
         <View style={styles.headerContent}>
-          <View style={styles.headerText}>
-            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
-              Homework
-            </Text>
-            <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-              Manage and grade assignments
-            </Text>
-          </View>
+          <Text style={[styles.headerTitle, { fontFamily, color: colors.textPrimary }]}>
+            Homework
+          </Text>
           <TouchableOpacity
             style={[styles.newButton, { backgroundColor: colors.primary }]}
-            onPress={handleCreateHomework}>
-
-            <Ionicons name="add" size={22} color="white" />
+            onPress={handleCreateHomework}
+          >
+            <Ionicons name="add" size={20} color="white" />
             <Text style={styles.newButtonText}>New</Text>
           </TouchableOpacity>
         </View>
 
         {/* Statistics Overview */}
-        <View style={[styles.statsOverview, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-          <Text style={[styles.statsTitle, { color: colors.textPrimary }]}>{t("dashboard.overview")}</Text>
+        <View style={[styles.statsOverview, { backgroundColor: colors.backgroundElevated }]}>
+          <Text style={[styles.statsTitle, { fontFamily, color: colors.textPrimary }]}>
+            {t("dashboard.overview")}
+          </Text>
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+              <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>
                 {homework.length}
               </Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total</Text>
+              <Text style={[styles.statLabel, { fontFamily, color: colors.textSecondary }]}>
+                Total
+              </Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+              <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>
                 {homework.reduce((acc, hw) => acc + (hw.submissions_count || 0), 0)}
               </Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t("submissions.title")}</Text>
+              <Text style={[styles.statLabel, { fontFamily, color: colors.textSecondary }]}>
+                {t("submissions.title")}
+              </Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+              <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>
                 {homework.reduce((acc, hw) => acc + (hw.graded_count || 0), 0)}
               </Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t("submissions.graded")}</Text>
+              <Text style={[styles.statLabel, { fontFamily, color: colors.textSecondary }]}>
+                {t("submissions.graded")}
+              </Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: colors.success }]}>
+              <Text style={[styles.statValue, { fontFamily, color: colors.success }]}>
                 {homework.length > 0 ?
-                Math.round(homework.reduce((acc, hw) => acc + (hw.average_score || 0), 0) / homework.length) :
-                0}%
+                  Math.round(homework.reduce((acc, hw) => acc + (hw.average_score || 0), 0) / homework.length) :
+                  0}%
               </Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t("dashboard.avgScore")}</Text>
+              <Text style={[styles.statLabel, { fontFamily, color: colors.textSecondary }]}>
+                {t("dashboard.avgScore")}
+              </Text>
             </View>
           </View>
         </View>
       </View>
 
       <ScrollView
-        style={styles.content}
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentContainer}
         refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={colors.primary} />
-
-        }>
-
-        <View style={styles.homeworkList}>
-          {homework.length === 0 ?
-          <View style={[styles.emptyState, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-              <Ionicons name="document-text-outline" size={80} color={colors.textTertiary} />
-              <Text style={[styles.emptyStateTitle, { color: colors.textPrimary }]}>
-                No Homework Yet
-              </Text>
-              <Text style={[styles.emptyStateSubtitle, { color: colors.textSecondary }]}>
-                Create your first homework assignment to get started
-              </Text>
-              <TouchableOpacity
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+      >
+        {homework.length === 0 ? (
+          <View style={[styles.emptyState, { backgroundColor: colors.backgroundElevated }]}>
+            <Ionicons name="document-text-outline" size={64} color={colors.textTertiary} />
+            <Text style={[styles.emptyStateTitle, { fontFamily, color: colors.textPrimary }]}>
+              No Homework Yet
+            </Text>
+            <Text style={[styles.emptyStateSubtitle, { fontFamily, color: colors.textSecondary }]}>
+              Create your first homework assignment to get started
+            </Text>
+            <TouchableOpacity
               style={[styles.createButton, { backgroundColor: colors.primary }]}
-              onPress={handleCreateHomework}>
-
-                <Text style={styles.createButtonText}>Create Homework</Text>
-              </TouchableOpacity>
-            </View> :
-
-          <View style={styles.homeworkGrid}>
-              {homework.map((item) => {
+              onPress={handleCreateHomework}
+            >
+              <Text style={styles.createButtonText}>Create Homework</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.homeworkList}>
+            {homework.map((item) => {
               const stats = getSubmissionStats(item);
               const isOverdue = new Date(item.due_date) < new Date();
 
@@ -201,334 +228,374 @@ export default function TeacherHomeworkScreen() {const { t } = useTranslation();
                 <TouchableOpacity
                   key={item.id}
                   style={[
-                  styles.homeworkCard,
-                  {
-                    backgroundColor: colors.backgroundElevated,
-                    borderColor: isOverdue ? colors.error : colors.primary,
-                    ...designTokens.shadows.sm
-                  }]
-                  }
+                    styles.homeworkCard,
+                    {
+                      backgroundColor: colors.backgroundElevated,
+                      ...styles.cardShadow
+                    }
+                  ]}
                   onPress={() => handleHomeworkPress(item)}
-                  activeOpacity={0.8}>
-
-                    <View style={styles.cardHeader}>
-                      <View style={styles.cardTextContainer}>
-                        <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-                          {item.title}
-                        </Text>
-                        <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-                          {item.description}
-                        </Text>
-                        <View style={styles.tagContainer}>
-                          <View style={[styles.tag, { backgroundColor: `${colors.textTertiary}20` }]}>
-                            <Text style={[styles.tagText, { color: colors.textSecondary }]}>
-                              {item.subject}
-                            </Text>
-                          </View>
-                          <View style={[styles.tag, { backgroundColor: `${colors.textTertiary}20` }]}>
-                            <Text style={[styles.tagText, { color: colors.textSecondary }]}>
-                              {item.class}
-                            </Text>
-                          </View>
-                          <View style={[styles.tag, { backgroundColor: `${colors.textTertiary}20` }]}>
-                            <Text style={[styles.tagText, { color: colors.textSecondary }]}>
-                              {item.points} points
-                            </Text>
-                          </View>
-                          {isOverdue &&
-                        <View style={[styles.tag, { backgroundColor: `${colors.error}20` }]}>
-                              <Text style={[styles.tagText, { color: colors.error }]}>
-                                Overdue
-                              </Text>
-                            </View>
-                        }
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.cardHeader}>
+                    <View style={styles.cardTextContainer}>
+                      <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>
+                        {item.title}
+                      </Text>
+                      <Text 
+                        style={[styles.cardDescription, { fontFamily, color: colors.textSecondary }]}
+                        numberOfLines={2}
+                      >
+                        {item.description}
+                      </Text>
+                      <View style={styles.tagContainer}>
+                        <View style={[styles.tag, { backgroundColor: `${colors.primary}15` }]}>
+                          <Text style={[styles.tagText, { fontFamily, color: colors.primary }]}>
+                            {item.subject}
+                          </Text>
                         </View>
+                        <View style={[styles.tag, { backgroundColor: `${colors.accentSecondary}15` }]}>
+                          <Text style={[styles.tagText, { fontFamily, color: colors.accentSecondary }]}>
+                            {item.class}
+                          </Text>
+                        </View>
+                        <View style={[styles.tag, { backgroundColor: `${colors.textTertiary}15` }]}>
+                          <Text style={[styles.tagText, { fontFamily, color: colors.textSecondary }]}>
+                            {item.points} pts
+                          </Text>
+                        </View>
+                        {isOverdue && (
+                          <View style={[styles.tag, { backgroundColor: `${colors.error}15` }]}>
+                            <Text style={[styles.tagText, { fontFamily, color: colors.error }]}>
+                              Overdue
+                            </Text>
+                          </View>
+                        )}
                       </View>
-                      <Ionicons
+                    </View>
+                    <Ionicons
                       name="chevron-forward"
                       size={20}
-                      color={isOverdue ? colors.error : colors.primary} />
+                      color={colors.textTertiary}
+                    />
+                  </View>
 
-                    </View>
-
-                    {/* Progress Bars */}
-                    <View style={styles.progressContainer}>
-                      {/* Submission Progress */}
-                      <View style={styles.progressBarContainer}>
-                        <View style={styles.progressHeader}>
-                          <Text style={[styles.progressTitle, { color: colors.textPrimary }]}>{t("submissions.title")}
-
+                  {/* Progress Bars */}
+                  <View style={styles.progressContainer}>
+                    {/* Submission Progress */}
+                    <View style={styles.progressBarContainer}>
+                      <View style={styles.progressHeader}>
+                        <Text style={[styles.progressTitle, { fontFamily, color: colors.textPrimary }]}>
+                          {t("submissions.title")}
                         </Text>
-                          <Text style={[styles.progressSubtitle, { color: colors.textSecondary }]}>
-                            {stats.submitted}/{stats.totalStudents} ({stats.submissionRate}%)
-                          </Text>
-                        </View>
-                        <View style={[styles.progressBar, { backgroundColor: colors.background }]}>
-                          <View
-                          style={[
-                          styles.progressFill,
-                          {
-                            backgroundColor: getStatusColor(stats.submissionRate),
-                            width: `${stats.submissionRate}%`
-                          }]
-                          } />
-
-                        </View>
+                        <Text style={[styles.progressSubtitle, { fontFamily, color: colors.textSecondary }]}>
+                          {stats.submitted}/{stats.totalStudents} ({stats.submissionRate}%)
+                        </Text>
                       </View>
-
-                      {/* Grading Progress */}
-                      <View style={styles.progressBarContainer}>
-                        <View style={styles.progressHeader}>
-                          <Text style={[styles.progressTitle, { color: colors.textPrimary }]}>
-                            Grading Progress
-                          </Text>
-                          <Text style={[styles.progressSubtitle, { color: colors.textSecondary }]}>
-                            {stats.graded}/{stats.submitted} graded
-                          </Text>
-                        </View>
-                        <View style={[styles.progressBar, { backgroundColor: colors.background }]}>
-                          <View
+                      <View style={[styles.progressBar, { backgroundColor: colors.background }]}>
+                        <View
                           style={[
-                          styles.progressFill,
-                          {
-                            backgroundColor: colors.success,
-                            width: `${stats.submitted > 0 ? stats.graded / stats.submitted * 100 : 0}%`
-                          }]
-                          } />
-
-                        </View>
+                            styles.progressFill,
+                            {
+                              backgroundColor: getStatusColor(stats.submissionRate),
+                              width: `${stats.submissionRate}%`
+                            }
+                          ]}
+                        />
                       </View>
                     </View>
 
-                    {/* Footer Info */}
-                    <View style={styles.cardFooter}>
-                      <View style={styles.footerInfo}>
-                        <View style={styles.footerItem}>
-                          <Ionicons name="calendar" size={16} color={colors.textSecondary} />
-                          <Text style={[styles.footerText, { color: colors.textSecondary }]}>
-                            Due: {formatDueDate(item.due_date)}
-                          </Text>
-                        </View>
-                        {stats.averageScore > 0 &&
+                    {/* Grading Progress */}
+                    <View style={styles.progressBarContainer}>
+                      <View style={styles.progressHeader}>
+                        <Text style={[styles.progressTitle, { fontFamily, color: colors.textPrimary }]}>
+                          Grading Progress
+                        </Text>
+                        <Text style={[styles.progressSubtitle, { fontFamily, color: colors.textSecondary }]}>
+                          {stats.graded}/{stats.submitted} graded
+                        </Text>
+                      </View>
+                      <View style={[styles.progressBar, { backgroundColor: colors.background }]}>
+                        <View
+                          style={[
+                            styles.progressFill,
+                            {
+                              backgroundColor: colors.success,
+                              width: `${stats.submitted > 0 ? (stats.graded / stats.submitted) * 100 : 0}%`
+                            }
+                          ]}
+                        />
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Footer Info */}
+                  <View style={styles.cardFooter}>
+                    <View style={styles.footerInfo}>
                       <View style={styles.footerItem}>
-                            <Ionicons name="trophy" size={16} color={colors.warning} />
-                            <Text style={[styles.footerText, { color: colors.warning }]}>
-                              Avg: {stats.averageScore}%
-                            </Text>
-                          </View>
-                      }
+                        <Ionicons name="calendar" size={16} color={colors.textSecondary} />
+                        <Text style={[styles.footerText, { fontFamily, color: colors.textSecondary }]}>
+                          Due: {formatDueDate(item.due_date)}
+                        </Text>
                       </View>
-                      <Text style={[styles.viewText, { color: colors.primary }]}>
-                        View Submissions →
-                      </Text>
+                      {stats.averageScore > 0 && (
+                        <View style={styles.footerItem}>
+                          <Ionicons name="trophy" size={16} color={colors.warning} />
+                          <Text style={[styles.footerText, { fontFamily, color: colors.warning }]}>
+                            Avg: {stats.averageScore}%
+                          </Text>
+                        </View>
+                      )}
                     </View>
-                  </TouchableOpacity>);
-
+                    <Text style={[styles.viewText, { fontFamily, color: colors.primary }]}>
+                      View →
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
             })}
-            </View>
-          }
-        </View>
-      </ScrollView>
-    </View>);
+          </View>
+        )}
 
+        {/* Bottom spacing */}
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
+    </View>
+  );
 }
 
 const styles = {
   container: {
-    flex: 1
-  },
-  loadingText: {
-    marginTop: designTokens.spacing.md,
-    fontSize: designTokens.typography.body.fontSize,
-    fontWeight: '500'
+    flex: 1,
   } as any,
   header: {
-    paddingHorizontal: designTokens.spacing.xl,
-    paddingTop: designTokens.spacing.xxxl,
-    paddingBottom: designTokens.spacing.lg
+    paddingTop: 20,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
   } as any,
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: designTokens.spacing.xl
-  } as any,
-  headerText: {
-    flex: 1
+    marginBottom: 20,
   } as any,
   headerTitle: {
-    fontSize: designTokens.typography.title1.fontSize,
-    fontWeight: designTokens.typography.title1.fontWeight as any,
-    marginBottom: designTokens.spacing.xs
-  } as any,
-  headerSubtitle: {
-    fontSize: designTokens.typography.body.fontSize,
-    fontWeight: '500'
+    fontSize: 34,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   } as any,
   newButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: designTokens.spacing.lg,
-    paddingVertical: designTokens.spacing.sm,
-    borderRadius: designTokens.borderRadius.lg,
-    ...designTokens.shadows.sm
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   } as any,
   newButtonText: {
     color: 'white',
-    fontWeight: '600',
-    fontSize: designTokens.typography.body.fontSize,
-    marginLeft: designTokens.spacing.xs
+    fontWeight: '700',
+    fontSize: 17,
+    marginLeft: 6,
   } as any,
   statsOverview: {
-    borderRadius: designTokens.borderRadius.xl,
-    padding: designTokens.spacing.lg,
-    borderWidth: 1,
-    ...designTokens.shadows.sm
+    borderRadius: 16,
+    padding: 16,
+    ...designTokens.shadows.sm,
   } as any,
   statsTitle: {
-    fontSize: designTokens.typography.title3.fontSize,
-    fontWeight: designTokens.typography.title3.fontWeight as any,
-    marginBottom: designTokens.spacing.md
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 10,
+    letterSpacing: -0.2,
   } as any,
   statsGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
   } as any,
   statItem: {
-    alignItems: 'center'
+    alignItems: 'center',
+    flex: 1,
   } as any,
   statValue: {
-    fontSize: designTokens.typography.title2.fontSize,
-    fontWeight: designTokens.typography.title2.fontWeight as any,
-    marginBottom: designTokens.spacing.xxs
+    fontSize: 26,
+    fontWeight: '800',
+    marginBottom: 4,
+    letterSpacing: -0.3,
   } as any,
   statLabel: {
-    fontSize: designTokens.typography.caption1.fontSize,
-    fontWeight: '500'
+    fontSize: 15,
+    fontWeight: '500',
+    opacity: 0.7,
   } as any,
-  content: {
-    flex: 1
+  scrollView: {
+    flex: 1,
   } as any,
-  homeworkList: {
-    paddingHorizontal: designTokens.spacing.xl,
-    paddingBottom: designTokens.spacing.xl
+  contentContainer: {
+    paddingBottom: 30,
+  } as any,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100,
+  } as any,
+  loadingText: {
+    marginTop: 12,
+    fontSize: 17,
+    fontWeight: '500',
   } as any,
   emptyState: {
     alignItems: 'center',
-    borderRadius: designTokens.borderRadius.xl,
-    padding: designTokens.spacing.xxxl,
-    borderWidth: 1
+    borderRadius: 16,
+    paddingVertical: 60,
+    paddingHorizontal: 30,
+    marginHorizontal: 20,
+    marginTop: 20,
+    ...designTokens.shadows.sm,
   } as any,
   emptyStateTitle: {
-    fontSize: designTokens.typography.headline.fontSize,
-    fontWeight: '500',
-    marginTop: designTokens.spacing.lg,
-    marginBottom: designTokens.spacing.xs
+    fontSize: 22,
+    fontWeight: '700',
+    marginTop: 20,
+    marginBottom: 8,
   } as any,
   emptyStateSubtitle: {
-    fontSize: designTokens.typography.footnote.fontSize,
+    fontSize: 17,
     textAlign: 'center',
-    marginBottom: designTokens.spacing.lg
+    opacity: 0.7,
+    lineHeight: 24,
+    marginBottom: 24,
   } as any,
   createButton: {
-    paddingHorizontal: designTokens.spacing.xl,
-    paddingVertical: designTokens.spacing.md,
-    borderRadius: designTokens.borderRadius.lg,
-    ...designTokens.shadows.sm
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   } as any,
   createButtonText: {
     color: 'white',
-    fontWeight: '600',
-    fontSize: designTokens.typography.body.fontSize
+    fontWeight: '700',
+    fontSize: 17,
   } as any,
-  homeworkGrid: {
-    gap: designTokens.spacing.sm
+  homeworkList: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    gap: 16,
   } as any,
   homeworkCard: {
-    borderRadius: designTokens.borderRadius.xl,
-    padding: designTokens.spacing.lg,
-    borderWidth: 1
+    borderRadius: 16,
+    padding: 20,
+    ...designTokens.shadows.sm,
+  } as any,
+  cardShadow: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   } as any,
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: designTokens.spacing.md
+    marginBottom: 16,
   } as any,
   cardTextContainer: {
     flex: 1,
-    marginRight: designTokens.spacing.md
+    marginRight: 12,
   } as any,
   cardTitle: {
-    fontSize: designTokens.typography.headline.fontSize,
-    fontWeight: '600',
-    marginBottom: designTokens.spacing.xs
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 6,
+    letterSpacing: -0.2,
   } as any,
   cardDescription: {
-    fontSize: designTokens.typography.body.fontSize,
-    marginBottom: designTokens.spacing.md
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 12,
+    opacity: 0.8,
   } as any,
   tagContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap' as 'wrap',
-    gap: designTokens.spacing.xs
+    gap: 8,
   } as any,
   tag: {
-    paddingHorizontal: designTokens.spacing.sm,
-    paddingVertical: designTokens.spacing.xxs,
-    borderRadius: designTokens.borderRadius.full
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
   } as any,
   tagText: {
-    fontSize: designTokens.typography.caption2.fontSize,
-    fontWeight: '600'
+    fontSize: 13,
+    fontWeight: '600',
   } as any,
   progressContainer: {
-    marginBottom: designTokens.spacing.md,
-    gap: designTokens.spacing.md
+    marginBottom: 20,
+    gap: 16,
   } as any,
   progressBarContainer: {
-    gap: designTokens.spacing.xs
+    gap: 6,
   } as any,
   progressHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'center',
   } as any,
   progressTitle: {
-    fontSize: designTokens.typography.footnote.fontSize,
-    fontWeight: '600'
+    fontSize: 15,
+    fontWeight: '600',
   } as any,
   progressSubtitle: {
-    fontSize: designTokens.typography.caption1.fontSize
+    fontSize: 15,
+    fontWeight: '500',
+    opacity: 0.7,
   } as any,
   progressBar: {
-    height: 8,
-    borderRadius: designTokens.borderRadius.full,
-    overflow: 'hidden'
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(0,0,0,0.05)',
   } as any,
   progressFill: {
     height: '100%',
-    borderRadius: designTokens.borderRadius.full
+    borderRadius: 3,
   } as any,
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'center',
   } as any,
   footerInfo: {
     flexDirection: 'row',
-    gap: designTokens.spacing.md
+    gap: 16,
   } as any,
   footerItem: {
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
   } as any,
   footerText: {
-    fontSize: designTokens.typography.caption1.fontSize,
-    marginLeft: designTokens.spacing.xxs
+    fontSize: 15,
+    fontWeight: '500',
+    marginLeft: 6,
+    opacity: 0.8,
   } as any,
   viewText: {
-    fontSize: designTokens.typography.footnote.fontSize,
-    fontWeight: '600'
-  } as any
+    fontSize: 17,
+    fontWeight: '600',
+  } as any,
+  bottomSpacing: {
+    height: 20,
+  } as any,
 };

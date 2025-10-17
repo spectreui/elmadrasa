@@ -27,7 +27,7 @@ export default function UsersManagement() {const { t } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'student' | 'teacher'>('all');
-  const { colors } = useThemeContext();
+  const { fontFamily, colors } = useThemeContext();
 
 
   useEffect(() => {

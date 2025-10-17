@@ -13,6 +13,7 @@ interface ThemeContextType {
   isDark: boolean;
   colors: typeof designTokens.colors.light | typeof designTokens.colors.dark;
   toggleTheme: () => void;
+  fontFamily: string; // 👈 added
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -22,7 +23,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themeMode, setThemeModeState] = useState<ThemeMode>('auto');
   const [systemTheme, setSystemTheme] = useState<'light' | 'dark'>(systemColorScheme || 'light');
   
-  const { isRTL } = useLanguage(); // Get isRTL from language context
+  const { isRTL, language } = useLanguage(); // Get isRTL from language context
   // Apply RTL to the app
   useEffect(() => {
     import('react-native').then(({ I18nManager }) => {
@@ -79,6 +80,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const isDark = themeMode === 'auto' ? systemTheme === 'dark' : themeMode === 'dark';
   const colors = isDark ? designTokens.colors.dark : designTokens.colors.light;
+ // 👇 Choose font based on language
+  const fontFamily = language === 'ar' ? 'SF-Arabic-Rounded' : 'SF-Pro-Regular, SF-Pro-Medium, SF-Pro-Bold, SF-Pro-Black';
 
   const value = {
     themeMode,
@@ -86,6 +89,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     isDark,
     colors,
     toggleTheme,
+    fontFamily, // 👈 expose font to rest of app
   };
 
   return (

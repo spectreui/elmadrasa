@@ -33,7 +33,7 @@ interface TeacherStats {
 
 export default function TeacherProfileScreen() {
   const { user, logout, isAuthenticated } = useAuth();
-  const { colors, isDark, toggleTheme } = useThemeContext();
+  const { fontFamily, colors, isDark, toggleTheme } = useThemeContext();
   const { language, setLanguage, isRTL, t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'profile' | 'settings'>('profile');
   const [loading, setLoading] = useState(false);
@@ -139,10 +139,10 @@ export default function TeacherProfileScreen() {
           alignItems: isRTL ? 'flex-end' : 'flex-start'
         }
       ]}>
-        <Text style={[styles.settingTitle, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
+        <Text style={[styles.settingTitle, { fontFamily, color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
           {title}
         </Text>
-        <Text style={[styles.settingDescription, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
+        <Text style={[styles.settingDescription, { fontFamily, color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
           {description}
         </Text>
       </View>
@@ -217,10 +217,10 @@ export default function TeacherProfileScreen() {
       ]}>
         <Ionicons name={icon as any} size={20} color={color} />
       </View>
-      <Text style={[styles.statValue, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
+      <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
         {value}
       </Text>
-      <Text style={[styles.statLabel, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
+      <Text style={[styles.statLabel, { fontFamily, color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
         {title}
       </Text>
     </View>
@@ -237,10 +237,10 @@ export default function TeacherProfileScreen() {
   }) => (
     <View style={[styles.progressBarContainer, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
       <View style={[styles.progressHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-        <Text style={[styles.progressTitle, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
+        <Text style={[styles.progressTitle, { fontFamily, color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
           {title}
         </Text>
-        <Text style={[styles.progressValue, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
+        <Text style={[styles.progressValue, { fontFamily, color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
           {value}%
         </Text>
       </View>
@@ -264,7 +264,7 @@ export default function TeacherProfileScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { fontFamily, backgroundColor: colors.background }] as any}>
       {/* Header */}
       <View style={[
         styles.header,
@@ -391,7 +391,7 @@ export default function TeacherProfileScreen() {
                   ]}>
                     <Text style={[
                       styles.avatarText,
-                      { color: colors.primary }
+                      { fontFamily, color: colors.primary }
                     ]}>
                       {user?.profile?.name?.charAt(0) || 'T'}
                     </Text>
@@ -403,7 +403,7 @@ export default function TeacherProfileScreen() {
                     <Text
                       style={[
                         styles.profileName,
-                        { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }
+                        { fontFamily, color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }
                       ]}
                     >
                       {user?.profile?.name || t('profile.teacher')}
@@ -430,10 +430,10 @@ export default function TeacherProfileScreen() {
                       flexDirection: isRTL ? 'row-reverse' : 'row'
                     }
                   ]}>
-                    <Text style={[styles.detailLabel, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
+                    <Text style={[styles.detailLabel, { fontFamily, color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
                       {t('profile.teacherId')}
                     </Text>
-                    <Text style={[styles.detailValue, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
+                    <Text style={[styles.detailValue, { fontFamily, color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
                       {user?.teacher_id || t('profile.notSet')}
                     </Text>
                   </View>
@@ -443,10 +443,10 @@ export default function TeacherProfileScreen() {
                       flexDirection: isRTL ? 'row-reverse' : 'row'
                       }
                   ]}>
-                    <Text style={[styles.detailLabel, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
+                    <Text style={[styles.detailLabel, { fontFamily, color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
                       {t('profile.email')}
                     </Text>
-                    <Text style={[styles.detailValue, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
+                    <Text style={[styles.detailValue, { fontFamily, color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
                       {user?.email}
                     </Text>
                   </View>
@@ -456,10 +456,10 @@ export default function TeacherProfileScreen() {
                       flexDirection: isRTL ? 'row-reverse' : 'row'
                       }
                   ]}>
-                    <Text style={[styles.detailLabel, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
+                    <Text style={[styles.detailLabel, { fontFamily, color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
                       {t('profile.accountCreated')}
                     </Text>
-                    <Text style={[styles.detailValue, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
+                    <Text style={[styles.detailValue, { fontFamily, color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
                       {user?.created_at ? new Date(user.created_at).toLocaleDateString(language === 'ar' ? 'ar-eg' : 'en-US') : t('profile.na')}
                     </Text>
                   </View>
@@ -553,7 +553,7 @@ export default function TeacherProfileScreen() {
                     ]}
                   >
                     <Ionicons name="download" size={20} color={colors.primary} />
-                    <Text style={[styles.toolText, { color: colors.primary, textAlign: isRTL ? 'right' : 'left' }]}>
+                    <Text style={[styles.toolText, { fontFamily, color: colors.primary, textAlign: isRTL ? 'right' : 'left' }]}>
                       {t('tools.exportData')}
                     </Text>
                     <Ionicons 
@@ -572,7 +572,7 @@ export default function TeacherProfileScreen() {
                     ]}
                   >
                     <Ionicons name="bar-chart" size={20} color={colors.primary} />
-                    <Text style={[styles.toolText, { color: colors.primary, textAlign: isRTL ? 'right' : 'left' }]}>
+                    <Text style={[styles.toolText, { fontFamily, color: colors.primary, textAlign: isRTL ? 'right' : 'left' }]}>
                       {t('tools.classAnalytics')}
                     </Text>
                     <Ionicons 
@@ -590,7 +590,7 @@ export default function TeacherProfileScreen() {
                     ]}
                   >
                     <Ionicons name="library" size={20} color={colors.primary} />
-                    <Text style={[styles.toolText, { color: colors.primary, textAlign: isRTL ? 'right' : 'left' }]}>
+                    <Text style={[styles.toolText, { fontFamily, color: colors.primary, textAlign: isRTL ? 'right' : 'left' }]}>
                       {t('tools.teachingResources')}
                     </Text>
                     <Ionicons 
@@ -623,7 +623,7 @@ export default function TeacherProfileScreen() {
               {loading ? (
                 <ActivityIndicator size="small" color={colors.error} />
               ) : (
-                <Text style={[styles.logoutText, { color: colors.error, textAlign: isRTL ? 'right' : 'left' }]}>
+                <Text style={[styles.logoutText, { fontFamily, color: colors.error, textAlign: isRTL ? 'right' : 'left' }]}>
                   {t('auth.logOut')}
                 </Text>
               )}

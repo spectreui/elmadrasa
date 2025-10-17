@@ -20,7 +20,7 @@ export default function TeachersManagementScreen() {
   const [selectedSubject, setSelectedSubject] = useState('');
   const [assigning, setAssigning] = useState(false);
   const [removingAssignment, setRemovingAssignment] = useState<string | null>(null);
-  const { colors, isDark } = useThemeContext();
+  const { fontFamily, colors, isDark } = useThemeContext();
     
 
   useEffect(() => {
@@ -214,7 +214,7 @@ export default function TeachersManagementScreen() {
         alignItems: 'center',
       }}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{
+        <Text style={{ fontFamily, 
           marginTop: designTokens.spacing.md,
           fontSize: designTokens.typography.body.fontSize,
           color: colors.textSecondary,
@@ -254,14 +254,14 @@ export default function TeachersManagementScreen() {
               <Ionicons name="arrow-back" size={24} color={colors.primary} />
             </TouchableOpacity>
             <View>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.title1.fontSize,
                 fontWeight: designTokens.typography.title1.fontWeight,
                 color: colors.textPrimary,
               } as any}>
                 Teacher Management
               </Text>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.body.fontSize,
                 color: colors.textSecondary,
               }}>
@@ -326,7 +326,7 @@ export default function TeachersManagementScreen() {
                     <Ionicons name="person" size={24} color="#10b981" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                       fontSize: designTokens.typography.title3.fontSize,
                       fontWeight: designTokens.typography.title3.fontWeight,
                       color: colors.textPrimary,
@@ -334,14 +334,14 @@ export default function TeachersManagementScreen() {
                     } as any}>
                       {teacher.profile?.name || 'No Name'}
                     </Text>
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                       fontSize: designTokens.typography.footnote.fontSize,
                       color: colors.textSecondary,
                       marginBottom: designTokens.spacing.xs,
                     }}>
                       {teacher.email}
                     </Text>
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                       fontSize: designTokens.typography.caption1.fontSize,
                       color: colors.textTertiary,
                     }}>
@@ -360,7 +360,7 @@ export default function TeachersManagementScreen() {
                         borderRadius: designTokens.borderRadius.full,
                         backgroundColor: teacher.is_approved ? '#10b981' + '15' : '#f97316' + '15',
                       }}>
-                        <Text style={{
+                        <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.caption2.fontSize,
                           fontWeight: '600',
                           color: teacher.is_approved ? '#10b981' : '#f97316',
@@ -379,7 +379,7 @@ export default function TeachersManagementScreen() {
                             backgroundColor: colors.primary,
                           }}
                         >
-                          <Text style={{
+                          <Text style={{ fontFamily, 
                             fontSize: designTokens.typography.caption2.fontSize,
                             fontWeight: '600',
                             color: '#ffffff',
@@ -424,7 +424,7 @@ export default function TeachersManagementScreen() {
               {/* Current Assignments */}
               {assignments.length > 0 ? (
                 <View>
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                     fontSize: designTokens.typography.headline.fontSize,
                     fontWeight: designTokens.typography.headline.fontWeight,
                     color: colors.textPrimary,
@@ -446,7 +446,7 @@ export default function TeachersManagementScreen() {
                         }}
                       >
                         <View style={{ flex: 1 }}>
-                          <Text style={{
+                          <Text style={{ fontFamily, 
                             fontSize: designTokens.typography.footnote.fontSize,
                             fontWeight: '600',
                             color: colors.primary,
@@ -454,14 +454,14 @@ export default function TeachersManagementScreen() {
                           }}>
                             {assignment.subject?.name}
                           </Text>
-                          <Text style={{
+                          <Text style={{ fontFamily, 
                             fontSize: designTokens.typography.caption1.fontSize,
                             color: colors.primary + 'cc',
                             marginBottom: 2,
                           }}>
                             Class: {assignment.class?.name}
                           </Text>
-                          <Text style={{
+                          <Text style={{ fontFamily, 
                             fontSize: designTokens.typography.caption2.fontSize,
                             color: colors.primary + 'aa',
                           }}>
@@ -499,7 +499,7 @@ export default function TeachersManagementScreen() {
                   borderRadius: designTokens.borderRadius.lg,
                   alignItems: 'center',
                 }}>
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                     fontSize: designTokens.typography.footnote.fontSize,
                     color: colors.textSecondary,
                   }}>
@@ -522,7 +522,7 @@ export default function TeachersManagementScreen() {
             ...designTokens.shadows.sm,
           }}>
             <Ionicons name="person" size={64} color={colors.textTertiary} />
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: colors.textSecondary,
@@ -531,7 +531,7 @@ export default function TeachersManagementScreen() {
             } as any}>
               No teachers found
             </Text>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textTertiary,
               textAlign: 'center',
@@ -548,7 +548,7 @@ export default function TeachersManagementScreen() {
                 backgroundColor: colors.primary,
               }}
             >
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: '#ffffff',
@@ -575,7 +575,7 @@ export default function TeachersManagementScreen() {
               justifyContent: 'space-between',
               marginBottom: designTokens.spacing.xs,
             }}>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.title2.fontSize,
                 fontWeight: designTokens.typography.title2.fontWeight,
                 color: colors.textPrimary,
@@ -586,7 +586,7 @@ export default function TeachersManagementScreen() {
                 <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textSecondary,
             }}>
@@ -600,7 +600,7 @@ export default function TeachersManagementScreen() {
           >
             {/* Class Selection */}
             <View>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.headline.fontSize,
                 fontWeight: designTokens.typography.headline.fontWeight,
                 color: colors.textPrimary,
@@ -645,7 +645,7 @@ export default function TeachersManagementScreen() {
                         <Ionicons name="school" size={16} color={colors.primary} />
                       </View>
                       <View>
-                        <Text style={{
+                        <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.headline.fontSize,
                           fontWeight: designTokens.typography.headline.fontWeight,
                           color: colors.textPrimary,
@@ -653,7 +653,7 @@ export default function TeachersManagementScreen() {
                         } as any}>
                           {classItem.name}
                         </Text>
-                        <Text style={{
+                        <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.caption1.fontSize,
                           color: colors.textSecondary,
                         }}>
@@ -672,7 +672,7 @@ export default function TeachersManagementScreen() {
 
             {/* Subject Selection */}
             <View>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.headline.fontSize,
                 fontWeight: designTokens.typography.headline.fontWeight,
                 color: colors.textPrimary,
@@ -687,7 +687,7 @@ export default function TeachersManagementScreen() {
                   borderRadius: designTokens.borderRadius.xl,
                   alignItems: 'center',
                 }}>
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                     fontSize: designTokens.typography.footnote.fontSize,
                     color: '#f59e0b',
                     textAlign: 'center',
@@ -736,7 +736,7 @@ export default function TeachersManagementScreen() {
                           />
                         </View>
                         <View>
-                          <Text style={{
+                          <Text style={{ fontFamily, 
                             fontSize: designTokens.typography.headline.fontSize,
                             fontWeight: designTokens.typography.headline.fontWeight,
                             color: colors.textPrimary,
@@ -744,7 +744,7 @@ export default function TeachersManagementScreen() {
                           } as any}>
                             {subject.name}
                           </Text>
-                          <Text style={{
+                          <Text style={{ fontFamily, 
                             fontSize: designTokens.typography.caption1.fontSize,
                             color: colors.textSecondary,
                           }}>
@@ -784,7 +784,7 @@ export default function TeachersManagementScreen() {
               {assigning ? (
                 <ActivityIndicator size="small" color="#ffffff" />
               ) : (
-                <Text style={{
+                <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.body.fontSize,
                   fontWeight: '600',
                   color: '#ffffff',

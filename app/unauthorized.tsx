@@ -3,13 +3,15 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useThemeContext } from '@/contexts/ThemeContext';
 
 export default function UnAuthorizedScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { fontFamily } = useThemeContext();
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { fontFamily, paddingTop: insets.top }]}>
       <View style={styles.content}>
         <Text style={styles.title}>Unauthorized</Text>
         <Text style={styles.subtitle}>

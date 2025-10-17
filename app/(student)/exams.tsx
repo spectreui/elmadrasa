@@ -13,7 +13,7 @@ import Alert from '@/components/Alert';
 
 export default function ExamsScreen() {
   const { user } = useAuth();
-  const { colors, isDark } = useThemeContext();
+  const { fontFamily, colors, isDark } = useThemeContext();
   const [exams, setExams] = useState<Exam[]>([]);
   const [takenExams, setTakenExams] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -233,7 +233,7 @@ export default function ExamsScreen() {
         backgroundColor: colors.background
       }}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{
+        <Text style={{ fontFamily, 
           color: colors.textSecondary,
           marginTop: designTokens.spacing.md,
           fontSize: designTokens.typography.body.fontSize
@@ -260,7 +260,7 @@ export default function ExamsScreen() {
       }
     >
       <View style={{ padding: designTokens.spacing.xl }}>
-        <Text style={{
+        <Text style={{ fontFamily, 
           fontSize: designTokens.typography.title1.fontSize,
           fontWeight: designTokens.typography.title1.fontWeight,
           color: colors.textPrimary,
@@ -268,7 +268,7 @@ export default function ExamsScreen() {
         } as any}>
           Exams
         </Text>
-        <Text style={{
+        <Text style={{ fontFamily, 
           color: colors.textSecondary,
           marginBottom: designTokens.spacing.xl,
           fontSize: designTokens.typography.body.fontSize
@@ -301,7 +301,7 @@ export default function ExamsScreen() {
             }}>
               <Ionicons name="checkmark-circle" size={20} color="#3B82F6" />
             </View>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.title2.fontSize,
               fontWeight: designTokens.typography.title2.fontWeight,
               color: colors.textPrimary,
@@ -309,7 +309,7 @@ export default function ExamsScreen() {
             } as any}>
               {stats.completed}
             </Text>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textTertiary
             }}>
@@ -336,7 +336,7 @@ export default function ExamsScreen() {
             }}>
               <Ionicons name="document-text" size={20} color="#10B981" />
             </View>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.title2.fontSize,
               fontWeight: designTokens.typography.title2.fontWeight,
               color: colors.textPrimary,
@@ -344,7 +344,7 @@ export default function ExamsScreen() {
             } as any}>
               {stats.available}
             </Text>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textTertiary
             }}>
@@ -371,7 +371,7 @@ export default function ExamsScreen() {
             }}>
               <Ionicons name="time" size={20} color="#F59E0B" />
             </View>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.title2.fontSize,
               fontWeight: designTokens.typography.title2.fontWeight,
               color: colors.textPrimary,
@@ -379,7 +379,7 @@ export default function ExamsScreen() {
             } as any}>
               {stats.upcoming}
             </Text>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textTertiary
             }}>
@@ -406,7 +406,7 @@ export default function ExamsScreen() {
             }}>
               <Ionicons name="alert-circle" size={20} color="#EF4444" />
             </View>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.title2.fontSize,
               fontWeight: designTokens.typography.title2.fontWeight,
               color: colors.textPrimary,
@@ -414,7 +414,7 @@ export default function ExamsScreen() {
             } as any}>
               {stats.missed}
             </Text>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textTertiary
             }}>
@@ -432,7 +432,7 @@ export default function ExamsScreen() {
             ...designTokens.shadows.sm
           }}>
             <Ionicons name="document-text-outline" size={48} color={colors.textTertiary} />
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.headline.fontSize,
               color: colors.textSecondary,
               marginTop: designTokens.spacing.md,
@@ -440,7 +440,7 @@ export default function ExamsScreen() {
             }}>
               No exams available
             </Text>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textTertiary,
               textAlign: 'center'
@@ -480,7 +480,7 @@ export default function ExamsScreen() {
                     {/* Keep the rest of your card content exactly the same */}
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: designTokens.spacing.md }}>
                       <View style={{ flex: 1 }}>
-                        <Text style={{
+                        <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.headline.fontSize,
                           fontWeight: designTokens.typography.headline.fontWeight,
                           color: colors.textPrimary,
@@ -488,7 +488,7 @@ export default function ExamsScreen() {
                         } as any} numberOfLines={1}>
                           {exam.title}
                         </Text>
-                        <Text style={{
+                        <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.footnote.fontSize,
                           color: colors.textSecondary
                         }}>
@@ -501,7 +501,7 @@ export default function ExamsScreen() {
                         paddingVertical: designTokens.spacing.xs,
                         borderRadius: designTokens.borderRadius.full
                       }}>
-                        <Text style={{
+                        <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.caption2.fontSize,
                           color: statusColors.text,
                           fontWeight: '600'
@@ -514,7 +514,7 @@ export default function ExamsScreen() {
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: designTokens.spacing.md }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Ionicons name="person" size={16} color={colors.textTertiary} />
-                        <Text style={{
+                        <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.footnote.fontSize,
                           color: colors.textSecondary,
                           marginLeft: designTokens.spacing.xs
@@ -524,7 +524,7 @@ export default function ExamsScreen() {
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Ionicons name="time" size={16} color={colors.textTertiary} />
-                        <Text style={{
+                        <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.footnote.fontSize,
                           color: colors.textSecondary,
                           marginLeft: designTokens.spacing.xs
@@ -537,7 +537,7 @@ export default function ExamsScreen() {
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                       <View>
                         {exam.available_from && (
-                          <Text style={{
+                          <Text style={{ fontFamily, 
                             fontSize: designTokens.typography.caption1.fontSize,
                             color: colors.textTertiary,
                             marginBottom: 4
@@ -546,7 +546,7 @@ export default function ExamsScreen() {
                           </Text>
                         )}
                         {exam.due_date && (
-                          <Text style={{
+                          <Text style={{ fontFamily, 
                             fontSize: designTokens.typography.caption1.fontSize,
                             color: colors.textTertiary
                           }}>
@@ -554,7 +554,7 @@ export default function ExamsScreen() {
                           </Text>
                         )}
                         {!exam.available_from && !exam.due_date && (
-                          <Text style={{
+                          <Text style={{ fontFamily, 
                             fontSize: designTokens.typography.caption1.fontSize,
                             color: colors.textTertiary
                           }}>
@@ -564,7 +564,7 @@ export default function ExamsScreen() {
                       </View>
 
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={{
+                        <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.footnote.fontSize,
                           color: (status === 'upcoming' || status === 'missed')
                             ? colors.textTertiary

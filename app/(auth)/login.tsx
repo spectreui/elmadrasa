@@ -26,7 +26,7 @@ export default function LoginScreen() {const { t } = useTranslation();
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const { login, isLoading, error, clearError } = useAuth();
-  const { colors, isDark } = useThemeContext();
+  const { fontFamily, colors, isDark } = useThemeContext();
 
 
   const demoLogins = [
@@ -115,7 +115,7 @@ export default function LoginScreen() {const { t } = useTranslation();
             }}>
               <Ionicons name="school" size={48} color="white" />
             </View>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.largeTitle.fontSize,
               fontWeight: designTokens.typography.largeTitle.fontWeight,
               color: colors.textPrimary,
@@ -123,7 +123,7 @@ export default function LoginScreen() {const { t } = useTranslation();
             } as any}>
               ElMadrasa
             </Text>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.body.fontSize,
               color: colors.textSecondary,
               textAlign: 'center'
@@ -144,7 +144,7 @@ export default function LoginScreen() {const { t } = useTranslation();
           }}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Ionicons name="warning" size={20} color={colors.error} />
-                <Text style={{
+                <Text style={{ fontFamily, 
                 color: colors.error,
                 fontWeight: '500',
                 marginLeft: designTokens.spacing.sm,
@@ -159,7 +159,7 @@ export default function LoginScreen() {const { t } = useTranslation();
           {/* Login Form */}
           <View style={{ marginBottom: designTokens.spacing.xxl }}>
             <View style={{ marginBottom: designTokens.spacing.lg }}>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textPrimary,
@@ -206,7 +206,7 @@ export default function LoginScreen() {const { t } = useTranslation();
             </View>
 
             <View style={{ marginBottom: designTokens.spacing.lg }}>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textPrimary,
@@ -286,7 +286,7 @@ export default function LoginScreen() {const { t } = useTranslation();
               {isLoading ?
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <ActivityIndicator color="white" size="small" />
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                   color: 'white',
                   fontWeight: '600',
                   fontSize: designTokens.typography.body.fontSize,
@@ -298,7 +298,7 @@ export default function LoginScreen() {const { t } = useTranslation();
 
               <>
                   <Ionicons name="log-in" size={20} color="white" />
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                   color: 'white',
                   fontWeight: '600',
                   fontSize: designTokens.typography.body.fontSize,
@@ -318,14 +318,14 @@ export default function LoginScreen() {const { t } = useTranslation();
             alignItems: 'center',
             marginBottom: designTokens.spacing.xxl
           }}>
-            <Text style={{
+            <Text style={{ fontFamily, 
               color: colors.textSecondary,
               fontSize: designTokens.typography.body.fontSize
             }}>
               Don't have an account?{' '}
             </Text>
             <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 color: colors.primary,
                 fontWeight: '600',
                 fontSize: designTokens.typography.body.fontSize
@@ -337,7 +337,7 @@ export default function LoginScreen() {const { t } = useTranslation();
 
           {/* Demo Accounts */}
           <View style={{ marginBottom: designTokens.spacing.xxl }}>
-            <Text style={{
+            <Text style={{ fontFamily, 
               textAlign: 'center',
               color: colors.textTertiary,
               fontSize: designTokens.typography.footnote.fontSize,
@@ -378,14 +378,14 @@ export default function LoginScreen() {const { t } = useTranslation();
                     <Ionicons name={demo.icon as any} size={20} color={demo.color} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                     fontWeight: '600',
                     color: colors.textPrimary,
                     fontSize: designTokens.typography.body.fontSize
                   }}>
                       {demo.role}
                     </Text>
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                     color: colors.textSecondary,
                     fontSize: designTokens.typography.caption1.fontSize
                   }}>
@@ -398,7 +398,7 @@ export default function LoginScreen() {const { t } = useTranslation();
                   borderRadius: designTokens.borderRadius.full,
                   backgroundColor: colors.separator
                 }}>
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                     color: colors.textSecondary,
                     fontSize: designTokens.typography.caption2.fontSize,
                     fontWeight: '500'
@@ -413,14 +413,14 @@ export default function LoginScreen() {const { t } = useTranslation();
 
           {/* Footer */}
           <View style={{ alignItems: 'center', paddingBottom: designTokens.spacing.xxl }}>
-            <Text style={{
+            <Text style={{ fontFamily, 
               color: colors.textTertiary,
               fontSize: designTokens.typography.footnote.fontSize,
               textAlign: 'center'
             }}>
               Secure login with modern encryption
             </Text>
-            <Text style={{
+            <Text style={{ fontFamily, 
               color: colors.textTertiary,
               fontSize: designTokens.typography.caption1.fontSize,
               marginTop: designTokens.spacing.xs

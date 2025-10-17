@@ -8,15 +8,16 @@ import {
   ActivityIndicator,
   RefreshControl,
   Modal,
-  TextInput } from
-'react-native';
+  TextInput
+} from
+  'react-native';
 import Alert from '@/components/Alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { apiService } from '../../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '@/contexts/ThemeContext';
-import { designTokens } from '../../../src/utils/designTokens';import { useTranslation } from "@/hooks/useTranslation";
+import { designTokens } from '../../../src/utils/designTokens'; import { useTranslation } from "@/hooks/useTranslation";
 
 interface Student {
   id: string;
@@ -67,7 +68,8 @@ interface ExamResults {
   submissions: Submission[];
 }
 
-export default function TeacherExamResultsScreen() {const { t } = useTranslation();
+export default function TeacherExamResultsScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams();
   const { user } = useAuth();
   const [results, setResults] = useState<ExamResults | null>(null);
@@ -79,7 +81,7 @@ export default function TeacherExamResultsScreen() {const { t } = useTranslation
   const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'analytics'>('overview');
   const [feedback, setFeedback] = useState('');
   const [sendingFeedback, setSendingFeedback] = useState(false);
-  const { colors } = useThemeContext();
+  const { fontFamily, colors } = useThemeContext();
 
 
   useEffect(() => {
@@ -154,20 +156,20 @@ export default function TeacherExamResultsScreen() {const { t } = useTranslation
 
   const calculateScoreDistribution = (submissions: Submission[]) => {
     const distribution = [
-    { range: '90-100', count: 0 },
-    { range: '80-89', count: 0 },
-    { range: '70-79', count: 0 },
-    { range: '60-69', count: 0 },
-    { range: '0-59', count: 0 }];
+      { range: '90-100', count: 0 },
+      { range: '80-89', count: 0 },
+      { range: '70-79', count: 0 },
+      { range: '60-69', count: 0 },
+      { range: '0-59', count: 0 }];
 
 
     submissions.forEach((submission) => {
       const percentage = submission.percentage;
-      if (percentage >= 90) distribution[0].count++;else
-      if (percentage >= 80) distribution[1].count++;else
-      if (percentage >= 70) distribution[2].count++;else
-      if (percentage >= 60) distribution[3].count++;else
-      distribution[4].count++;
+      if (percentage >= 90) distribution[0].count++; else
+        if (percentage >= 80) distribution[1].count++; else
+          if (percentage >= 70) distribution[2].count++; else
+            if (percentage >= 60) distribution[3].count++; else
+              distribution[4].count++;
     });
 
     return distribution;
@@ -228,19 +230,19 @@ export default function TeacherExamResultsScreen() {const { t } = useTranslation
 
   const exportResults = () => {
     Alert.alert('Export Results', 'Choose export format:', [
-    { text: 'PDF Report', onPress: () => console.log('Exporting PDF...') },
-    { text: 'Excel Sheet', onPress: () => console.log('Exporting Excel...') },
-    { text: 'CSV Data', onPress: () => console.log('Exporting CSV...') },
-    { text: 'Cancel', style: 'cancel' }]
+      { text: 'PDF Report', onPress: () => console.log('Exporting PDF...') },
+      { text: 'Excel Sheet', onPress: () => console.log('Exporting Excel...') },
+      { text: 'CSV Data', onPress: () => console.log('Exporting CSV...') },
+      { text: 'Cancel', style: 'cancel' }]
     );
   };
 
   const shareResults = () => {
     Alert.alert('Share Results', 'Share exam results with:', [
-    { text: 'All Students', onPress: () => console.log('Sharing with all students...') },
-    { text: 'Selected Students', onPress: () => console.log('Sharing with selected students...') },
-    { text: 'Other Teachers', onPress: () => console.log('Sharing with teachers...') },
-    { text: 'Cancel', style: 'cancel' }]
+      { text: 'All Students', onPress: () => console.log('Sharing with all students...') },
+      { text: 'Selected Students', onPress: () => console.log('Sharing with selected students...') },
+      { text: 'Other Teachers', onPress: () => console.log('Sharing with teachers...') },
+      { text: 'Cancel', style: 'cancel' }]
     );
   };
 
@@ -272,7 +274,7 @@ export default function TeacherExamResultsScreen() {const { t } = useTranslation
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText as any, { color: colors.textSecondary }]}>Loading exam results...</Text>
+        <Text style={[styles.loadingText as any, { fontFamily, color: colors.textSecondary }]}>Loading exam results...</Text>
       </View>);
 
   }
@@ -281,8 +283,8 @@ export default function TeacherExamResultsScreen() {const { t } = useTranslation
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <Ionicons name="alert-circle" size={64} color={colors.textTertiary} />
-        <Text style={[styles.emptyTitle as any, { color: colors.textPrimary }]}>No results found</Text>
-        <Text style={[styles.emptySubtitle as any, { color: colors.textSecondary }]}>
+        <Text style={[styles.emptyTitle as any, { fontFamily, color: colors.textPrimary }]}>No results found</Text>
+        <Text style={[styles.emptySubtitle as any, { fontFamily, color: colors.textSecondary }]}>
           Unable to load exam results. The exam may not exist or you may not have permission to view it.
         </Text>
         <TouchableOpacity
@@ -302,14 +304,14 @@ export default function TeacherExamResultsScreen() {const { t } = useTranslation
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.backgroundElevated, borderBottomColor: colors.border }]}>
-        <View style={styles.headerContent as any}>
+        <View style={[styles.headerContent] as any}>
           <TouchableOpacity
             style={[styles.headerButton as any, { backgroundColor: colors.background }]}
             onPress={() => router.back()}>
 
             <Ionicons name="chevron-back" size={20} color={colors.primary} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Exam Analytics</Text>
+          <Text style={[styles.headerTitle, { fontFamily, color: colors.textPrimary }]}>Exam Analytics</Text>
           <View style={styles.headerActions as any}>
             <TouchableOpacity
               style={[styles.headerButton as any, { backgroundColor: colors.background }]}
@@ -327,14 +329,14 @@ export default function TeacherExamResultsScreen() {const { t } = useTranslation
         </View>
 
         <View style={styles.examInfo}>
-          <Text style={[styles.examTitle, { color: colors.textPrimary }]}>
+          <Text style={[styles.examTitle, { fontFamily, color: colors.textPrimary }]}>
             {results.exam.title}
           </Text>
-          <Text style={[styles.examSubtitle as any, { color: colors.textSecondary }]}>
+          <Text style={[styles.examSubtitle as any, { fontFamily, color: colors.textSecondary }]}>
             {results.exam.subject} • {results.exam.class}
           </Text>
           {results.exam.teacher &&
-          <Text style={[styles.examCreator, { color: colors.textTertiary }]}>
+            <Text style={[styles.examCreator, { fontFamily, color: colors.textTertiary }]}>
               Created by: {results.exam.teacher.profile.name}
             </Text>
           }
@@ -343,37 +345,37 @@ export default function TeacherExamResultsScreen() {const { t } = useTranslation
         {/* Tabs */}
         <View style={[styles.tabsContainer as any, { backgroundColor: colors.background }]}>
           {[
-          { key: 'overview', label: t("dashboard.overview"), icon: 'stats-chart' },
-          { key: 'submissions', label: t("submissions.title"), icon: 'document-text' },
-          { key: 'analytics', label: t("dashboard.analytics"), icon: 'analytics' }].
-          map((tab) =>
-          <TouchableOpacity
-            key={tab.key}
-            style={[
-            styles.tab as any,
-            activeTab === tab.key ?
-            { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm } :
-            {}]
-            }
-            onPress={() => setActiveTab(tab.key as any)}>
+            { key: 'overview', label: t("dashboard.overview"), icon: 'stats-chart' },
+            { key: 'submissions', label: t("submissions.title"), icon: 'document-text' },
+            { key: 'analytics', label: t("dashboard.analytics"), icon: 'analytics' }].
+            map((tab) =>
+              <TouchableOpacity
+                key={tab.key}
+                style={[
+                  styles.tab as any,
+                  activeTab === tab.key ?
+                    { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm } :
+                    {}]
+                }
+                onPress={() => setActiveTab(tab.key as any)}>
 
-              <Ionicons
-              name={tab.icon as any}
-              size={16}
-              color={activeTab === tab.key ? colors.primary : colors.textTertiary} />
+                <Ionicons
+                  name={tab.icon as any}
+                  size={16}
+                  color={activeTab === tab.key ? colors.primary : colors.textTertiary} />
 
-              <Text
-              style={[
-              styles.tabText as any,
-              activeTab === tab.key ?
-              { color: colors.primary } :
-              { color: colors.textSecondary }]
-              }>
+                <Text
+                  style={[
+                    styles.tabText as any,
+                    activeTab === tab.key ?
+                      { fontFamily, color: colors.primary } :
+                      { fontFamily, color: colors.textSecondary }]
+                  }>
 
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          )}
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            )}
         </View>
       </View>
 
@@ -381,240 +383,240 @@ export default function TeacherExamResultsScreen() {const { t } = useTranslation
         style={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={colors.primary} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary} />
 
         }>
 
         {activeTab === 'overview' ?
-        <View style={styles.tabContent}>
+          <View style={styles.tabContent}>
             {/* Performance Insights */}
             {performanceInsights.length > 0 &&
-          <View style={[styles.insightsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.warning }]}>
+              <View style={[styles.insightsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.warning }]}>
                 <View style={styles.insightsHeader as any}>
                   <Ionicons name="bulb" size={20} color={colors.warning} style={styles.insightsIcon} />
                   <View style={styles.insightsText}>
-                    <Text style={[styles.insightsTitle as any, { color: colors.textPrimary }]}>{t("dashboard.performanceInsights")}</Text>
+                    <Text style={[styles.insightsTitle as any, { fontFamily, color: colors.textPrimary }]}>{t("dashboard.performanceInsights")}</Text>
                     {performanceInsights.map((insight, index) =>
-                <Text key={index} style={[styles.insightItem, { color: colors.textSecondary }]}>• {insight}</Text>
-                )}
+                      <Text key={index} style={[styles.insightItem, { fontFamily, color: colors.textSecondary }]}>• {insight}</Text>
+                    )}
                   </View>
                 </View>
               </View>
-          }
+            }
 
             {/* Statistics Cards */}
             <View style={styles.statsGrid as any}>
               <View style={[styles.statCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
                 <View style={styles.statHeader as any}>
-                  <Text style={[styles.statLabel as any, { color: colors.textSecondary }]}>{t("submissions.title")}</Text>
+                  <Text style={[styles.statLabel as any, { fontFamily, color: colors.textSecondary }]}>{t("submissions.title")}</Text>
                   <Ionicons name="people" size={20} color={colors.primary} />
                 </View>
-                <Text style={[styles.statValue, { color: colors.textPrimary }]}>{results.statistics.totalSubmissions}</Text>
-                <Text style={[styles.statSubtitle, { color: colors.textTertiary }]}>
+                <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>{results.statistics.totalSubmissions}</Text>
+                <Text style={[styles.statSubtitle, { fontFamily, color: colors.textTertiary }]}>
                   {results.statistics.totalStudents ? `of ${results.statistics.totalStudents} students` : 'Total submissions'}
                 </Text>
               </View>
 
               <View style={[styles.statCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
                 <View style={styles.statHeader as any}>
-                  <Text style={[styles.statLabel as any, { color: colors.textSecondary }]}>{t("dashboard.avgScore")}</Text>
+                  <Text style={[styles.statLabel as any, { fontFamily, color: colors.textSecondary }]}>{t("dashboard.avgScore")}</Text>
                   <Ionicons name="trophy" size={20} color={colors.success} />
                 </View>
-                <Text style={[styles.statValue, { color: colors.textPrimary }]}>{results.statistics.averageScore}%</Text>
-                <Text style={[styles.statSubtitle, { color: colors.textTertiary }]}>{t("dashboard.classAverage")}</Text>
+                <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>{results.statistics.averageScore}%</Text>
+                <Text style={[styles.statSubtitle, { fontFamily, color: colors.textTertiary }]}>{t("dashboard.classAverage")}</Text>
               </View>
 
               <View style={[styles.statCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
                 <View style={styles.statHeader as any}>
-                  <Text style={[styles.statLabel as any, { color: colors.textSecondary }]}>Highest</Text>
+                  <Text style={[styles.statLabel as any, { fontFamily, color: colors.textSecondary }]}>Highest</Text>
                   <Ionicons name="trending-up" size={20} color={colors.warning} />
                 </View>
-                <Text style={[styles.statValue, { color: colors.textPrimary }]}>{results.statistics.highestScore}%</Text>
-                <Text style={[styles.statSubtitle, { color: colors.textTertiary }]}>Top score</Text>
+                <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>{results.statistics.highestScore}%</Text>
+                <Text style={[styles.statSubtitle, { fontFamily, color: colors.textTertiary }]}>Top score</Text>
               </View>
 
               <View style={[styles.statCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
                 <View style={styles.statHeader as any}>
-                  <Text style={[styles.statLabel as any, { color: colors.textSecondary }]}>Lowest</Text>
+                  <Text style={[styles.statLabel as any, { fontFamily, color: colors.textSecondary }]}>Lowest</Text>
                   <Ionicons name="trending-down" size={20} color={colors.error} />
                 </View>
-                <Text style={[styles.statValue, { color: colors.textPrimary }]}>{results.statistics.lowestScore}%</Text>
-                <Text style={[styles.statSubtitle, { color: colors.textTertiary }]}>Lowest score</Text>
+                <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>{results.statistics.lowestScore}%</Text>
+                <Text style={[styles.statSubtitle, { fontFamily, color: colors.textTertiary }]}>Lowest score</Text>
               </View>
             </View>
 
             {/* Score Distribution */}
             <View style={[styles.scoreDistributionCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Score Distribution</Text>
+              <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>Score Distribution</Text>
               <View style={styles.distributionList}>
                 {results.scoreDistribution.map((item, index) =>
-              <View key={index} style={styles.distributionItem as any}>
-                    <Text style={[styles.distributionRange as any, { color: colors.textPrimary }]}>{item.range}</Text>
+                  <View key={index} style={styles.distributionItem as any}>
+                    <Text style={[styles.distributionRange as any, { fontFamily, color: colors.textPrimary }]}>{item.range}</Text>
                     <View style={[styles.distributionBar as any, { backgroundColor: colors.background }]}>
                       <View
-                    style={[
-                    styles.distributionFill as any,
-                    {
-                      backgroundColor: getGradeColor(parseInt(item.range.split('-')[0])),
-                      width: `${item.count / Math.max(...results.scoreDistribution.map((s) => s.count), 1) * 100}%`
-                    }]
-                    } />
+                        style={[
+                          styles.distributionFill as any,
+                          {
+                            backgroundColor: getGradeColor(parseInt(item.range.split('-')[0])),
+                            width: `${item.count / Math.max(...results.scoreDistribution.map((s) => s.count), 1) * 100}%`
+                          }]
+                        } />
 
                     </View>
-                    <Text style={[styles.distributionCount as any, { color: colors.textSecondary }]}>{item.count}</Text>
+                    <Text style={[styles.distributionCount as any, { fontFamily, color: colors.textSecondary }]}>{item.count}</Text>
                   </View>
-              )}
+                )}
               </View>
             </View>
 
             {/* Top Performers */}
             <View style={[styles.topPerformersCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
               <View style={styles.cardHeader as any}>
-                <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Top Performers</Text>
-                <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
+                <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>Top Performers</Text>
+                <Text style={[styles.cardSubtitle, { fontFamily, color: colors.textSecondary }]}>
                   Showing top 3 of {results.submissions.length}
                 </Text>
               </View>
               {results.submissions.
-            sort((a, b) => b.percentage - a.percentage).
-            slice(0, 3).
-            map((submission, index) =>
-            <View
-              key={submission.id}
-              style={[
-              styles.performerItem as any,
-              {
-                borderBottomColor: colors.border,
-                borderBottomWidth: index < 2 ? 1 : 0
-              }]
-              }>
+                sort((a, b) => b.percentage - a.percentage).
+                slice(0, 3).
+                map((submission, index) =>
+                  <View
+                    key={submission.id}
+                    style={[
+                      styles.performerItem as any,
+                      {
+                        borderBottomColor: colors.border,
+                        borderBottomWidth: index < 2 ? 1 : 0
+                      }]
+                    }>
 
-                  <View style={styles.performerInfo as any}>
-                    <View style={[styles.rankBadge as any, { backgroundColor: `${colors.primary}20` }]}>
-                      <Text style={[styles.rankText as any, { color: colors.primary }]}>{index + 1}</Text>
+                    <View style={styles.performerInfo as any}>
+                      <View style={[styles.rankBadge as any, { backgroundColor: `${colors.primary}20` }]}>
+                        <Text style={[styles.rankText as any, { fontFamily, color: colors.primary }]}>{index + 1}</Text>
+                      </View>
+                      <View style={styles.performerDetails}>
+                        <Text style={[styles.performerName as any, { fontFamily, color: colors.textPrimary }]}>{submission.student.name}</Text>
+                        <Text style={[styles.performerId, { fontFamily, color: colors.textSecondary }]}>{submission.student.studentId}</Text>
+                      </View>
                     </View>
-                    <View style={styles.performerDetails}>
-                      <Text style={[styles.performerName as any, { color: colors.textPrimary }]}>{submission.student.name}</Text>
-                      <Text style={[styles.performerId, { color: colors.textSecondary }]}>{submission.student.studentId}</Text>
-                    </View>
-                  </View>
-                  <Text style={[styles.performerScore as any, { color: getGradeColor(submission.percentage) }]}>
-                    {submission.percentage}%
-                  </Text>
-                </View>
-            )}
-            </View>
-          </View> :
-        activeTab === 'submissions' ?
-        <View style={styles.tabContent}>
-            {/* Submissions List */}
-            <View style={[styles.submissionsCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-              {results.submissions.length > 0 ?
-            results.submissions.
-            sort((a, b) => b.percentage - a.percentage).
-            map((submission, index) =>
-            <TouchableOpacity
-              key={submission.id}
-              style={[
-              styles.submissionItem as any,
-              {
-                borderBottomColor: colors.border,
-                borderBottomWidth: index !== results.submissions.length - 1 ? 1 : 0
-              }]
-              }
-              onPress={() => handleViewSubmission(submission)}
-              activeOpacity={0.7}>
-
-                    <View style={styles.submissionInfo}>
-                      <Text style={[styles.submissionName as any, { color: colors.textPrimary }]}>{submission.student.name}</Text>
-                      <Text style={[styles.submissionDetails, { color: colors.textSecondary }]}>
-                        {submission.student.studentId} • {submission.student.class}
-                      </Text>
-                    </View>
-                    <View style={styles.submissionMeta as any}>
-                      <Text style={[styles.submissionScore as any, { color: getGradeColor(submission.percentage) }]}>
-                        {submission.percentage}%
-                      </Text>
-                      <Text style={[styles.submissionDate, { color: colors.textTertiary }]}>
-                        {new Date(submission.submitted_at).toLocaleDateString()}
-                      </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} style={styles.chevronIcon} />
-                  </TouchableOpacity>
-            ) :
-
-            <View style={styles.emptyState as any}>
-                  <Ionicons name="document-text-outline" size={48} color={colors.textTertiary} />
-                  <Text style={[styles.emptyTitle as any, { color: colors.textSecondary }]}>No submissions yet</Text>
-                  <Text style={[styles.emptySubtitle as any, { color: colors.textTertiary }]}>
-                    Students haven't submitted this exam yet
-                  </Text>
-                </View>
-            }
-            </View>
-          </View> :
-
-        <View style={styles.tabContent}>
-            {/* Analytics Tab */}
-            <View style={styles.analyticsSection}>
-              {/* Performance Trends */}
-              <View style={[styles.analyticsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-                <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Performance Analysis</Text>
-                <View style={styles.trendList}>
-                  <View style={[styles.trendItem as any, { borderBottomColor: colors.border }]}>
-                    <Text style={[styles.trendLabel as any, { color: colors.textSecondary }]}>Class Average</Text>
-                    <Text style={[styles.trendValue as any, { color: colors.textPrimary }]}>{results.statistics.averageScore}%</Text>
-                  </View>
-                  <View style={[styles.trendItem as any, { borderBottomColor: colors.border }]}>
-                    <Text style={[styles.trendLabel as any, { color: colors.textSecondary }]}>Performance Range</Text>
-                    <Text style={[styles.trendValue as any, { color: colors.textPrimary }]}>
-                      {results.statistics.lowestScore}% - {results.statistics.highestScore}%
+                    <Text style={[styles.performerScore as any, { fontFamily, color: getGradeColor(submission.percentage) }]}>
+                      {submission.percentage}%
                     </Text>
                   </View>
-                  <View style={styles.trendItem as any}>
-                    <Text style={[styles.trendLabel as any, { color: colors.textSecondary }]}>Standard Deviation</Text>
-                    <Text style={[styles.trendValue as any, { color: colors.textPrimary }]}>
-                      {Math.round(Math.sqrt(
-                      results.submissions.reduce((acc, sub) =>
-                      acc + Math.pow(sub.percentage - results.statistics.averageScore, 2), 0
-                      ) / results.submissions.length
-                    ))}%
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Question Analysis */}
-              <View style={[styles.analyticsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-                <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Question Analysis</Text>
-                <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
-                  Detailed question-by-question analysis coming soon...
-                </Text>
-                <TouchableOpacity style={[styles.actionButton as any, { backgroundColor: `${colors.primary}15` }]}>
-                  <Text style={[styles.actionButtonText as any, { color: colors.primary }]}>Generate Detailed Report</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Action Recommendations */}
-              <View style={[styles.analyticsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-                <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Recommended Actions</Text>
-                <View style={styles.recommendationsList}>
-                  {performanceInsights.map((insight, index) =>
-                <View key={index} style={styles.recommendationItem as any}>
-                      <Ionicons name="checkmark-circle" size={16} color={colors.success} style={styles.recommendationIcon} />
-                      <Text style={[styles.recommendationText, { color: colors.textSecondary }]}>{insight}</Text>
-                    </View>
                 )}
-                  {performanceInsights.length === 0 &&
-                <Text style={[styles.noRecommendations as any, { color: colors.textTertiary }]}>No specific recommendations at this time.</Text>
+            </View>
+          </View> :
+          activeTab === 'submissions' ?
+            <View style={styles.tabContent}>
+              {/* Submissions List */}
+              <View style={[styles.submissionsCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                {results.submissions.length > 0 ?
+                  results.submissions.
+                    sort((a, b) => b.percentage - a.percentage).
+                    map((submission, index) =>
+                      <TouchableOpacity
+                        key={submission.id}
+                        style={[
+                          styles.submissionItem as any,
+                          {
+                            borderBottomColor: colors.border,
+                            borderBottomWidth: index !== results.submissions.length - 1 ? 1 : 0
+                          }]
+                        }
+                        onPress={() => handleViewSubmission(submission)}
+                        activeOpacity={0.7}>
+
+                        <View style={styles.submissionInfo}>
+                          <Text style={[styles.submissionName as any, { fontFamily, color: colors.textPrimary }]}>{submission.student.name}</Text>
+                          <Text style={[styles.submissionDetails, { fontFamily, color: colors.textSecondary }]}>
+                            {submission.student.studentId} • {submission.student.class}
+                          </Text>
+                        </View>
+                        <View style={styles.submissionMeta as any}>
+                          <Text style={[styles.submissionScore as any, { fontFamily, color: getGradeColor(submission.percentage) }]}>
+                            {submission.percentage}%
+                          </Text>
+                          <Text style={[styles.submissionDate, { fontFamily, color: colors.textTertiary }]}>
+                            {new Date(submission.submitted_at).toLocaleDateString()}
+                          </Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} style={styles.chevronIcon} />
+                      </TouchableOpacity>
+                    ) :
+
+                  <View style={styles.emptyState as any}>
+                    <Ionicons name="document-text-outline" size={48} color={colors.textTertiary} />
+                    <Text style={[styles.emptyTitle as any, { fontFamily, color: colors.textSecondary }]}>No submissions yet</Text>
+                    <Text style={[styles.emptySubtitle as any, { fontFamily, color: colors.textTertiary }]}>
+                      Students haven't submitted this exam yet
+                    </Text>
+                  </View>
                 }
+              </View>
+            </View> :
+
+            <View style={styles.tabContent}>
+              {/* Analytics Tab */}
+              <View style={styles.analyticsSection}>
+                {/* Performance Trends */}
+                <View style={[styles.analyticsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                  <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>Performance Analysis</Text>
+                  <View style={styles.trendList}>
+                    <View style={[styles.trendItem as any, { borderBottomColor: colors.border }]}>
+                      <Text style={[styles.trendLabel as any, { fontFamily, color: colors.textSecondary }]}>Class Average</Text>
+                      <Text style={[styles.trendValue as any, { fontFamily, color: colors.textPrimary }]}>{results.statistics.averageScore}%</Text>
+                    </View>
+                    <View style={[styles.trendItem as any, { borderBottomColor: colors.border }]}>
+                      <Text style={[styles.trendLabel as any, { fontFamily, color: colors.textSecondary }]}>Performance Range</Text>
+                      <Text style={[styles.trendValue as any, { fontFamily, color: colors.textPrimary }]}>
+                        {results.statistics.lowestScore}% - {results.statistics.highestScore}%
+                      </Text>
+                    </View>
+                    <View style={styles.trendItem as any}>
+                      <Text style={[styles.trendLabel as any, { fontFamily, color: colors.textSecondary }]}>Standard Deviation</Text>
+                      <Text style={[styles.trendValue as any, { fontFamily, color: colors.textPrimary }]}>
+                        {Math.round(Math.sqrt(
+                          results.submissions.reduce((acc, sub) =>
+                            acc + Math.pow(sub.percentage - results.statistics.averageScore, 2), 0
+                          ) / results.submissions.length
+                        ))}%
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Question Analysis */}
+                <View style={[styles.analyticsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                  <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>Question Analysis</Text>
+                  <Text style={[styles.cardSubtitle, { fontFamily, color: colors.textSecondary }]}>
+                    Detailed question-by-question analysis coming soon...
+                  </Text>
+                  <TouchableOpacity style={[styles.actionButton as any, { backgroundColor: `${colors.primary}15` }]}>
+                    <Text style={[styles.actionButtonText as any, { fontFamily, color: colors.primary }]}>Generate Detailed Report</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Action Recommendations */}
+                <View style={[styles.analyticsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                  <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>Recommended Actions</Text>
+                  <View style={styles.recommendationsList}>
+                    {performanceInsights.map((insight, index) =>
+                      <View key={index} style={styles.recommendationItem as any}>
+                        <Ionicons name="checkmark-circle" size={16} color={colors.success} style={styles.recommendationIcon} />
+                        <Text style={[styles.recommendationText, { fontFamily, color: colors.textSecondary }]}>{insight}</Text>
+                      </View>
+                    )}
+                    {performanceInsights.length === 0 &&
+                      <Text style={[styles.noRecommendations as any, { fontFamily, color: colors.textTertiary }]}>No specific recommendations at this time.</Text>
+                    }
+                  </View>
                 </View>
               </View>
             </View>
-          </View>
         }
       </ScrollView>
 
@@ -634,7 +636,7 @@ export default function TeacherExamResultsScreen() {const { t } = useTranslation
 
                 <Ionicons name="close" size={20} color={colors.primary} />
               </TouchableOpacity>
-              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Submission Details</Text>
+              <Text style={[styles.modalTitle, { fontFamily, color: colors.textPrimary }]}>Submission Details</Text>
               <TouchableOpacity
                 style={[styles.modalButton as any, { backgroundColor: `${colors.primary}15` }]}
                 onPress={handleSendFeedback}>
@@ -645,85 +647,85 @@ export default function TeacherExamResultsScreen() {const { t } = useTranslation
           </View>
 
           {selectedSubmission &&
-          <ScrollView style={styles.modalContent}>
+            <ScrollView style={styles.modalContent}>
               <View style={[styles.studentCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
                 <View style={styles.studentHeader as any}>
                   <View style={styles.studentInfo}>
-                    <Text style={[styles.studentName as any, { color: colors.textPrimary }]}>{selectedSubmission.student.name}</Text>
-                    <Text style={[styles.studentDetails, { color: colors.textSecondary }]}>
+                    <Text style={[styles.studentName as any, { fontFamily, color: colors.textPrimary }]}>{selectedSubmission.student.name}</Text>
+                    <Text style={[styles.studentDetails, { fontFamily, color: colors.textSecondary }]}>
                       {selectedSubmission.student.studentId} • {selectedSubmission.student.class}
                     </Text>
                     {selectedSubmission.student.email &&
-                  <Text style={[styles.studentEmail, { color: colors.textTertiary }]}>
+                      <Text style={[styles.studentEmail, { fontFamily, color: colors.textTertiary }]}>
                         {selectedSubmission.student.email}
                       </Text>
-                  }
+                    }
                   </View>
                   <View style={styles.studentScore as any}>
-                    <Text style={[styles.scoreValue, { color: getGradeColor(selectedSubmission.percentage) }]}>
+                    <Text style={[styles.scoreValue, { fontFamily, color: getGradeColor(selectedSubmission.percentage) }]}>
                       {selectedSubmission.percentage}%
                     </Text>
-                    <Text style={[styles.scoreDetails, { color: colors.textSecondary }]}>
+                    <Text style={[styles.scoreDetails, { fontFamily, color: colors.textSecondary }]}>
                       {selectedSubmission.score}/{selectedSubmission.total_points} points
                     </Text>
                   </View>
                 </View>
 
                 <View style={styles.submissionMetaRow as any}>
-                  <Text style={[styles.submissionMetaText, { color: colors.textTertiary }]}>
+                  <Text style={[styles.submissionMetaText, { fontFamily, color: colors.textTertiary }]}>
                     Submitted: {new Date(selectedSubmission.submitted_at).toLocaleString()}
                   </Text>
                   {selectedSubmission.time_spent &&
-                <Text style={[styles.submissionMetaText, { color: colors.textTertiary }]}>
+                    <Text style={[styles.submissionMetaText, { fontFamily, color: colors.textTertiary }]}>
                       Time: {selectedSubmission.time_spent}
                     </Text>
-                }
+                  }
                 </View>
               </View>
 
               {/* Answers Section */}
               <View style={[styles.answersCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-                <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Question Analysis</Text>
+                <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>Question Analysis</Text>
                 <View style={styles.answersList}>
                   {selectedSubmission.answers.map((answer: any, index: number) =>
-                <View
-                  key={index}
-                  style={[styles.answerItem, { borderColor: colors.border }]}>
+                    <View
+                      key={index}
+                      style={[styles.answerItem, { borderColor: colors.border }]}>
 
                       <View style={styles.answerHeader as any}>
-                        <Text style={[styles.questionNumber as any, { color: colors.textPrimary }]}>Q{index + 1}</Text>
+                        <Text style={[styles.questionNumber as any, { fontFamily, color: colors.textPrimary }]}>Q{index + 1}</Text>
                         <View style={[styles.answerStatus, { backgroundColor: answer.is_correct ? `${colors.success}20` : `${colors.error}20` }]}>
-                          <Text style={[styles.statusText as any, { color: answer.is_correct ? colors.success : colors.error }]}>
+                          <Text style={[styles.statusText as any, { fontFamily, color: answer.is_correct ? colors.success : colors.error }]}>
                             {answer.is_correct ? 'Correct' : 'Incorrect'}
                           </Text>
                         </View>
                       </View>
-                      <Text style={[styles.answerPoints, { color: colors.textSecondary }]}>
+                      <Text style={[styles.answerPoints, { fontFamily, color: colors.textSecondary }]}>
                         Points: {answer.points}
                       </Text>
                       {answer.answer &&
-                  <Text style={[styles.answerText, { color: colors.textPrimary }]}>
+                        <Text style={[styles.answerText, { fontFamily, color: colors.textPrimary }]}>
                           Answer: {answer.answer}
                         </Text>
-                  }
+                      }
                     </View>
-                )}
+                  )}
                 </View>
               </View>
 
               {/* Action Buttons */}
               <View style={styles.modalActions as any}>
                 <TouchableOpacity
-                style={[styles.modalActionButton as any, { backgroundColor: colors.primary }]}
-                onPress={exportResults}>
+                  style={[styles.modalActionButton as any, { backgroundColor: colors.primary }]}
+                  onPress={exportResults}>
 
                   <Text style={styles.modalActionText as any}>Download PDF</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                style={[styles.modalActionButton as any, { backgroundColor: colors.background }]}
-                onPress={handleSendFeedback}>
+                  style={[styles.modalActionButton as any, { backgroundColor: colors.background }]}
+                  onPress={handleSendFeedback}>
 
-                  <Text style={[styles.modalActionText as any, { color: colors.textPrimary }]}>Send Feedback</Text>
+                  <Text style={[styles.modalActionText as any, { fontFamily, color: colors.textPrimary }]}>Send Feedback</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -739,11 +741,11 @@ export default function TeacherExamResultsScreen() {const { t } = useTranslation
 
         <View style={[styles.feedbackOverlay as any, { backgroundColor: `${colors.textPrimary}80` }]}>
           <View style={[styles.feedbackModal as any, { backgroundColor: colors.backgroundElevated }]}>
-            <Text style={[styles.feedbackTitle, { color: colors.textPrimary }]}>Send Feedback</Text>
-            <Text style={[styles.feedbackSubtitle, { color: colors.textSecondary }]}>
+            <Text style={[styles.feedbackTitle, { fontFamily, color: colors.textPrimary }]}>Send Feedback</Text>
+            <Text style={[styles.feedbackSubtitle, { fontFamily, color: colors.textSecondary }]}>
               Send personalized feedback to {selectedSubmission?.student.name}
             </Text>
-            
+
             <TextInput
               style={[styles.feedbackInput, {
                 borderColor: colors.border,
@@ -756,13 +758,13 @@ export default function TeacherExamResultsScreen() {const { t } = useTranslation
               value={feedback}
               onChangeText={setFeedback} />
 
-            
+
             <View style={styles.feedbackActions as any}>
               <TouchableOpacity
                 style={[styles.feedbackButton as any, { backgroundColor: colors.background }]}
                 onPress={() => setFeedbackModalVisible(false)}>
 
-                <Text style={[styles.feedbackButtonText as any, { color: colors.textPrimary }]}>{t("common.cancel")}</Text>
+                <Text style={[styles.feedbackButtonText as any, { fontFamily, color: colors.textPrimary }]}>{t("common.cancel")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.feedbackButton as any, { backgroundColor: colors.primary }]}
@@ -770,9 +772,9 @@ export default function TeacherExamResultsScreen() {const { t } = useTranslation
                 disabled={!feedback.trim() || sendingFeedback}>
 
                 {sendingFeedback ?
-                <ActivityIndicator size="small" color="white" /> :
+                  <ActivityIndicator size="small" color="white" /> :
 
-                <Text style={styles.feedbackButtonText as any}>{t("common.send")}</Text>
+                  <Text style={styles.feedbackButtonText as any}>{t("common.send")}</Text>
                 }
               </TouchableOpacity>
             </View>

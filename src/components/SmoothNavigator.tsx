@@ -14,7 +14,7 @@ import ProfileScreen from '../../app/(student)/profile';
 const Stack = createStackNavigator();
 
 export default function SmoothNavigator() {
-  const { colors } = useThemeContext();
+  const { fontFamily, colors } = useThemeContext();
 
   return (
     <NavigationContainer>

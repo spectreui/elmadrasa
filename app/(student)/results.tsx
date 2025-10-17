@@ -18,7 +18,7 @@ import Animated, { FadeIn } from "react-native-reanimated";
 
 export default function ResultsScreen() {
   const { user } = useAuth();
-  const { colors } = useThemeContext();
+  const { fontFamily, colors } = useThemeContext();
   const [results, setResults] = useState<any[]>([]);
   const [subjectPerformance, setSubjectPerformance] = useState<any[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<"all" | "recent" | "top">("all");
@@ -353,7 +353,7 @@ export default function ResultsScreen() {
         alignItems: 'center',
       }}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{
+        <Text style={{ fontFamily,  fontFamily, 
           marginTop: designTokens.spacing.md,
           fontSize: designTokens.typography.body.fontSize,
           color: colors.textSecondary,
@@ -372,7 +372,7 @@ export default function ResultsScreen() {
         paddingHorizontal: designTokens.spacing.xl,
         paddingBottom: designTokens.spacing.lg,
       }}>
-        <Text style={{
+        <Text style={{ fontFamily,  fontFamily, 
           fontSize: designTokens.typography.largeTitle.fontSize,
           fontWeight: designTokens.typography.largeTitle.fontWeight,
           color: colors.textPrimary,
@@ -380,7 +380,7 @@ export default function ResultsScreen() {
         } as any}>
           Exam Results
         </Text>
-        <Text style={{
+        <Text style={{ fontFamily,  fontFamily, 
           fontSize: designTokens.typography.body.fontSize,
           color: colors.textSecondary,
         }}>
@@ -406,7 +406,7 @@ export default function ResultsScreen() {
         }}>
           {/* Performance Overview */}
           <View style={{ marginBottom: designTokens.spacing.xl }}>
-            <Text style={{
+            <Text style={{ fontFamily,  fontFamily, 
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: colors.textPrimary,
@@ -470,7 +470,7 @@ export default function ResultsScreen() {
 
           {/* Results List */}
           <View style={{ marginBottom: designTokens.spacing.xl }}>
-            <Text style={{
+            <Text style={{ fontFamily,  fontFamily, 
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: colors.textPrimary,
@@ -492,7 +492,7 @@ export default function ResultsScreen() {
                 ...designTokens.shadows.sm,
               }}>
                 <Ionicons name="stats-chart" size={48} color={colors.textTertiary} />
-                <Text style={{
+                <Text style={{ fontFamily,  fontFamily, 
                   fontSize: designTokens.typography.title3.fontSize,
                   fontWeight: designTokens.typography.title3.fontWeight,
                   color: colors.textPrimary,
@@ -501,7 +501,7 @@ export default function ResultsScreen() {
                 } as any}>
                   No results found
                 </Text>
-                <Text style={{
+                <Text style={{ fontFamily,  fontFamily, 
                   fontSize: designTokens.typography.body.fontSize,
                   color: colors.textSecondary,
                   textAlign: 'center',

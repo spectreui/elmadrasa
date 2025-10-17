@@ -47,7 +47,7 @@ const getGradeColor = (grade: number, maxPoints: number) => {
 
 export default function StudentHomeworkScreen() {
   const { user } = useAuth();
-  const { colors, isDark } = useThemeContext();
+  const { fontFamily, colors, isDark } = useThemeContext();
   const [homework, setHomework] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -298,7 +298,7 @@ export default function StudentHomeworkScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { fontFamily, backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.headerTitle as any, { color: colors.textPrimary }]}>

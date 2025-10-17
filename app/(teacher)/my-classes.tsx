@@ -16,7 +16,7 @@ export default function MyClassesScreen() {
   const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
   const [joinCodes, setJoinCodes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const { colors } = useThemeContext();
+  const { fontFamily, colors } = useThemeContext();
 
   useEffect(() => {
     loadTeacherClasses();
@@ -69,18 +69,18 @@ export default function MyClassesScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>{t("common.loading")}</Text>
+      <View style={[styles.container, { fontFamily, backgroundColor: colors.background }]}>
+        <Text style={[styles.loadingText, { fontFamily, color: colors.textSecondary }]}>{t("common.loading")}</Text>
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { fontFamily, backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>{t("classes.myClasses")}</Text>
-        <Text style={[styles.headerSubtitle, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>{t("classes.subtitle")}</Text>
+        <Text style={[styles.headerTitle, { fontFamily, color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>{t("classes.myClasses")}</Text>
+        <Text style={[styles.headerSubtitle, { fontFamily, color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>{t("classes.subtitle")}</Text>
       </View>
 
       <ScrollView
@@ -91,13 +91,13 @@ export default function MyClassesScreen() {
           {teacherClasses.length === 0 ?
             <View style={[styles.emptyState, { backgroundColor: colors.background }]}>
               <Ionicons name="school" size={64} color={colors.textTertiary} />
-              <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>{t("classes.none")}</Text>
-              <Text style={[styles.emptySubtitle, { color: colors.textTertiary }]}>{t("classes.noneMessage")}</Text>
+              <Text style={[styles.emptyTitle, { fontFamily, color: colors.textSecondary }]}>{t("classes.none")}</Text>
+              <Text style={[styles.emptySubtitle, { fontFamily, color: colors.textTertiary }]}>{t("classes.noneMessage")}</Text>
             </View> :
 
             teacherClasses.map((classItem) =>
               <View key={classItem.id} style={styles.classSection}>
-                <Text style={[styles.className, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
+                <Text style={[styles.className, { fontFamily, color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
                   {classItem.class_name}
                 </Text>
                 
@@ -126,10 +126,10 @@ export default function MyClassesScreen() {
                               />
                             </View>
                             <View style={[styles.subjectDetails, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
-                              <Text style={[styles.subjectName, { color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
+                              <Text style={[styles.subjectName, { fontFamily, color: colors.textPrimary, textAlign: isRTL ? 'right' : 'left' }]}>
                                 {subject.name}
                               </Text>
-                              <Text style={[styles.subjectClass, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
+                              <Text style={[styles.subjectClass, { fontFamily, color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
                                 {classItem.class_name}
                               </Text>
                             </View>
@@ -143,11 +143,11 @@ export default function MyClassesScreen() {
                             activeOpacity={0.7}
                           >
                             <View style={[styles.joinCodeInfo, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
-                              <Text style={[styles.joinCodeLabel, { color: colors.primary, textAlign: isRTL ? 'right' : 'left' }]}>{t("classes.joinCode")}</Text>
-                              <Text style={[styles.joinCodeValue, { color: colors.primary, textAlign: isRTL ? 'right' : 'left' }]}>
+                              <Text style={[styles.joinCodeLabel, { fontFamily, color: colors.primary, textAlign: isRTL ? 'right' : 'left' }]}>{t("classes.joinCode")}</Text>
+                              <Text style={[styles.joinCodeValue, { fontFamily, color: colors.primary, textAlign: isRTL ? 'right' : 'left' }]}>
                                 {joinCode.code || joinCode.join_code || t('classes.noCodeAvailable')}
                               </Text>
-                              <Text style={[styles.joinCodeHint, { color: colors.primary, textAlign: isRTL ? 'right' : 'left' }]}>{t("classes.tapToCopy")}</Text>
+                              <Text style={[styles.joinCodeHint, { fontFamily, color: colors.primary, textAlign: isRTL ? 'right' : 'left' }]}>{t("classes.tapToCopy")}</Text>
                             </View>
                             <View style={[styles.copyButton, { backgroundColor: colors.primary }]}>
                               <Ionicons name="copy" size={18} color="white" />
@@ -155,8 +155,8 @@ export default function MyClassesScreen() {
                           </TouchableOpacity> :
 
                           <View style={[styles.noCodeContainer, { backgroundColor: colors.background }]}>
-                            <Text style={[styles.noCodeText, { color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>{t("classes.noCode")}</Text>
-                            <Text style={[styles.noCodeDetails, { color: colors.textTertiary, textAlign: isRTL ? 'right' : 'left' }]}>
+                            <Text style={[styles.noCodeText, { fontFamily, color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>{t("classes.noCode")}</Text>
+                            <Text style={[styles.noCodeDetails, { fontFamily, color: colors.textTertiary, textAlign: isRTL ? 'right' : 'left' }]}>
                               {t("classes.classId")}: {classItem.class_id}, {t("classes.subjectId")}: {subject.id}
                             </Text>
                           </View>

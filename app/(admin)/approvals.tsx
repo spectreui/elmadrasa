@@ -24,7 +24,7 @@ export default function ApprovalsPage() {
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const { colors, isDark } = useThemeContext();
+  const { fontFamily, colors, isDark } = useThemeContext();
   
   useEffect(() => {
     loadPendingApprovals();
@@ -118,7 +118,7 @@ export default function ApprovalsPage() {
           marginBottom: designTokens.spacing.md,
         }}>
           <View style={{ flex: 1 }}>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: colors.textPrimary,
@@ -126,7 +126,7 @@ export default function ApprovalsPage() {
             } as any}>
               {userName}
             </Text>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textSecondary,
               marginBottom: designTokens.spacing.xs,
@@ -145,7 +145,7 @@ export default function ApprovalsPage() {
                 borderRadius: designTokens.borderRadius.full,
                 backgroundColor: user.role === 'student' ? colors.primary + '15' : '#10b981' + '15',
               }}>
-                <Text style={{
+                <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.caption2.fontSize,
                   fontWeight: '600',
                   color: user.role === 'student' ? colors.primary : '#10b981',
@@ -159,7 +159,7 @@ export default function ApprovalsPage() {
                 borderRadius: designTokens.borderRadius.full,
                 backgroundColor: '#f59e0b' + '15',
               }}>
-                <Text style={{
+                <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.caption2.fontSize,
                   fontWeight: '600',
                   color: '#f59e0b',
@@ -170,7 +170,7 @@ export default function ApprovalsPage() {
             </View>
 
             {user.profile?.class && (
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.caption1.fontSize,
                 color: colors.textSecondary,
                 marginTop: designTokens.spacing.sm,
@@ -180,7 +180,7 @@ export default function ApprovalsPage() {
             )}
 
             {user.profile?.department && (
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.caption1.fontSize,
                 color: colors.textSecondary,
                 marginTop: designTokens.spacing.xs,
@@ -197,7 +197,7 @@ export default function ApprovalsPage() {
           alignItems: 'center',
           marginTop: designTokens.spacing.md,
         }}>
-          <Text style={{
+          <Text style={{ fontFamily, 
             fontSize: designTokens.typography.caption2.fontSize,
             color: colors.textTertiary,
           }}>
@@ -221,7 +221,7 @@ export default function ApprovalsPage() {
               }}
             >
               <Ionicons name="close" size={16} color={colors.textSecondary} />
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textSecondary,
@@ -243,7 +243,7 @@ export default function ApprovalsPage() {
               }}
             >
               <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: '#FFFFFF',
@@ -266,7 +266,7 @@ export default function ApprovalsPage() {
         alignItems: 'center',
       }}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{
+        <Text style={{ fontFamily, 
           marginTop: designTokens.spacing.md,
           fontSize: designTokens.typography.body.fontSize,
           color: colors.textSecondary,
@@ -294,14 +294,14 @@ export default function ApprovalsPage() {
           marginBottom: designTokens.spacing.md,
         }}>
           <View>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.title1.fontSize,
               fontWeight: designTokens.typography.title1.fontWeight,
               color: colors.textPrimary,
             } as any}>
               Pending Approvals
             </Text>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.body.fontSize,
               color: colors.textSecondary,
               marginTop: designTokens.spacing.xs,
@@ -317,7 +317,7 @@ export default function ApprovalsPage() {
               borderRadius: designTokens.borderRadius.full,
               backgroundColor: '#f59e0b' + '15',
             }}>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.caption2.fontSize,
                 fontWeight: '600',
                 color: '#f59e0b',
@@ -349,7 +349,7 @@ export default function ApprovalsPage() {
             ...designTokens.shadows.sm,
           }}>
             <Ionicons name="checkmark-circle-outline" size={64} color={colors.textTertiary} />
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: colors.textPrimary,
@@ -358,7 +358,7 @@ export default function ApprovalsPage() {
             } as any}>
               All caught up!
             </Text>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textSecondary,
               textAlign: 'center',
@@ -368,7 +368,7 @@ export default function ApprovalsPage() {
           </View>
         ) : (
           <View>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.footnote.fontSize,
               fontWeight: '600',
               color: colors.textSecondary,

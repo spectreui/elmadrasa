@@ -35,7 +35,7 @@ export const UniversalPromptProvider = ({ children }: { children: React.ReactNod
     onCancel: () => {},
     type: 'plain-text'
   });
-  const { colors } = useThemeContext();
+  const { fontFamily, colors } = useThemeContext();
   const [inputValue, setInputValue] = useState('');
 
   const showUniversalPrompt = (
@@ -78,7 +78,7 @@ export const UniversalPromptProvider = ({ children }: { children: React.ReactNod
         onRequestClose={handleCancel}
       >
         <View style={styles.overlay}>
-          <View style={[styles.container, { backgroundColor: colors.backgroundElevated }]}>
+          <View style={[styles.container, { fontFamily, backgroundColor: colors.backgroundElevated }]}>
             <Text style={[styles.title, { color: colors.textPrimary }]}>{promptState.title}</Text>
             {promptState.message ? (
               <Text style={[styles.message, { color: colors.textSecondary }]}>

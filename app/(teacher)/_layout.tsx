@@ -2,14 +2,14 @@ import { Tabs, Redirect, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { View, Text } from "react-native";
-import { useEffect } from "react";
 import { useThemeContext } from "@/contexts/ThemeContext"; import { useTranslation } from "@/hooks/useTranslation";
+import LiquidGlassTabBar from "@/components/TabBar";
 
 export default function TeacherLayout() {
-  const { t, setLanguage } = useTranslation();
+  const { t } = useTranslation();
   const { isAuthenticated, loading, user } = useAuth();
   const router = useRouter();
-  const { isDark, colors, toggleTheme } = useThemeContext();
+  const { fontFamily, colors } = useThemeContext();
 
   // Force arabic
   // setLanguage('ar');
@@ -31,34 +31,38 @@ export default function TeacherLayout() {
 
   return (
     <Tabs
+      tabBar={props => <LiquidGlassTabBar {...props} />}
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.backgroundElevated,
-          borderTopColor: colors.border,
+          backgroundColor: 'transparent',
+          borderTopWidth: 0,
+          elevation: 0,
           height: 70,
           paddingBottom: 0,
-          paddingTop: 8
+          paddingTop: 8,
+          position: 'relative',
         },
         tabBarActiveTintColor: "#3b82f6",
-        tabBarInactiveTintColor: "#6b7280",
+        tabBarInactiveTintColor: "rgba(107, 114, 128, 0.7)",
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: "500"
-        }
-      }}>
+        },
+      }}
+    >
 
       <Tabs.Screen
         name="index"
         options={{
           title: t("home"),
+          sceneStyle: {paddingBottom: 80},
           tabBarIcon: ({ color, size, focused }) =>
             <View className="items-center justify-center">
               <Ionicons
                 name={focused ? "home" : "home-outline"}
                 size={24}
                 color={color} />
-
             </View>
 
         }} />
@@ -67,6 +71,7 @@ export default function TeacherLayout() {
         name="exams/index"
         options={{
           title: t('exams'),
+          sceneStyle: {paddingBottom: 80},
           tabBarIcon: ({ color, size, focused }) =>
             <View className="items-center justify-center">
               <Ionicons
@@ -82,6 +87,7 @@ export default function TeacherLayout() {
         name="homework/index"
         options={{
           title: t("homeworks"),
+          sceneStyle: {paddingBottom: 80},
           tabBarIcon: ({ color, size, focused }) =>
             <View className="items-center justify-center">
               <Ionicons
@@ -97,6 +103,7 @@ export default function TeacherLayout() {
         name="my-classes"
         options={{
           title: t("dashboard.classes"),
+          sceneStyle: {paddingBottom: 80},
           tabBarIcon: ({ color, size, focused }) =>
             <View className="items-center justify-center">
               <Ionicons
@@ -112,6 +119,7 @@ export default function TeacherLayout() {
         name="statistics"
         options={{
           title: t("dashboard.analytics"),
+          sceneStyle: {paddingBottom: 80},
           tabBarIcon: ({ color, size, focused }) =>
             <View className="items-center justify-center">
               <Ionicons
@@ -169,6 +177,6 @@ export default function TeacherLayout() {
           href: null // This hides it from tab bar
         }} />
 
-    </Tabs>);
-
+    </Tabs>
+  );
 }

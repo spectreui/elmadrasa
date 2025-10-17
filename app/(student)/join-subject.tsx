@@ -23,7 +23,7 @@ const { width } = Dimensions.get('window');
 export default function JoinSubjectScreen() {const { t } = useTranslation();
   const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const { colors, isDark } = useThemeContext();
+  const { fontFamily, colors, isDark } = useThemeContext();
   const [refreshing, setRefreshing] = useState(false);
 
 

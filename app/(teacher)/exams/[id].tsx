@@ -21,6 +21,7 @@ import { designTokens } from '../../../src/utils/designTokens';
 import Animated, { FadeInUp, Layout } from 'react-native-reanimated';
 import { ShareModal } from '@/components/ShareModal';
 import { generateExamLink } from '@/utils/linking';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { width } = Dimensions.get('window');
 
@@ -46,12 +47,13 @@ interface ExamDetails {
 export default function ExamDetailScreen() {
   const { id } = useLocalSearchParams();
   const { user } = useAuth();
-  const { colors, isDark } = useThemeContext();
+  const { fontFamily, colors, isDark } = useThemeContext();
   const [exam, setExam] = useState<ExamDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'questions' | 'submissions'>('overview');
   const [showShareModal, setShowShareModal] = useState(false);
+  const { language, isRTL } = useTranslation();
 
   useEffect(() => {
     if (id) {
@@ -206,6 +208,358 @@ export default function ExamDetailScreen() {
     return value.toFixed(1);
   };
 
+
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: designTokens.spacing.xl,
+    },
+    loadingText: {
+      marginTop: designTokens.spacing.md,
+      fontSize: designTokens.typography.body.fontSize,
+    },
+    header: {
+      paddingTop: designTokens.spacing.xxxl,
+      paddingHorizontal: designTokens.spacing.xl,
+      paddingBottom: designTokens.spacing.lg,
+      borderBottomWidth: 1,
+    },
+    backButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: designTokens.spacing.lg,
+    },
+    backButtonText: {
+      fontSize: designTokens.typography.body.fontSize,
+      fontWeight: '600',
+      marginLeft: designTokens.spacing.xs,
+    },
+    headerContent: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+    },
+    titleRow: {
+      flex: 1,
+      flexDirection: isRTL ? 'row-reverse' : 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginHorizontal: isRTL ? designTokens.spacing.md : designTokens.spacing.sm,
+    },
+    titleContainer: {
+      flex: 1,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: '800',
+      marginBottom: designTokens.spacing.xs,
+      letterSpacing: -0.3,
+    },
+    subtitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: designTokens.spacing.xs,
+    },
+    subtitleItem: {
+      flexDirection: isRTL ? 'row-reverse' : 'row',
+      alignItems: 'center',
+    },
+    subtitleText: {
+      fontSize: designTokens.typography.caption1.fontSize,
+      marginHorizontal: isRTL ? 0 : designTokens.spacing.xs,
+      marginLeft: isRTL ? designTokens.spacing.xs : 0,
+      opacity: 0.8,
+    },
+    dot: {
+      width: 4,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: 'rgba(156, 163, 175, 0.5)',
+      marginHorizontal: designTokens.spacing.sm,
+    },
+    statusBadge: {
+      paddingHorizontal: designTokens.spacing.md,
+      paddingVertical: designTokens.spacing.xs,
+      borderRadius: designTokens.borderRadius.full,
+      borderWidth: 1,
+      alignSelf: 'flex-start',
+    },
+    statusText: {
+      fontSize: designTokens.typography.caption2.fontSize,
+      fontWeight: '600',
+    },
+    actionButtonsRow: {
+      flexDirection: isRTL ? 'row-reverse' : 'row',
+      gap: designTokens.spacing.sm,
+    },
+    iconButton: {
+      width: 40,
+      height: 40,
+      borderRadius: designTokens.borderRadius.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    tabsContainer: {
+      flexDirection: isRTL ? 'row-reverse' : 'row',
+      borderRadius: designTokens.borderRadius.xl,
+      padding: designTokens.spacing.xs,
+      marginTop: designTokens.spacing.lg,
+    },
+    tab: {
+      flex: 1,
+      paddingVertical: designTokens.spacing.md,
+      borderRadius: designTokens.borderRadius.lg,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    tabText: {
+      fontSize: designTokens.typography.footnote.fontSize,
+      marginHorizontal: isRTL ? 0 : designTokens.spacing.xs,
+      marginRight: isRTL ? designTokens.spacing.xs : 0,
+    },
+    content: {
+      flex: 1,
+    },
+    contentPadding: {
+      paddingHorizontal: designTokens.spacing.xl,
+      paddingBottom: designTokens.spacing.xxxl,
+    },
+    section: {
+      borderRadius: designTokens.borderRadius.xxl,
+      padding: designTokens.spacing.lg,
+      marginBottom: designTokens.spacing.lg,
+      borderWidth: 0.5,
+      borderColor: 'rgba(0,0,0,0.05)',
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: designTokens.spacing.lg,
+    },
+    sectionTitle: {
+      fontSize: 22,
+      fontWeight: '700',
+      marginBottom: designTokens.spacing.xs,
+    },
+    sectionSubtitle: {
+      fontSize: designTokens.typography.body.fontSize,
+      opacity: 0.7,
+    },
+    statsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: designTokens.spacing.sm,
+      marginBottom: designTokens.spacing.lg,
+    },
+    statCard: {
+      width: '48%',
+      borderRadius: designTokens.borderRadius.xl,
+      padding: designTokens.spacing.lg,
+      borderWidth: 0.5,
+      borderColor: 'rgba(0,0,0,0.05)',
+    },
+    statIconContainer: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: 'rgba(255,255,255,0.2)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: designTokens.spacing.md,
+    },
+    statValue: {
+      fontSize: 24,
+      fontWeight: '700',
+      marginBottom: designTokens.spacing.xs,
+    },
+    statTitle: {
+      fontSize: designTokens.typography.caption1.fontSize,
+      opacity: 0.8,
+    },
+    settingsSection: {
+      borderTopWidth: 0.5,
+      borderTopColor: 'rgba(0,0,0,0.05)',
+      paddingTop: designTokens.spacing.lg,
+    },
+    settingsTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      marginBottom: designTokens.spacing.md,
+    },
+    settingsList: {
+      gap: designTokens.spacing.md,
+    },
+    settingRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    settingLabel: {
+      fontSize: designTokens.typography.body.fontSize,
+      opacity: 0.8,
+    },
+    settingValue: {
+      fontSize: designTokens.typography.body.fontSize,
+      fontWeight: '500',
+    },
+    actionsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: designTokens.spacing.sm,
+    },
+    actionButton: {
+      width: '48%',
+      borderRadius: designTokens.borderRadius.xl,
+      padding: designTokens.spacing.lg,
+      borderWidth: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: designTokens.spacing.sm,
+    },
+    actionButtonText: {
+      fontSize: designTokens.typography.body.fontSize,
+      marginLeft: designTokens.spacing.xs,
+    },
+    questionsList: {
+      gap: designTokens.spacing.md,
+    },
+    questionCard: {
+      borderRadius: designTokens.borderRadius.xl,
+      padding: designTokens.spacing.lg,
+      borderWidth: 1,
+    },
+    questionHeader: {
+      flexDirection: isRTL ? 'row-reverse' : 'row',
+      alignItems: 'flex-start',
+      marginBottom: designTokens.spacing.md,
+    },
+    questionText: {
+      flex: 1,
+      fontSize: designTokens.typography.body.fontSize,
+      lineHeight: 22,
+      marginHorizontal: isRTL ? designTokens.spacing.sm : designTokens.spacing.xs,
+      marginRight: isRTL ? 0 : designTokens.spacing.sm,
+    },
+    questionNumber: {
+      fontSize: designTokens.typography.body.fontSize,
+      fontWeight: '600',
+      marginRight: designTokens.spacing.xs,
+      marginTop: designTokens.spacing.xs,
+    },
+    pointsBadge: {
+      paddingHorizontal: designTokens.spacing.sm,
+      paddingVertical: designTokens.spacing.xs,
+      borderRadius: designTokens.borderRadius.full,
+      borderWidth: 1,
+      alignSelf: 'flex-start',
+    },
+    pointsText: {
+      fontSize: designTokens.typography.caption2.fontSize,
+      fontWeight: '600',
+    },
+    questionMeta: {
+      marginBottom: designTokens.spacing.md,
+    },
+    questionType: {
+      fontSize: designTokens.typography.caption1.fontSize,
+    },
+    optionsContainer: {
+      marginBottom: designTokens.spacing.md,
+    },
+    optionsTitle: {
+      fontSize: designTokens.typography.caption1.fontSize,
+      fontWeight: '600',
+      marginBottom: designTokens.spacing.xs,
+    },
+    optionRow: {
+      flexDirection: isRTL ? 'row-reverse' : 'row',
+      alignItems: 'center',
+      marginBottom: designTokens.spacing.xs,
+    },
+    optionIndicator: {
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      borderWidth: 2,
+      marginHorizontal: isRTL ? 0 : designTokens.spacing.sm,
+      marginLeft: isRTL ? designTokens.spacing.sm : 0,
+    },
+    optionText: {
+      fontSize: designTokens.typography.body.fontSize,
+      flex: 1,
+      textAlign: isRTL ? 'right' : 'left',
+    },
+    explanationContainer: {
+      padding: designTokens.spacing.md,
+      borderRadius: designTokens.borderRadius.lg,
+      borderLeftWidth: 3,
+      marginTop: designTokens.spacing.sm,
+    },
+    explanationHeader: {
+      flexDirection: isRTL ? 'row-reverse' : 'row',
+      alignItems: 'center',
+      marginBottom: designTokens.spacing.xs,
+    },
+    explanationTitle: {
+      fontSize: designTokens.typography.caption1.fontSize,
+      fontWeight: '600',
+      marginHorizontal: isRTL ? 0 : designTokens.spacing.xs,
+      marginRight: isRTL ? designTokens.spacing.xs : 0,
+    },
+    explanationText: {
+      fontSize: designTokens.typography.caption1.fontSize,
+      lineHeight: 18,
+    },
+    emptyState: {
+      alignItems: 'center',
+      paddingVertical: designTokens.spacing.xxl,
+    },
+    emptyIconContainer: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: designTokens.spacing.lg,
+    },
+    emptyTitle: {
+      fontSize: designTokens.typography.title3.fontSize,
+      fontWeight: designTokens.typography.title3.fontWeight,
+      marginBottom: designTokens.spacing.xs,
+    },
+    emptyText: {
+      fontSize: designTokens.typography.body.fontSize,
+      textAlign: 'center',
+      lineHeight: 22,
+      maxWidth: 280,
+      opacity: 0.7,
+      marginBottom: designTokens.spacing.lg,
+    },
+    primaryButton: {
+      borderRadius: designTokens.borderRadius.xl,
+      padding: designTokens.spacing.lg,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    primaryButtonText: {
+      color: 'white',
+      fontSize: designTokens.typography.body.fontSize,
+      fontWeight: '600',
+      marginLeft: designTokens.spacing.xs,
+    },
+  } as any);
+
+
   const StatCard = ({
     title,
     value,
@@ -227,10 +581,10 @@ export default function ExamDetailScreen() {
       <View style={styles.statIconContainer}>
         <Ionicons name={icon as any} size={20} color={color.icon} />
       </View>
-      <Text style={[styles.statValue, { color: color.text }]}>
+      <Text style={[styles.statValue, { fontFamily, color: color.text }]}>
         {value}
       </Text>
-      <Text style={[styles.statTitle, { color: colors.textSecondary }]}>
+      <Text style={[styles.statTitle, { fontFamily, color: colors.textSecondary }]}>
         {title}
       </Text>
     </View>
@@ -285,7 +639,7 @@ export default function ExamDetailScreen() {
     return (
       <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+        <Text style={[styles.loadingText, { fontFamily, color: colors.textSecondary }]}>
           Loading exam details...
         </Text>
       </View>
@@ -301,10 +655,10 @@ export default function ExamDetailScreen() {
         ]}>
           <Ionicons name="document-text" size={48} color={colors.textTertiary} />
         </View>
-        <Text style={[styles.emptyTitle as any, { color: colors.textPrimary }]}>
+        <Text style={[styles.emptyTitle as any, { fontFamily, color: colors.textPrimary }]}>
           Exam not found
         </Text>
-        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+        <Text style={[styles.emptyText, { fontFamily, color: colors.textSecondary }]}>
           The exam you're looking for doesn't exist or has been removed.
         </Text>
         <TouchableOpacity
@@ -318,7 +672,7 @@ export default function ExamDetailScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { fontFamily, backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[
         styles.header,
@@ -332,7 +686,7 @@ export default function ExamDetailScreen() {
           onPress={() => router.back()}
         >
           <Ionicons name="arrow-back" size={20} color={colors.primary} />
-          <Text style={[styles.backButtonText, { color: colors.primary }]}>
+          <Text style={[styles.backButtonText, { fontFamily, color: colors.primary }]}>
             Back to Exams
           </Text>
         </TouchableOpacity>
@@ -340,20 +694,20 @@ export default function ExamDetailScreen() {
         <View style={styles.headerContent}>
           <View style={styles.titleRow}>
             <View style={styles.titleContainer}>
-              <Text style={[styles.title as any, { color: colors.textPrimary }]}>
+              <Text style={[styles.title as any, { fontFamily, color: colors.textPrimary }]}>
                 {exam.title}
               </Text>
               <View style={styles.subtitleRow}>
                 <View style={styles.subtitleItem}>
                   <Ionicons name="book" size={14} color={colors.textSecondary} />
-                  <Text style={[styles.subtitleText, { color: colors.textSecondary }]}>
+                  <Text style={[styles.subtitleText, { fontFamily, color: colors.textSecondary }]}>
                     {exam.subject}
                   </Text>
                 </View>
                 <View style={styles.dot} />
                 <View style={styles.subtitleItem}>
                   <Ionicons name="people" size={14} color={colors.textSecondary} />
-                  <Text style={[styles.subtitleText, { color: colors.textSecondary }]}>
+                  <Text style={[styles.subtitleText, { fontFamily, color: colors.textSecondary }]}>
                     {exam.class}
                   </Text>
                 </View>
@@ -369,7 +723,7 @@ export default function ExamDetailScreen() {
             ]}>
               <Text style={[
                 styles.statusText,
-                { color: exam.is_active ? '#10B981' : '#6B7280' }
+                { fontFamily, color: exam.is_active ? '#10B981' : '#6B7280' }
               ]}>
                 {exam.is_active ? 'Active' : 'Inactive'}
               </Text>
@@ -462,7 +816,7 @@ export default function ExamDetailScreen() {
                   ...designTokens.shadows.sm,
                 }
               ]}>
-                <Text style={[styles.sectionTitle as any, { color: colors.textPrimary }]}>
+                <Text style={[styles.sectionTitle as any, { fontFamily, color: colors.textPrimary }]}>
                   Exam Overview
                 </Text>
 
@@ -511,39 +865,39 @@ export default function ExamDetailScreen() {
 
                 {/* Exam Settings */}
                 <View style={styles.settingsSection}>
-                  <Text style={[styles.settingsTitle as any, { color: colors.textPrimary }]}>
+                  <Text style={[styles.settingsTitle as any, { fontFamily, color: colors.textPrimary }]}>
                     Settings
                   </Text>
                   <View style={styles.settingsList}>
                     <View style={styles.settingRow}>
-                      <Text style={[styles.settingLabel, { color: colors.textSecondary }]}>
+                      <Text style={[styles.settingLabel, { fontFamily, color: colors.textSecondary }]}>
                         Timed Exam
                       </Text>
-                      <Text style={[styles.settingValue, { color: colors.textPrimary }]}>
+                      <Text style={[styles.settingValue, { fontFamily, color: colors.textPrimary }]}>
                         {exam.settings?.timed ? `${exam.settings.duration} minutes` : 'No time limit'}
                       </Text>
                     </View>
                     <View style={styles.settingRow}>
-                      <Text style={[styles.settingLabel, { color: colors.textSecondary }]}>
+                      <Text style={[styles.settingLabel, { fontFamily, color: colors.textSecondary }]}>
                         Allow Retake
                       </Text>
-                      <Text style={[styles.settingValue, { color: colors.textPrimary }]}>
+                      <Text style={[styles.settingValue, { fontFamily, color: colors.textPrimary }]}>
                         {exam.settings?.allow_retake ? 'Yes' : 'No'}
                       </Text>
                     </View>
                     <View style={styles.settingRow}>
-                      <Text style={[styles.settingLabel, { color: colors.textSecondary }]}>
+                      <Text style={[styles.settingLabel, { fontFamily, color: colors.textSecondary }]}>
                         Random Order
                       </Text>
-                      <Text style={[styles.settingValue, { color: colors.textPrimary }]}>
+                      <Text style={[styles.settingValue, { fontFamily, color: colors.textPrimary }]}>
                         {exam.settings?.random_order ? 'Yes' : 'No'}
                       </Text>
                     </View>
                     <View style={styles.settingRow}>
-                      <Text style={[styles.settingLabel, { color: colors.textSecondary }]}>
+                      <Text style={[styles.settingLabel, { fontFamily, color: colors.textSecondary }]}>
                         Created
                       </Text>
-                      <Text style={[styles.settingValue, { color: colors.textPrimary }]}>
+                      <Text style={[styles.settingValue, { fontFamily, color: colors.textPrimary }]}>
                         {new Date(exam.created_at).toLocaleDateString()}
                       </Text>
                     </View>
@@ -559,7 +913,7 @@ export default function ExamDetailScreen() {
                   ...designTokens.shadows.sm,
                 }
               ]}>
-                <Text style={[styles.sectionTitle as any, { color: colors.textPrimary }]}>
+                <Text style={[styles.sectionTitle as any, { fontFamily, color: colors.textPrimary }]}>
                   Quick Actions
                 </Text>
                 <View style={styles.actionsGrid}>
@@ -606,10 +960,10 @@ export default function ExamDetailScreen() {
                 }
               ]}>
                 <View style={styles.sectionHeader}>
-                  <Text style={[styles.sectionTitle as any, { color: colors.textPrimary }]}>
+                  <Text style={[styles.sectionTitle as any, { fontFamily, color: colors.textPrimary }]}>
                     Questions
                   </Text>
-                  <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+                  <Text style={[styles.sectionSubtitle, { fontFamily, color: colors.textSecondary }]}>
                     {exam.questions?.length || 0} questions • {getTotalPoints()} points
                   </Text>
                 </View>
@@ -630,10 +984,10 @@ export default function ExamDetailScreen() {
                         layout={Layout.springify()}
                       >
                         <View style={styles.questionHeader}>
-                          <Text style={[styles.questionNumber, { color: colors.textSecondary }]}>
+                          <Text style={[styles.questionNumber, { fontFamily, color: colors.textSecondary }]}>
                             {index + 1}.
                           </Text>
-                          <Text style={[styles.questionText, { color: colors.textPrimary }]}>
+                          <Text style={[styles.questionText, { fontFamily, color: colors.textPrimary }]}>
                             {question.question}
                           </Text>
                           <View style={[
@@ -643,15 +997,15 @@ export default function ExamDetailScreen() {
                               borderColor: '#3B82F630'
                             }
                           ]}>
-                            <Text style={[styles.pointsText, { color: '#3B82F6' }]}>
+                            <Text style={[styles.pointsText, { fontFamily, color: '#3B82F6' }]}>
                               {question.points} pt{question.points !== 1 ? 's' : ''}
                             </Text>
                           </View>
                         </View>
 
                         <View style={styles.questionMeta}>
-                          <Text style={[styles.questionType, { color: colors.textSecondary }]}>
-                            Type: <Text style={{ color: colors.textPrimary, fontWeight: '600' }}>
+                          <Text style={[styles.questionType, { fontFamily, color: colors.textSecondary }]}>
+                            Type: <Text style={{ fontFamily, color: colors.textPrimary, fontWeight: '600' }}>
                               {question.type}
                             </Text>
                           </Text>
@@ -659,7 +1013,7 @@ export default function ExamDetailScreen() {
 
                         {question.type === 'mcq' && question.options && (
                           <View style={styles.optionsContainer}>
-                            <Text style={[styles.optionsTitle, { color: colors.textSecondary }]}>
+                            <Text style={[styles.optionsTitle, { fontFamily, color: colors.textSecondary }]}>
                               Options:
                             </Text>
                             {question.options.map((option: string, optIndex: number) => (
@@ -701,11 +1055,11 @@ export default function ExamDetailScreen() {
                           ]}>
                             <View style={styles.explanationHeader}>
                               <Ionicons name="information-circle" size={14} color="#3B82F6" />
-                              <Text style={[styles.explanationTitle, { color: '#3B82F6' }]}>
+                              <Text style={[styles.explanationTitle, { fontFamily, color: '#3B82F6' }]}>
                                 Explanation
                               </Text>
                             </View>
-                            <Text style={[styles.explanationText, { color: colors.textSecondary }]}>
+                            <Text style={[styles.explanationText, { fontFamily, color: colors.textSecondary }]}>
                               {question.explanation}
                             </Text>
                           </View>
@@ -721,10 +1075,10 @@ export default function ExamDetailScreen() {
                     ]}>
                       <Ionicons name="help-circle" size={48} color={colors.textTertiary} />
                     </View>
-                    <Text style={[styles.emptyTitle as any, { color: colors.textPrimary }]}>
+                    <Text style={[styles.emptyTitle as any, { fontFamily, color: colors.textPrimary }]}>
                       No questions added
                     </Text>
-                    <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+                    <Text style={[styles.emptyText, { fontFamily, color: colors.textSecondary }]}>
                       Add questions to this exam to get started
                     </Text>
                   </View>
@@ -746,10 +1100,10 @@ export default function ExamDetailScreen() {
                 }
               ]}>
                 <View style={styles.sectionHeader}>
-                  <Text style={[styles.sectionTitle as any, { color: colors.textPrimary }]}>
+                  <Text style={[styles.sectionTitle as any, { fontFamily, color: colors.textPrimary }]}>
                     Submissions
                   </Text>
-                  <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+                  <Text style={[styles.sectionSubtitle, { fontFamily, color: colors.textSecondary }]}>
                     {exam.submissions_count || 0} submissions
                   </Text>
                 </View>
@@ -770,10 +1124,10 @@ export default function ExamDetailScreen() {
                     ]}>
                       <Ionicons name="document" size={48} color={colors.textTertiary} />
                     </View>
-                    <Text style={[styles.emptyTitle as any, { color: colors.textPrimary }]}>
+                    <Text style={[styles.emptyTitle as any, { fontFamily, color: colors.textPrimary }]}>
                       No submissions yet
                     </Text>
-                    <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+                    <Text style={[styles.emptyText, { fontFamily, color: colors.textSecondary }]}>
                       Student submissions will appear here once they take the exam
                     </Text>
                   </View>
@@ -797,346 +1151,3 @@ export default function ExamDetailScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: designTokens.spacing.xl,
-  },
-  loadingText: {
-    marginTop: designTokens.spacing.md,
-    fontSize: designTokens.typography.body.fontSize,
-  },
-  header: {
-    paddingTop: designTokens.spacing.xxxl,
-    paddingHorizontal: designTokens.spacing.xl,
-    paddingBottom: designTokens.spacing.lg,
-    borderBottomWidth: 1,
-  },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: designTokens.spacing.lg,
-  },
-  backButtonText: {
-    fontSize: designTokens.typography.body.fontSize,
-    fontWeight: '600',
-    marginLeft: designTokens.spacing.xs,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  titleRow: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginRight: designTokens.spacing.md,
-  },
-  titleContainer: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    marginBottom: designTokens.spacing.xs,
-    letterSpacing: -0.3,
-  },
-  subtitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: designTokens.spacing.xs,
-  },
-  subtitleItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  subtitleText: {
-    fontSize: designTokens.typography.caption1.fontSize,
-    marginLeft: designTokens.spacing.xs,
-    opacity: 0.8,
-  },
-  dot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(156, 163, 175, 0.5)',
-    marginHorizontal: designTokens.spacing.sm,
-  },
-  statusBadge: {
-    paddingHorizontal: designTokens.spacing.md,
-    paddingVertical: designTokens.spacing.xs,
-    borderRadius: designTokens.borderRadius.full,
-    borderWidth: 1,
-    alignSelf: 'flex-start',
-  },
-  statusText: {
-    fontSize: designTokens.typography.caption2.fontSize,
-    fontWeight: '600',
-  },
-  actionButtonsRow: {
-    flexDirection: 'row',
-    gap: designTokens.spacing.sm,
-  },
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: designTokens.borderRadius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabsContainer: {
-    flexDirection: 'row',
-    borderRadius: designTokens.borderRadius.xl,
-    padding: designTokens.spacing.xs,
-    marginTop: designTokens.spacing.lg,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: designTokens.spacing.md,
-    borderRadius: designTokens.borderRadius.lg,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  tabText: {
-    fontSize: designTokens.typography.footnote.fontSize,
-    marginLeft: designTokens.spacing.xs,
-  },
-  content: {
-    flex: 1,
-  },
-  contentPadding: {
-    paddingHorizontal: designTokens.spacing.xl,
-    paddingBottom: designTokens.spacing.xxxl,
-  },
-  section: {
-    borderRadius: designTokens.borderRadius.xxl,
-    padding: designTokens.spacing.lg,
-    marginBottom: designTokens.spacing.lg,
-    borderWidth: 0.5,
-    borderColor: 'rgba(0,0,0,0.05)',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: designTokens.spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: designTokens.spacing.xs,
-  },
-  sectionSubtitle: {
-    fontSize: designTokens.typography.body.fontSize,
-    opacity: 0.7,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: designTokens.spacing.sm,
-    marginBottom: designTokens.spacing.lg,
-  },
-  statCard: {
-    width: '48%',
-    borderRadius: designTokens.borderRadius.xl,
-    padding: designTokens.spacing.lg,
-    borderWidth: 0.5,
-    borderColor: 'rgba(0,0,0,0.05)',
-  },
-  statIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: designTokens.spacing.md,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: designTokens.spacing.xs,
-  },
-  statTitle: {
-    fontSize: designTokens.typography.caption1.fontSize,
-    opacity: 0.8,
-  },
-  settingsSection: {
-    borderTopWidth: 0.5,
-    borderTopColor: 'rgba(0,0,0,0.05)',
-    paddingTop: designTokens.spacing.lg,
-  },
-  settingsTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: designTokens.spacing.md,
-  },
-  settingsList: {
-    gap: designTokens.spacing.md,
-  },
-  settingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  settingLabel: {
-    fontSize: designTokens.typography.body.fontSize,
-    opacity: 0.8,
-  },
-  settingValue: {
-    fontSize: designTokens.typography.body.fontSize,
-    fontWeight: '500',
-  },
-  actionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: designTokens.spacing.sm,
-  },
-  actionButton: {
-    width: '48%',
-    borderRadius: designTokens.borderRadius.xl,
-    padding: designTokens.spacing.lg,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: designTokens.spacing.sm,
-  },
-  actionButtonText: {
-    fontSize: designTokens.typography.body.fontSize,
-    marginLeft: designTokens.spacing.xs,
-  },
-  questionsList: {
-    gap: designTokens.spacing.md,
-  },
-  questionCard: {
-    borderRadius: designTokens.borderRadius.xl,
-    padding: designTokens.spacing.lg,
-    borderWidth: 1,
-  },
-  questionHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: designTokens.spacing.md,
-  },
-  questionNumber: {
-    fontSize: designTokens.typography.body.fontSize,
-    fontWeight: '600',
-    marginRight: designTokens.spacing.xs,
-    marginTop: designTokens.spacing.xs,
-  },
-  questionText: {
-    flex: 1,
-    fontSize: designTokens.typography.body.fontSize,
-    lineHeight: 22,
-    marginRight: designTokens.spacing.sm,
-  },
-  pointsBadge: {
-    paddingHorizontal: designTokens.spacing.sm,
-    paddingVertical: designTokens.spacing.xs,
-    borderRadius: designTokens.borderRadius.full,
-    borderWidth: 1,
-    alignSelf: 'flex-start',
-  },
-  pointsText: {
-    fontSize: designTokens.typography.caption2.fontSize,
-    fontWeight: '600',
-  },
-  questionMeta: {
-    marginBottom: designTokens.spacing.md,
-  },
-  questionType: {
-    fontSize: designTokens.typography.caption1.fontSize,
-  },
-  optionsContainer: {
-    marginBottom: designTokens.spacing.md,
-  },
-  optionsTitle: {
-    fontSize: designTokens.typography.caption1.fontSize,
-    fontWeight: '600',
-    marginBottom: designTokens.spacing.xs,
-  },
-  optionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: designTokens.spacing.xs,
-  },
-  optionIndicator: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 2,
-    marginRight: designTokens.spacing.sm,
-  },
-  optionText: {
-    fontSize: designTokens.typography.body.fontSize,
-    flex: 1,
-  },
-  explanationContainer: {
-    padding: designTokens.spacing.md,
-    borderRadius: designTokens.borderRadius.lg,
-    borderLeftWidth: 3,
-    marginTop: designTokens.spacing.sm,
-  },
-  explanationHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: designTokens.spacing.xs,
-  },
-  explanationTitle: {
-    fontSize: designTokens.typography.caption1.fontSize,
-    fontWeight: '600',
-    marginLeft: designTokens.spacing.xs,
-  },
-  explanationText: {
-    fontSize: designTokens.typography.caption1.fontSize,
-    lineHeight: 18,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: designTokens.spacing.xxl,
-  },
-  emptyIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: designTokens.spacing.lg,
-  },
-  emptyTitle: {
-    fontSize: designTokens.typography.title3.fontSize,
-    fontWeight: designTokens.typography.title3.fontWeight,
-    marginBottom: designTokens.spacing.xs,
-  },
-  emptyText: {
-    fontSize: designTokens.typography.body.fontSize,
-    textAlign: 'center',
-    lineHeight: 22,
-    maxWidth: 280,
-    opacity: 0.7,
-    marginBottom: designTokens.spacing.lg,
-  },
-  primaryButton: {
-    borderRadius: designTokens.borderRadius.xl,
-    padding: designTokens.spacing.lg,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    color: 'white',
-    fontSize: designTokens.typography.body.fontSize,
-    fontWeight: '600',
-    marginLeft: designTokens.spacing.xs,
-  },
-} as any);

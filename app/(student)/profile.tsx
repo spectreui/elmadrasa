@@ -20,7 +20,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';import { useTranslati
 
 export default function ProfileScreen() {const { t } = useTranslation();
   const { user, logout } = useAuth();
-  const { colors, isDark, toggleTheme } = useThemeContext();
+  const { fontFamily, colors, isDark, toggleTheme } = useThemeContext();
   const [activeTab, setActiveTab] = useState<'profile' | 'settings'>('profile');
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -278,7 +278,7 @@ export default function ProfileScreen() {const { t } = useTranslation();
                       marginRight: designTokens.spacing.lg
                     }}>
 
-                      <Text style={{
+                      <Text style={{ fontFamily, 
                       fontSize: 28,
                       fontWeight: '700',
                       color: colors.primary
@@ -345,13 +345,13 @@ export default function ProfileScreen() {const { t } = useTranslation();
                     justifyContent: 'space-between',
                     marginBottom: designTokens.spacing.md
                   }}>
-                      <Text style={{
+                      <Text style={{ fontFamily, 
                       fontSize: designTokens.typography.body.fontSize,
                       color: colors.textSecondary
                     }}>
                         Student ID
                       </Text>
-                      <Text style={{
+                      <Text style={{ fontFamily, 
                       fontSize: designTokens.typography.body.fontSize,
                       color: colors.textPrimary,
                       fontWeight: '500'
@@ -364,13 +364,13 @@ export default function ProfileScreen() {const { t } = useTranslation();
                     justifyContent: 'space-between',
                     marginBottom: designTokens.spacing.md
                   }}>
-                      <Text style={{
+                      <Text style={{ fontFamily, 
                       fontSize: designTokens.typography.body.fontSize,
                       color: colors.textSecondary
                     }}>{t("profile.email")}
 
                     </Text>
-                      <Text style={{
+                      <Text style={{ fontFamily, 
                       fontSize: designTokens.typography.body.fontSize,
                       color: colors.textPrimary,
                       fontWeight: '500'
@@ -382,13 +382,13 @@ export default function ProfileScreen() {const { t } = useTranslation();
                     flexDirection: 'row',
                     justifyContent: 'space-between'
                   }}>
-                      <Text style={{
+                      <Text style={{ fontFamily, 
                       fontSize: designTokens.typography.body.fontSize,
                       color: colors.textSecondary
                     }}>{t("profile.accountCreated")}
 
                     </Text>
-                      <Text style={{
+                      <Text style={{ fontFamily, 
                       fontSize: designTokens.typography.body.fontSize,
                       color: colors.textPrimary,
                       fontWeight: '500'
@@ -425,7 +425,7 @@ export default function ProfileScreen() {const { t } = useTranslation();
 
                           {profileStats.averageScore || '0'}%
                         </Text>
-                        <Text style={{
+                        <Text style={{ fontFamily, 
                       fontSize: designTokens.typography.footnote.fontSize,
                       color: colors.textSecondary
                     }}>
@@ -449,7 +449,7 @@ export default function ProfileScreen() {const { t } = useTranslation();
 
                           {profileStats.examsCompleted || '0'}
                         </Text>
-                        <Text style={{
+                        <Text style={{ fontFamily, 
                       fontSize: designTokens.typography.footnote.fontSize,
                       color: colors.textSecondary
                     }}>
@@ -471,7 +471,7 @@ export default function ProfileScreen() {const { t } = useTranslation();
 
                           #{profileStats.rank || '--'}
                         </Text>
-                        <Text style={{
+                        <Text style={{ fontFamily, 
                       fontSize: designTokens.typography.footnote.fontSize,
                       color: colors.textSecondary
                     }}>

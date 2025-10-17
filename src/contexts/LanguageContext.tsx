@@ -56,7 +56,8 @@ const translations = {
     'dashboard.noActivity': 'No recent activity',
     'dashboard.noActivityDesc': 'Your activities will appear here',
     'dashboard.score': 'Score',
-
+    'dashboard.assignedTo': 'Assigned For',
+    
     // Common
     'common.viewAll': 'View All',
     'common.active': 'Active',
@@ -96,6 +97,19 @@ const translations = {
     'months.october': 'October',
     'months.november': 'November',
     'months.december': 'December',
+    'months.january': 'January',
+
+    'months.Feb': 'February',
+    'months.Mar': 'March',
+    'months.Apr': 'April',
+    'months.May': 'May',
+    'months.Jun': 'June',
+    'months.Jul': 'July',
+    'months.Aug': 'August',
+    'months.Sep': 'September',
+    'months.Oct': 'October',
+    'months.Nov': 'November',
+    'months.Dec': 'December',
 
     // Profile
     'profile.title': 'Profile',
@@ -153,6 +167,7 @@ const translations = {
     'auth.logOutConfirm': 'Are you sure you want to sign out?',
 
     // Homework
+    'homework.title': 'Homework',
     'homework.new': 'New Homework',
     'homework.createAssignment': 'Create assignment with questions',
     'homework.assignmentDetails': 'Assignment Details',
@@ -338,6 +353,7 @@ const translations = {
     'dashboard.noActivity': 'لا يوجد نشاط حديث',
     'dashboard.noActivityDesc': 'ستظهر أنشطتك هنا',
     'dashboard.score': 'النتيجة',
+    'dashboard.assignedTo': 'تم تعيينه ل',
 
     'completed': 'اكتمل',
     'pending': 'في انتظار المراجعة',
@@ -396,6 +412,19 @@ const translations = {
     'months.october': 'أكتوبر',
     'months.november': 'نوفمبر',
     'months.december': 'ديسمبر',
+    'months.january': 'يناير',
+
+    'months.Feb': 'فبراير',
+    'months.Mar': 'مارس',
+    'months.Apr': 'أبريل',
+    'months.May': 'مايو',
+    'months.Jun': 'يونيو',
+    'months.Jul': 'يوليو',
+    'months.Aug': 'أغسطس',
+    'months.Sep': 'سبتمبر',
+    'months.Oct': 'أكتوبر',
+    'months.Nov': 'نوفمبر',
+    'months.Dec': 'ديسمبر',
 
     // Statistics
     'statistics.thisWeek': 'هذا الأسبوع',
@@ -456,6 +485,7 @@ const translations = {
     'auth.logOutConfirm': 'هل أنت متأكد أنك تريد تسجيل الخروج؟',
 
     // Homework
+    'homework.title': 'واجب',
     'homework.new': 'واجب جديد',
     'homework.createAssignment': 'إنشاء مهمة مع أسئلة',
     'homework.assignmentDetails': 'تفاصيل المهمة',
@@ -565,7 +595,8 @@ const translations = {
     'exams.selectDueDate': 'اختر تاريخ الاستحقاق',
     'exams.completeAllQuestions': 'يرجى إكمال جميع الأسئلة',
     'exams.dateRangeError': 'يجب أن يكون تاريخ التوفر قبل تاريخ الاستحقاق',
-    'exams.questions': 'سؤال',
+    'exams.questions': 'الأسئلة',
+    'exams.question': 'سؤال',
     'exams.enterQuestion': 'أدخل السؤال',
     'exams.loadFailed': 'فشل تحميل الاختبار',
     'exams.loadClassesFailed': 'فشل تحميل الفصول',
@@ -620,7 +651,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
         let finalLanguage: Language = 'en';
 
-        // Priority: 1. User preference from server, 2. Local storage, 3. Device locale
+        // Priority: 1. Local storage,  2. User preference from server, 3. Device locale
+        if (finalLanguage === 'en') {
+          const savedLanguage = await AsyncStorage.getItem('app-language');
+          if (savedLanguage) {
+            finalLanguage = savedLanguage as Language;
+            console.log('📱 Loaded language from local storage:', finalLanguage);
+          }
+        }
+
+        // If no local preference, check server
         if (isAuthenticated && user) {
           try {
             // Try to get user's language from server
@@ -631,15 +671,6 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
             }
           } catch (error) {
             console.log('Could not fetch language from server, using local storage');
-          }
-        }
-
-        // If no server preference, check local storage
-        if (finalLanguage === 'en') {
-          const savedLanguage = await AsyncStorage.getItem('app-language');
-          if (savedLanguage) {
-            finalLanguage = savedLanguage as Language;
-            console.log('📱 Loaded language from local storage:', finalLanguage);
           }
         }
 

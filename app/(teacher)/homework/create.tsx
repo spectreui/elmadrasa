@@ -45,7 +45,7 @@ interface Question {
 
 export default function CreateHomeworkScreen() {
   const { user } = useAuth();
-  const { colors } = useThemeContext();
+  const { fontFamily, colors } = useThemeContext();
   const [loading, setLoading] = useState(false);
   const [fetchingData, setFetchingData] = useState(true);
   const [teacherClasses, setTeacherClasses] = useState<ClassItem[]>([]);
@@ -297,7 +297,7 @@ export default function CreateHomeworkScreen() {
             backgroundColor: colors.backgroundElevated
           }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.textPrimary }}>
+              <Text style={{ fontFamily,  fontSize: 22, fontWeight: 'bold', color: colors.textPrimary }}>
                 Select {showDatePicker === 'start' ? 'Start' : 'Due'} Date
               </Text>
               <TouchableOpacity
@@ -335,7 +335,7 @@ export default function CreateHomeworkScreen() {
                   <Ionicons name="chevron-back" size={20} color={colors.textPrimary} />
                 </TouchableOpacity>
 
-                <Text style={{ fontSize: 18, fontWeight: '600', color: colors.textPrimary }}>
+                <Text style={{ fontFamily,  fontSize: 18, fontWeight: '600', color: colors.textPrimary }}>
                   {months[selectedMonth]} {selectedYear}
                 </Text>
 
@@ -374,7 +374,7 @@ export default function CreateHomeworkScreen() {
                         borderColor: selectedYear === year ? colors.primary : colors.border
                       }}
                     >
-                      <Text style={{
+                      <Text style={{ fontFamily, 
                         color: selectedYear === year ? '#fff' : colors.textPrimary,
                         fontWeight: selectedYear === year ? '600' : 'normal'
                       }}>
@@ -392,7 +392,7 @@ export default function CreateHomeworkScreen() {
               <View style={{ flexDirection: 'row', marginBottom: 8 }}>
                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
                   <View key={index} style={{ flex: 1, alignItems: 'center' }}>
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                       fontSize: 14,
                       fontWeight: '600',
                       color: colors.textSecondary,
@@ -431,7 +431,7 @@ export default function CreateHomeworkScreen() {
                     disabled={day === null}
                   >
                     {day !== null ? (
-                      <Text style={{
+                      <Text style={{ fontFamily, 
                         fontSize: 16,
                         color: tempDate.getDate() === day &&
                           tempDate.getMonth() === selectedMonth &&
@@ -463,14 +463,14 @@ export default function CreateHomeworkScreen() {
               borderColor: colors.border,
               marginBottom: 24
             }}>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: 14,
                 color: colors.textSecondary,
                 marginBottom: 4
               }}>
                 Selected {showDatePicker === 'start' ? 'Start' : 'Due'} Date
               </Text>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: 18,
                 fontWeight: '600',
                 color: colors.textPrimary
@@ -498,7 +498,7 @@ export default function CreateHomeworkScreen() {
                   alignItems: 'center'
                 }}
               >
-                <Text style={{
+                <Text style={{ fontFamily, 
                   fontSize: 16,
                   fontWeight: '600',
                   color: colors.textPrimary
@@ -516,7 +516,7 @@ export default function CreateHomeworkScreen() {
                   alignItems: 'center'
                 }}
               >
-                <Text style={{
+                <Text style={{ fontFamily, 
                   fontSize: 16,
                   fontWeight: '600',
                   color: '#fff'
@@ -607,7 +607,7 @@ export default function CreateHomeworkScreen() {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{ marginTop: 16, fontSize: 16, color: colors.textSecondary }}>
+        <Text style={{ fontFamily,  marginTop: 16, fontSize: 16, color: colors.textSecondary }}>
           Loading your classes...
         </Text>
       </View>
@@ -635,10 +635,10 @@ export default function CreateHomeworkScreen() {
         }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 28, fontWeight: '800', marginBottom: 4, color: colors.textPrimary }}>
+              <Text style={{ fontFamily,  fontSize: 28, fontWeight: '800', marginBottom: 4, color: colors.textPrimary }}>
                 New Homework
               </Text>
-              <Text style={{ fontSize: 16, color: colors.textSecondary }}>
+              <Text style={{ fontFamily,  fontSize: 16, color: colors.textSecondary }}>
                 Create assignment with questions
               </Text>
             </View>
@@ -668,14 +668,14 @@ export default function CreateHomeworkScreen() {
           }}>
             {/* Basic Info */}
             <View style={{ marginBottom: 24 }}>
-              <Text style={{ fontSize: 20, fontWeight: '700', marginBottom: 20, color: colors.textPrimary }}>
+              <Text style={{ fontFamily,  fontSize: 20, fontWeight: '700', marginBottom: 20, color: colors.textPrimary }}>
                 Assignment Details
               </Text>
 
               <View style={{ gap: 20 }}>
                 {/* Title */}
                 <View>
-                  <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 12, color: colors.textPrimary }}>
+                  <Text style={{ fontFamily,  fontSize: 16, fontWeight: '600', marginBottom: 12, color: colors.textPrimary }}>
                     Title *
                   </Text>
                   <TextInput
@@ -697,7 +697,7 @@ export default function CreateHomeworkScreen() {
 
                 {/* Description */}
                 <View>
-                  <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 12, color: colors.textPrimary }}>
+                  <Text style={{ fontFamily,  fontSize: 16, fontWeight: '600', marginBottom: 12, color: colors.textPrimary }}>
                     Description
                   </Text>
                   <TextInput
@@ -722,7 +722,7 @@ export default function CreateHomeworkScreen() {
 
                 {/* Class Selection */}
                 <View>
-                  <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 12, color: colors.textPrimary }}>
+                  <Text style={{ fontFamily,  fontSize: 16, fontWeight: '600', marginBottom: 12, color: colors.textPrimary }}>
                     Class *
                   </Text>
                   <TouchableOpacity
@@ -738,7 +738,7 @@ export default function CreateHomeworkScreen() {
                     }}
                     onPress={() => setShowClassModal(true)}
                   >
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                       fontSize: 16,
                       color: form.class_name ? colors.textPrimary : colors.textTertiary
                     }}>
@@ -750,7 +750,7 @@ export default function CreateHomeworkScreen() {
 
                 {/* Subject Selection */}
                 <View>
-                  <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 12, color: colors.textPrimary }}>
+                  <Text style={{ fontFamily,  fontSize: 16, fontWeight: '600', marginBottom: 12, color: colors.textPrimary }}>
                     Subject *
                   </Text>
                   <TouchableOpacity
@@ -767,7 +767,7 @@ export default function CreateHomeworkScreen() {
                     onPress={() => form.class_id ? setShowSubjectModal(true) : null}
                     disabled={!form.class_id}
                   >
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                       fontSize: 16,
                       color: form.subject_name && form.class_id ? colors.textPrimary : colors.textTertiary
                     }}>
@@ -790,14 +790,14 @@ export default function CreateHomeworkScreen() {
               paddingTop: 24,
               marginBottom: 24
             }}>
-              <Text style={{ fontSize: 20, fontWeight: '700', marginBottom: 20, color: colors.textPrimary }}>
+              <Text style={{ fontFamily,  fontSize: 20, fontWeight: '700', marginBottom: 20, color: colors.textPrimary }}>
                 Schedule
               </Text>
 
               <View style={{ gap: 20 }}>
                 {/* Start Date */}
                 <View>
-                  <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 12, color: colors.textPrimary }}>
+                  <Text style={{ fontFamily,  fontSize: 16, fontWeight: '600', marginBottom: 12, color: colors.textPrimary }}>
                     Start Date *
                   </Text>
                   <TouchableOpacity
@@ -813,7 +813,7 @@ export default function CreateHomeworkScreen() {
                     }}
                     onPress={() => setShowDatePicker('start')}
                   >
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                       fontSize: 16,
                       color: form.start_date ? colors.textPrimary : colors.textTertiary
                     }}>
@@ -825,7 +825,7 @@ export default function CreateHomeworkScreen() {
 
                 {/* Due Date */}
                 <View>
-                  <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 12, color: colors.textPrimary }}>
+                  <Text style={{ fontFamily,  fontSize: 16, fontWeight: '600', marginBottom: 12, color: colors.textPrimary }}>
                     Due Date *
                   </Text>
                   <TouchableOpacity
@@ -841,7 +841,7 @@ export default function CreateHomeworkScreen() {
                     }}
                     onPress={() => setShowDatePicker('due')}
                   >
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                       fontSize: 16,
                       color: form.due_date ? colors.textPrimary : colors.textTertiary
                     }}>
@@ -860,14 +860,14 @@ export default function CreateHomeworkScreen() {
               paddingTop: 24,
               marginBottom: 24
             }}>
-              <Text style={{ fontSize: 20, fontWeight: '700', marginBottom: 20, color: colors.textPrimary }}>
+              <Text style={{ fontFamily,  fontSize: 20, fontWeight: '700', marginBottom: 20, color: colors.textPrimary }}>
                 Settings
               </Text>
 
               <View style={{ gap: 20 }}>
                 {/* Points */}
                 <View>
-                  <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 12, color: colors.textPrimary }}>
+                  <Text style={{ fontFamily,  fontSize: 16, fontWeight: '600', marginBottom: 12, color: colors.textPrimary }}>
                     Total Points
                   </Text>
                   <TextInput
@@ -901,14 +901,14 @@ export default function CreateHomeworkScreen() {
                   paddingVertical: 8
                 }}>
                   <View style={{ flex: 1 }}>
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                       fontSize: 16,
                       fontWeight: '600',
                       color: colors.textPrimary
                     }}>
                       Include Questions
                     </Text>
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                       fontSize: 14,
                       color: colors.textSecondary,
                       marginTop: 4
@@ -932,14 +932,14 @@ export default function CreateHomeworkScreen() {
                   paddingVertical: 8
                 }}>
                   <View style={{ flex: 1 }}>
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                       fontSize: 16,
                       fontWeight: '600',
                       color: colors.textPrimary
                     }}>
                       Allow Attachments
                     </Text>
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                       fontSize: 14,
                       color: colors.textSecondary,
                       marginTop: 4
@@ -971,7 +971,7 @@ export default function CreateHomeworkScreen() {
                   alignItems: 'center',
                   marginBottom: 20
                 }}>
-                  <Text style={{ fontSize: 20, fontWeight: '700', color: colors.textPrimary }}>
+                  <Text style={{ fontFamily,  fontSize: 20, fontWeight: '700', color: colors.textPrimary }}>
                     Questions
                   </Text>
                   <TouchableOpacity
@@ -986,7 +986,7 @@ export default function CreateHomeworkScreen() {
                     }}
                   >
                     <Ionicons name="add" size={16} color="#fff" />
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                       color: '#fff',
                       fontWeight: '600',
                       marginLeft: 6
@@ -1014,7 +1014,7 @@ export default function CreateHomeworkScreen() {
                         alignItems: 'center',
                         marginBottom: 16
                       }}>
-                        <Text style={{
+                        <Text style={{ fontFamily, 
                           fontSize: 16,
                           fontWeight: '600',
                           color: colors.textPrimary
@@ -1037,7 +1037,7 @@ export default function CreateHomeworkScreen() {
 
                       {/* Question Text */}
                       <View style={{ marginBottom: 16 }}>
-                        <Text style={{
+                        <Text style={{ fontFamily, 
                           fontSize: 14,
                           fontWeight: '600',
                           marginBottom: 8,
@@ -1067,7 +1067,7 @@ export default function CreateHomeworkScreen() {
 
                       {/* Question Type */}
                       <View style={{ marginBottom: 16 }}>
-                        <Text style={{
+                        <Text style={{ fontFamily, 
                           fontSize: 14,
                           fontWeight: '600',
                           marginBottom: 8,
@@ -1090,7 +1090,7 @@ export default function CreateHomeworkScreen() {
                               backgroundColor: question.type === 'text' ? `${colors.primary}15` : colors.backgroundElevated
                             }}
                           >
-                            <Text style={{
+                            <Text style={{ fontFamily, 
                               textAlign: 'center',
                               color: question.type === 'text' ? colors.primary : colors.textPrimary,
                               fontWeight: question.type === 'text' ? '600' : 'normal'
@@ -1114,7 +1114,7 @@ export default function CreateHomeworkScreen() {
                               backgroundColor: question.type === 'mcq' ? `${colors.primary}15` : colors.backgroundElevated
                             }}
                           >
-                            <Text style={{
+                            <Text style={{ fontFamily, 
                               textAlign: 'center',
                               color: question.type === 'mcq' ? colors.primary : colors.textPrimary,
                               fontWeight: question.type === 'mcq' ? '600' : 'normal'
@@ -1134,7 +1134,7 @@ export default function CreateHomeworkScreen() {
                             alignItems: 'center',
                             marginBottom: 8
                           }}>
-                            <Text style={{
+                            <Text style={{ fontFamily, 
                               fontSize: 14,
                               fontWeight: '600',
                               color: colors.textPrimary
@@ -1150,7 +1150,7 @@ export default function CreateHomeworkScreen() {
                                 backgroundColor: colors.primary
                               }}
                             >
-                              <Text style={{
+                              <Text style={{ fontFamily, 
                                 color: '#fff',
                                 fontSize: 12,
                                 fontWeight: '600'
@@ -1180,7 +1180,7 @@ export default function CreateHomeworkScreen() {
                                 justifyContent: 'center',
                                 marginRight: 12
                               }}>
-                                <Text style={{
+                                <Text style={{ fontFamily, 
                                   fontSize: 12,
                                   color: colors.textSecondary
                                 }}>
@@ -1221,7 +1221,7 @@ export default function CreateHomeworkScreen() {
 
                       {/* Points */}
                       <View>
-                        <Text style={{
+                        <Text style={{ fontFamily, 
                           fontSize: 14,
                           fontWeight: '600',
                           marginBottom: 8,
@@ -1252,7 +1252,7 @@ export default function CreateHomeworkScreen() {
                             <Ionicons name="remove" size={16} color={colors.textPrimary} />
                           </TouchableOpacity>
 
-                          <Text style={{
+                          <Text style={{ fontFamily, 
                             fontSize: 16,
                             color: colors.textPrimary,
                             marginHorizontal: 16,
@@ -1309,7 +1309,7 @@ export default function CreateHomeworkScreen() {
               ) : (
                 <>
                   <Ionicons name="book" size={20} color="#ffffff" />
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                     color: '#ffffff',
                     fontSize: 18,
                     fontWeight: '700',
@@ -1341,7 +1341,7 @@ export default function CreateHomeworkScreen() {
             backgroundColor: colors.backgroundElevated
           }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.textPrimary }}>
+              <Text style={{ fontFamily,  fontSize: 22, fontWeight: 'bold', color: colors.textPrimary }}>
                 Select Class
               </Text>
               <TouchableOpacity
@@ -1387,14 +1387,14 @@ export default function CreateHomeworkScreen() {
                   }}
                 >
                   <View style={{ flex: 1 }}>
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                       fontSize: 16,
                       fontWeight: '600',
                       color: colors.textPrimary
                     }}>
                       {classItem.name}
                     </Text>
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                       fontSize: 14,
                       color: colors.textSecondary,
                       marginTop: 4
@@ -1415,7 +1415,7 @@ export default function CreateHomeworkScreen() {
                   justifyContent: 'center'
                 }}>
                   <Ionicons name="book-outline" size={48} color={colors.textTertiary} />
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                     fontSize: 16,
                     color: colors.textSecondary,
                     marginTop: 16,
@@ -1447,7 +1447,7 @@ export default function CreateHomeworkScreen() {
             backgroundColor: colors.backgroundElevated
           }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.textPrimary }}>
+              <Text style={{ fontFamily,  fontSize: 22, fontWeight: 'bold', color: colors.textPrimary }}>
                 Select Subject
               </Text>
               <TouchableOpacity
@@ -1491,14 +1491,14 @@ export default function CreateHomeworkScreen() {
                   }}
                 >
                   <View style={{ flex: 1 }}>
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                       fontSize: 16,
                       fontWeight: '600',
                       color: colors.textPrimary
                     }}>
                       {subject.name}
                     </Text>
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                       fontSize: 14,
                       color: colors.textSecondary,
                       marginTop: 4
@@ -1519,7 +1519,7 @@ export default function CreateHomeworkScreen() {
                   justifyContent: 'center'
                 }}>
                   <Ionicons name="book-outline" size={48} color={colors.textTertiary} />
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                     fontSize: 16,
                     color: colors.textSecondary,
                     marginTop: 16,

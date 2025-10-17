@@ -22,7 +22,7 @@ export default function AssignTeachersScreen() {
   const [showTeacherModal, setShowTeacherModal] = useState(false);
   const [removingAssignment, setRemovingAssignment] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const { colors, isDark } = useThemeContext();
+  const { fontFamily, colors, isDark } = useThemeContext();
   
 
   useEffect(() => {
@@ -209,7 +209,7 @@ export default function AssignTeachersScreen() {
         alignItems: 'center',
       }}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{
+        <Text style={{ fontFamily, 
           marginTop: designTokens.spacing.md,
           fontSize: designTokens.typography.body.fontSize,
           color: colors.textSecondary,
@@ -247,14 +247,14 @@ export default function AssignTeachersScreen() {
             <Ionicons name="arrow-back" size={24} color={colors.primary} />
           </TouchableOpacity>
           <View>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.title1.fontSize,
               fontWeight: designTokens.typography.title1.fontWeight,
               color: colors.textPrimary,
             } as any}>
               Assign Teachers
             </Text>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.body.fontSize,
               color: colors.textSecondary,
             }}>
@@ -286,7 +286,7 @@ export default function AssignTeachersScreen() {
                 alignItems: 'center',
               }}
             >
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: selectedLevel === level.id ? '#ffffff' : colors.textPrimary,
@@ -304,7 +304,7 @@ export default function AssignTeachersScreen() {
       >
         {levelClasses.map(classItem => (
           <View key={classItem.id} style={{ marginBottom: designTokens.spacing.xxl }}>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.title2.fontSize,
               fontWeight: designTokens.typography.title2.fontWeight,
               color: colors.textPrimary,
@@ -413,7 +413,7 @@ export default function AssignTeachersScreen() {
                               </TouchableOpacity>
                             </>
                           ) : (
-                            <Text style={{
+                            <Text style={{ fontFamily, 
                               fontSize: designTokens.typography.footnote.fontSize,
                               color: '#f97316',
                             }}>
@@ -483,7 +483,7 @@ export default function AssignTeachersScreen() {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.title2.fontSize,
                 fontWeight: designTokens.typography.title2.fontWeight,
                 color: colors.textPrimary,

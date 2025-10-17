@@ -26,7 +26,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
     section: '',
     description: ''
   });
-  const { colors, isDark } = useThemeContext();
+  const { fontFamily, colors, isDark } = useThemeContext();
 
 
   useEffect(() => {
@@ -291,7 +291,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
     return (
       <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{
+        <Text style={{ fontFamily, 
           marginTop: designTokens.spacing.lg,
           fontSize: designTokens.typography.body.fontSize,
           color: colors.textSecondary
@@ -318,7 +318,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
           marginBottom: designTokens.spacing.xl
         }}>
           <View style={{ flex: 1 }}>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.largeTitle.fontSize,
               fontWeight: designTokens.typography.largeTitle.fontWeight,
               color: colors.textPrimary,
@@ -326,7 +326,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
             } as any}>{t("dashboard.classes")}
 
             </Text>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.body.fontSize,
               color: colors.textSecondary
             }}>
@@ -347,7 +347,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
             }}>
 
             <Ionicons name="add" size={20} color="#FFFFFF" />
-            <Text style={{
+            <Text style={{ fontFamily, 
               color: '#FFFFFF',
               fontWeight: '600',
               fontSize: designTokens.typography.body.fontSize
@@ -376,7 +376,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
               justifyContent: 'space-between'
             }}>
               <View>
-                <Text style={{
+                <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.title1.fontSize,
                   fontWeight: designTokens.typography.title1.fontWeight,
                   color: colors.textPrimary,
@@ -384,7 +384,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                 } as any}>
                   {classes.length}
                 </Text>
-                <Text style={{
+                <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.footnote.fontSize,
                   fontWeight: '600',
                   color: colors.textSecondary
@@ -419,7 +419,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
               justifyContent: 'space-between'
             }}>
               <View>
-                <Text style={{
+                <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.title1.fontSize,
                   fontWeight: designTokens.typography.title1.fontWeight,
                   color: colors.textPrimary,
@@ -427,7 +427,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                 } as any}>
                   {levels.length}
                 </Text>
-                <Text style={{
+                <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.footnote.fontSize,
                   fontWeight: '600',
                   color: colors.textSecondary
@@ -459,7 +459,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
 
         {/* Classes Grid */}
         <View style={{ marginBottom: designTokens.spacing.xl }}>
-          <Text style={{
+          <Text style={{ fontFamily, 
             fontSize: designTokens.typography.title2.fontSize,
             fontWeight: designTokens.typography.title2.fontWeight,
             color: colors.textPrimary,
@@ -479,7 +479,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
             backgroundColor: colors.backgroundElevated
           }}>
               <Ionicons name="school-outline" size={60} color={colors.textTertiary} style={{ marginBottom: designTokens.spacing.lg }} />
-              <Text style={{
+              <Text style={{ fontFamily, 
               fontSize: designTokens.typography.title2.fontSize,
               fontWeight: designTokens.typography.title2.fontWeight,
               color: colors.textPrimary,
@@ -487,7 +487,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
             } as any}>
                 No Classes Yet
               </Text>
-              <Text style={{
+              <Text style={{ fontFamily, 
               fontSize: designTokens.typography.body.fontSize,
               color: colors.textSecondary,
               textAlign: 'center',
@@ -505,7 +505,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                 ...designTokens.shadows.md
               }}>
 
-                <Text style={{
+                <Text style={{ fontFamily, 
                 color: '#FFFFFF',
                 fontWeight: '600',
                 fontSize: designTokens.typography.body.fontSize
@@ -553,7 +553,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                           <Ionicons name="school" size={24} color={levelColor.text} />
                         </View>
                         <View style={{ flex: 1 }}>
-                          <Text style={{
+                          <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.title3.fontSize,
                           fontWeight: designTokens.typography.title3.fontWeight,
                           color: colors.textPrimary,
@@ -572,7 +572,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                             borderRadius: designTokens.borderRadius.full,
                             backgroundColor: levelColor.bg
                           }}>
-                              <Text style={{
+                              <Text style={{ fontFamily, 
                               fontSize: designTokens.typography.footnote.fontSize,
                               fontWeight: '600',
                               color: levelColor.text
@@ -586,7 +586,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                             borderRadius: designTokens.borderRadius.full,
                             backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.1)'
                           }}>
-                              <Text style={{
+                              <Text style={{ fontFamily, 
                               fontSize: designTokens.typography.footnote.fontSize,
                               fontWeight: '600',
                               color: '#10b981'
@@ -600,7 +600,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                             borderRadius: designTokens.borderRadius.full,
                             backgroundColor: isDark ? 'rgba(156, 163, 175, 0.15)' : 'rgba(156, 163, 175, 0.1)'
                           }}>
-                              <Text style={{
+                              <Text style={{ fontFamily, 
                               fontSize: designTokens.typography.footnote.fontSize,
                               fontWeight: '600',
                               color: colors.textSecondary
@@ -610,7 +610,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                             </View>
                           </View>
                           {classItem.metadata?.description &&
-                        <Text style={{
+                        <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.body.fontSize,
                           color: colors.textSecondary,
                           marginTop: designTokens.spacing.md
@@ -654,14 +654,14 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
               marginBottom: designTokens.spacing.sm
             }}>
               <View>
-                <Text style={{
+                <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.largeTitle.fontSize,
                   fontWeight: designTokens.typography.largeTitle.fontWeight,
                   color: colors.textPrimary
                 } as any}>
                   New Class
                 </Text>
-                <Text style={{
+                <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.body.fontSize,
                   color: colors.textSecondary,
                   marginTop: designTokens.spacing.xs
@@ -696,7 +696,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
             <View style={{ gap: designTokens.spacing.xxl }}>
               {/* Level Selection */}
               <View>
-                <Text style={{
+                <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.title3.fontSize,
                   fontWeight: designTokens.typography.title3.fontWeight,
                   color: colors.textPrimary,
@@ -721,7 +721,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                       paddingHorizontal: designTokens.spacing.lg,
                       justifyContent: 'center'
                     }}>
-                      <Text style={{
+                      <Text style={{ fontFamily, 
                         fontSize: designTokens.typography.body.fontSize,
                         color: formData.level_id ? colors.textPrimary : colors.textTertiary
                       }}>
@@ -744,7 +744,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                           }}
                           onPress={() => setFormData({ ...formData, level_id: '', grade: '', section: '', name: '' })}>
 
-                          <Text style={{
+                          <Text style={{ fontFamily, 
                             fontSize: designTokens.typography.body.fontSize,
                             color: colors.textTertiary
                           }}>
@@ -761,7 +761,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                           }}
                           onPress={() => setFormData({ ...formData, level_id: level.id, grade: '', section: '', name: '' })}>
 
-                            <Text style={{
+                            <Text style={{ fontFamily, 
                             fontSize: designTokens.typography.body.fontSize,
                             color: colors.textPrimary
                           }}>
@@ -778,7 +778,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
               {/* Grade Selection */}
               {formData.level_id &&
               <View>
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.title3.fontSize,
                   fontWeight: designTokens.typography.title3.fontWeight,
                   color: colors.textPrimary,
@@ -798,7 +798,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                     paddingHorizontal: designTokens.spacing.lg,
                     justifyContent: 'center'
                   }}>
-                      <Text style={{
+                      <Text style={{ fontFamily, 
                       fontSize: designTokens.typography.body.fontSize,
                       color: formData.grade ? colors.textPrimary : colors.textTertiary
                     }}>
@@ -821,7 +821,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                         }}
                         onPress={() => setFormData({ ...formData, grade: '', section: '', name: '' })}>
 
-                          <Text style={{
+                          <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.body.fontSize,
                           color: colors.textTertiary
                         }}>
@@ -838,7 +838,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                         }}
                         onPress={() => setFormData({ ...formData, grade: grade.value, section: '', name: '' })}>
 
-                            <Text style={{
+                            <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.body.fontSize,
                           color: colors.textPrimary
                         }}>
@@ -855,7 +855,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
               {/* Section Selection */}
               {formData.grade &&
               <View>
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.title3.fontSize,
                   fontWeight: designTokens.typography.title3.fontWeight,
                   color: colors.textPrimary,
@@ -875,7 +875,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                     paddingHorizontal: designTokens.spacing.lg,
                     justifyContent: 'center'
                   }}>
-                      <Text style={{
+                      <Text style={{ fontFamily, 
                       fontSize: designTokens.typography.body.fontSize,
                       color: formData.section ? colors.textPrimary : colors.textTertiary
                     }}>
@@ -898,7 +898,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                         }}
                         onPress={() => setFormData({ ...formData, section: '' })}>
 
-                          <Text style={{
+                          <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.body.fontSize,
                           color: colors.textTertiary
                         }}>
@@ -915,7 +915,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                         }}
                         onPress={() => setFormData({ ...formData, section: section.value })}>
 
-                            <Text style={{
+                            <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.body.fontSize,
                           color: colors.textPrimary
                         }}>
@@ -938,7 +938,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                 borderWidth: 1,
                 borderColor: isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)'
               }}>
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.footnote.fontSize,
                   fontWeight: '600',
                   color: colors.primary,
@@ -946,7 +946,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                 }}>
                     Class Name
                   </Text>
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.title3.fontSize,
                   fontWeight: designTokens.typography.title3.fontWeight,
                   color: colors.textPrimary
@@ -958,7 +958,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
 
               {/* Description */}
               <View>
-                <Text style={{
+                <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.title3.fontSize,
                   fontWeight: designTokens.typography.title3.fontWeight,
                   color: colors.textPrimary,
@@ -1008,7 +1008,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                 {creating ?
                 <ActivityIndicator size="small" color="#FFFFFF" /> :
 
-                <Text style={{
+                <Text style={{ fontFamily, 
                   color: '#FFFFFF',
                   fontWeight: '600',
                   fontSize: designTokens.typography.body.fontSize
@@ -1046,14 +1046,14 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
               marginBottom: designTokens.spacing.md
             }}>
               <View style={{ flex: 1 }}>
-                <Text style={{
+                <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.largeTitle.fontSize,
                   fontWeight: designTokens.typography.largeTitle.fontWeight,
                   color: colors.textPrimary
                 } as any}>
                   {selectedClass?.name}
                 </Text>
-                <Text style={{
+                <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.body.fontSize,
                   color: colors.textSecondary,
                   marginTop: designTokens.spacing.xs
@@ -1092,7 +1092,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
               paddingVertical: designTokens.spacing.xxxl
             }}>
                 <ActivityIndicator size="large" color={colors.primary} />
-                <Text style={{
+                <Text style={{ fontFamily, 
                 marginTop: designTokens.spacing.lg,
                 fontSize: designTokens.typography.body.fontSize,
                 color: colors.textSecondary
@@ -1110,7 +1110,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                   justifyContent: 'space-between',
                   marginBottom: designTokens.spacing.lg
                 }}>
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                     fontSize: designTokens.typography.title2.fontSize,
                     fontWeight: designTokens.typography.title2.fontWeight,
                     color: colors.textPrimary
@@ -1123,7 +1123,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                     borderRadius: designTokens.borderRadius.full,
                     backgroundColor: `${colors.primary}15`
                   }}>
-                      <Text style={{
+                      <Text style={{ fontFamily, 
                       fontSize: designTokens.typography.footnote.fontSize,
                       fontWeight: '600',
                       color: colors.primary
@@ -1162,7 +1162,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                               <Ionicons name="person" size={20} color="#10b981" />
                             </View>
                             <View style={{ flex: 1 }}>
-                              <Text style={{
+                              <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.body.fontSize,
                           fontWeight: '600',
                           color: colors.textPrimary,
@@ -1170,7 +1170,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                         }}>
                                 {item.teacher?.profile?.name || 'Teacher'}
                               </Text>
-                              <Text style={{
+                              <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.footnote.fontSize,
                           color: colors.textSecondary
                         }}>
@@ -1192,7 +1192,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                   backgroundColor: colors.backgroundElevated
                 }}>
                       <Ionicons name="person-outline" size={48} color={colors.textTertiary} style={{ marginBottom: designTokens.spacing.lg }} />
-                      <Text style={{
+                      <Text style={{ fontFamily, 
                     fontSize: designTokens.typography.title3.fontSize,
                     fontWeight: designTokens.typography.title3.fontWeight,
                     color: colors.textPrimary,
@@ -1200,7 +1200,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                   } as any}>
                         No Teachers
                       </Text>
-                      <Text style={{
+                      <Text style={{ fontFamily, 
                     fontSize: designTokens.typography.body.fontSize,
                     color: colors.textSecondary,
                     textAlign: 'center'
@@ -1219,7 +1219,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                   justifyContent: 'space-between',
                   marginBottom: designTokens.spacing.lg
                 }}>
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                     fontSize: designTokens.typography.title2.fontSize,
                     fontWeight: designTokens.typography.title2.fontWeight,
                     color: colors.textPrimary
@@ -1232,7 +1232,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                     borderRadius: designTokens.borderRadius.full,
                     backgroundColor: `${colors.primary}15`
                   }}>
-                      <Text style={{
+                      <Text style={{ fontFamily, 
                       fontSize: designTokens.typography.footnote.fontSize,
                       fontWeight: '600',
                       color: colors.primary
@@ -1271,7 +1271,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                               <Ionicons name="school" size={20} color="#8b5cf6" />
                             </View>
                             <View style={{ flex: 1 }}>
-                              <Text style={{
+                              <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.body.fontSize,
                           fontWeight: '600',
                           color: colors.textPrimary,
@@ -1279,7 +1279,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                         }}>
                                 {student.full_name || student.user?.profile?.name || 'Student'}
                               </Text>
-                              <Text style={{
+                              <Text style={{ fontFamily, 
                           fontSize: designTokens.typography.footnote.fontSize,
                           color: colors.textSecondary
                         }}>
@@ -1301,7 +1301,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                   backgroundColor: colors.backgroundElevated
                 }}>
                       <Ionicons name="school-outline" size={48} color={colors.textTertiary} style={{ marginBottom: designTokens.spacing.lg }} />
-                      <Text style={{
+                      <Text style={{ fontFamily, 
                     fontSize: designTokens.typography.title3.fontSize,
                     fontWeight: designTokens.typography.title3.fontWeight,
                     color: colors.textPrimary,
@@ -1309,7 +1309,7 @@ export default function ClassesManagementScreen() {const { t } = useTranslation(
                   } as any}>
                         No Students
                       </Text>
-                      <Text style={{
+                      <Text style={{ fontFamily, 
                     fontSize: designTokens.typography.body.fontSize,
                     color: colors.textSecondary,
                     textAlign: 'center'

@@ -19,7 +19,7 @@ export default function AdminDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const { colors } = useThemeContext()
+  const { fontFamily, colors } = useThemeContext()
 
   useEffect(() => {
     loadDashboardData();

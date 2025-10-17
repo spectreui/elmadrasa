@@ -9,8 +9,8 @@ import {
   ActivityIndicator,
   SafeAreaView,
   AppState,
-  AppStateStatus } from
-'react-native';
+  AppStateStatus 
+} from 'react-native';
 import Alert from '@/components/Alert';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { apiService } from '../../../src/services/api';
@@ -18,7 +18,8 @@ import { Exam, Question, ApiResponse } from '../../../src/types';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from '@expo/vector-icons';import { useTranslation } from "@/hooks/useTranslation";
+import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ExamDetails extends Exam {
   questions: Question[];
@@ -30,7 +31,8 @@ interface ExamDetails extends Exam {
   };
 }
 
-export default function StudentExamScreen() {const { t } = useTranslation();
+export default function StudentExamScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const examId = Array.isArray(id) ? id[0] : id;
@@ -45,7 +47,6 @@ export default function StudentExamScreen() {const { t } = useTranslation();
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [showWarning, setShowWarning] = useState(true);
-
 
   // Refs to track auto-submit state
   const isAutoSubmitting = useRef(false);
@@ -78,7 +79,6 @@ export default function StudentExamScreen() {const { t } = useTranslation();
     }
     appState.current = nextAppState;
   };
-
 
   useEffect(() => {
     return () => {
@@ -183,7 +183,7 @@ export default function StudentExamScreen() {const { t } = useTranslation();
     }));
   };
 
-  // FIXED AUTO-SUBMIT FUNCTION
+  // FIXED AUTO-SUBMIT FUNCTION - NOW AUTO-SUBMITS IMMEDIATELY
   const handleAutoSubmit = async (isAuto: boolean = false) => {
     // Prevent multiple auto-submissions
     if (isAutoSubmitting.current || hasSubmitted.current) {
@@ -195,17 +195,8 @@ export default function StudentExamScreen() {const { t } = useTranslation();
     isAutoSubmitting.current = true;
 
     if (isAuto) {
-      // For auto-submissions, show alert then immediately submit
-      Alert.alert(
-        'Auto-Submitted',
-        'Your exam was automatically submitted due to time limit or app backgrounding.',
-        [{
-          text: 'OK',
-          onPress: () => {
-            submitExam(true); // true indicates auto-submit
-          }
-        }]
-      );
+      // Immediately submit without waiting for user interaction
+      submitExam(true); // true indicates auto-submit
     } else {
       submitExam(false); // Manual submit
     }

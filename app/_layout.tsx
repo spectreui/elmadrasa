@@ -17,6 +17,7 @@ import SmartBanner from "@/components/SmartBanner";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AlertProvider } from "@/components/Alert";
 import ElmadrasaAnimation from "@/components/AppleHello";
+import { FancyTabBarProvider } from "@/contexts/TabBarContext";
 
 // Keep splash screen until ready
 SplashScreen.preventAutoHideAsync();
@@ -51,6 +52,12 @@ export default function RootLayout() {
   const [loaded, error] = useFonts({
     "Inter-Regular": require("@/assets/fonts/Inter-Regular.otf"),
     "Inter-SemiBold": require("@/assets/fonts/Inter-SemiBold.otf"),
+    "Sf-Arabic-semibold": require("@/assets/fonts/SF-Arabic-semibold.ttf"),
+    "Sf-Arabic-Rounded": require("@/assets/fonts/SF-Arabic-Rounded.ttf"),
+    "Sf-Pro-Regular": require("@/assets/fonts/SF-Pro-Regular.otf"),
+    "Sf-Pro-Bold": require("@/assets/fonts/SF-Pro-Bold.otf"),
+    "Sf-Pro-Black": require("@/assets/fonts/SF-Pro-Black.otf"),
+    "Sf-Pro-Medium": require("@/assets/fonts/SF-Pro-Medium.otf"),
   });
 
   const [showIntro, setShowIntro] = useState<boolean | null>(null);
@@ -65,7 +72,7 @@ export default function RootLayout() {
 
   // ✅ Pre-warm token (to avoid unauthorized flickers)
   useEffect(() => {
-    AsyncStorage.setItem("introShown", "false");
+    AsyncStorage.setItem("introShown", "true");
     (async () => {
       await apiService.validateToken();
     })();
@@ -140,7 +147,9 @@ export default function RootLayout() {
                     currentPath={pathname}
                   />
                   <SafeAreaView>
-                    <Slot />
+                    <FancyTabBarProvider>
+                      <Slot/>
+                    </FancyTabBarProvider>
                   </SafeAreaView>
                 </NotificationProvider>
               </AlertProvider>

@@ -86,7 +86,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
   const [attachments, setAttachments] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, string>>({});
-  const { colors, isDark } = useThemeContext();
+  const { fontFamily, colors, isDark } = useThemeContext();
   const [showShareModal, setShowShareModal] = useState(false);
 
 
@@ -391,7 +391,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
         alignItems: 'center'
       }}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{
+        <Text style={{ fontFamily,  fontFamily, 
           marginTop: designTokens.spacing.md,
           fontSize: designTokens.typography.body.fontSize,
           color: colors.textSecondary
@@ -412,7 +412,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
         padding: designTokens.spacing.xl
       }}>
         <Ionicons name="document-text-outline" size={64} color={colors.textTertiary} />
-        <Text style={{
+        <Text style={{ fontFamily,  fontFamily, 
           fontSize: designTokens.typography.title2.fontSize,
           fontWeight: designTokens.typography.title2.fontWeight,
           color: colors.textPrimary,
@@ -421,7 +421,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
         } as any}>
           Homework Not Found
         </Text>
-        <Text style={{
+        <Text style={{ fontFamily,  fontFamily, 
           fontSize: designTokens.typography.body.fontSize,
           color: colors.textSecondary,
           textAlign: 'center',
@@ -438,7 +438,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
             borderRadius: designTokens.borderRadius.xl
           }}>
 
-          <Text style={{
+          <Text style={{ fontFamily,  fontFamily, 
             color: 'white',
             fontWeight: '600',
             fontSize: designTokens.typography.body.fontSize
@@ -487,7 +487,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
               }}>
 
               <Ionicons name="arrow-back" size={20} color={colors.textSecondary} />
-              <Text style={{
+              <Text style={{ fontFamily,  fontFamily, 
                 marginLeft: designTokens.spacing.sm,
                 fontSize: designTokens.typography.footnote.fontSize,
                 color: colors.textSecondary
@@ -503,7 +503,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
                 borderRadius: designTokens.borderRadius.full,
                 backgroundColor: dueStatus?.bgColor
               }}>
-                <Text style={{
+                <Text style={{ fontFamily,  fontFamily, 
                   fontSize: designTokens.typography.caption2.fontSize,
                   fontWeight: '600',
                   color: dueStatus?.color
@@ -523,7 +523,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
             </View>
           </View>
 
-          <Text style={{
+          <Text style={{ fontFamily,  fontFamily, 
             fontSize: designTokens.typography.title1.fontSize,
             fontWeight: designTokens.typography.title1.fontWeight,
             color: colors.textPrimary,
@@ -543,7 +543,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
               borderRadius: designTokens.borderRadius.full,
               backgroundColor: '#6B728015'
             }}>
-              <Text style={{
+              <Text style={{ fontFamily,  fontFamily, 
                 fontSize: designTokens.typography.caption1.fontSize,
                 fontWeight: '600',
                 color: '#6B7280'
@@ -557,7 +557,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
               borderRadius: designTokens.borderRadius.full,
               backgroundColor: '#6B728015'
             }}>
-              <Text style={{
+              <Text style={{ fontFamily,  fontFamily, 
                 fontSize: designTokens.typography.caption1.fontSize,
                 fontWeight: '600',
                 color: '#6B7280'
@@ -571,7 +571,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
               borderRadius: designTokens.borderRadius.full,
               backgroundColor: '#6B728015'
             }}>
-              <Text style={{
+              <Text style={{ fontFamily,  fontFamily, 
                 fontSize: designTokens.typography.caption1.fontSize,
                 fontWeight: '600',
                 color: '#6B7280'
@@ -612,7 +612,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
                 <Ionicons name="calendar" size={20} color={dueStatus?.color} />
               </View>
               <View>
-                <Text style={{
+                <Text style={{ fontFamily,  fontFamily, 
                   fontSize: designTokens.typography.headline.fontSize,
                   fontWeight: designTokens.typography.headline.fontWeight,
                   color: colors.textPrimary,
@@ -620,7 +620,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
                 } as any}>
                   Due Date
                 </Text>
-                <Text style={{
+                <Text style={{ fontFamily,  fontFamily, 
                   fontSize: designTokens.typography.footnote.fontSize,
                   color: colors.textSecondary
                 }}>
@@ -640,7 +640,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
             ...designTokens.shadows.sm,
             marginBottom: designTokens.spacing.xl
           }}>
-            <Text style={{
+            <Text style={{ fontFamily,  fontFamily, 
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: colors.textPrimary,
@@ -648,7 +648,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
             } as any}>
               Assignment Description
             </Text>
-            <Text style={{
+            <Text style={{ fontFamily,  fontFamily, 
               fontSize: designTokens.typography.body.fontSize,
               color: colors.textPrimary
             }}>
@@ -667,7 +667,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
             ...designTokens.shadows.sm,
             marginBottom: designTokens.spacing.xl
           }}>
-              <Text style={{
+              <Text style={{ fontFamily,  fontFamily, 
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: colors.textPrimary,
@@ -689,7 +689,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
                     borderBottomColor: colors.border
                   }}>
 
-                    <Text style={{
+                    <Text style={{ fontFamily,  fontFamily, 
                     fontSize: designTokens.typography.body.fontSize,
                     fontWeight: '600',
                     color: colors.textPrimary,
@@ -719,7 +719,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
                       borderRadius: designTokens.borderRadius.lg,
                       backgroundColor: isDark ? '#1F2937' : '#F9FAFB'
                     }}>
-                          <Text style={{
+                          <Text style={{ fontFamily,  fontFamily, 
                         fontSize: designTokens.typography.body.fontSize,
                         color: colors.textPrimary
                       }}>
@@ -740,7 +740,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
 
 
                             {questionGrade.grade !== null &&
-                      <Text style={{
+                      <Text style={{ fontFamily,  fontFamily, 
                         fontSize: designTokens.typography.caption1.fontSize,
                         color: getGradeColor(questionGrade.grade, question.points),
                         fontWeight: '600',
@@ -751,7 +751,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
                       }
 
                             {questionGrade.feedback &&
-                      <Text style={{
+                      <Text style={{ fontFamily,  fontFamily, 
                         fontSize: designTokens.typography.body.fontSize,
                         color: questionGrade.grade !== null ? getGradeColor(questionGrade.grade, question.points) : colors.textSecondary,
                         marginTop: designTokens.spacing.xs
@@ -803,7 +803,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
             backgroundColor: colors.backgroundElevated,
             ...designTokens.shadows.sm
           }}>
-              <Text style={{
+              <Text style={{ fontFamily,  fontFamily, 
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: colors.textPrimary,
@@ -813,7 +813,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
               </Text>
 
               <View style={{ marginBottom: designTokens.spacing.md }}>
-                <Text style={{
+                <Text style={{ fontFamily,  fontFamily, 
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textPrimary,
@@ -826,7 +826,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
                 borderRadius: designTokens.borderRadius.lg,
                 backgroundColor: isDark ? '#1F2937' : '#F9FAFB'
               }}>
-                  <Text style={{
+                  <Text style={{ fontFamily,  fontFamily, 
                   fontSize: designTokens.typography.body.fontSize,
                   color: colors.textPrimary
                 }}>
@@ -837,7 +837,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
 
               {submission?.attachments && submission.attachments.length > 0 &&
             <View style={{ marginBottom: designTokens.spacing.md }}>
-                  <Text style={{
+                  <Text style={{ fontFamily,  fontFamily, 
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textPrimary,
@@ -875,7 +875,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
                 </View>
             }
 
-              <Text style={{
+              <Text style={{ fontFamily,  fontFamily, 
               fontSize: designTokens.typography.caption1.fontSize,
               color: colors.textSecondary,
               marginTop: designTokens.spacing.sm
@@ -893,7 +893,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
               borderWidth: 1,
               borderColor: getGradeColor(submission.grade, homework.points) + '40'
             }}>
-                  <Text style={{
+                  <Text style={{ fontFamily,  fontFamily, 
                 fontSize: designTokens.typography.body.fontSize,
                 fontWeight: '600',
                 color: getGradeColor(submission.grade, homework.points),
@@ -904,7 +904,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
 
                   {/* Component grades */}
                   {submission.text_grade !== undefined && submission.text_grade !== null &&
-              <Text style={{
+              <Text style={{ fontFamily,  fontFamily, 
                 fontSize: designTokens.typography.caption1.fontSize,
                 color: getGradeColor(submission.text_grade, homework.points - (homework.questions?.reduce((sum, q) => sum + q.points, 0) || 0)),
                 marginTop: designTokens.spacing.xs
@@ -914,7 +914,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
               }
 
                   {submission.question_grades && submission.question_grades.length > 0 &&
-              <Text style={{
+              <Text style={{ fontFamily,  fontFamily, 
                 fontSize: designTokens.typography.caption1.fontSize,
                 color: getGradeColor(submission.question_grades.reduce((sum, qg) => sum + (qg.grade || 0), 0), homework.questions?.reduce((sum, q) => sum + q.points, 0) || 0),
                 marginTop: designTokens.spacing.xs
@@ -924,7 +924,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
               }
 
                   {submission.feedback &&
-              <Text style={{
+              <Text style={{ fontFamily,  fontFamily, 
                 fontSize: designTokens.typography.body.fontSize,
                 color: getGradeColor(submission.grade, homework.points),
                 marginTop: designTokens.spacing.sm
@@ -944,7 +944,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
             backgroundColor: colors.backgroundElevated,
             ...designTokens.shadows.sm
           }}>
-              <Text style={{
+              <Text style={{ fontFamily,  fontFamily, 
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: colors.textPrimary,
@@ -954,7 +954,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
               </Text>
 
               <View style={{ marginBottom: designTokens.spacing.lg }}>
-                <Text style={{
+                <Text style={{ fontFamily,  fontFamily, 
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textPrimary,
@@ -989,7 +989,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
 
               {homework.attachments &&
             <View style={{ marginBottom: designTokens.spacing.lg }}>
-                  <Text style={{
+                  <Text style={{ fontFamily,  fontFamily, 
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textPrimary,
@@ -1065,7 +1065,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
                     size={20}
                     color={canSubmit ? "#3B82F6" : colors.textTertiary} />
 
-                        <Text style={{
+                        <Text style={{ fontFamily,  fontFamily, 
                     marginLeft: designTokens.spacing.sm,
                     fontWeight: '600',
                     color: canSubmit ? '#3B82F6' : colors.textTertiary
@@ -1087,7 +1087,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
               borderColor: '#DC262640',
               marginBottom: designTokens.spacing.lg
             }}>
-                  <Text style={{
+                  <Text style={{ fontFamily,  fontFamily, 
                 fontSize: designTokens.typography.body.fontSize,
                 fontWeight: '600',
                 color: '#DC2626',
@@ -1113,7 +1113,7 @@ export default function HomeworkDetailScreen() {const { t } = useTranslation();
                 {submitting ?
               <ActivityIndicator size="small" color="white" /> :
 
-              <Text style={{
+              <Text style={{ fontFamily,  fontFamily, 
                 fontSize: designTokens.typography.body.fontSize,
                 fontWeight: '600',
                 color: 'white'

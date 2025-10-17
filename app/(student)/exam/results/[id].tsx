@@ -61,7 +61,7 @@ export default function ExamResultsScreen() {
   const submissionId = Array.isArray(params.submissionId) ? params.submissionId[0] : params.submissionId;
   const examId = Array.isArray(params.id) ? params.id[0] : params.id;
 
-  const { colors, isDark } = useThemeContext();
+  const { fontFamily, colors, isDark } = useThemeContext();
   const [resultData, setResultData] = useState<ResultData | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAllAnswers, setShowAllAnswers] = useState(false);

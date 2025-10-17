@@ -64,7 +64,7 @@ export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
     type: 'alert',
   });
   const [inputValue, setInputValue] = useState('');
-  const { colors, isDark } = useThemeContext();
+  const { fontFamily, colors, isDark } = useThemeContext();
 
   // Set global reference
   React.useEffect(() => {
@@ -208,7 +208,7 @@ export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
         onRequestClose={handleCancel}
       >
         <View style={styles.overlay}>
-          <View style={[styles.container, { 
+          <View style={[styles.container, { fontFamily, 
             backgroundColor: colors.backgroundElevated,
             shadowColor: isDark ? '#000' : '#gray',
           }]}>

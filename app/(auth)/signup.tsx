@@ -32,7 +32,7 @@ interface Class {
 }
 
 export default function SignUp() {const { t } = useTranslation();
-  const { colors, isDark } = useThemeContext();
+  const { fontFamily, colors, isDark } = useThemeContext();
 
 
   // Form state
@@ -393,7 +393,7 @@ export default function SignUp() {const { t } = useTranslation();
                 color={colors.textPrimary} />
 
             </TouchableOpacity>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.largeTitle.fontSize,
               fontWeight: designTokens.typography.largeTitle.fontWeight,
               color: colors.textPrimary,
@@ -401,7 +401,7 @@ export default function SignUp() {const { t } = useTranslation();
             } as any}>
               Create Account
             </Text>
-            <Text style={{
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.body.fontSize,
               color: colors.textSecondary
             }}>
@@ -413,7 +413,7 @@ export default function SignUp() {const { t } = useTranslation();
           <View style={{ gap: designTokens.spacing.lg }}>
             {/* Name */}
             <View>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textPrimary,
@@ -440,7 +440,7 @@ export default function SignUp() {const { t } = useTranslation();
 
             {/* Email */}
             <View>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textPrimary,
@@ -469,7 +469,7 @@ export default function SignUp() {const { t } = useTranslation();
 
             {/* Role Selection */}
             <View>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textPrimary,
@@ -501,7 +501,7 @@ export default function SignUp() {const { t } = useTranslation();
                     size={20}
                     color={formData.role === 'student' ? colors.primary : colors.textSecondary} />
 
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                     fontWeight: '600',
                     color: formData.role === 'student' ? colors.primary : colors.textPrimary,
                     fontSize: designTokens.typography.body.fontSize
@@ -530,7 +530,7 @@ export default function SignUp() {const { t } = useTranslation();
                     size={20}
                     color={formData.role === 'teacher' ? colors.primary : colors.textSecondary} />
 
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                     fontWeight: '600',
                     color: formData.role === 'teacher' ? colors.primary : colors.textPrimary,
                     fontSize: designTokens.typography.body.fontSize
@@ -546,7 +546,7 @@ export default function SignUp() {const { t } = useTranslation();
             <>
                 {/* Student ID */}
                 <View>
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.footnote.fontSize,
                   fontWeight: '600',
                   color: colors.textPrimary,
@@ -574,7 +574,7 @@ export default function SignUp() {const { t } = useTranslation();
 
                 {/* Level Dropdown */}
                 <View>
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.footnote.fontSize,
                   fontWeight: '600',
                   color: colors.textPrimary,
@@ -599,7 +599,7 @@ export default function SignUp() {const { t } = useTranslation();
                     setShowClassDropdown(false);
                   }}>
 
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                     color: formData.levelId ? colors.textPrimary : colors.textTertiary,
                     fontSize: designTokens.typography.body.fontSize
                   }}>
@@ -638,7 +638,7 @@ export default function SignUp() {const { t } = useTranslation();
                         </View> :
                   levels.length === 0 ?
                   <View style={{ padding: designTokens.spacing.lg }}>
-                          <Text style={{
+                          <Text style={{ fontFamily, 
                       color: colors.textSecondary,
                       textAlign: 'center',
                       fontSize: designTokens.typography.body.fontSize
@@ -657,7 +657,7 @@ export default function SignUp() {const { t } = useTranslation();
                     }}
                     onPress={() => handleLevelSelect(level.id)}>
 
-                            <Text style={{
+                            <Text style={{ fontFamily, 
                       color: colors.textPrimary,
                       fontSize: designTokens.typography.body.fontSize
                     }}>
@@ -672,7 +672,7 @@ export default function SignUp() {const { t } = useTranslation();
 
                 {/* Grade Dropdown */}
                 <View>
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.footnote.fontSize,
                   fontWeight: '600',
                   color: colors.textPrimary,
@@ -702,7 +702,7 @@ export default function SignUp() {const { t } = useTranslation();
                   }}
                   disabled={!formData.levelId}>
 
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                     color: formData.grade ? colors.textPrimary : colors.textTertiary,
                     fontSize: designTokens.typography.body.fontSize
                   }}>
@@ -741,7 +741,7 @@ export default function SignUp() {const { t } = useTranslation();
                         </View> :
                   grades.length === 0 ?
                   <View style={{ padding: designTokens.spacing.lg }}>
-                          <Text style={{
+                          <Text style={{ fontFamily, 
                       color: colors.textSecondary,
                       textAlign: 'center',
                       fontSize: designTokens.typography.body.fontSize
@@ -760,7 +760,7 @@ export default function SignUp() {const { t } = useTranslation();
                     }}
                     onPress={() => handleGradeSelect(grade)}>
 
-                            <Text style={{
+                            <Text style={{ fontFamily, 
                       color: colors.textPrimary,
                       fontSize: designTokens.typography.body.fontSize
                     }}>
@@ -775,7 +775,7 @@ export default function SignUp() {const { t } = useTranslation();
 
                 {/* Class Dropdown */}
                 <View>
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.footnote.fontSize,
                   fontWeight: '600',
                   color: colors.textPrimary,
@@ -805,7 +805,7 @@ export default function SignUp() {const { t } = useTranslation();
                   }}
                   disabled={!formData.grade}>
 
-                    <Text style={{
+                    <Text style={{ fontFamily, 
                     color: formData.classId ? colors.textPrimary : colors.textTertiary,
                     fontSize: designTokens.typography.body.fontSize
                   }}>
@@ -844,7 +844,7 @@ export default function SignUp() {const { t } = useTranslation();
                         </View> :
                   classes.length === 0 ?
                   <View style={{ padding: designTokens.spacing.lg }}>
-                          <Text style={{
+                          <Text style={{ fontFamily, 
                       color: colors.textSecondary,
                       textAlign: 'center',
                       fontSize: designTokens.typography.body.fontSize
@@ -863,7 +863,7 @@ export default function SignUp() {const { t } = useTranslation();
                     }}
                     onPress={() => handleClassSelect(cls.id)}>
 
-                            <Text style={{
+                            <Text style={{ fontFamily, 
                       color: colors.textPrimary,
                       fontSize: designTokens.typography.body.fontSize
                     }}>
@@ -880,7 +880,7 @@ export default function SignUp() {const { t } = useTranslation();
 
             {/* Password */}
             <View>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textPrimary,
@@ -925,7 +925,7 @@ export default function SignUp() {const { t } = useTranslation();
 
             {/* Confirm Password */}
             <View>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: designTokens.typography.footnote.fontSize,
                 fontWeight: '600',
                 color: colors.textPrimary,
@@ -985,7 +985,7 @@ export default function SignUp() {const { t } = useTranslation();
               {loading ?
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <ActivityIndicator color="white" size="small" />
-                  <Text style={{
+                  <Text style={{ fontFamily, 
                   color: 'white',
                   fontWeight: '600',
                   fontSize: designTokens.typography.body.fontSize,
@@ -995,7 +995,7 @@ export default function SignUp() {const { t } = useTranslation();
                   </Text>
                 </View> :
 
-              <Text style={{
+              <Text style={{ fontFamily, 
                 color: 'white',
                 fontWeight: '600',
                 fontSize: designTokens.typography.body.fontSize
@@ -1011,14 +1011,14 @@ export default function SignUp() {const { t } = useTranslation();
               justifyContent: 'center',
               marginTop: designTokens.spacing.xxl
             }}>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 color: colors.textSecondary,
                 fontSize: designTokens.typography.body.fontSize
               }}>
                 Already have an account?{' '}
               </Text>
               <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
-                <Text style={{
+                <Text style={{ fontFamily, 
                   color: colors.primary,
                   fontWeight: '600',
                   fontSize: designTokens.typography.body.fontSize

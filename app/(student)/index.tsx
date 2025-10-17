@@ -20,7 +20,7 @@ import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';import { us
 
 export default function StudentDashboard() {const { t } = useTranslation();
   const { user } = useAuth();
-  const { isDark, colors, toggleTheme } = useThemeContext();
+  const { isDark, colors, fontFamily, toggleTheme } = useThemeContext();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -261,7 +261,7 @@ export default function StudentDashboard() {const { t } = useTranslation();
               justifyContent: 'center',
               marginRight: designTokens.spacing.md
             }}>
-              <Text style={{
+              <Text style={{ fontFamily, 
                 fontSize: 24,
                 fontWeight: '700',
                 color: '#007AFF'

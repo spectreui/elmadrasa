@@ -27,7 +27,7 @@ interface ShareModalProps {
 }
 
 export const ShareModal = ({ visible, onClose, title, link, subject }: ShareModalProps) => {
-  const { colors, isDark } = useThemeContext();
+  const { fontFamily, colors, isDark } = useThemeContext();
   const [copying, setCopying] = useState(false);
     
 
