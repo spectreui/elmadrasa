@@ -464,6 +464,7 @@ const styles = {
     borderRadius: designTokens.borderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
+    margin: designTokens.spacing.xxs,
     ...designTokens.shadows.sm,
   } as any,
   avatar: {
