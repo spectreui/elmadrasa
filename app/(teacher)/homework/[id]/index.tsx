@@ -433,6 +433,7 @@ export default function HomeworkDetailScreen() {
 const styles = {
   container: {
     flex: 1,
+    paddingBottom: 40
   } as any,
   header: {
     paddingTop: 60,
@@ -467,7 +468,7 @@ const styles = {
     flex: 1,
   } as any,
   contentContainer: {
-    paddingBottom: 30,
+    paddingBottom: 40,
   } as any,
   loadingContainer: {
     flex: 1,

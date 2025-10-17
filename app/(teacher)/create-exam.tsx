@@ -1018,7 +1018,7 @@ export default function CreateExamScreen() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: colors.background }}
+      style={{ flex: 1, backgroundColor: colors.background, paddingBottom: 40 }}
       showsVerticalScrollIndicator={false}
     >
       <View style={{ padding: designTokens.spacing.xl }}>

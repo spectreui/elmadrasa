@@ -347,6 +347,7 @@ export default function StatisticsScreen() {
 const styles = {
   container: {
     flex: 1,
+    paddingBottom: 40
   } as any,
   header: {
     paddingTop: 20,
@@ -364,7 +365,7 @@ const styles = {
     flex: 1,
   } as any,
   contentContainer: {
-    paddingBottom: 30,
+    paddingBottom: 40,
   } as any,
   loadingContainer: {
     flex: 1,

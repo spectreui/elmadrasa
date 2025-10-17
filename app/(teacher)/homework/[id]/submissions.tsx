@@ -266,7 +266,7 @@ export default function HomeworkSubmissionsScreen() {
     if (!submission) return null;
 
     return (
-      <View>
+      <View style= {{paddingBottom: 40}}>
         {/* Main Submission Content */}
         <View style={{ marginBottom: designTokens.spacing.md }}>
           <Text style={{ fontFamily, 

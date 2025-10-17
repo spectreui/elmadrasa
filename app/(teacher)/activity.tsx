@@ -191,7 +191,7 @@ export default function TeacherActivity() {
 const styles = {
   container: {
     flex: 1,
-    paddingBottom: 30
+    paddingBottom: 40
   } as any,
   loadingContainer: {
     flex: 1,

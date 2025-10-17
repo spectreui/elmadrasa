@@ -176,7 +176,8 @@ export default function MyClassesScreen() {
 
 const styles = {
   container: {
-    flex: 1
+    flex: 1,
+    paddingBottom: 40
   } as any,
   loadingText: {
     fontSize: designTokens.typography.body.fontSize,

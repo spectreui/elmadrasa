@@ -213,6 +213,7 @@ export default function ExamDetailScreen() {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
+      paddingBottom: 40
     },
     centerContainer: {
       flex: 1,

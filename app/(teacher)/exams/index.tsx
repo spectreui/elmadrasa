@@ -464,7 +464,8 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
 
 const styles = {
   container: {
-    flex: 1
+    flex: 1,
+    paddingBottom: 40
   } as any,
   loadingText: {
     marginTop: designTokens.spacing.md,
