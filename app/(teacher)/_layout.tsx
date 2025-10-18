@@ -86,7 +86,6 @@ export default function TeacherLayout() {
         name="homework/index"
         options={{
           title: t("homeworks"),
-          sceneStyle: {paddingBottom: 40},
           tabBarIcon: ({ color, size, focused }) =>
             <View className="items-center justify-center">
               <Ionicons

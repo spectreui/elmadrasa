@@ -97,7 +97,7 @@ export default function TeacherExamResultsScreen() {
   const [gradingAnswers, setGradingAnswers] = useState<Record<string, { points: number; feedback: string }>>({});
   const [overallFeedback, setOverallFeedback] = useState('');
   const [isGrading, setIsGrading] = useState(false);
-  const { fontFamily, colors } = useThemeContext();
+  const { fontFamily, colors, isDark } = useThemeContext();
 
   useEffect(() => {
     loadExamResults();
@@ -700,7 +700,7 @@ export default function TeacherExamResultsScreen() {
                             {submission.percentage}%
                           </Text>
                           <View style={[styles.gradingStatus, { backgroundColor: getGradingStatus(submission).color + '20' }]}>
-                            <Text style={[styles.gradingStatusText, { color: getGradingStatus(submission).color, fontFamily }]}>
+                            <Text style={[styles.gradingStatusText as any, { color: getGradingStatus(submission).color, fontFamily }]}>
                               {getGradingStatus(submission).text}
                             </Text>
                           </View>
@@ -853,8 +853,8 @@ export default function TeacherExamResultsScreen() {
                     <Text style={[styles.scoreDetails, { fontFamily, color: colors.textSecondary }]}>
                       {selectedSubmission.score}/{selectedSubmission.total_points} {t("exams.points")}
                     </Text>
-                    <View style={[styles.gradingStatusBadge, { backgroundColor: getGradingStatus(selectedSubmission).color + '20' }]}>
-                      <Text style={[styles.gradingStatusBadgeText, { color: getGradingStatus(selectedSubmission).color, fontFamily }]}>
+                    <View style={[styles.gradingStatusBadge as any, { backgroundColor: getGradingStatus(selectedSubmission).color + '20' }]}>
+                      <Text style={[styles.gradingStatusBadgeText as any, { color: getGradingStatus(selectedSubmission).color, fontFamily }]}>
                         {getGradingStatus(selectedSubmission).text}
                       </Text>
                     </View>
@@ -930,7 +930,7 @@ export default function TeacherExamResultsScreen() {
 
                       {answer.answer && (
                         <View style={styles.answerContainer}>
-                          <Text style={[styles.answerLabel, { fontFamily, color: colors.textSecondary }]}>
+                          <Text style={[styles.answerLabel as any, { fontFamily, color: colors.textSecondary }]}>
                             {t("exams.studentAnswer")}:
                           </Text>
                           <Text style={[styles.answerText, { fontFamily, color: colors.textPrimary }]}>
@@ -940,11 +940,11 @@ export default function TeacherExamResultsScreen() {
                       )}
 
                       {answer.needs_grading && (
-                        <View style={styles.gradingSection}>
-                          <Text style={[styles.gradingLabel, { fontFamily, color: colors.textSecondary }]}>
+                        <View style={[styles.gradingSection, {borderTopColor: isDark ? designTokens.colors.dark.border : designTokens.colors.light.border}]}>
+                          <Text style={[styles.gradingLabel as any, { fontFamily, color: colors.textSecondary }]}>
                             {t("exams.pointsAwarded")}:
                           </Text>
-                          <View style={styles.pointsInputContainer}>
+                          <View style={styles.pointsInputContainer as any}>
                             <TextInput
                               style={[styles.pointsInput, {
                                 borderColor: colors.border,
@@ -964,7 +964,7 @@ export default function TeacherExamResultsScreen() {
                             </Text>
                           </View>
 
-                          <Text style={[styles.gradingLabel, { fontFamily, color: colors.textSecondary }]}>
+                          <Text style={[styles.gradingLabel as any, { fontFamily, color: colors.textSecondary }]}>
                             {t("exams.feedback")}:
                           </Text>
                           <TextInput
@@ -988,7 +988,7 @@ export default function TeacherExamResultsScreen() {
 
                       {answer.feedback && !answer.needs_grading && (
                         <View style={styles.feedbackSection}>
-                          <Text style={[styles.feedbackLabel, { fontFamily, color: colors.textSecondary }]}>
+                          <Text style={[styles.feedbackLabel as any, { fontFamily, color: colors.textSecondary }]}>
                             {t("exams.feedback")}:
                           </Text>
                           <Text style={[styles.feedbackText, { fontFamily, color: colors.textPrimary }]}>
@@ -1682,7 +1682,6 @@ const additionalStyles = {
     marginTop: designTokens.spacing.md,
     paddingTop: designTokens.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: designTokens.colors.border
   },
   gradingLabel: {
     fontSize: designTokens.typography.caption1.fontSize,
