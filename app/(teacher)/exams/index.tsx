@@ -1,4 +1,4 @@
-// app/(teacher)/exams/index.tsx - REDESIGNED
+// app/(teacher)/exams/index.tsx - UPDATED
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -6,8 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  RefreshControl } from
-"react-native";
+  RefreshControl 
+} from "react-native";
 import Alert from '@/components/Alert';
 import { router } from "expo-router";
 import { useAuth } from "../../../src/contexts/AuthContext";
@@ -18,9 +18,9 @@ import { useThemeContext } from "../../../src/contexts/ThemeContext";
 import { designTokens } from "../../../src/utils/designTokens";
 import { ShareModal } from "@/components/ShareModal";
 import { generateExamLink } from "@/utils/linking";
+import { useTranslation } from "@/hooks/useTranslation";
 
-// Extended Exam type with optional fields for teacher view
-import { useTranslation } from "@/hooks/useTranslation";interface TeacherExam extends Exam {
+interface TeacherExam extends Exam {
   submissions_count?: number;
   average_score?: number;
   teacher?: {
@@ -31,7 +31,8 @@ import { useTranslation } from "@/hooks/useTranslation";interface TeacherExam ex
   };
 }
 
-export default function TeacherExamsScreen() {const { t } = useTranslation();
+export default function TeacherExamsScreen() {
+  const { t, isRTL } = useTranslation();
   const { fontFamily, colors } = useThemeContext();
   const { user, isAuthenticated } = useAuth();
   const [exams, setExams] = useState<TeacherExam[]>([]);
@@ -42,7 +43,6 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
   const [showShareModal, setShowShareModal] = useState(false);
   const [currentExam, setCurrentExam] = useState<TeacherExam | null>(null);
 
-  // Add share function
   const shareExam = (exam: TeacherExam) => {
     setCurrentExam(exam);
     setShowShareModal(true);
@@ -51,7 +51,6 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
   useEffect(() => {
     if (!loading) {
       if (isAuthenticated && user?.role === 'student') {
-        console.log('➡️ Redirecting student to tabs');
         router.replace('/(student)/homework');
       }
     }
@@ -80,7 +79,7 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
       }
     } catch (error: any) {
       console.error("Failed to load exams:", error);
-      Alert.alert("Error", "Failed to load exams. Please check your connection.");
+      Alert.alert(t("common.error"), t("exams.loadFailed"));
       setAllExams([]);
       setExams([]);
     } finally {
@@ -111,39 +110,68 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
     loadExams();
   };
 
+  // NEW: Toggle exam active status
+  const toggleExamStatus = async (examId: string, currentStatus: boolean) => {
+    try {
+      const newStatus = !currentStatus;
+      const response = await apiService.updateExamStatus(examId, {is_active: newStatus});
+      
+      if (response.data.success) {
+        // Update local state
+        setAllExams(prev => prev.map(exam => 
+          exam.id === examId ? { ...exam, is_active: newStatus } : exam
+        ));
+        filterExamsByTab();
+        
+        Alert.alert(
+          t('common.success'),
+          t(newStatus ? 'exams.activatedSuccess' : 'exams.deactivatedSuccess')
+        );
+      } else {
+        throw new Error(response.data.error);
+      }
+    } catch (error: any) {
+      console.error("Toggle exam status error:", error);
+      Alert.alert(
+        t('common.error'),
+        t('exams.updateFailed')
+      );
+    }
+  };
+
   const deleteExam = async (examId: string, examTitle: string) => {
     Alert.alert(
-      "Delete Exam",
-      `Are you sure you want to delete "${examTitle}"? This action cannot be undone.`,
+      t("common.confirm"),
+      `${t("exams.deleteConfirm")} "${examTitle}"?`,
       [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const response = await apiService.deleteExam(examId);
-            if (response.data.success) {
-              setAllExams((prev) => prev.filter((exam) => exam.id !== examId));
-              setExams((prev) => prev.filter((exam) => exam.id !== examId));
-              Alert.alert("Success", "Exam deleted successfully");
-            } else {
-              Alert.alert("Error", response.data.error || "Failed to delete exam");
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("common.delete"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const response = await apiService.deleteExam(examId);
+              if (response.data.success) {
+                setAllExams((prev) => prev.filter((exam) => exam.id !== examId));
+                setExams((prev) => prev.filter((exam) => exam.id !== examId));
+                Alert.alert(t("common.success"), t("exams.deleteSuccess"));
+              } else {
+                Alert.alert(t("common.error"), response.data.error || t("exams.deleteFailed"));
+              }
+            } catch (error) {
+              console.error("Delete exam error:", error);
+              Alert.alert(t("common.error"), t("exams.deleteFailed"));
             }
-          } catch (error) {
-            console.error("Delete exam error:", error);
-            Alert.alert("Error", "Failed to delete exam");
           }
         }
-      }]
-
+      ]
     );
   };
 
   const getStatusBadge = (exam: TeacherExam) => {
     if (exam.status === "draft" || exam.is_active === false) {
       return {
-        text: "Draft",
+        text: t("exams.inactive"),
         color: colors.background,
         textColor: colors.textSecondary
       };
@@ -151,14 +179,14 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
 
     if (exam.status === "archived") {
       return {
-        text: "Archived",
+        text: t("exams.archived"),
         color: colors.background,
         textColor: colors.textSecondary
       };
     }
 
     return {
-      text: "Active",
+      text: t("exams.active"),
       color: `${colors.success}15`,
       textColor: colors.success
     };
@@ -166,15 +194,15 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
 
   const getTabCounts = () => {
     const activeCount = allExams.filter((exam) =>
-    exam.is_active !== false && exam.status !== "archived" && exam.status !== "draft"
+      exam.is_active !== false && exam.status !== "archived" && exam.status !== "draft"
     ).length;
 
     const draftCount = allExams.filter((exam) =>
-    exam.is_active === false || exam.status === "draft"
+      exam.is_active === false || exam.status === "draft"
     ).length;
 
     const archivedCount = allExams.filter((exam) =>
-    exam.status === "archived"
+      exam.status === "archived"
     ).length;
 
     return { active: activeCount, draft: draftCount, archived: archivedCount };
@@ -186,9 +214,11 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
     return (
       <View style={[styles.container, { fontFamily, backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { fontFamily, color: colors.textSecondary }]}>Loading exams...</Text>
-      </View>);
-
+        <Text style={[styles.loadingText, { fontFamily, color: colors.textSecondary }]}>
+          {t("exams.loading")}
+        </Text>
+      </View>
+    );
   }
 
   return (
@@ -196,127 +226,134 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
       style={[styles.container, { backgroundColor: colors.background }]}
       showsVerticalScrollIndicator={false}
       refreshControl={
-      <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
-      }>
-
+        <RefreshControl 
+          refreshing={refreshing} 
+          onRefresh={onRefresh} 
+          tintColor={colors.primary} 
+        />
+      }
+    >
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.backgroundElevated, borderBottomColor: colors.border }]}>
         <View style={styles.headerContent}>
           <View>
-            <Text style={[styles.headerTitle, { fontFamily, color: colors.textPrimary }]}>My Exams</Text>
+            <Text style={[styles.headerTitle, { fontFamily, color: colors.textPrimary }]}>
+              {t("exams.myExams")}
+            </Text>
             <Text style={[styles.headerSubtitle, { fontFamily, color: colors.textSecondary }]}>
-              {allExams.length} total exams
+              {allExams.length} {t("exams.totalExams")}
             </Text>
           </View>
           <TouchableOpacity
             style={[styles.newButton, { backgroundColor: colors.primary }]}
-            onPress={() => router.push("/(teacher)/create-exam")}>
-
+            onPress={() => router.push("/(teacher)/create-exam")}
+          >
             <Ionicons name="add" size={20} color="white" />
-            <Text style={styles.newButtonText}>New</Text>
+            <Text style={styles.newButtonText}>{t("common.create")}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Tabs */}
         <View style={[styles.tabsContainer, { backgroundColor: colors.background }]}>
           {[
-          { key: "active" as const, label: t("common.active"), icon: "play", count: tabCounts.active },
-          { key: "draft" as const, label: "Drafts", icon: "document", count: tabCounts.draft },
-          { key: "archived" as const, label: "Archived", icon: "archive", count: tabCounts.archived }].
-          map((tab) =>
-          <TouchableOpacity
-            key={tab.key}
-            style={[
-            styles.tab,
-            activeTab === tab.key ?
-            { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm } :
-            {}]
-            }
-            onPress={() => setActiveTab(tab.key)}>
-
-              <Ionicons
-              name={tab.icon as any}
-              size={16}
-              color={activeTab === tab.key ? colors.primary : colors.textTertiary} />
-
-              <Text
+            { key: "active", label: t("common.active"), icon: "play", count: tabCounts.active },
+            { key: "draft", label: t("exams.drafts"), icon: "document", count: tabCounts.draft },
+            { key: "archived", label: t("exams.archived"), icon: "archive", count: tabCounts.archived }
+          ].map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
               style={[
-              styles.tabText,
-              activeTab === tab.key ?
-              { fontFamily, color: colors.primary } :
-              { fontFamily, color: colors.textSecondary }]
-              }>
-
+                styles.tab,
+                activeTab === tab.key && {
+                  backgroundColor: colors.backgroundElevated,
+                  ...designTokens.shadows.sm
+                }
+              ]}
+              onPress={() => setActiveTab(tab.key as any)}
+            >
+              <Ionicons
+                name={tab.icon as any}
+                size={16}
+                color={activeTab === tab.key ? colors.primary : colors.textTertiary}
+              />
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === tab.key
+                    ? { fontFamily, color: colors.primary }
+                    : { fontFamily, color: colors.textSecondary }
+                ]}
+              >
                 {tab.label}
               </Text>
-              {tab.count > 0 &&
-            <View style={[
-            styles.tabBadge,
-            activeTab === tab.key ?
-            { backgroundColor: `${colors.primary}15` } :
-            { backgroundColor: colors.background }]
-            }>
+              {tab.count > 0 && (
+                <View style={[
+                  styles.tabBadge,
+                  activeTab === tab.key
+                    ? { backgroundColor: `${colors.primary}15` }
+                    : { backgroundColor: colors.background }
+                ]}>
                   <Text style={[
-              styles.tabBadgeText,
-              activeTab === tab.key ?
-              { fontFamily, color: colors.primary } :
-              { fontFamily, color: colors.textSecondary }]
-              }>
+                    styles.tabBadgeText,
+                    activeTab === tab.key
+                      ? { fontFamily, color: colors.primary }
+                      : { fontFamily, color: colors.textSecondary }
+                  ]}>
                     {tab.count}
                   </Text>
                 </View>
-            }
+              )}
             </TouchableOpacity>
-          )}
+          ))}
         </View>
       </View>
 
       {/* Exams List */}
       <View style={styles.content}>
-        {exams.length === 0 ?
-        <View style={[styles.emptyState, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+        {exams.length === 0 ? (
+          <View style={[styles.emptyState, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
             <Ionicons
-            name={
-            activeTab === "active" ? "document-text-outline" :
-            activeTab === "draft" ? "create-outline" : "archive-outline"
-            }
-            size={64}
-            color={colors.textTertiary} />
-
+              name={
+                activeTab === "active" ? "document-text-outline" :
+                activeTab === "draft" ? "create-outline" : "archive-outline"
+              }
+              size={64}
+              color={colors.textTertiary}
+            />
             <Text style={[styles.emptyStateTitle, { fontFamily, color: colors.textSecondary }]}>
-              {activeTab === "active" && "No active exams"}
-              {activeTab === "draft" && "No draft exams"}
-              {activeTab === "archived" && "No archived exams"}
+              {activeTab === "active" && t("exams.noActiveExams")}
+              {activeTab === "draft" && t("exams.noDraftExams")}
+              {activeTab === "archived" && t("exams.noArchivedExams")}
             </Text>
             <Text style={[styles.emptyStateSubtitle, { fontFamily, color: colors.textTertiary }]}>
-              {activeTab === "active" && allExams.length > 0 ?
-            "All exams are in draft or archived status" :
-            "Create your first exam to get started"}
+              {activeTab === "active" && allExams.length > 0
+                ? t("exams.allInDraftOrArchived")
+                : t("exams.createFirstExam")}
             </Text>
-            {activeTab === "active" && allExams.length === 0 &&
-          <TouchableOpacity
-            style={[styles.createButton, { backgroundColor: colors.primary }]}
-            onPress={() => router.push("/(teacher)/create-exam")}>
-
+            {activeTab === "active" && allExams.length === 0 && (
+              <TouchableOpacity
+                style={[styles.createButton, { backgroundColor: colors.primary }]}
+                onPress={() => router.push("/(teacher)/create-exam")}
+              >
                 <Ionicons name="add" size={20} color="white" />
-                <Text style={styles.createButtonText}>{t("dashboard.createExam")}</Text>
+                <Text style={styles.createButtonText}>{t("exams.create")}</Text>
               </TouchableOpacity>
-          }
-          </View> :
-
-        <View style={styles.examsList}>
+            )}
+          </View>
+        ) : (
+          <View style={styles.examsList}>
             {exams.map((exam) => {
-            const statusBadge = getStatusBadge(exam);
+              const statusBadge = getStatusBadge(exam);
 
-            return (
-              <View
-                key={exam.id}
-                style={[styles.examCard, {
-                  backgroundColor: colors.backgroundElevated,
-                  borderColor: colors.border,
-                  ...designTokens.shadows.sm
-                }]}>
-
+              return (
+                <View
+                  key={exam.id}
+                  style={[styles.examCard, {
+                    backgroundColor: colors.backgroundElevated,
+                    borderColor: colors.border,
+                    ...designTokens.shadows.sm
+                  }]}
+                >
                   <View style={styles.examHeader}>
                     <View style={styles.examTextContainer}>
                       <Text style={[styles.examTitle, { fontFamily, color: colors.textPrimary }]}>
@@ -338,7 +375,7 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
                         <View style={styles.metaItem}>
                           <Ionicons name="time" size={14} color={colors.textTertiary} />
                           <Text style={[styles.metaText, { fontFamily, color: colors.textSecondary }]}>
-                            {exam.settings?.timed ? `${exam.settings.duration}m` : "Untimed"}
+                            {exam.settings?.timed ? `${exam.settings.duration}m` : t("exams.untimed")}
                           </Text>
                         </View>
                       </View>
@@ -356,20 +393,20 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
                       <View style={styles.statItem}>
                         <Ionicons name="person" size={16} color={colors.primary} />
                         <Text style={[styles.statText, { fontFamily, color: colors.textPrimary }]}>
-                          {exam.submissions_count || 0} submissions
+                          {exam.submissions_count || 0} {t("submissions.submitted")}
                         </Text>
                       </View>
-                      {exam.average_score !== undefined && exam.average_score > 0 &&
-                    <View style={styles.statItem}>
+                      {exam.average_score !== undefined && exam.average_score > 0 && (
+                        <View style={styles.statItem}>
                           <Ionicons name="trophy" size={16} color={colors.warning} />
                           <Text style={[styles.statText, { fontFamily, color: colors.textPrimary }]}>
-                            {exam.average_score}% avg
+                            {exam.average_score}% {t("dashboard.avgScore")}
                           </Text>
                         </View>
-                    }
+                      )}
                     </View>
                     <Text style={[styles.dateText, { fontFamily, color: colors.textTertiary }]}>
-                      {exam.created_at ? new Date(exam.created_at).toLocaleDateString() : "Unknown"}
+                      {exam.created_at ? new Date(exam.created_at).toLocaleDateString() : t("common.unknown")}
                     </Text>
                   </View>
 
@@ -377,58 +414,71 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
                   <View style={styles.actionsRow}>
                     <View style={styles.primaryActions}>
                       <TouchableOpacity
-                      style={[styles.actionButton, { backgroundColor: `${colors.primary}15` }]}
-                      onPress={() => router.push(`/(teacher)/exams/${exam.id}`)}>
-
+                        style={[styles.actionButton, { backgroundColor: `${colors.primary}15` }]}
+                        onPress={() => router.push(`/(teacher)/exams/${exam.id}`)}
+                      >
                         <Ionicons name="eye" size={16} color={colors.primary} />
                         <Text style={[styles.actionText, { fontFamily, color: colors.primary }]}>
-                          View
+                          {t("common.view")}
                         </Text>
                       </TouchableOpacity>
 
-                      {(exam.submissions_count || 0) > 0 &&
-                    <TouchableOpacity
-                      style={[styles.actionButton, { backgroundColor: `${colors.success}15` }]}
-                      onPress={() => router.push(`/(teacher)/exam-results/${exam.id}`)}>
-
+                      {(exam.submissions_count || 0) > 0 && (
+                        <TouchableOpacity
+                          style={[styles.actionButton, { backgroundColor: `${colors.success}15` }]}
+                          onPress={() => router.push(`/(teacher)/exam-results/${exam.id}`)}
+                        >
                           <Ionicons name="bar-chart" size={16} color={colors.success} />
                           <Text style={[styles.actionText, { fontFamily, color: colors.success }]}>
-                            Results
+                            {t("submissions.title")}
                           </Text>
                         </TouchableOpacity>
-                    }
+                      )}
                     </View>
                     <View style={styles.secondaryActions}>
+                      {/* NEW: Toggle Status Button */}
                       <TouchableOpacity
-                      style={[styles.iconButton, { backgroundColor: colors.background }]}
-                      onPress={() => {
-                        if (exam) {
-                          setCurrentExam(exam);
-                          setShowShareModal(true);
-                        }
-                      }}>
-
+                        style={[styles.iconButton, { backgroundColor: colors.background }]}
+                        onPress={() => toggleExamStatus(exam.id, exam.is_active !== false)}
+                      >
+                        <Ionicons 
+                          name={exam.is_active !== false ? "pause" : "play"} 
+                          size={18} 
+                          color={exam.is_active !== false ? colors.warning : colors.success} 
+                        />
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
+                        style={[styles.iconButton, { backgroundColor: colors.background }]}
+                        onPress={() => {
+                          if (exam) {
+                            setCurrentExam(exam);
+                            setShowShareModal(true);
+                          }
+                        }}
+                      >
                         <Ionicons name="share" size={18} color={colors.textSecondary} />
                       </TouchableOpacity>
+                      
                       <TouchableOpacity
-                      style={[styles.iconButton, { backgroundColor: `${colors.error}15` }]}
-                      onPress={() => deleteExam(exam.id, exam.title)}>
-
+                        style={[styles.iconButton, { backgroundColor: `${colors.error}15` }]}
+                        onPress={() => deleteExam(exam.id, exam.title)}
+                      >
                         <Ionicons name="trash" size={18} color={colors.error} />
                       </TouchableOpacity>
                     </View>
                   </View>
-                </View>);
-
-          })}
+                </View>
+              );
+            })}
           </View>
-        }
+        )}
 
         {/* Quick Stats */}
-        {exams.length > 0 &&
-        <View style={styles.statsGrid}>
+        {exams.length > 0 && (
+          <View style={styles.statsGrid}>
             <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-              <Text style={[styles.statLabel, { fontFamily, color: colors.textSecondary }]}>Showing</Text>
+              <Text style={[styles.statLabel, { fontFamily, color: colors.textSecondary }]}>{t("exams.showing")}</Text>
               <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>{exams.length}</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
@@ -444,22 +494,23 @@ export default function TeacherExamsScreen() {const { t } = useTranslation();
               </Text>
             </View>
           </View>
-        }
-      </View>
-      {currentExam &&
-      <ShareModal
-        visible={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        title={`Exam: ${currentExam.title}`}
-        link={generateExamLink(
-          currentExam.id,
-          { subject: currentExam.subject, title: currentExam.title }
         )}
-        subject={currentExam.subject} />
-
-      }
-    </ScrollView>);
-
+      </View>
+      
+      {currentExam && (
+        <ShareModal
+          visible={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          title={`${t("exams.exam")}: ${currentExam.title}`}
+          link={generateExamLink(
+            currentExam.id,
+            { subject: currentExam.subject, title: currentExam.title }
+          )}
+          subject={currentExam.subject}
+        />
+      )}
+    </ScrollView>
+  );
 }
 
 const styles = {

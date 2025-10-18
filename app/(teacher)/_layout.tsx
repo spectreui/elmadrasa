@@ -202,7 +202,21 @@ export default function TeacherLayout() {
           sceneStyle: {paddingBottom: 40},
           href: null // This hides it from tab bar
         }} />
-
+      <Tabs.Screen
+        name="exams/grading/[id]"
+        options={{
+          // sceneStyle: {paddingBottom: 40},
+          tabBarStyle: {
+            display: 'none'
+          },
+          href: null // This hides it from tab bar
+        }} />
+      <Tabs.Screen
+        name="exams/grading/index"
+        options={{
+          sceneStyle: {paddingBottom: 40},
+          href: null // This hides it from tab bar
+        }} />
     </Tabs>
   );
 }

@@ -280,8 +280,7 @@ export default function CreateExamScreen() {
     }
 
     if (questions.some((q) => !q.question ||
-      q.type === 'mcq' && (!q.options.some((opt: string) => opt) || !q.correct_answer) ||
-      q.type === 'text' && !q.correct_answer)) {
+      q.type === 'mcq' && (!q.options.some((opt: string) => opt) || !q.correct_answer))) {
       Alert.alert(t('common.error'), t('exams.completeQuestions'));
       return;
     }
@@ -479,7 +478,8 @@ export default function CreateExamScreen() {
         borderColor: colors.border,
         marginBottom: 16
       }}>
-        <Text style={{ fontFamily,
+        <Text style={{
+          fontFamily,
           fontSize: 16,
           fontWeight: '600',
           color: colors.textPrimary,
@@ -511,7 +511,8 @@ export default function CreateExamScreen() {
                 <Ionicons name="remove" size={16} color="#fff" />
               </TouchableOpacity>
 
-              <Text style={{ fontFamily,
+              <Text style={{
+                fontFamily,
                 fontSize: 20,
                 fontWeight: '600',
                 color: colors.textPrimary,
@@ -561,7 +562,8 @@ export default function CreateExamScreen() {
                 <Ionicons name="remove" size={16} color="#fff" />
               </TouchableOpacity>
 
-              <Text style={{ fontFamily,
+              <Text style={{
+                fontFamily,
                 fontSize: 20,
                 fontWeight: '600',
                 color: colors.textPrimary,
@@ -593,7 +595,8 @@ export default function CreateExamScreen() {
           {/* AM/PM */}
           <View style={{ alignItems: 'center' }}>
             <Text style={{ fontFamily, fontSize: 14, color: colors.textSecondary, marginBottom: 8 }}>&nbsp;</Text>
-            <Text style={{ fontFamily,
+            <Text style={{
+              fontFamily,
               fontSize: 16,
               fontWeight: '600',
               color: colors.textPrimary,
@@ -700,7 +703,8 @@ export default function CreateExamScreen() {
                         borderColor: selectedYear === year ? colors.primary : colors.border
                       }}
                     >
-                      <Text style={{ fontFamily,
+                      <Text style={{
+                        fontFamily,
                         color: selectedYear === year ? '#fff' : colors.textPrimary,
                         fontWeight: selectedYear === year ? '600' : 'normal',
                         textAlign: 'center'
@@ -719,7 +723,8 @@ export default function CreateExamScreen() {
               <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', marginBottom: 8 }}>
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) =>
                   <View key={index} style={{ flex: 1, alignItems: 'center' }}>
-                    <Text style={{ fontFamily,
+                    <Text style={{
+                      fontFamily,
                       fontSize: 14,
                       fontWeight: '600',
                       color: colors.textSecondary,
@@ -772,7 +777,8 @@ export default function CreateExamScreen() {
                       disabled={day === null || isPast}
                     >
                       {day !== null ?
-                        <Text style={{ fontFamily,
+                        <Text style={{
+                          fontFamily,
                           fontSize: 16,
                           color: isSelected ? '#fff' :
                             isToday ? colors.primary :
@@ -801,7 +807,8 @@ export default function CreateExamScreen() {
               borderColor: colors.border,
               marginBottom: 24
             }}>
-              <Text style={{ fontFamily,
+              <Text style={{
+                fontFamily,
                 fontSize: 14,
                 color: colors.textSecondary,
                 marginBottom: 4,
@@ -809,7 +816,8 @@ export default function CreateExamScreen() {
               }}>
                 {t('exams.selectedDate')}
               </Text>
-              <Text style={{ fontFamily,
+              <Text style={{
+                fontFamily,
                 fontSize: 18,
                 fontWeight: '600',
                 color: colors.textPrimary,
@@ -839,7 +847,8 @@ export default function CreateExamScreen() {
                   alignItems: 'center'
                 }}
               >
-                <Text style={{ fontFamily,
+                <Text style={{
+                  fontFamily,
                   fontSize: 16,
                   fontWeight: '600',
                   color: colors.textPrimary
@@ -857,7 +866,8 @@ export default function CreateExamScreen() {
                   alignItems: 'center'
                 }}
               >
-                <Text style={{ fontFamily,
+                <Text style={{
+                  fontFamily,
                   fontSize: 16,
                   fontWeight: '600',
                   color: '#fff'
@@ -918,7 +928,8 @@ export default function CreateExamScreen() {
             borderBottomWidth: 1,
             borderBottomColor: colors.border
           }}>
-            <Text style={{ fontFamily,
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: colors.textPrimary,
@@ -934,7 +945,8 @@ export default function CreateExamScreen() {
           {loading ?
             <View style={{ padding: 30, alignItems: 'center' }}>
               <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={{ fontFamily,
+              <Text style={{
+                fontFamily,
                 color: colors.textSecondary,
                 marginTop: 10,
                 fontSize: designTokens.typography.body.fontSize,
@@ -961,7 +973,8 @@ export default function CreateExamScreen() {
                     justifyContent: 'space-between'
                   }}
                 >
-                  <Text style={{ fontFamily,
+                  <Text style={{
+                    fontFamily,
                     fontSize: designTokens.typography.body.fontSize,
                     color: selectedValue === item[displayKey] ? colors.primary : colors.textPrimary,
                     textAlign: isRTL ? 'right' : 'left'
@@ -979,7 +992,8 @@ export default function CreateExamScreen() {
               }
               ListEmptyComponent={
                 <View style={{ padding: 30, alignItems: 'center' }}>
-                  <Text style={{ fontFamily,
+                  <Text style={{
+                    fontFamily,
                     color: colors.textSecondary,
                     fontSize: designTokens.typography.body.fontSize,
                     textAlign: 'center'
@@ -1004,7 +1018,8 @@ export default function CreateExamScreen() {
         alignItems: 'center'
       }}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{ fontFamily,
+        <Text style={{
+          fontFamily,
           color: colors.textSecondary,
           marginTop: designTokens.spacing.md,
           fontSize: designTokens.typography.body.fontSize,
@@ -1022,7 +1037,8 @@ export default function CreateExamScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={{ padding: designTokens.spacing.xl }}>
-        <Text style={{ fontFamily,
+        <Text style={{
+          fontFamily,
           fontSize: designTokens.typography.title1.fontSize,
           fontWeight: designTokens.typography.title1.fontWeight,
           color: colors.textPrimary,
@@ -1040,7 +1056,8 @@ export default function CreateExamScreen() {
           ...designTokens.shadows.sm,
           marginBottom: designTokens.spacing.lg
         }}>
-          <Text style={{ fontFamily,
+          <Text style={{
+            fontFamily,
             fontSize: designTokens.typography.title2.fontSize,
             fontWeight: designTokens.typography.title2.fontWeight,
             color: colors.textPrimary,
@@ -1051,7 +1068,8 @@ export default function CreateExamScreen() {
           </Text>
 
           <View style={{ marginBottom: designTokens.spacing.lg }}>
-            <Text style={{ fontFamily,
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textSecondary,
               marginBottom: designTokens.spacing.xs,
@@ -1079,7 +1097,8 @@ export default function CreateExamScreen() {
           </View>
 
           <View style={{ marginBottom: designTokens.spacing.lg }}>
-            <Text style={{ fontFamily,
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textSecondary,
               marginBottom: designTokens.spacing.xs,
@@ -1101,7 +1120,8 @@ export default function CreateExamScreen() {
                 alignItems: 'center'
               }}
             >
-              <Text style={{ fontFamily,
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.body.fontSize,
                 color: classLevel ? colors.textPrimary : colors.textTertiary,
                 textAlign: isRTL ? 'right' : 'left'
@@ -1113,7 +1133,8 @@ export default function CreateExamScreen() {
           </View>
 
           <View style={{ marginBottom: designTokens.spacing.lg }}>
-            <Text style={{ fontFamily,
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textSecondary,
               marginBottom: designTokens.spacing.xs,
@@ -1137,7 +1158,8 @@ export default function CreateExamScreen() {
                 opacity: classLevel ? 1 : 0.5
               }}
             >
-              <Text style={{ fontFamily,
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.body.fontSize,
                 color: subject && classLevel ? colors.textPrimary : colors.textTertiary,
                 textAlign: isRTL ? 'right' : 'left'
@@ -1150,7 +1172,8 @@ export default function CreateExamScreen() {
             {loadingSubjects &&
               <View style={{ marginTop: 8, flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center' }}>
                 <ActivityIndicator size="small" color={colors.primary} />
-                <Text style={{ fontFamily,
+                <Text style={{
+                  fontFamily,
                   color: colors.textSecondary,
                   fontSize: designTokens.typography.caption1.fontSize,
                   marginHorizontal: 8,
@@ -1164,7 +1187,8 @@ export default function CreateExamScreen() {
 
           {/* Available From */}
           <View style={{ marginBottom: designTokens.spacing.lg }}>
-            <Text style={{ fontFamily,
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textSecondary,
               marginBottom: designTokens.spacing.xs,
@@ -1186,7 +1210,8 @@ export default function CreateExamScreen() {
                 alignItems: 'center'
               }}
             >
-              <Text style={{ fontFamily,
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.body.fontSize,
                 color: availableFrom ? colors.textPrimary : colors.textTertiary,
                 textAlign: isRTL ? 'right' : 'left'
@@ -1199,7 +1224,8 @@ export default function CreateExamScreen() {
 
           {/* Due Date */}
           <View>
-            <Text style={{ fontFamily,
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textSecondary,
               marginBottom: designTokens.spacing.xs,
@@ -1221,7 +1247,8 @@ export default function CreateExamScreen() {
                 alignItems: 'center'
               }}
             >
-              <Text style={{ fontFamily,
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.body.fontSize,
                 color: dueDate ? colors.textPrimary : colors.textTertiary,
                 textAlign: isRTL ? 'right' : 'left'
@@ -1241,7 +1268,8 @@ export default function CreateExamScreen() {
           ...designTokens.shadows.sm,
           marginBottom: designTokens.spacing.lg
         }}>
-          <Text style={{ fontFamily,
+          <Text style={{
+            fontFamily,
             fontSize: designTokens.typography.title2.fontSize,
             fontWeight: designTokens.typography.title2.fontWeight,
             color: colors.textPrimary,
@@ -1258,7 +1286,8 @@ export default function CreateExamScreen() {
             marginBottom: designTokens.spacing.lg
           }}>
             <View style={{ flex: 1, alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
-              <Text style={{ fontFamily,
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.body.fontSize,
                 color: colors.textPrimary,
                 fontWeight: '500',
@@ -1266,7 +1295,8 @@ export default function CreateExamScreen() {
               }}>
                 {t("exams.timed")}
               </Text>
-              <Text style={{ fontFamily,
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.footnote.fontSize,
                 color: colors.textSecondary,
                 marginTop: 2,
@@ -1286,7 +1316,8 @@ export default function CreateExamScreen() {
 
           {timed &&
             <View style={{ marginBottom: designTokens.spacing.lg }}>
-              <Text style={{ fontFamily,
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.footnote.fontSize,
                 color: colors.textSecondary,
                 marginBottom: designTokens.spacing.xs,
@@ -1322,7 +1353,8 @@ export default function CreateExamScreen() {
             marginBottom: designTokens.spacing.lg
           }}>
             <View style={{ flex: 1, alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
-              <Text style={{ fontFamily,
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.body.fontSize,
                 color: colors.textPrimary,
                 fontWeight: '500',
@@ -1330,7 +1362,8 @@ export default function CreateExamScreen() {
               }}>
                 {t("exams.allowRetake")}
               </Text>
-              <Text style={{ fontFamily,
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.footnote.fontSize,
                 color: colors.textSecondary,
                 marginTop: 2,
@@ -1355,7 +1388,8 @@ export default function CreateExamScreen() {
             marginBottom: designTokens.spacing.lg
           }}>
             <View style={{ flex: 1, alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
-              <Text style={{ fontFamily,
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.body.fontSize,
                 color: colors.textPrimary,
                 fontWeight: '500',
@@ -1363,7 +1397,8 @@ export default function CreateExamScreen() {
               }}>
                 {t("exams.randomOrder")}
               </Text>
-              <Text style={{ fontFamily,
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.footnote.fontSize,
                 color: colors.textSecondary,
                 marginTop: 2,
@@ -1388,7 +1423,8 @@ export default function CreateExamScreen() {
             borderRadius: designTokens.borderRadius.lg,
             marginTop: designTokens.spacing.md
           }}>
-            <Text style={{ fontFamily,
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: colors.textPrimary,
@@ -1405,7 +1441,8 @@ export default function CreateExamScreen() {
               marginBottom: designTokens.spacing.lg
             }}>
               <View style={{ flex: 1, alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
-                <Text style={{ fontFamily,
+                <Text style={{
+                  fontFamily,
                   fontSize: designTokens.typography.body.fontSize,
                   color: colors.textPrimary,
                   fontWeight: '500',
@@ -1413,7 +1450,8 @@ export default function CreateExamScreen() {
                 }}>
                   {t("exams.allowImageSubmissions")}
                 </Text>
-                <Text style={{ fontFamily,
+                <Text style={{
+                  fontFamily,
                   fontSize: designTokens.typography.footnote.fontSize,
                   color: colors.textSecondary,
                   marginTop: 2,
@@ -1432,7 +1470,8 @@ export default function CreateExamScreen() {
             </View>
 
             <View>
-              <Text style={{ fontFamily,
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.footnote.fontSize,
                 color: colors.textSecondary,
                 marginBottom: designTokens.spacing.xs,
@@ -1460,7 +1499,8 @@ export default function CreateExamScreen() {
                   {uploadingAttachment ?
                     <>
                       <ActivityIndicator size="small" color={colors.primary} />
-                      <Text style={{ fontFamily,
+                      <Text style={{
+                        fontFamily,
                         fontSize: designTokens.typography.body.fontSize,
                         color: colors.textPrimary,
                         marginHorizontal: 8,
@@ -1472,7 +1512,8 @@ export default function CreateExamScreen() {
 
                     <>
                       <Ionicons name="attach" size={20} color={colors.textTertiary} />
-                      <Text style={{ fontFamily,
+                      <Text style={{
+                        fontFamily,
                         fontSize: designTokens.typography.body.fontSize,
                         color: colors.textPrimary,
                         marginHorizontal: 8,
@@ -1493,7 +1534,8 @@ export default function CreateExamScreen() {
                 }}>
                   <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                     <View style={{ flex: 1, alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
-                      <Text style={{ fontFamily,
+                      <Text style={{
+                        fontFamily,
                         fontSize: designTokens.typography.body.fontSize,
                         color: colors.textPrimary,
                         marginBottom: 4,
@@ -1501,7 +1543,8 @@ export default function CreateExamScreen() {
                       }} numberOfLines={1}>
                         {attachmentName || t("exams.attachment")}
                       </Text>
-                      <Text style={{ fontFamily,
+                      <Text style={{
+                        fontFamily,
                         fontSize: designTokens.typography.caption1.fontSize,
                         color: colors.textSecondary,
                         textAlign: isRTL ? 'right' : 'left'
@@ -1538,7 +1581,8 @@ export default function CreateExamScreen() {
                 </View>
               }
 
-              <Text style={{ fontFamily,
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.caption1.fontSize,
                 color: colors.textTertiary,
                 marginTop: 8,
@@ -1565,7 +1609,8 @@ export default function CreateExamScreen() {
             alignItems: 'center',
             marginBottom: designTokens.spacing.lg
           }}>
-            <Text style={{ fontFamily,
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.title2.fontSize,
               fontWeight: designTokens.typography.title2.fontWeight,
               color: colors.textPrimary,
@@ -1606,7 +1651,8 @@ export default function CreateExamScreen() {
                 alignItems: 'center',
                 marginBottom: designTokens.spacing.md
               }}>
-                <Text style={{ fontFamily,
+                <Text style={{
+                  fontFamily,
                   fontSize: designTokens.typography.body.fontSize,
                   color: colors.textPrimary,
                   fontWeight: '600',
@@ -1639,7 +1685,8 @@ export default function CreateExamScreen() {
                     alignItems: 'center'
                   }}
                 >
-                  <Text style={{ fontFamily,
+                  <Text style={{
+                    fontFamily,
                     fontSize: designTokens.typography.footnote.fontSize,
                     color: question.type === 'mcq' ? '#fff' : colors.textSecondary,
                     fontWeight: question.type === 'mcq' ? '600' : 'normal',
@@ -1658,7 +1705,8 @@ export default function CreateExamScreen() {
                     alignItems: 'center'
                   }}
                 >
-                  <Text style={{ fontFamily,
+                  <Text style={{
+                    fontFamily,
                     fontSize: designTokens.typography.footnote.fontSize,
                     color: question.type === 'text' ? '#fff' : colors.textSecondary,
                     fontWeight: question.type === 'text' ? '600' : 'normal',
@@ -1671,7 +1719,8 @@ export default function CreateExamScreen() {
 
               {/* Question Input */}
               <View style={{ marginBottom: designTokens.spacing.md }}>
-                <Text style={{ fontFamily,
+                <Text style={{
+                  fontFamily,
                   fontSize: designTokens.typography.footnote.fontSize,
                   color: colors.textSecondary,
                   marginBottom: designTokens.spacing.xs,
@@ -1709,7 +1758,8 @@ export default function CreateExamScreen() {
                     alignItems: 'center',
                     marginBottom: designTokens.spacing.xs
                   }}>
-                    <Text style={{ fontFamily,
+                    <Text style={{
+                      fontFamily,
                       fontSize: designTokens.typography.footnote.fontSize,
                       color: colors.textSecondary,
                       fontWeight: '500',
@@ -1725,7 +1775,8 @@ export default function CreateExamScreen() {
                       }}
                     >
                       <Ionicons name="add-circle" size={16} color={colors.primary} />
-                      <Text style={{ fontFamily,
+                      <Text style={{
+                        fontFamily,
                         fontSize: designTokens.typography.caption1.fontSize,
                         color: colors.primary,
                         marginHorizontal: 4,
@@ -1753,7 +1804,8 @@ export default function CreateExamScreen() {
                         justifyContent: 'center',
                         marginHorizontal: 8
                       }}>
-                        <Text style={{ fontFamily,
+                        <Text style={{
+                          fontFamily,
                           fontSize: designTokens.typography.caption2.fontSize,
                           color: colors.textSecondary,
                           textAlign: 'center'
@@ -1797,18 +1849,19 @@ export default function CreateExamScreen() {
               }
 
               {/* Correct Answer */}
-              <View style={{ marginBottom: designTokens.spacing.md }}>
-                <Text style={{ fontFamily,
-                  fontSize: designTokens.typography.footnote.fontSize,
-                  color: colors.textSecondary,
-                  marginBottom: designTokens.spacing.xs,
-                  fontWeight: '500',
-                  textAlign: isRTL ? 'right' : 'left'
-                }}>
-                  {question.type === 'mcq' ? t("exams.correctAnswer") : t("exams.expectedAnswer")} *
-                </Text>
+              {question.type === 'mcq' ? (
+                <View style={{ marginBottom: designTokens.spacing.md }}>
+                  <Text style={{
+                    fontFamily,
+                    fontSize: designTokens.typography.footnote.fontSize,
+                    color: colors.textSecondary,
+                    marginBottom: designTokens.spacing.xs,
+                    fontWeight: '500',
+                    textAlign: isRTL ? 'right' : 'left'
+                  }}>
+                    {t("exams.correctAnswer")} *
+                  </Text>
 
-                {question.type === 'mcq' ?
                   <View style={{
                     flexDirection: isRTL ? 'row-reverse' : 'row',
                     flexWrap: 'wrap',
@@ -1827,7 +1880,8 @@ export default function CreateExamScreen() {
                           borderColor: question.correct_answer === option ? colors.primary : colors.border
                         }}
                       >
-                        <Text style={{ fontFamily,
+                        <Text style={{
+                          fontFamily,
                           fontSize: designTokens.typography.footnote.fontSize,
                           color: question.correct_answer === option ? '#fff' : colors.textPrimary,
                           fontWeight: question.correct_answer === option ? '600' : 'normal',
@@ -1837,32 +1891,24 @@ export default function CreateExamScreen() {
                         </Text>
                       </TouchableOpacity>
                     )}
-                  </View> :
-
-                  <TextInput
-                    value={question.correct_answer}
-                    onChangeText={(text) => updateQuestion(qIndex, 'correct_answer', text)}
-                    placeholder={t("exams.enterExpectedAnswer")}
-                    placeholderTextColor={colors.textTertiary}
-                    multiline
-                    style={{
-                      backgroundColor: 'transparent',
-                      borderRadius: designTokens.borderRadius.md,
-                      padding: designTokens.spacing.sm,
-                      fontSize: designTokens.typography.body.fontSize,
-                      color: colors.textPrimary,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      minHeight: 60,
-                      textAlign: isRTL ? 'right' : 'left'
-                    }}
-                  />
-                }
-              </View>
+                  </View>
+                </View>
+              ) : (
+                <View style={{ marginBottom: designTokens.spacing.md }}>
+                  <Text style={{
+                    fontFamily,
+                    fontSize: designTokens.typography.caption1.fontSize,
+                    color: colors.textSecondary
+                  }}>
+                    {t("exams.textAnswerNote")}
+                  </Text>
+                </View>
+              )}
 
               {/* Points */}
               <View>
-                <Text style={{ fontFamily,
+                <Text style={{
+                  fontFamily,
                   fontSize: designTokens.typography.footnote.fontSize,
                   color: colors.textSecondary,
                   marginBottom: designTokens.spacing.xs,
@@ -1896,7 +1942,8 @@ export default function CreateExamScreen() {
                     <Ionicons name="remove" size={16} color={colors.textPrimary} />
                   </TouchableOpacity>
 
-                  <Text style={{ fontFamily,
+                  <Text style={{
+                    fontFamily,
                     fontSize: designTokens.typography.body.fontSize,
                     color: colors.textPrimary,
                     marginHorizontal: 16,
@@ -1943,7 +1990,8 @@ export default function CreateExamScreen() {
             ...designTokens.shadows.md
           }}
         >
-          <Text style={{ fontFamily,
+          <Text style={{
+            fontFamily,
             fontSize: designTokens.typography.body.fontSize,
             fontWeight: '600',
             color: '#fff',

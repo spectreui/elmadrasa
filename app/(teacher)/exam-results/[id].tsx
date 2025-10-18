@@ -1,4 +1,4 @@
-// app/(teacher)/exam-results/[id].tsx - Updated with Full Dark Mode Support
+// app/(teacher)/exam-results/[id].tsx - Updated with Grading Features
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -9,15 +9,15 @@ import {
   RefreshControl,
   Modal,
   TextInput
-} from
-  'react-native';
+} from 'react-native';
 import Alert from '@/components/Alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { apiService } from '../../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '@/contexts/ThemeContext';
-import { designTokens } from '../../../src/utils/designTokens'; import { useTranslation } from "@/hooks/useTranslation";
+import { designTokens } from '../../../src/utils/designTokens';
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface Student {
   id: string;
@@ -27,6 +27,16 @@ interface Student {
   email?: string;
 }
 
+interface Answer {
+  question_id: string;
+  answer: string;
+  is_correct: boolean;
+  points: number;
+  needs_grading: boolean;
+  is_manually_graded?: boolean;
+  feedback?: string;
+}
+
 interface Submission {
   id: string;
   student: Student;
@@ -34,8 +44,11 @@ interface Submission {
   total_points: number;
   percentage: number;
   submitted_at: string;
-  answers: any[];
+  answers: Answer[];
   time_spent?: string;
+  needs_manual_grading: boolean;
+  is_manually_graded: boolean;
+  feedback?: string;
 }
 
 interface ExamResults {
@@ -81,8 +94,10 @@ export default function TeacherExamResultsScreen() {
   const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'analytics'>('overview');
   const [feedback, setFeedback] = useState('');
   const [sendingFeedback, setSendingFeedback] = useState(false);
+  const [gradingAnswers, setGradingAnswers] = useState<Record<string, { points: number; feedback: string }>>({});
+  const [overallFeedback, setOverallFeedback] = useState('');
+  const [isGrading, setIsGrading] = useState(false);
   const { fontFamily, colors } = useThemeContext();
-
 
   useEffect(() => {
     loadExamResults();
@@ -119,7 +134,7 @@ export default function TeacherExamResultsScreen() {
             student: {
               id: sub.student?.id || 'unknown',
               name: sub.student?.name || 'Unknown Student',
-              studentId: sub.student?.studentId || 'N/A',
+              studentId: sub.student?.student_id || 'N/A',
               class: sub.student?.class || 'Unknown Class',
               email: sub.student?.email
             },
@@ -128,7 +143,10 @@ export default function TeacherExamResultsScreen() {
             percentage: sub.percentage || Math.round(sub.score / (sub.totalPoints || sub.total_points || 1) * 100),
             submitted_at: sub.submittedAt || sub.submitted_at,
             answers: sub.answers || [],
-            time_spent: sub.time_spent
+            time_spent: sub.time_spent,
+            needs_manual_grading: sub.needs_manual_grading,
+            is_manually_graded: sub.is_manually_graded,
+            feedback: sub.feedback
           }))
         };
 
@@ -160,16 +178,16 @@ export default function TeacherExamResultsScreen() {
       { range: '80-89', count: 0 },
       { range: '70-79', count: 0 },
       { range: '60-69', count: 0 },
-      { range: '0-59', count: 0 }];
-
+      { range: '0-59', count: 0 }
+    ];
 
     submissions.forEach((submission) => {
       const percentage = submission.percentage;
-      if (percentage >= 90) distribution[0].count++; else
-        if (percentage >= 80) distribution[1].count++; else
-          if (percentage >= 70) distribution[2].count++; else
-            if (percentage >= 60) distribution[3].count++; else
-              distribution[4].count++;
+      if (percentage >= 90) distribution[0].count++;
+      else if (percentage >= 80) distribution[1].count++;
+      else if (percentage >= 70) distribution[2].count++;
+      else if (percentage >= 60) distribution[3].count++;
+      else distribution[4].count++;
     });
 
     return distribution;
@@ -202,9 +220,32 @@ export default function TeacherExamResultsScreen() {
     return colors.error;
   };
 
+  const getGradingStatus = (submission: Submission) => {
+    if (submission.needs_manual_grading) {
+      return { text: t("submissions.pending"), color: colors.warning };
+    } else if (submission.is_manually_graded) {
+      return { text: t("submissions.graded"), color: colors.success };
+    } else {
+      return { text: t("submissions.autoGraded"), color: colors.primary };
+    }
+  }
+
   const handleViewSubmission = (submission: Submission) => {
     setSelectedSubmission(submission);
     setDetailModalVisible(true);
+    setOverallFeedback(submission.feedback || '');
+
+    // Initialize grading answers state
+    const initialGrading: Record<string, { points: number; feedback: string }> = {};
+    submission.answers.forEach(answer => {
+      if (answer.needs_grading) {
+        initialGrading[answer.question_id] = {
+          points: answer.points,
+          feedback: answer.feedback || ''
+        };
+      }
+    });
+    setGradingAnswers(initialGrading);
   };
 
   const handleSendFeedback = () => {
@@ -225,6 +266,85 @@ export default function TeacherExamResultsScreen() {
       Alert.alert('Error', 'Failed to send feedback. Please try again.');
     } finally {
       setSendingFeedback(false);
+    }
+  };
+
+  const handleGradeAnswer = (questionId: string, points: number, feedback: string) => {
+    setGradingAnswers(prev => ({
+      ...prev,
+      [questionId]: { points, feedback }
+    }));
+  };
+
+  const submitGrading = async () => {
+    if (!selectedSubmission) return;
+
+    try {
+      setIsGrading(true);
+
+      // Calculate new total score
+      let newScore = 0;
+      const updatedAnswers = selectedSubmission.answers.map(answer => {
+        if (answer.needs_grading && gradingAnswers[answer.question_id]) {
+          const gradedAnswer = gradingAnswers[answer.question_id];
+          newScore += gradedAnswer.points;
+          return {
+            ...answer,
+            points: gradedAnswer.points,
+            feedback: gradedAnswer.feedback,
+            is_manually_graded: true
+          };
+        }
+        newScore += answer.points;
+        return answer;
+      });
+
+      // Update submission
+      const response = await apiService.gradeSubmission(
+        selectedSubmission.id,
+        newScore,
+        overallFeedback,
+        updatedAnswers,
+      );
+
+      if (response.data.success) {
+        // Update local state
+        setResults(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            submissions: prev.submissions.map(sub =>
+              sub.id === selectedSubmission.id
+                ? {
+                  ...sub,
+                  score: newScore,
+                  percentage: Math.round((newScore / sub.total_points) * 100),
+                  answers: updatedAnswers,
+                  is_manually_graded: true,
+                  feedback: overallFeedback
+                }
+                : sub
+            )
+          };
+        });
+
+        setSelectedSubmission({
+          ...selectedSubmission,
+          score: newScore,
+          percentage: Math.round((newScore / selectedSubmission.total_points) * 100),
+          answers: updatedAnswers,
+          is_manually_graded: true,
+          feedback: overallFeedback
+        });
+
+        Alert.alert(t("common.success"), t("submissions.gradingSuccess"));
+      } else {
+        throw new Error(response.data.error);
+      }
+    } catch (error) {
+      Alert.alert(t("common.error"), t("submissions.gradingFailed"));
+    } finally {
+      setIsGrading(false);
     }
   };
 
@@ -274,28 +394,31 @@ export default function TeacherExamResultsScreen() {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText as any, { fontFamily, color: colors.textSecondary }]}>Loading exam results...</Text>
-      </View>);
-
+        <Text style={[styles.loadingText as any, { fontFamily, color: colors.textSecondary }]}>
+          {t("exams.loadingResults")}
+        </Text>
+      </View>
+    );
   }
 
   if (!results) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <Ionicons name="alert-circle" size={64} color={colors.textTertiary} />
-        <Text style={[styles.emptyTitle as any, { fontFamily, color: colors.textPrimary }]}>No results found</Text>
+        <Text style={[styles.emptyTitle as any, { fontFamily, color: colors.textPrimary }]}>
+          {t("exams.noResultsFound")}
+        </Text>
         <Text style={[styles.emptySubtitle as any, { fontFamily, color: colors.textSecondary }]}>
-          Unable to load exam results. The exam may not exist or you may not have permission to view it.
+          {t("exams.resultsLoadFailed")}
         </Text>
         <TouchableOpacity
           style={[styles.backButton as any, { backgroundColor: colors.primary }]}
           onPress={() => router.back()}>
-
           <Ionicons name="chevron-back" size={20} color="white" />
-          <Text style={styles.backButtonText as any}>Go Back</Text>
+          <Text style={styles.backButtonText as any}>{t("common.back")}</Text>
         </TouchableOpacity>
-      </View>);
-
+      </View>
+    );
   }
 
   const performanceInsights = getPerformanceInsights();
@@ -308,21 +431,20 @@ export default function TeacherExamResultsScreen() {
           <TouchableOpacity
             style={[styles.headerButton as any, { backgroundColor: colors.background }]}
             onPress={() => router.back()}>
-
             <Ionicons name="chevron-back" size={20} color={colors.primary} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { fontFamily, color: colors.textPrimary }]}>Exam Analytics</Text>
+          <Text style={[styles.headerTitle, { fontFamily, color: colors.textPrimary }]}>
+            {t("exams.examAnalytics")}
+          </Text>
           <View style={styles.headerActions as any}>
             <TouchableOpacity
               style={[styles.headerButton as any, { backgroundColor: colors.background }]}
               onPress={shareResults}>
-
               <Ionicons name="share" size={18} color={colors.primary} />
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.headerButton as any, { backgroundColor: colors.background }]}
               onPress={exportResults}>
-
               <Ionicons name="download" size={18} color={colors.primary} />
             </TouchableOpacity>
           </View>
@@ -337,7 +459,7 @@ export default function TeacherExamResultsScreen() {
           </Text>
           {results.exam.teacher &&
             <Text style={[styles.examCreator, { fontFamily, color: colors.textTertiary }]}>
-              Created by: {results.exam.teacher.profile.name}
+              {t("exams.createdBy")}: {results.exam.teacher.profile.name}
             </Text>
           }
         </View>
@@ -347,35 +469,32 @@ export default function TeacherExamResultsScreen() {
           {[
             { key: 'overview', label: t("dashboard.overview"), icon: 'stats-chart' },
             { key: 'submissions', label: t("submissions.title"), icon: 'document-text' },
-            { key: 'analytics', label: t("dashboard.analytics"), icon: 'analytics' }].
-            map((tab) =>
-              <TouchableOpacity
-                key={tab.key}
+            { key: 'analytics', label: t("dashboard.analytics"), icon: 'analytics' }
+          ].map((tab) =>
+            <TouchableOpacity
+              key={tab.key}
+              style={[
+                styles.tab as any,
+                activeTab === tab.key ?
+                  { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm } :
+                  {}
+              ]}
+              onPress={() => setActiveTab(tab.key as any)}>
+              <Ionicons
+                name={tab.icon as any}
+                size={16}
+                color={activeTab === tab.key ? colors.primary : colors.textTertiary} />
+              <Text
                 style={[
-                  styles.tab as any,
+                  styles.tabText as any,
                   activeTab === tab.key ?
-                    { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm } :
-                    {}]
-                }
-                onPress={() => setActiveTab(tab.key as any)}>
-
-                <Ionicons
-                  name={tab.icon as any}
-                  size={16}
-                  color={activeTab === tab.key ? colors.primary : colors.textTertiary} />
-
-                <Text
-                  style={[
-                    styles.tabText as any,
-                    activeTab === tab.key ?
-                      { fontFamily, color: colors.primary } :
-                      { fontFamily, color: colors.textSecondary }]
-                  }>
-
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            )}
+                    { fontFamily, color: colors.primary } :
+                    { fontFamily, color: colors.textSecondary }
+                ]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -387,7 +506,6 @@ export default function TeacherExamResultsScreen() {
             refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor={colors.primary} />
-
         }>
 
         {activeTab === 'overview' ?
@@ -398,9 +516,13 @@ export default function TeacherExamResultsScreen() {
                 <View style={styles.insightsHeader as any}>
                   <Ionicons name="bulb" size={20} color={colors.warning} style={styles.insightsIcon} />
                   <View style={styles.insightsText}>
-                    <Text style={[styles.insightsTitle as any, { fontFamily, color: colors.textPrimary }]}>{t("dashboard.performanceInsights")}</Text>
+                    <Text style={[styles.insightsTitle as any, { fontFamily, color: colors.textPrimary }]}>
+                      {t("dashboard.performanceInsights")}
+                    </Text>
                     {performanceInsights.map((insight, index) =>
-                      <Text key={index} style={[styles.insightItem, { fontFamily, color: colors.textSecondary }]}>• {insight}</Text>
+                      <Text key={index} style={[styles.insightItem, { fontFamily, color: colors.textSecondary }]}>
+                        • {insight}
+                      </Text>
                     )}
                   </View>
                 </View>
@@ -411,50 +533,78 @@ export default function TeacherExamResultsScreen() {
             <View style={styles.statsGrid as any}>
               <View style={[styles.statCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
                 <View style={styles.statHeader as any}>
-                  <Text style={[styles.statLabel as any, { fontFamily, color: colors.textSecondary }]}>{t("submissions.title")}</Text>
+                  <Text style={[styles.statLabel as any, { fontFamily, color: colors.textSecondary }]}>
+                    {t("submissions.title")}
+                  </Text>
                   <Ionicons name="people" size={20} color={colors.primary} />
                 </View>
-                <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>{results.statistics.totalSubmissions}</Text>
+                <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>
+                  {results.statistics.totalSubmissions}
+                </Text>
                 <Text style={[styles.statSubtitle, { fontFamily, color: colors.textTertiary }]}>
-                  {results.statistics.totalStudents ? `of ${results.statistics.totalStudents} students` : 'Total submissions'}
+                  {results.statistics.totalStudents ?
+                    `${t("exams.of")} ${results.statistics.totalStudents} ${t("exams.students")}` :
+                    t("exams.totalSubmissions")}
                 </Text>
               </View>
 
               <View style={[styles.statCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
                 <View style={styles.statHeader as any}>
-                  <Text style={[styles.statLabel as any, { fontFamily, color: colors.textSecondary }]}>{t("dashboard.avgScore")}</Text>
+                  <Text style={[styles.statLabel as any, { fontFamily, color: colors.textSecondary }]}>
+                    {t("dashboard.avgScore")}
+                  </Text>
                   <Ionicons name="trophy" size={20} color={colors.success} />
                 </View>
-                <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>{results.statistics.averageScore}%</Text>
-                <Text style={[styles.statSubtitle, { fontFamily, color: colors.textTertiary }]}>{t("dashboard.classAverage")}</Text>
+                <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>
+                  {results.statistics.averageScore}%
+                </Text>
+                <Text style={[styles.statSubtitle, { fontFamily, color: colors.textTertiary }]}>
+                  {t("dashboard.classAverage")}
+                </Text>
               </View>
 
               <View style={[styles.statCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
                 <View style={styles.statHeader as any}>
-                  <Text style={[styles.statLabel as any, { fontFamily, color: colors.textSecondary }]}>Highest</Text>
+                  <Text style={[styles.statLabel as any, { fontFamily, color: colors.textSecondary }]}>
+                    {t("exams.highest")}
+                  </Text>
                   <Ionicons name="trending-up" size={20} color={colors.warning} />
                 </View>
-                <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>{results.statistics.highestScore}%</Text>
-                <Text style={[styles.statSubtitle, { fontFamily, color: colors.textTertiary }]}>Top score</Text>
+                <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>
+                  {results.statistics.highestScore}%
+                </Text>
+                <Text style={[styles.statSubtitle, { fontFamily, color: colors.textTertiary }]}>
+                  {t("exams.topScore")}
+                </Text>
               </View>
 
               <View style={[styles.statCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
                 <View style={styles.statHeader as any}>
-                  <Text style={[styles.statLabel as any, { fontFamily, color: colors.textSecondary }]}>Lowest</Text>
+                  <Text style={[styles.statLabel as any, { fontFamily, color: colors.textSecondary }]}>
+                    {t("exams.lowest")}
+                  </Text>
                   <Ionicons name="trending-down" size={20} color={colors.error} />
                 </View>
-                <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>{results.statistics.lowestScore}%</Text>
-                <Text style={[styles.statSubtitle, { fontFamily, color: colors.textTertiary }]}>Lowest score</Text>
+                <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>
+                  {results.statistics.lowestScore}%
+                </Text>
+                <Text style={[styles.statSubtitle, { fontFamily, color: colors.textTertiary }]}>
+                  {t("exams.lowestScore")}
+                </Text>
               </View>
             </View>
 
             {/* Score Distribution */}
             <View style={[styles.scoreDistributionCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-              <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>Score Distribution</Text>
+              <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>
+                {t("exams.scoreDistribution")}
+              </Text>
               <View style={styles.distributionList}>
                 {results.scoreDistribution.map((item, index) =>
                   <View key={index} style={styles.distributionItem as any}>
-                    <Text style={[styles.distributionRange as any, { fontFamily, color: colors.textPrimary }]}>{item.range}</Text>
+                    <Text style={[styles.distributionRange as any, { fontFamily, color: colors.textPrimary }]}>
+                      {item.range}
+                    </Text>
                     <View style={[styles.distributionBar as any, { backgroundColor: colors.background }]}>
                       <View
                         style={[
@@ -464,9 +614,10 @@ export default function TeacherExamResultsScreen() {
                             width: `${item.count / Math.max(...results.scoreDistribution.map((s) => s.count), 1) * 100}%`
                           }]
                         } />
-
                     </View>
-                    <Text style={[styles.distributionCount as any, { fontFamily, color: colors.textSecondary }]}>{item.count}</Text>
+                    <Text style={[styles.distributionCount as any, { fontFamily, color: colors.textSecondary }]}>
+                      {item.count}
+                    </Text>
                   </View>
                 )}
               </View>
@@ -475,15 +626,17 @@ export default function TeacherExamResultsScreen() {
             {/* Top Performers */}
             <View style={[styles.topPerformersCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
               <View style={styles.cardHeader as any}>
-                <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>Top Performers</Text>
+                <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>
+                  {t("exams.topPerformers")}
+                </Text>
                 <Text style={[styles.cardSubtitle, { fontFamily, color: colors.textSecondary }]}>
-                  Showing top 3 of {results.submissions.length}
+                  {t("exams.showingTop")} 3 {t("exams.of")} {results.submissions.length}
                 </Text>
               </View>
-              {results.submissions.
-                sort((a, b) => b.percentage - a.percentage).
-                slice(0, 3).
-                map((submission, index) =>
+              {results.submissions
+                .sort((a, b) => b.percentage - a.percentage)
+                .slice(0, 3)
+                .map((submission, index) =>
                   <View
                     key={submission.id}
                     style={[
@@ -493,14 +646,19 @@ export default function TeacherExamResultsScreen() {
                         borderBottomWidth: index < 2 ? 1 : 0
                       }]
                     }>
-
                     <View style={styles.performerInfo as any}>
                       <View style={[styles.rankBadge as any, { backgroundColor: `${colors.primary}20` }]}>
-                        <Text style={[styles.rankText as any, { fontFamily, color: colors.primary }]}>{index + 1}</Text>
+                        <Text style={[styles.rankText as any, { fontFamily, color: colors.primary }]}>
+                          {index + 1}
+                        </Text>
                       </View>
                       <View style={styles.performerDetails}>
-                        <Text style={[styles.performerName as any, { fontFamily, color: colors.textPrimary }]}>{submission.student.name}</Text>
-                        <Text style={[styles.performerId, { fontFamily, color: colors.textSecondary }]}>{submission.student.studentId}</Text>
+                        <Text style={[styles.performerName as any, { fontFamily, color: colors.textPrimary }]}>
+                          {submission.student.name}
+                        </Text>
+                        <Text style={[styles.performerId, { fontFamily, color: colors.textSecondary }]}>
+                          {submission.student.studentId}
+                        </Text>
                       </View>
                     </View>
                     <Text style={[styles.performerScore as any, { fontFamily, color: getGradeColor(submission.percentage) }]}>
@@ -515,9 +673,9 @@ export default function TeacherExamResultsScreen() {
               {/* Submissions List */}
               <View style={[styles.submissionsCard as any, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
                 {results.submissions.length > 0 ?
-                  results.submissions.
-                    sort((a, b) => b.percentage - a.percentage).
-                    map((submission, index) =>
+                  results.submissions
+                    .sort((a, b) => b.percentage - a.percentage)
+                    .map((submission, index) =>
                       <TouchableOpacity
                         key={submission.id}
                         style={[
@@ -527,11 +685,12 @@ export default function TeacherExamResultsScreen() {
                             borderBottomWidth: index !== results.submissions.length - 1 ? 1 : 0
                           }]
                         }
-                        onPress={() => handleViewSubmission(submission)}
+                        onPress={() => router.push(`/(teacher)/exams/grading/${submission.id}`)}
                         activeOpacity={0.7}>
-
                         <View style={styles.submissionInfo}>
-                          <Text style={[styles.submissionName as any, { fontFamily, color: colors.textPrimary }]}>{submission.student.name}</Text>
+                          <Text style={[styles.submissionName as any, { fontFamily, color: colors.textPrimary }]}>
+                            {submission.student.name}
+                          </Text>
                           <Text style={[styles.submissionDetails, { fontFamily, color: colors.textSecondary }]}>
                             {submission.student.studentId} • {submission.student.class}
                           </Text>
@@ -540,6 +699,11 @@ export default function TeacherExamResultsScreen() {
                           <Text style={[styles.submissionScore as any, { fontFamily, color: getGradeColor(submission.percentage) }]}>
                             {submission.percentage}%
                           </Text>
+                          <View style={[styles.gradingStatus, { backgroundColor: getGradingStatus(submission).color + '20' }]}>
+                            <Text style={[styles.gradingStatusText, { color: getGradingStatus(submission).color, fontFamily }]}>
+                              {getGradingStatus(submission).text}
+                            </Text>
+                          </View>
                           <Text style={[styles.submissionDate, { fontFamily, color: colors.textTertiary }]}>
                             {new Date(submission.submitted_at).toLocaleDateString()}
                           </Text>
@@ -547,37 +711,47 @@ export default function TeacherExamResultsScreen() {
                         <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} style={styles.chevronIcon} />
                       </TouchableOpacity>
                     ) :
-
                   <View style={styles.emptyState as any}>
                     <Ionicons name="document-text-outline" size={48} color={colors.textTertiary} />
-                    <Text style={[styles.emptyTitle as any, { fontFamily, color: colors.textSecondary }]}>No submissions yet</Text>
+                    <Text style={[styles.emptyTitle as any, { fontFamily, color: colors.textSecondary }]}>
+                      {t("exams.noSubmissionsYet")}
+                    </Text>
                     <Text style={[styles.emptySubtitle as any, { fontFamily, color: colors.textTertiary }]}>
-                      Students haven't submitted this exam yet
+                      {t("exams.studentsNotSubmitted")}
                     </Text>
                   </View>
                 }
               </View>
             </View> :
-
             <View style={styles.tabContent}>
               {/* Analytics Tab */}
               <View style={styles.analyticsSection}>
                 {/* Performance Trends */}
                 <View style={[styles.analyticsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-                  <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>Performance Analysis</Text>
+                  <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>
+                    {t("exams.performanceAnalysis")}
+                  </Text>
                   <View style={styles.trendList}>
                     <View style={[styles.trendItem as any, { borderBottomColor: colors.border }]}>
-                      <Text style={[styles.trendLabel as any, { fontFamily, color: colors.textSecondary }]}>Class Average</Text>
-                      <Text style={[styles.trendValue as any, { fontFamily, color: colors.textPrimary }]}>{results.statistics.averageScore}%</Text>
+                      <Text style={[styles.trendLabel as any, { fontFamily, color: colors.textSecondary }]}>
+                        {t("dashboard.classAverage")}
+                      </Text>
+                      <Text style={[styles.trendValue as any, { fontFamily, color: colors.textPrimary }]}>
+                        {results.statistics.averageScore}%
+                      </Text>
                     </View>
                     <View style={[styles.trendItem as any, { borderBottomColor: colors.border }]}>
-                      <Text style={[styles.trendLabel as any, { fontFamily, color: colors.textSecondary }]}>Performance Range</Text>
+                      <Text style={[styles.trendLabel as any, { fontFamily, color: colors.textSecondary }]}>
+                        {t("exams.performanceRange")}
+                      </Text>
                       <Text style={[styles.trendValue as any, { fontFamily, color: colors.textPrimary }]}>
                         {results.statistics.lowestScore}% - {results.statistics.highestScore}%
                       </Text>
                     </View>
                     <View style={styles.trendItem as any}>
-                      <Text style={[styles.trendLabel as any, { fontFamily, color: colors.textSecondary }]}>Standard Deviation</Text>
+                      <Text style={[styles.trendLabel as any, { fontFamily, color: colors.textSecondary }]}>
+                        {t("exams.standardDeviation")}
+                      </Text>
                       <Text style={[styles.trendValue as any, { fontFamily, color: colors.textPrimary }]}>
                         {Math.round(Math.sqrt(
                           results.submissions.reduce((acc, sub) =>
@@ -591,27 +765,37 @@ export default function TeacherExamResultsScreen() {
 
                 {/* Question Analysis */}
                 <View style={[styles.analyticsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-                  <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>Question Analysis</Text>
+                  <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>
+                    {t("exams.questionAnalysis")}
+                  </Text>
                   <Text style={[styles.cardSubtitle, { fontFamily, color: colors.textSecondary }]}>
-                    Detailed question-by-question analysis coming soon...
+                    {t("exams.detailedAnalysisComing")}
                   </Text>
                   <TouchableOpacity style={[styles.actionButton as any, { backgroundColor: `${colors.primary}15` }]}>
-                    <Text style={[styles.actionButtonText as any, { fontFamily, color: colors.primary }]}>Generate Detailed Report</Text>
+                    <Text style={[styles.actionButtonText as any, { fontFamily, color: colors.primary }]}>
+                      {t("exams.generateReport")}
+                    </Text>
                   </TouchableOpacity>
                 </View>
 
                 {/* Action Recommendations */}
                 <View style={[styles.analyticsCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-                  <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>Recommended Actions</Text>
+                  <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>
+                    {t("exams.recommendedActions")}
+                  </Text>
                   <View style={styles.recommendationsList}>
                     {performanceInsights.map((insight, index) =>
                       <View key={index} style={styles.recommendationItem as any}>
                         <Ionicons name="checkmark-circle" size={16} color={colors.success} style={styles.recommendationIcon} />
-                        <Text style={[styles.recommendationText, { fontFamily, color: colors.textSecondary }]}>{insight}</Text>
+                        <Text style={[styles.recommendationText, { fontFamily, color: colors.textSecondary }]}>
+                          {insight}
+                        </Text>
                       </View>
                     )}
                     {performanceInsights.length === 0 &&
-                      <Text style={[styles.noRecommendations as any, { fontFamily, color: colors.textTertiary }]}>No specific recommendations at this time.</Text>
+                      <Text style={[styles.noRecommendations as any, { fontFamily, color: colors.textTertiary }]}>
+                        {t("exams.noRecommendations")}
+                      </Text>
                     }
                   </View>
                 </View>
@@ -625,7 +809,6 @@ export default function TeacherExamResultsScreen() {
         visible={detailModalVisible}
         animationType="slide"
         presentationStyle="pageSheet">
-
         <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
           {/* Modal Header */}
           <View style={[styles.modalHeader, { backgroundColor: colors.backgroundElevated, borderBottomColor: colors.border }]}>
@@ -633,14 +816,14 @@ export default function TeacherExamResultsScreen() {
               <TouchableOpacity
                 style={[styles.modalButton as any, { backgroundColor: colors.background }]}
                 onPress={() => setDetailModalVisible(false)}>
-
                 <Ionicons name="close" size={20} color={colors.primary} />
               </TouchableOpacity>
-              <Text style={[styles.modalTitle, { fontFamily, color: colors.textPrimary }]}>Submission Details</Text>
+              <Text style={[styles.modalTitle, { fontFamily, color: colors.textPrimary }]}>
+                {t("exams.submissionDetails")}
+              </Text>
               <TouchableOpacity
                 style={[styles.modalButton as any, { backgroundColor: `${colors.primary}15` }]}
                 onPress={handleSendFeedback}>
-
                 <Ionicons name="chatbubble" size={18} color={colors.primary} />
               </TouchableOpacity>
             </View>
@@ -651,7 +834,9 @@ export default function TeacherExamResultsScreen() {
               <View style={[styles.studentCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
                 <View style={styles.studentHeader as any}>
                   <View style={styles.studentInfo}>
-                    <Text style={[styles.studentName as any, { fontFamily, color: colors.textPrimary }]}>{selectedSubmission.student.name}</Text>
+                    <Text style={[styles.studentName as any, { fontFamily, color: colors.textPrimary }]}>
+                      {selectedSubmission.student.name}
+                    </Text>
                     <Text style={[styles.studentDetails, { fontFamily, color: colors.textSecondary }]}>
                       {selectedSubmission.student.studentId} • {selectedSubmission.student.class}
                     </Text>
@@ -666,48 +851,151 @@ export default function TeacherExamResultsScreen() {
                       {selectedSubmission.percentage}%
                     </Text>
                     <Text style={[styles.scoreDetails, { fontFamily, color: colors.textSecondary }]}>
-                      {selectedSubmission.score}/{selectedSubmission.total_points} points
+                      {selectedSubmission.score}/{selectedSubmission.total_points} {t("exams.points")}
                     </Text>
+                    <View style={[styles.gradingStatusBadge, { backgroundColor: getGradingStatus(selectedSubmission).color + '20' }]}>
+                      <Text style={[styles.gradingStatusBadgeText, { color: getGradingStatus(selectedSubmission).color, fontFamily }]}>
+                        {getGradingStatus(selectedSubmission).text}
+                      </Text>
+                    </View>
                   </View>
                 </View>
 
                 <View style={styles.submissionMetaRow as any}>
                   <Text style={[styles.submissionMetaText, { fontFamily, color: colors.textTertiary }]}>
-                    Submitted: {new Date(selectedSubmission.submitted_at).toLocaleString()}
+                    {t("exams.submitted")}: {new Date(selectedSubmission.submitted_at).toLocaleString()}
                   </Text>
                   {selectedSubmission.time_spent &&
                     <Text style={[styles.submissionMetaText, { fontFamily, color: colors.textTertiary }]}>
-                      Time: {selectedSubmission.time_spent}
+                      {t("exams.time")}: {selectedSubmission.time_spent}
                     </Text>
                   }
                 </View>
               </View>
 
+              {/* Overall Feedback Section */}
+              <View style={[styles.feedbackCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
+                <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>
+                  {t("exams.overallFeedback")}
+                </Text>
+                <TextInput
+                  style={[styles.feedbackInput, {
+                    borderColor: colors.border,
+                    backgroundColor: colors.background,
+                    color: colors.textPrimary
+                  }]}
+                  placeholder={t("exams.addOverallFeedback")}
+                  placeholderTextColor={colors.textTertiary}
+                  multiline
+                  value={overallFeedback}
+                  onChangeText={setOverallFeedback}
+                />
+              </View>
+
               {/* Answers Section */}
               <View style={[styles.answersCard, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
-                <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>Question Analysis</Text>
+                <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>
+                  {t("exams.questionAnalysis")}
+                </Text>
                 <View style={styles.answersList}>
-                  {selectedSubmission.answers.map((answer: any, index: number) =>
+                  {selectedSubmission.answers.map((answer: Answer, index: number) =>
                     <View
                       key={index}
                       style={[styles.answerItem, { borderColor: colors.border }]}>
-
                       <View style={styles.answerHeader as any}>
-                        <Text style={[styles.questionNumber as any, { fontFamily, color: colors.textPrimary }]}>Q{index + 1}</Text>
-                        <View style={[styles.answerStatus, { backgroundColor: answer.is_correct ? `${colors.success}20` : `${colors.error}20` }]}>
-                          <Text style={[styles.statusText as any, { fontFamily, color: answer.is_correct ? colors.success : colors.error }]}>
-                            {answer.is_correct ? 'Correct' : 'Incorrect'}
+                        <Text style={[styles.questionNumber as any, { fontFamily, color: colors.textPrimary }]}>
+                          {t("exams.question")} {index + 1}
+                        </Text>
+                        <View style={[styles.answerStatus, {
+                          backgroundColor: answer.needs_grading ?
+                            (answer.is_manually_graded ? `${colors.success}20` : `${colors.warning}20`) :
+                            `${colors.primary}20`
+                        }]}>
+                          <Text style={[styles.statusText as any, {
+                            fontFamily,
+                            color: answer.needs_grading ?
+                              (answer.is_manually_graded ? colors.success : colors.warning) :
+                              colors.primary
+                          }]}>
+                            {answer.needs_grading ?
+                              (answer.is_manually_graded ? t("exams.manuallyGraded") : t("exams.needsGrading")) :
+                              t("exams.autoGraded")}
                           </Text>
                         </View>
                       </View>
+
                       <Text style={[styles.answerPoints, { fontFamily, color: colors.textSecondary }]}>
-                        Points: {answer.points}
+                        {t("exams.points")}: {answer.points}
                       </Text>
-                      {answer.answer &&
-                        <Text style={[styles.answerText, { fontFamily, color: colors.textPrimary }]}>
-                          Answer: {answer.answer}
-                        </Text>
-                      }
+
+                      {answer.answer && (
+                        <View style={styles.answerContainer}>
+                          <Text style={[styles.answerLabel, { fontFamily, color: colors.textSecondary }]}>
+                            {t("exams.studentAnswer")}:
+                          </Text>
+                          <Text style={[styles.answerText, { fontFamily, color: colors.textPrimary }]}>
+                            {answer.answer}
+                          </Text>
+                        </View>
+                      )}
+
+                      {answer.needs_grading && (
+                        <View style={styles.gradingSection}>
+                          <Text style={[styles.gradingLabel, { fontFamily, color: colors.textSecondary }]}>
+                            {t("exams.pointsAwarded")}:
+                          </Text>
+                          <View style={styles.pointsInputContainer}>
+                            <TextInput
+                              style={[styles.pointsInput, {
+                                borderColor: colors.border,
+                                backgroundColor: colors.background,
+                                color: colors.textPrimary
+                              }]}
+                              value={gradingAnswers[answer.question_id]?.points.toString() || answer.points.toString()}
+                              onChangeText={(text) => handleGradeAnswer(
+                                answer.question_id,
+                                parseInt(text) || 0,
+                                gradingAnswers[answer.question_id]?.feedback || ''
+                              )}
+                              keyboardType="numeric"
+                            />
+                            <Text style={[styles.pointsMax, { fontFamily, color: colors.textSecondary }]}>
+                              / {answer.points}
+                            </Text>
+                          </View>
+
+                          <Text style={[styles.gradingLabel, { fontFamily, color: colors.textSecondary }]}>
+                            {t("exams.feedback")}:
+                          </Text>
+                          <TextInput
+                            style={[styles.feedbackInputSmall, {
+                              borderColor: colors.border,
+                              backgroundColor: colors.background,
+                              color: colors.textPrimary
+                            }]}
+                            placeholder={t("exams.addFeedback")}
+                            placeholderTextColor={colors.textTertiary}
+                            multiline
+                            value={gradingAnswers[answer.question_id]?.feedback || ''}
+                            onChangeText={(text) => handleGradeAnswer(
+                              answer.question_id,
+                              gradingAnswers[answer.question_id]?.points || answer.points,
+                              text
+                            )}
+                          />
+                        </View>
+                      )}
+
+                      {answer.feedback && !answer.needs_grading && (
+                        <View style={styles.feedbackSection}>
+                          <Text style={[styles.feedbackLabel, { fontFamily, color: colors.textSecondary }]}>
+                            {t("exams.feedback")}:
+                          </Text>
+                          <Text style={[styles.feedbackText, { fontFamily, color: colors.textPrimary }]}>
+                            {answer.feedback}
+                          </Text>
+                        </View>
+                      )}
                     </View>
                   )}
                 </View>
@@ -716,16 +1004,34 @@ export default function TeacherExamResultsScreen() {
               {/* Action Buttons */}
               <View style={styles.modalActions as any}>
                 <TouchableOpacity
-                  style={[styles.modalActionButton as any, { backgroundColor: colors.primary }]}
+                  style={[styles.modalActionButton as any, { backgroundColor: colors.background }]}
                   onPress={exportResults}>
-
-                  <Text style={styles.modalActionText as any}>Download PDF</Text>
+                  <Text style={[styles.modalActionText as any, { fontFamily, color: colors.textPrimary }]}>
+                    {t("exams.downloadPDF")}
+                  </Text>
                 </TouchableOpacity>
+
+                {selectedSubmission.needs_manual_grading && !selectedSubmission.is_manually_graded && (
+                  <TouchableOpacity
+                    style={[styles.modalActionButton as any, { backgroundColor: colors.primary }]}
+                    onPress={submitGrading}
+                    disabled={isGrading}>
+                    {isGrading ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <Text style={styles.modalActionText as any}>
+                        {t("exams.submitGrading")}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                )}
+
                 <TouchableOpacity
                   style={[styles.modalActionButton as any, { backgroundColor: colors.background }]}
                   onPress={handleSendFeedback}>
-
-                  <Text style={[styles.modalActionText as any, { fontFamily, color: colors.textPrimary }]}>Send Feedback</Text>
+                  <Text style={[styles.modalActionText as any, { fontFamily, color: colors.textPrimary }]}>
+                    {t("exams.sendFeedback")}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -738,12 +1044,13 @@ export default function TeacherExamResultsScreen() {
         visible={feedbackModalVisible}
         animationType="slide"
         transparent={true}>
-
         <View style={[styles.feedbackOverlay as any, { backgroundColor: `${colors.textPrimary}80` }]}>
           <View style={[styles.feedbackModal as any, { backgroundColor: colors.backgroundElevated }]}>
-            <Text style={[styles.feedbackTitle, { fontFamily, color: colors.textPrimary }]}>Send Feedback</Text>
+            <Text style={[styles.feedbackTitle, { fontFamily, color: colors.textPrimary }]}>
+              {t("exams.sendFeedback")}
+            </Text>
             <Text style={[styles.feedbackSubtitle, { fontFamily, color: colors.textSecondary }]}>
-              Send personalized feedback to {selectedSubmission?.student.name}
+              {t("exams.sendFeedbackTo")} {selectedSubmission?.student.name}
             </Text>
 
             <TextInput
@@ -752,40 +1059,42 @@ export default function TeacherExamResultsScreen() {
                 backgroundColor: colors.background,
                 color: colors.textPrimary
               }]}
-              placeholder="Write your feedback here..."
+              placeholder={t("exams.writeFeedback")}
               placeholderTextColor={colors.textTertiary}
               multiline
               value={feedback}
-              onChangeText={setFeedback} />
-
+              onChangeText={setFeedback}
+            />
 
             <View style={styles.feedbackActions as any}>
               <TouchableOpacity
                 style={[styles.feedbackButton as any, { backgroundColor: colors.background }]}
                 onPress={() => setFeedbackModalVisible(false)}>
-
-                <Text style={[styles.feedbackButtonText as any, { fontFamily, color: colors.textPrimary }]}>{t("common.cancel")}</Text>
+                <Text style={[styles.feedbackButtonText as any, { fontFamily, color: colors.textPrimary }]}>
+                  {t("common.cancel")}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.feedbackButton as any, { backgroundColor: colors.primary }]}
                 onPress={sendFeedback}
                 disabled={!feedback.trim() || sendingFeedback}>
-
-                {sendingFeedback ?
-                  <ActivityIndicator size="small" color="white" /> :
-
-                  <Text style={styles.feedbackButtonText as any}>{t("common.send")}</Text>
-                }
+                {sendingFeedback ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text style={styles.feedbackButtonText as any}>
+                    {t("common.send")}
+                  </Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
-    </View>);
-
+    </View>
+  );
 }
 
-const styles = {
+const originalStyles = {
   container: {
     flex: 1,
     paddingBottom: 40
@@ -1260,6 +1569,7 @@ const styles = {
   modalActions: {
     flexDirection: 'row',
     gap: designTokens.spacing.md,
+    marginBottom: designTokens.spacing.lg,
     marginTop: designTokens.spacing.lg
   },
   modalActionButton: {
@@ -1317,4 +1627,107 @@ const styles = {
     fontWeight: '600',
     fontSize: designTokens.typography.body.fontSize
   }
+};
+
+const additionalStyles = {
+  gradingStatus: {
+    paddingHorizontal: designTokens.spacing.sm,
+    paddingVertical: designTokens.spacing.xxs,
+    borderRadius: designTokens.borderRadius.full,
+    marginBottom: designTokens.spacing.xxs
+  },
+  gradingStatusText: {
+    fontSize: designTokens.typography.caption2.fontSize,
+    fontWeight: '600'
+  },
+  gradingStatusBadge: {
+    paddingHorizontal: designTokens.spacing.sm,
+    paddingVertical: designTokens.spacing.xxs,
+    borderRadius: designTokens.borderRadius.full,
+    alignSelf: 'flex-end',
+    marginTop: designTokens.spacing.xs
+  },
+  gradingStatusBadgeText: {
+    fontSize: designTokens.typography.caption2.fontSize,
+    fontWeight: '600'
+  },
+  feedbackCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    borderWidth: 1,
+    marginBottom: designTokens.spacing.lg,
+    ...designTokens.shadows.sm
+  },
+  feedbackInput: {
+    borderWidth: 1,
+    borderRadius: designTokens.borderRadius.lg,
+    padding: designTokens.spacing.md,
+    height: 100,
+    fontSize: designTokens.typography.body.fontSize,
+    marginTop: designTokens.spacing.sm
+  },
+  answerContainer: {
+    marginTop: designTokens.spacing.sm
+  },
+  answerLabel: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    fontWeight: '500',
+    marginBottom: designTokens.spacing.xxs
+  },
+  answerText: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    lineHeight: designTokens.typography.caption1.fontSize * 1.4
+  },
+  gradingSection: {
+    marginTop: designTokens.spacing.md,
+    paddingTop: designTokens.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: designTokens.colors.border
+  },
+  gradingLabel: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    fontWeight: '500',
+    marginBottom: designTokens.spacing.xxs
+  },
+  pointsInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: designTokens.spacing.md
+  },
+  pointsInput: {
+    borderWidth: 1,
+    borderRadius: designTokens.borderRadius.lg,
+    padding: designTokens.spacing.sm,
+    width: 80,
+    fontSize: designTokens.typography.body.fontSize
+  },
+  pointsMax: {
+    marginLeft: designTokens.spacing.xs,
+    fontSize: designTokens.typography.caption1.fontSize
+  },
+  feedbackInputSmall: {
+    borderWidth: 1,
+    borderRadius: designTokens.borderRadius.lg,
+    padding: designTokens.spacing.sm,
+    height: 80,
+    fontSize: designTokens.typography.caption1.fontSize
+  },
+  feedbackSection: {
+    marginTop: designTokens.spacing.md
+  },
+  feedbackLabel: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    fontWeight: '500',
+    marginBottom: designTokens.spacing.xxs
+  },
+  feedbackText: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    lineHeight: designTokens.typography.caption1.fontSize * 1.4
+  }
+};
+
+// Merge additional styles with existing styles object
+const styles = {
+  ...originalStyles,
+  ...additionalStyles
 };

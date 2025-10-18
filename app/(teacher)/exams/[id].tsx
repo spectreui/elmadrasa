@@ -130,7 +130,8 @@ export default function ExamDetailScreen() {
 
     try {
       const newStatus = !exam.is_active;
-      const response = await apiService.updateExam(exam.id, { is_active: newStatus });
+      console.log(exam.id + "./" + newStatus)
+      const response = await apiService.updateExamStatus(exam.id, { is_active: newStatus });
 
       if (response.data.success) {
         setExam(prev => prev ? { ...prev, is_active: newStatus } : null);
@@ -190,9 +191,12 @@ export default function ExamDetailScreen() {
         Alert.alert('Success', `Exam ${newStatus ? 'activated' : 'deactivated'} successfully`);
       } else {
         Alert.alert('Error', response.data.error || 'Failed to update exam status');
+      console.log(exam.id + "./" + !exam.is_active);
       }
     } catch (error) {
       console.error('Toggle exam status error:', error);
+
+      console.log(exam.id + "./" + !exam.is_active);
       Alert.alert('Error', 'Failed to update exam status');
     }
   };

@@ -4,7 +4,7 @@ import { LoginRequest, AuthResponse, ApiResponse, User, Exam } from "../types";
 import { storage } from "../utils/storage";
 import { router } from 'expo-router';
 
-// const API_BASE_URL = "http://192.168.1.69:5001/api";
+// const API_BASE_URL = "http://10.168.230.72:5001/api";
 const API_BASE_URL = "https://elmadrasa-server.vercel.app/api";
 
 // --- Shared routing config (used by both api.ts and _layout.tsx) ---
@@ -147,7 +147,7 @@ class ApiService {
               const currentPath = window.location?.pathname || '';
               if (!currentPath.includes('/unauthorized')) {
                 console.log('➡️ Redirecting to unauthorized page');
-                router.replace('/unauthorized');
+                // router.replace('/unauthorized');
               }
             } catch (err) {
               console.error('❌ 403 redirect failed:', err);
@@ -162,7 +162,7 @@ class ApiService {
           console.log('🔍 404 - Not Found');
           setTimeout(() => {
             try {
-              router.replace('/not-found');
+              // router.replace('/not-found');
             } catch (err) {
               console.error('❌ 404 redirect failed:', err);
             }
@@ -175,7 +175,7 @@ class ApiService {
           console.log('🌐 Network error');
           setTimeout(() => {
             try {
-              router.replace('/network-error');
+              // router.replace('/network-error');
             } catch (err) {
               console.error('❌ Failed to route to network-error:', err);
             }
@@ -378,24 +378,6 @@ class ApiService {
     return this.api.get("/teachers/activity");
   }
 
-  // Add these methods to your ApiService class
-
-  // Manual grading methods
-  async getSubmissionsNeedingGrading(): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.get("/teachers/submissions/needs-grading");
-  }
-
-  async getSubmissionForGrading(submissionId: string): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.get(`/teachers/submissions/${submissionId}`);
-  }
-
-  async manuallyGradeSubmission(submissionId: string, score: number, feedback?: string): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.post(`/teachers/submissions/${submissionId}/grade`, {
-      score,
-      feedback
-    });
-  }
-
   public async getExamResults(examId: string): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.get(`/exams/${examId}/results`);
   }
@@ -452,6 +434,10 @@ class ApiService {
 
   public async updateExam(examId: string, data: any): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.put(`/exams/${examId}`, data);
+  }
+
+  public async updateExamStatus(examId: string, data: any): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.patch(`/exams/${examId}/status`, data);
   }
 
   public async createExam(examData: any): Promise<AxiosResponse<ApiResponse<Exam>>> {
@@ -720,8 +706,8 @@ class ApiService {
     return this.api.get('/users/me');
   }
 
-  async updateUser(profileData: { 
-    language?: 'en' | 'ar'; 
+  async updateUser(profileData: {
+    language?: 'en' | 'ar';
     name?: string;
     avatar?: string;
     [key: string]: any;
@@ -793,6 +779,29 @@ class ApiService {
     return this.api.get(`/users/${userId}/profile`);
   }
 
+  // In apiService class:
+  async getSubmissionsNeedingGrading(): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.get("/teachers/submissions/needs-grading");
+  }
+
+  async getSubmissionForGrading(submissionId: string): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.get(`/teachers/submissions/${submissionId}/grade`);
+  }
+
+  async manuallyGradeSubmission(
+    submissionId: string,
+    score: number,
+    feedback?: string,
+    answers?: any[],
+    updatedQuestions?: any[] // Add this parameter
+  ): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.post(`/teachers/submissions/${submissionId}/grade`, {
+      score,
+      feedback,
+      answers,
+      updatedQuestions // Include in request body
+    });
+  }
 }
 
 export const apiService = new ApiService();

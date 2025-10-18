@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   SafeAreaView,
   AppState,
-  AppStateStatus 
+  AppStateStatus
 } from 'react-native';
 import Alert from '@/components/Alert';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -40,7 +40,7 @@ export default function StudentExamScreen() {
   const [exam, setExam] = useState<ExamDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [answers, setAnswers] = useState<{[key: string]: string;}>({});
+  const [answers, setAnswers] = useState<{ [key: string]: string; }>({});
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [hasTaken, setHasTaken] = useState(false);
   const [examStatus, setExamStatus] = useState<'available' | 'taken' | 'upcoming' | 'missed'>('available');
@@ -117,7 +117,7 @@ export default function StudentExamScreen() {
       } else {
         if (response.status === 403) {
           Alert.alert('Exam Expired', response.data.error || 'This exam is no longer available.', [
-          { text: 'OK', onPress: () => router.back() }]
+            { text: 'OK', onPress: () => router.back() }]
           );
           return;
         }
@@ -127,7 +127,7 @@ export default function StudentExamScreen() {
       console.error('Failed to load exam:', error);
       if (error.response?.status === 403) {
         Alert.alert('Access Denied', error.response.data.error || 'You cannot access this exam at this time.', [
-        { text: 'OK', onPress: () => router.back() }]
+          { text: 'OK', onPress: () => router.back() }]
         );
       } else {
         Alert.alert('Error', 'Failed to load exam details');
@@ -211,8 +211,8 @@ export default function StudentExamScreen() {
 
     if (Object.keys(answers).length === 0) {
       Alert.alert('Warning', 'You haven\'t answered any questions. Are you sure you want to submit?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Submit', onPress: () => submitExam(false) }]
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Submit', onPress: () => submitExam(false) }]
       );
       return;
     }
@@ -224,8 +224,8 @@ export default function StudentExamScreen() {
         'Unanswered Questions',
         `You have ${unansweredQuestions.length} unanswered question(s). Are you sure you want to submit?`,
         [
-        { text: 'Continue Editing', style: 'cancel' },
-        { text: 'Submit Anyway', onPress: () => submitExam(false) }]
+          { text: 'Continue Editing', style: 'cancel' },
+          { text: 'Submit Anyway', onPress: () => submitExam(false) }]
 
       );
     } else {
@@ -233,6 +233,7 @@ export default function StudentExamScreen() {
     }
   };
 
+  // Replace the submitExam function with this improved version:
   const submitExam = async (isAutoSubmit: boolean = false) => {
     // Prevent multiple submissions
     if (hasSubmitted.current) {
@@ -256,33 +257,23 @@ export default function StudentExamScreen() {
 
       if (response.data.success) {
         const submissionData = response.data.data;
+        const submissionId = submissionData.submission?.id;
 
         if (submissionData.needsManualGrading) {
           Alert.alert(
             isAutoSubmit ? 'Auto-Submitted for Grading' : 'Submitted for Grading',
             isAutoSubmit ?
-            'Your exam was automatically submitted and is waiting for manual grading.' :
-            'Your exam has been submitted and is waiting for manual grading by your teacher.',
+              'Your exam was automatically submitted and is waiting for manual grading.' :
+              'Your exam has been submitted and is waiting for manual grading by your teacher.',
             [
-            {
-              text: 'OK',
-              onPress: () => router.push('/exams')
-            }]
-
+              {
+                text: 'OK',
+                onPress: () => router.push('/exams')
+              }]
           );
         } else {
-          console.log('🎯 Navigating directly to results page...');
-          router.push({
-            pathname: '/exam/results/' + examId,
-            params: {
-              submissionId: submissionData.submission?.id,
-              examId: examId,
-              score: submissionData.score,
-              totalPoints: submissionData.totalPoints,
-              percentage: Math.round(submissionData.percentage),
-              examTitle: exam?.title || 'Exam Results'
-            }
-          });
+          // Navigate to results using only the submission ID (cannot be manipulated)
+          router.push(`/exam/results/${examId}?submissionId=${submissionId}`);
         }
       } else {
         Alert.alert('Submission Failed', response.data.error || 'Unknown error occurred');
@@ -297,6 +288,7 @@ export default function StudentExamScreen() {
       isAutoSubmitting.current = false;
     }
   };
+
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -343,7 +335,7 @@ export default function StudentExamScreen() {
             The due date for this exam has passed.
           </Text>
           {exam?.due_date &&
-          <Text style={styles.subtitle}>
+            <Text style={styles.subtitle}>
               Due date was: {new Date(exam.due_date).toLocaleString()}
             </Text>
           }
@@ -425,24 +417,24 @@ export default function StudentExamScreen() {
     <SafeAreaView style={styles.container}>{
       showWarning &&
       <View style={styles.warningBanner}>
-          <View style={styles.warningContent}>
-            <Text style={styles.warningText}>
-              <Ionicons
+        <View style={styles.warningContent}>
+          <Text style={styles.warningText}>
+            <Ionicons
               name="warning-outline"
               size={16}
               color="#FFA500" />
-             Exam will auto-submit if you leave this page or put the app in background
-            </Text>
-            <TouchableOpacity
+            Exam will auto-submit if you leave this page or put the app in background
+          </Text>
+          <TouchableOpacity
             onPress={() => setShowWarning(false)}
             style={styles.warningCloseButton}>
 
-              <Text style={styles.warningCloseText}>×</Text>
-            </TouchableOpacity>
-          </View>
+            <Text style={styles.warningCloseText}>×</Text>
+          </TouchableOpacity>
         </View>
+      </View>
 
-      }
+    }
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -453,10 +445,10 @@ export default function StudentExamScreen() {
         </TouchableOpacity>
 
         {timeLeft !== null &&
-        <View style={[
-        styles.timer,
-        timeLeft < 300 && styles.timerWarning // Red when less than 5 minutes
-        ]}>
+          <View style={[
+            styles.timer,
+            timeLeft < 300 && styles.timerWarning // Red when less than 5 minutes
+          ]}>
             <Text style={styles.timerText}>
               {formatTime(timeLeft)}
             </Text>
@@ -469,13 +461,13 @@ export default function StudentExamScreen() {
         <Text style={styles.examTitle}>{exam.title}</Text>
         <Text style={styles.examSubject}>{exam.subject} • {exam.class}</Text>
         {exam.teacher &&
-        <Text style={styles.teacherName}>
+          <Text style={styles.teacherName}>
             Teacher: {exam.teacher.profile.name}
           </Text>
         }
 
         {exam.settings?.timed &&
-        <View style={styles.examSettings}>
+          <View style={styles.examSettings}>
             <Text style={styles.settingsText}>
               ⏱️ Timed: {exam.settings.duration} minutes
             </Text>
@@ -483,7 +475,7 @@ export default function StudentExamScreen() {
         }
 
         {exam.due_date &&
-        <View style={styles.dueDateContainer}>
+          <View style={styles.dueDateContainer}>
             <Text style={styles.dueDateText}>
               Due: {new Date(exam.due_date).toLocaleDateString()} at {new Date(exam.due_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </Text>
@@ -496,34 +488,34 @@ export default function StudentExamScreen() {
         entering={FadeIn.duration(600)} // Smooth fade-in when screen loads
         style={styles.questionsContainer}>
         {exam.questions.map((question, index) =>
-        <View key={question.id} style={styles.questionCard}>
+          <View key={question.id} style={styles.questionCard}>
             <Text style={styles.questionNumber}>
               Question {index + 1} ({question.points} point{question.points !== 1 ? 's' : ''})
             </Text>
             <Text style={styles.questionText}>{question.question}</Text>
 
             {question.type === 'mcq' ?
-          <View style={styles.optionsContainer}>
+              <View style={styles.optionsContainer}>
                 {question.options.map((option, optionIndex) =>
-            <TouchableOpacity
-              key={optionIndex}
-              style={[
-              styles.option,
-              answers[question.id] === option && styles.optionSelected]
-              }
-              onPress={() => handleAnswerSelect(question.id, option)}>
+                  <TouchableOpacity
+                    key={optionIndex}
+                    style={[
+                      styles.option,
+                      answers[question.id] === option && styles.optionSelected]
+                    }
+                    onPress={() => handleAnswerSelect(question.id, option)}>
 
                     <View style={styles.optionRadio}>
                       {answers[question.id] === option &&
-                <View style={styles.optionRadioSelected} />
-                }
+                        <View style={styles.optionRadioSelected} />
+                      }
                     </View>
                     <Text style={styles.optionText}>{option}</Text>
                   </TouchableOpacity>
-            )}
+                )}
               </View> :
 
-          <View style={styles.textAnswerContainer}>
+              <View style={styles.textAnswerContainer}>
                 <Text style={styles.textAnswerHint}>
                   Type your answer below:
                 </Text>
@@ -533,34 +525,34 @@ export default function StudentExamScreen() {
                   </Text>
                 </View>
                 <TouchableOpacity
-              style={styles.addAnswerButton}
-              onPress={() => {
-                // For text answers, you might want to implement a modal or separate screen
-                Alert.prompt(
-                  'Your Answer',
-                  question.question,
-                  [
-                  { text: t("common.cancel"), style: 'cancel' },
-                  {
-                    text: t("common.save"),
-                    onPress: (answer) => {
-                      if (answer) {
-                        handleAnswerSelect(question.id, answer);
-                      }
-                    }
-                  }],
+                  style={styles.addAnswerButton}
+                  onPress={() => {
+                    // For text answers, you might want to implement a modal or separate screen
+                    Alert.prompt(
+                      'Your Answer',
+                      question.question,
+                      [
+                        { text: t("common.cancel"), style: 'cancel' },
+                        {
+                          text: t("common.save"),
+                          onPress: (answer) => {
+                            if (answer) {
+                              handleAnswerSelect(question.id, answer);
+                            }
+                          }
+                        }],
 
-                  'plain-text',
-                  answers[question.id] || ''
-                );
-              }}>
+                      'plain-text',
+                      answers[question.id] || ''
+                    );
+                  }}>
 
                   <Text style={styles.addAnswerButtonText}>
                     {answers[question.id] ? 'Edit Answer' : 'Add Answer'}
                   </Text>
                 </TouchableOpacity>
               </View>
-          }
+            }
           </View>
         )}
       </Animated.ScrollView>
@@ -572,16 +564,16 @@ export default function StudentExamScreen() {
         </Text>
         <TouchableOpacity
           style={[
-          styles.submitButton,
-          (submitting || timeLeft === 0) && styles.submitButtonDisabled]
+            styles.submitButton,
+            (submitting || timeLeft === 0) && styles.submitButtonDisabled]
           }
           onPress={handleSubmit}
           disabled={submitting || timeLeft === 0}>
 
           {submitting ?
-          <ActivityIndicator color="#FFFFFF" /> :
+            <ActivityIndicator color="#FFFFFF" /> :
 
-          <Text style={styles.submitButtonText}>
+            <Text style={styles.submitButtonText}>
               {timeLeft === 0 ? 'Time Expired' : 'Submit Exam'}
             </Text>
           }

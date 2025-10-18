@@ -1,4 +1,4 @@
-// app/(student)/exam/results/[id].tsx
+// app/(student)/exam/results/[id].tsx - Complete fix
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -27,11 +27,13 @@ interface ResultData {
     submitted_at: string;
     needs_manual_grading?: boolean;
     is_manually_graded?: boolean;
+    feedback?: string;
     answers: Array<{
       question_id: string;
       answer: string;
       is_correct: boolean;
       points: number;
+      needs_grading?: boolean;
     }>;
   };
   exam: {
@@ -51,6 +53,7 @@ interface ResultData {
       options: string[];
       correct_answer: string;
       points: number;
+      explanation?: string;
     }>;
   };
 }
@@ -58,15 +61,11 @@ interface ResultData {
 export default function ExamResultsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const submissionId = Array.isArray(params.submissionId) ? params.submissionId[0] : params.submissionId;
-  const examId = Array.isArray(params.id) ? params.id[0] : params.id;
-
   const { fontFamily, colors, isDark } = useThemeContext();
   const [resultData, setResultData] = useState<ResultData | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAllAnswers, setShowAllAnswers] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-    
 
   // Add this function to handle sharing
   const handleShare = () => {
@@ -74,78 +73,46 @@ export default function ExamResultsScreen() {
   };
 
   useEffect(() => {
-    if (submissionId) {
-      loadResults();
-    } else if (examId) {
-      loadLatestSubmission();
-    } else {
-      setLoading(false);
-    }
-  }, [submissionId, examId]);
+    loadResults();
+  }, []);
 
   const loadResults = async () => {
     try {
       setLoading(true);
-      const response = await apiService.getSubmissionResults(submissionId!);
-
-      if (response.data.success) {
-        setResultData(response.data.data);
+      
+      // Get the submission ID from query parameters
+      const submissionId = Array.isArray(params.submissionId) 
+        ? params.submissionId[0] 
+        : params.submissionId;
+      
+      console.log('Loading results for submission ID:', submissionId);
+      
+      if (submissionId) {
+        // Call the correct API endpoint with submission ID
+        const response = await apiService.getSubmissionResults(submissionId);
+        
+        if (response.data.success) {
+          setResultData(response.data.data);
+        } else {
+          Alert.alert('Error', response.data.error || 'Failed to load results');
+        }
       } else {
-        Alert.alert('Error', 'Failed to load results');
+        // If no submission ID, try to get latest submission for the exam
+        const examId = Array.isArray(params.id) ? params.id[0] : params.id;
+        if (examId) {
+          const response = await apiService.getLatestSubmission(examId);
+          if (response.data.success && response.data.data) {
+            setResultData(response.data.data);
+          } else {
+            Alert.alert('Error', 'No submission found for this exam');
+          }
+        } else {
+          Alert.alert('Error', 'No exam or submission ID provided');
+        }
       }
     } catch (error: any) {
       console.error('Failed to load results:', error);
-      Alert.alert('Error', 'Failed to load results');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadLatestSubmission = async () => {
-    try {
-      setLoading(true);
-      const response = await apiService.getLatestSubmission(examId!);
-
-      if (response.data.success && response.data.data) {
-        setResultData(response.data.data);
-      } else {
-        setResultData({
-          submission: {
-            id: 'temp',
-            score: Number(params.score) || 0,
-            total_points: Number(params.totalPoints) || 100,
-            submitted_at: new Date().toISOString(),
-            answers: []
-          },
-          exam: {
-            id: examId!,
-            title: String(params.examTitle) || 'Exam Results',
-            subject: 'Unknown',
-            class: 'Unknown',
-            teacher: { profile: { name: 'Teacher' } },
-            questions: []
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Failed to load submission:', error);
-      setResultData({
-        submission: {
-          id: 'temp',
-          score: Number(params.score) || 0,
-          total_points: Number(params.totalPoints) || 100,
-          submitted_at: new Date().toISOString(),
-          answers: []
-        },
-        exam: {
-          id: examId!,
-          title: String(params.examTitle) || 'Exam Results',
-          subject: 'Unknown',
-          class: 'Unknown',
-          teacher: { profile: { name: 'Teacher' } },
-          questions: []
-        }
-      });
+      Alert.alert('Error', error.message || 'Failed to load results');
     } finally {
       setLoading(false);
     }
@@ -170,7 +137,7 @@ export default function ExamResultsScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          <Text style={[styles.loadingText, { color: colors.textSecondary, fontFamily }]}>
             Loading Results...
           </Text>
         </View>
@@ -183,26 +150,30 @@ export default function ExamResultsScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle" size={64} color={isDark ? '#FF453A' : '#FF3B30'} />
-          <Text style={[styles.errorText, { color: isDark ? '#FF453A' : '#FF3B30' }]}>
+          <Text style={[styles.errorText, { color: isDark ? '#FF453A' : '#FF3B30', fontFamily }]}>
             Results Not Available
           </Text>
-          <Text style={[styles.errorSubtext, { color: colors.textSecondary }]}>
+          <Text style={[styles.errorSubtext, { color: colors.textSecondary, fontFamily }]}>
             Unable to load exam results. Please try again later.
           </Text>
           <TouchableOpacity
             style={[styles.button, { backgroundColor: colors.primary }]}
             onPress={() => router.push('/exams')}
           >
-            <Text style={styles.buttonText}>Back to Exams</Text>
+            <Text style={[styles.buttonText, { fontFamily }]}>Back to Exams</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
   }
 
-  const percentage = Math.round((resultData.submission.score / resultData.submission.total_points) * 100);
+  const percentage = resultData.submission.total_points > 0
+    ? Math.round((resultData.submission.score / resultData.submission.total_points) * 100)
+    : 0;
   const correctAnswers = resultData.submission.answers.filter(a => a.is_correct).length;
   const totalQuestions = resultData.submission.answers.length;
+  const needsManualGrading = resultData.submission.needs_manual_grading;
+  const isManuallyGraded = resultData.submission.is_manually_graded;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -217,7 +188,7 @@ export default function ExamResultsScreen() {
         >
           <Ionicons name="arrow-back" size={24} color={colors.primary} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary, fontFamily }]}>
           Exam Results
         </Text>
         <TouchableOpacity
@@ -232,14 +203,15 @@ export default function ExamResultsScreen() {
         entering={FadeIn.duration(600)}
         style={styles.content}>
 
-        {resultData.submission.needs_manual_grading && !resultData.submission.is_manually_graded ? (
+        {/* Manual Grading Status */}
+        {needsManualGrading && !isManuallyGraded ? (
           <View style={[styles.pendingGrading, { backgroundColor: colors.backgroundElevated }]}>
             <Ionicons name="time" size={32} color={colors.textTertiary} />
-            <Text style={[styles.pendingText, { color: colors.textPrimary }]}>
+            <Text style={[styles.pendingText, { color: colors.textPrimary, fontFamily }]}>
               Awaiting Manual Grading
             </Text>
-            <Text style={[styles.pendingSubtext, { color: colors.textSecondary }]}>
-              Your teacher will grade this submission manually
+            <Text style={[styles.pendingSubtext, { color: colors.textSecondary, fontFamily }]}>
+              Your teacher will grade this submission manually. You'll be notified when it's ready.
             </Text>
           </View>
         ) : (
@@ -247,10 +219,10 @@ export default function ExamResultsScreen() {
             backgroundColor: colors.backgroundElevated,
             ...designTokens.shadows.md
           }]}>
-            <Text style={[styles.examTitle, { color: colors.textPrimary }]}>
+            <Text style={[styles.examTitle, { color: colors.textPrimary, fontFamily }]}>
               {resultData.exam.title}
             </Text>
-            <Text style={[styles.examInfo, { color: colors.textSecondary }]}>
+            <Text style={[styles.examInfo, { color: colors.textSecondary, fontFamily }]}>
               {resultData.exam.subject} • {resultData.exam.class}
             </Text>
 
@@ -258,43 +230,43 @@ export default function ExamResultsScreen() {
               backgroundColor: isDark ? '#1C1C1E' : '#F8F8F8',
               borderColor: colors.primary
             }]}>
-              <Text style={[styles.scorePercentage, { color: colors.primary }]}>
+              <Text style={[styles.scorePercentage, { color: colors.primary, fontFamily }]}>
                 {percentage}%
               </Text>
-              <Text style={[styles.scoreText, { color: colors.textSecondary }]}>
+              <Text style={[styles.scoreText, { color: colors.textSecondary, fontFamily }]}>
                 {resultData.submission.score}/{resultData.submission.total_points}
               </Text>
             </View>
 
             <Text style={[
               styles.gradeText,
-              { color: getGradeColor(percentage) }
+              { color: getGradeColor(percentage), fontFamily }
             ]}>
               {getGradeText(percentage)}
             </Text>
 
             <View style={styles.statsGrid}>
               <View style={styles.statItem}>
-                <Text style={[styles.statNumber, { color: colors.textPrimary }]}>
+                <Text style={[styles.statNumber, { color: colors.textPrimary, fontFamily }]}>
                   {correctAnswers}
                 </Text>
-                <Text style={[styles.statLabel, { color: colors.textTertiary }]}>
+                <Text style={[styles.statLabel, { color: colors.textTertiary, fontFamily }]}>
                   Correct
                 </Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={[styles.statNumber, { color: colors.textPrimary }]}>
+                <Text style={[styles.statNumber, { color: colors.textPrimary, fontFamily }]}>
                   {totalQuestions - correctAnswers}
                 </Text>
-                <Text style={[styles.statLabel, { color: colors.textTertiary }]}>
+                <Text style={[styles.statLabel, { color: colors.textTertiary, fontFamily }]}>
                   Incorrect
                 </Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={[styles.statNumber, { color: colors.textPrimary }]}>
+                <Text style={[styles.statNumber, { color: colors.textPrimary, fontFamily }]}>
                   {totalQuestions}
                 </Text>
-                <Text style={[styles.statLabel, { color: colors.textTertiary }]}>
+                <Text style={[styles.statLabel, { color: colors.textTertiary, fontFamily }]}>
                   Total
                 </Text>
               </View>
@@ -302,19 +274,37 @@ export default function ExamResultsScreen() {
           </View>
         )}
 
-        {resultData.submission.answers.length > 0 && (
+        {/* Teacher Feedback */}
+        {isManuallyGraded && resultData.submission.feedback && (
+          <View style={[styles.feedbackCard, {
+            backgroundColor: colors.backgroundElevated,
+            borderColor: colors.primary
+          }]}>
+            <View style={styles.feedbackHeader}>
+              <Ionicons name="chatbubble-ellipses" size={20} color={colors.primary} />
+              <Text style={[styles.feedbackTitle, { color: colors.textPrimary, fontFamily }]}>
+                Teacher Feedback
+              </Text>
+            </View>
+            <Text style={[styles.feedbackText, { color: colors.textPrimary, fontFamily }]}>
+              {resultData.submission.feedback}
+            </Text>
+          </View>
+        )}
+
+        {isManuallyGraded && resultData.submission.answers.length > 0 && (
           <View style={[styles.answersSection, {
             backgroundColor: colors.backgroundElevated
           }]}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary, fontFamily }]}>
                 Answer Review
               </Text>
               <TouchableOpacity
                 style={[styles.toggleButton, { backgroundColor: colors.primary }]}
                 onPress={() => setShowAllAnswers(!showAllAnswers)}
               >
-                <Text style={styles.toggleButtonText}>
+                <Text style={[styles.toggleButtonText, { fontFamily }]}>
                   {showAllAnswers ? 'Show Summary' : 'Show All Answers'}
                 </Text>
               </TouchableOpacity>
@@ -329,43 +319,60 @@ export default function ExamResultsScreen() {
                       backgroundColor: isDark ? '#1C1C1E' : '#F8F8F8'
                     }]}>
                       <View style={styles.questionHeader}>
-                        <Text style={[styles.questionNumber, { color: colors.textPrimary }]}>
+                        <Text style={[styles.questionNumber, { color: colors.textPrimary, fontFamily }]}>
                           Q{index + 1}
                         </Text>
-                        <View style={[
-                          styles.correctBadge,
-                          answer.is_correct ? styles.correct : styles.incorrect,
-                          {
-                            backgroundColor: answer.is_correct
-                              ? (isDark ? '#30D15820' : '#34C75920')
-                              : (isDark ? '#FF453A20' : '#FF3B3020')
-                          }
-                        ]}>
-                          <Text style={[
-                            styles.correctBadgeText,
+
+                        {answer.needs_grading ? (
+                          <View style={[
+                            styles.pendingBadge,
+                            { backgroundColor: isDark ? '#FF9F0A20' : '#FF950020' }
+                          ]}>
+                            <Text style={[
+                              styles.pendingBadgeText,
+                              { color: isDark ? '#FF9F0A' : '#FF9500', fontFamily }
+                            ]}>
+                              Pending Review
+                            </Text>
+                          </View>
+                        ) : (
+                          <View style={[
+                            styles.correctBadge,
+                            answer.is_correct ? styles.correct : styles.incorrect,
                             {
-                              color: answer.is_correct
-                                ? (isDark ? '#30D158' : '#34C759')
-                                : (isDark ? '#FF453A' : '#FF3B30')
+                              backgroundColor: answer.is_correct
+                                ? (isDark ? '#30D15820' : '#34C75920')
+                                : (isDark ? '#FF453A20' : '#FF3B3020')
                             }
                           ]}>
-                            {answer.is_correct ? 'Correct' : 'Incorrect'}
-                          </Text>
-                        </View>
-                        <Text style={[styles.pointsText, { color: colors.textTertiary }]}>
-                          {answer.points} pts
+                            <Text style={[
+                              styles.correctBadgeText,
+                              {
+                                color: answer.is_correct
+                                  ? (isDark ? '#30D158' : '#34C759')
+                                  : (isDark ? '#FF453A' : '#FF3B30'),
+                                fontFamily
+                              }
+                            ]}>
+                              {answer.is_correct ? 'Correct' : 'Incorrect'}
+                            </Text>
+                          </View>
+                        )}
+
+                        <Text style={[styles.pointsText, { color: colors.textTertiary, fontFamily }]}>
+                          {answer.points}/{question?.points || 0} pts
                         </Text>
                       </View>
 
                       {question && (
                         <>
-                          <Text style={[styles.questionText, { color: colors.textPrimary }]}>
+                          <Text style={[styles.questionText, { color: colors.textPrimary, fontFamily }]}>
                             {question.question}
                           </Text>
 
                           {question.type === 'mcq' && (
                             <View style={styles.optionsReview}>
-                              <Text style={[styles.answerLabel, { color: colors.textSecondary }]}>
+                              <Text style={[styles.answerLabel, { color: colors.textSecondary, fontFamily }]}>
                                 Your answer:
                               </Text>
                               <Text style={[
@@ -373,21 +380,22 @@ export default function ExamResultsScreen() {
                                 answer.is_correct
                                   ? (isDark ? styles.correctTextDark : styles.correctText)
                                   : (isDark ? styles.incorrectTextDark : styles.incorrectText),
-                                { color: colors.textPrimary }
+                                { color: colors.textPrimary, fontFamily }
                               ]}>
-                                {answer.answer}
+                                {answer.answer || 'No answer provided'}
                               </Text>
 
-                              {!answer.is_correct && (
+                              {!answer.is_correct && !answer.needs_grading && (
                                 <>
-                                  <Text style={[styles.answerLabel, { color: colors.textSecondary }]}>
+                                  <Text style={[styles.answerLabel, { color: colors.textSecondary, fontFamily }]}>
                                     Correct answer:
                                   </Text>
                                   <Text style={[
                                     styles.correctAnswerText,
                                     {
                                       backgroundColor: isDark ? '#30D15820' : '#34C75920',
-                                      color: colors.textPrimary
+                                      color: colors.textPrimary,
+                                      fontFamily
                                     }
                                   ]}>
                                     {question.correct_answer}
@@ -399,7 +407,7 @@ export default function ExamResultsScreen() {
 
                           {question.type === 'text' && (
                             <View style={styles.textAnswerReview}>
-                              <Text style={[styles.answerLabel, { color: colors.textSecondary }]}>
+                              <Text style={[styles.answerLabel, { color: colors.textSecondary, fontFamily }]}>
                                 Your answer:
                               </Text>
                               <Text style={[
@@ -407,10 +415,59 @@ export default function ExamResultsScreen() {
                                 {
                                   backgroundColor: isDark ? '#1C1C1E' : '#F8F8F8',
                                   color: colors.textPrimary,
-                                  borderColor: colors.border
+                                  borderColor: colors.border,
+                                  fontFamily
                                 }
                               ]}>
-                                {answer.answer}
+                                {answer.answer || 'No answer provided'}
+                              </Text>
+
+                              {answer.needs_grading && (
+                                <View style={[styles.pendingNote, {
+                                  backgroundColor: isDark ? '#FF9F0A20' : '#FF950020',
+                                  borderColor: isDark ? '#FF9F0A' : '#FF9500'
+                                }]}>
+                                  <Ionicons name="time" size={16} color={isDark ? '#FF9F0A' : '#FF9500'} />
+                                  <Text style={[styles.pendingNoteText, {
+                                    color: isDark ? '#FF9F0A' : '#FF9500',
+                                    fontFamily
+                                  }]}>
+                                    Awaiting teacher review
+                                  </Text>
+                                </View>
+                              )}
+                            </View>
+                          )}
+
+                          {/* Show correct answer if available (for text questions or when manually graded) */}
+                          {question.correct_answer && (isManuallyGraded || !answer.needs_grading) && (
+                            <View style={[styles.correctAnswerSection, {
+                              backgroundColor: isDark ? '#30D15820' : '#34C75920',
+                              borderColor: isDark ? '#30D158' : '#34C759'
+                            }]}>
+                              <Text style={[styles.correctAnswerLabel, { color: colors.textPrimary, fontFamily }]}>
+                                Correct Answer:
+                              </Text>
+                              <Text style={[styles.correctAnswerValue, { color: colors.textPrimary, fontFamily }]}>
+                                {question.correct_answer}
+                              </Text>
+                            </View>
+                          )}
+
+                          {/* Show explanation if available */}
+                          {question.explanation && (
+                            <View style={[styles.explanationSection, {
+                              backgroundColor: isDark ? '#0A84FF20' : '#007AFF20',
+                              borderColor: isDark ? '#0A84FF' : '#007AFF'
+                            }]}>
+                              <View style={styles.explanationHeader}>
+                                <Ionicons name="information-circle" size={16} color={isDark ? '#0A84FF' : '#007AFF'} />
+                                <Text style={[styles.explanationTitle, { color: colors.textPrimary, fontFamily }]}>
+                                  Explanation
+                                </Text>
+                              </View>
+                              <Text style={[styles.explanationText, { color: colors.textPrimary, fontFamily }]}>
+                                {question.explanation}
                               </Text>
                             </View>
                           )}
@@ -428,7 +485,7 @@ export default function ExamResultsScreen() {
                     size={20}
                     color={isDark ? '#30D158' : '#34C759'}
                   />
-                  <Text style={[styles.summaryText, { color: colors.textPrimary }]}>
+                  <Text style={[styles.summaryText, { color: colors.textPrimary, fontFamily }]}>
                     {correctAnswers} questions correct
                   </Text>
                 </View>
@@ -438,11 +495,11 @@ export default function ExamResultsScreen() {
                     size={20}
                     color={isDark ? '#FF453A' : '#FF3B30'}
                   />
-                  <Text style={[styles.summaryText, { color: colors.textPrimary }]}>
+                  <Text style={[styles.summaryText, { color: colors.textPrimary, fontFamily }]}>
                     {totalQuestions - correctAnswers} questions incorrect
                   </Text>
                 </View>
-                <Text style={[styles.summaryHint, { color: colors.textTertiary }]}>
+                <Text style={[styles.summaryHint, { color: colors.textTertiary, fontFamily }]}>
                   Tap "Show All Answers" to review each question in detail
                 </Text>
               </View>
@@ -457,7 +514,7 @@ export default function ExamResultsScreen() {
             onPress={() => router.replace('/(student)/exams')}
           >
             <Ionicons name="list" size={20} color="#FFFFFF" />
-            <Text style={styles.primaryButtonText}>Back to Exams</Text>
+            <Text style={[styles.primaryButtonText, { fontFamily }]}>Back to Exams</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -468,21 +525,22 @@ export default function ExamResultsScreen() {
             onPress={() => router.push('/')}
           >
             <Ionicons name="home" size={20} color={colors.primary} />
-            <Text style={[styles.secondaryButtonText, { color: colors.primary }]}>
+            <Text style={[styles.secondaryButtonText, { color: colors.primary, fontFamily }]}>
               Go to Dashboard
             </Text>
           </TouchableOpacity>
-          <ShareModal
-            visible={showShareModal}
-            onClose={() => setShowShareModal(false)}
-            title={`Exam Results: ${resultData?.exam?.title || 'Results'}`}
-            link={generateExamResultsLink(
-              resultData?.submission?.id || '',
-              { title: resultData?.exam?.title }
-            )}
-            subject="Exam Results"
-          />
         </View>
+
+        <ShareModal
+          visible={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          title={`Exam Results: ${resultData?.exam?.title || 'Results'}`}
+          link={generateExamResultsLink(
+            resultData?.submission?.id || '',
+            { title: resultData?.exam?.title }
+          )}
+          subject="Exam Results"
+        />
       </Animated.ScrollView>
     </SafeAreaView >
   );
@@ -607,6 +665,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 4,
   },
+  feedbackCard: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: designTokens.borderRadius.xl,
+    borderWidth: 1,
+  },
+  feedbackHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  feedbackTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  feedbackText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
   answersSection: {
     margin: 16,
     padding: 20,
@@ -655,6 +734,16 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 4,
     marginRight: 8,
+  },
+  pendingBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  pendingBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   correct: {
   },
@@ -710,6 +799,54 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
+    marginBottom: 8,
+  },
+  pendingNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    borderRadius: 4,
+    borderWidth: 1,
+  },
+  pendingNoteText: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginLeft: 4,
+  },
+  correctAnswerSection: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 12,
+  },
+  correctAnswerLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  correctAnswerValue: {
+    fontSize: 15,
+    fontStyle: 'italic',
+  },
+  explanationSection: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 12,
+  },
+  explanationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  explanationTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  explanationText: {
+    fontSize: 15,
+    lineHeight: 20,
   },
   summaryView: {
   },
