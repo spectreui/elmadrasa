@@ -72,7 +72,6 @@ export default function RootLayout() {
 
   // ✅ Pre-warm token (to avoid unauthorized flickers)
   useEffect(() => {
-    AsyncStorage.setItem("introShown", "true");
     (async () => {
       await apiService.validateToken();
     })();
@@ -105,7 +104,7 @@ export default function RootLayout() {
 
   const renderIntro = () => {
     try {
-      return <ElmadrasaAnimation onAnimationComplete={handleHelloDone} speed={1.8} />;
+      return <ElmadrasaAnimation onAnimationComplete={handleHelloDone} speed={2} />;
     } catch (error) {
       console.error("❌ Animation error:", error);
       setAnimationError(true);
