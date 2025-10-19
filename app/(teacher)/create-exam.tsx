@@ -1015,7 +1015,7 @@ export default function CreateExamScreen() {
         flex: 1,
         backgroundColor: colors.background,
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
       }}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={{
@@ -1033,10 +1033,10 @@ export default function CreateExamScreen() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: colors.background, paddingBottom: 40 }}
+      style={{ flex: 1, backgroundColor: colors.background, paddingBottom: 70 }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={{ padding: designTokens.spacing.xl }}>
+      <View style={{ padding: designTokens.spacing.xl, paddingBottom: 80  }}>
         <Text style={{
           fontFamily,
           fontSize: designTokens.typography.title1.fontSize,

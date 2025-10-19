@@ -285,7 +285,7 @@ export default function SubmissionGradingScreen() {
   const maxScore = submission.total_points;
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingBottom: 70 }}>
       {/* Header */}
       <View style={{
         paddingHorizontal: 20,

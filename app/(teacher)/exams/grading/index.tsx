@@ -135,7 +135,7 @@ export default function ManualGradingScreen() {
 
       {/* Content */}
       <ScrollView
-        style={{ flex: 1, padding: designTokens.spacing.xl }}
+        style={{ flex: 1, padding: designTokens.spacing.xl, paddingBottom: 70 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
