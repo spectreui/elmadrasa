@@ -5,29 +5,17 @@ import { BlurView } from 'expo-blur';
 import { BottomTabBar } from '@react-navigation/bottom-tabs';
 import { useThemeContext } from '@/contexts/ThemeContext';
 
-const Blur = ({ children }: { children: React.ReactNode }) => {
-    const isNative = (Platform.OS === 'ios' || Platform.OS === 'android');
-    if (isNative) {
-        return (
-            <>
-                <BlurView intensity={80} tint="light" style={StyleSheet.absoluteFill} />
-                {children}
-            </>
-        )
-    }
-}
-
 const LiquidGlassTabBar = (props : any) => {
     const { isDark } = useThemeContext();
     // Web-compatible glass effect styles
     const webGlassStyle = Platform.select({
         web: {
-            backgroundColor: isDark ? 'rgba(0, 0, 0, 0.25' : 'rgba(255, 255, 255, 0.25)',
+            backgroundColor: isDark ? 'rgba(0, 0, 0, 0.25)' : 'rgba(255, 255, 255, 0.25)',
             backdropFilter: 'blur(20px) saturate(180%)',
             WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         },
         ios: {
-            backgroundColor: isDark ? 'rgba(0, 0, 0, 0.25' : 'rgba(255, 255, 255, 0.25)',
+            backgroundColor: isDark ? 'rgba(0, 0, 0, 0.25)' : 'rgba(255, 255, 255, 0.25)',
             backdropFilter: 'blur(20px) saturate(180%)',
             WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         }
@@ -55,8 +43,8 @@ const LiquidGlassTabBar = (props : any) => {
             {/* Native BlurView - won't affect web */}
             {Platform.OS !== 'web' && (
                 <BlurView
-                    intensity={80}
-                    tint="light"
+                    intensity={100}
+                    tint={isDark ? "dark" : "light"}
                     style={StyleSheet.absoluteFill}
                 />
             )}

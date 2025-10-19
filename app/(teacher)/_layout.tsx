@@ -70,7 +70,6 @@ export default function TeacherLayout() {
         name="exams/index"
         options={{
           title: t('exams'),
-          sceneStyle: {paddingBottom: 40},
           tabBarIcon: ({ color, size, focused }) =>
             <View className="items-center justify-center">
               <Ionicons
@@ -79,7 +78,6 @@ export default function TeacherLayout() {
                 color={color} />
 
             </View>
-
         }} />
 
       <Tabs.Screen
@@ -101,7 +99,6 @@ export default function TeacherLayout() {
         name="my-classes"
         options={{
           title: t("dashboard.classes"),
-          sceneStyle: {paddingBottom: 40},
           tabBarIcon: ({ color, size, focused }) =>
             <View className="items-center justify-center">
               <Ionicons
@@ -117,7 +114,6 @@ export default function TeacherLayout() {
         name="statistics"
         options={{
           title: t("dashboard.analytics"),
-          sceneStyle: {paddingBottom: 40},
           tabBarIcon: ({ color, size, focused }) =>
             <View className="items-center justify-center">
               <Ionicons
@@ -134,7 +130,6 @@ export default function TeacherLayout() {
         options={{
           title: t("profile.title"),
           href: null,
-          sceneStyle: {paddingBottom: 40},
           tabBarIcon: ({ color, size, focused }) =>
             <View className="items-center justify-center">
               <Ionicons
@@ -149,56 +144,48 @@ export default function TeacherLayout() {
       <Tabs.Screen
         name="exam-results/[id]"
         options={{
-          sceneStyle: {paddingBottom: 40},
           href: null // This hides it from tab bar
         }} />
 
       <Tabs.Screen
         name="create-exam"
         options={{
-          sceneStyle: {paddingBottom: 40},
           href: null // This hides it from tab bar
         }} />
 
       <Tabs.Screen
         name="homework/[id]/submissions"
         options={{
-          sceneStyle: {paddingBottom: 40},
           href: null // This hides it from tab bar
         }} />
 
       <Tabs.Screen
         name="homework/edit/[id]"
         options={{
-          sceneStyle: {paddingBottom: 40},
           href: null // This hides it from tab bar
         }} />
 
       <Tabs.Screen
         name="activity"
         options={{
-          sceneStyle: {paddingBottom: 40},
           href: null // This hides it from tab bar
         }} />
 
       <Tabs.Screen
         name="homework/create"
         options={{
-          sceneStyle: {paddingBottom: 40},
           href: null // This hides it from tab bar
         }} />
 
       <Tabs.Screen
         name="homework/[id]/index"
         options={{
-          sceneStyle: {paddingBottom: 40},
           href: null // This hides it from tab bar
         }} />
 
       <Tabs.Screen
         name="exams/[id]"
         options={{
-          sceneStyle: {paddingBottom: 40},
           href: null // This hides it from tab bar
         }} />
       <Tabs.Screen
@@ -213,7 +200,6 @@ export default function TeacherLayout() {
       <Tabs.Screen
         name="exams/grading/index"
         options={{
-          sceneStyle: {paddingBottom: 40},
           href: null // This hides it from tab bar
         }} />
     </Tabs>

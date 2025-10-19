@@ -18,6 +18,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AlertProvider } from "@/components/Alert";
 import ElmadrasaAnimation from "@/components/AppleHello";
 import { FancyTabBarProvider } from "@/contexts/TabBarContext";
+import AutoKeyboardView from "@/components/AutoKeyboardView";
 
 // Keep splash screen until ready
 SplashScreen.preventAutoHideAsync();
@@ -147,7 +148,10 @@ export default function RootLayout() {
                   />
                   <SafeAreaView>
                     <FancyTabBarProvider>
-                      <Slot/>
+                      {/* ✅ Global keyboard + bottom nav spacing */}
+                      <AutoKeyboardView>
+                        <Slot />
+                      </AutoKeyboardView>
                     </FancyTabBarProvider>
                   </SafeAreaView>
                 </NotificationProvider>

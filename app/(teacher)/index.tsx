@@ -641,6 +641,7 @@ const styles = {
     textAlign: 'center',
   } as any,
   bottomSpacing: {
-    height: designTokens.spacing.xxl,
+    height: designTokens.spacing.xxxl,
+    paddingBottom: 100
   } as any,
 };

@@ -620,7 +620,7 @@ export default function CreateHomeworkScreen() {
       style={{ flex: 1, backgroundColor: colors.background }}
     >
       <ScrollView
-        style={{ flex: 1, paddingBottom: 40 }}
+        style={{ flex: 1, paddingBottom: 0 }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ flexGrow: 1 }}
       >
@@ -658,7 +658,7 @@ export default function CreateHomeworkScreen() {
           </View>
         </View>
 
-        <View style={{ flex: 1, padding: 20 }}>
+        <View style={{ flex: 1, padding: 20, marginBottom: 80 }}>
           <View style={{
             borderRadius: 20,
             padding: 20,
