@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Dimensions
+  Dimensions,
+  I18nManager
 } from 'react-native';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { apiService } from '../../../src/services/api';
@@ -38,7 +39,7 @@ interface Homework {
 }
 
 export default function TeacherHomeworkScreen() {
-  const { t } = useTranslation();
+  const { t, isRTL } = useTranslation();
   const { user, isAuthenticated } = useAuth();
   const [homework, setHomework] = useState<Homework[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,11 +54,11 @@ export default function TeacherHomeworkScreen() {
       if (response.data.success) {
         setHomework(response.data.data || []);
       } else {
-        throw new Error(response.data.error || 'Failed to load homework');
+        throw new Error(response.data.error || t('homework.errors.loadFailed'));
       }
     } catch (error: any) {
       console.error('Failed to load homework:', error);
-      Alert.alert('Error', error.message || 'Failed to load homework assignments');
+      Alert.alert(t('common.error'), error.message || t('homework.errors.loadFailed'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -96,7 +97,7 @@ export default function TeacherHomeworkScreen() {
   };
 
   const formatDueDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric'
     });
@@ -110,12 +111,50 @@ export default function TeacherHomeworkScreen() {
     router.push('/homework/create');
   };
 
+  // RTL-aware styles
+  const rtlStyles = {
+    headerContent: {
+      flexDirection: isRTL ? 'row-reverse' : 'row' as any,
+    },
+    newButton: {
+      flexDirection: isRTL ? 'row-reverse' : 'row' as any,
+    },
+    statsGrid: {
+      flexDirection: isRTL ? 'row-reverse' : 'row' as any,
+    },
+    cardHeader: {
+      flexDirection: isRTL ? 'row-reverse' : 'row' as any,
+    },
+    cardTextContainer: {
+      marginRight: isRTL ? 0 : 12,
+      marginLeft: isRTL ? 12 : 0,
+    },
+    tagContainer: {
+      flexDirection: isRTL ? 'row-reverse' : 'row' as any,
+    },
+    progressHeader: {
+      flexDirection: isRTL ? 'row-reverse' : 'row' as any,
+    },
+    cardFooter: {
+      flexDirection: isRTL ? 'row-reverse' : 'row' as any,
+    },
+    footerInfo: {
+      flexDirection: isRTL ? 'row-reverse' : 'row' as any,
+    },
+    footerItem: {
+      flexDirection: isRTL ? 'row-reverse' : 'row' as any,
+    },
+    viewText: {
+      transform: isRTL ? [{ scaleX: -1 }] : [] as any,
+    }
+  };
+
   if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
           <Text style={[styles.headerTitle, { fontFamily, color: colors.textPrimary }]}>
-            Homework
+            {t('homework.title')}
           </Text>
         </View>
         <View style={styles.loadingContainer}>
@@ -132,16 +171,16 @@ export default function TeacherHomeworkScreen() {
     <View style={[styles.container, { fontFamily, backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.background }]}>
-        <View style={styles.headerContent}>
+        <View style={[styles.headerContent, rtlStyles.headerContent]}>
           <Text style={[styles.headerTitle, { fontFamily, color: colors.textPrimary }]}>
-            Homework
+            {t('homework.title')}
           </Text>
           <TouchableOpacity
-            style={[styles.newButton, { backgroundColor: colors.primary }]}
+            style={[styles.newButton, rtlStyles.newButton, { backgroundColor: colors.primary }]}
             onPress={handleCreateHomework}
           >
             <Ionicons name="add" size={20} color="white" />
-            <Text style={styles.newButtonText}>New</Text>
+            <Text style={styles.newButtonText}>{t('common.new')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -150,13 +189,13 @@ export default function TeacherHomeworkScreen() {
           <Text style={[styles.statsTitle, { fontFamily, color: colors.textPrimary }]}>
             {t("dashboard.overview")}
           </Text>
-          <View style={styles.statsGrid}>
+          <View style={[styles.statsGrid, rtlStyles.statsGrid]}>
             <View style={styles.statItem}>
               <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>
                 {homework.length}
               </Text>
               <Text style={[styles.statLabel, { fontFamily, color: colors.textSecondary }]}>
-                Total
+                {t('homework.stats.total')}
               </Text>
             </View>
             <View style={styles.statItem}>
@@ -206,16 +245,16 @@ export default function TeacherHomeworkScreen() {
           <View style={[styles.emptyState, { backgroundColor: colors.backgroundElevated }]}>
             <Ionicons name="document-text-outline" size={64} color={colors.textTertiary} />
             <Text style={[styles.emptyStateTitle, { fontFamily, color: colors.textPrimary }]}>
-              No Homework Yet
+              {t('homework.emptyState.title')}
             </Text>
             <Text style={[styles.emptyStateSubtitle, { fontFamily, color: colors.textSecondary }]}>
-              Create your first homework assignment to get started
+              {t('homework.emptyState.subtitle')}
             </Text>
             <TouchableOpacity
               style={[styles.createButton, { backgroundColor: colors.primary }]}
               onPress={handleCreateHomework}
             >
-              <Text style={styles.createButtonText}>Create Homework</Text>
+              <Text style={styles.createButtonText}>{t('homework.createButton')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -237,8 +276,8 @@ export default function TeacherHomeworkScreen() {
                   onPress={() => handleHomeworkPress(item)}
                   activeOpacity={0.8}
                 >
-                  <View style={styles.cardHeader}>
-                    <View style={styles.cardTextContainer}>
+                  <View style={[styles.cardHeader, rtlStyles.cardHeader]}>
+                    <View style={[styles.cardTextContainer, rtlStyles.cardTextContainer]}>
                       <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>
                         {item.title}
                       </Text>
@@ -248,7 +287,7 @@ export default function TeacherHomeworkScreen() {
                       >
                         {item.description}
                       </Text>
-                      <View style={styles.tagContainer}>
+                      <View style={[styles.tagContainer, rtlStyles.tagContainer]}>
                         <View style={[styles.tag, { backgroundColor: `${colors.primary}15` }]}>
                           <Text style={[styles.tagText, { fontFamily, color: colors.primary }]}>
                             {item.subject}
@@ -261,20 +300,20 @@ export default function TeacherHomeworkScreen() {
                         </View>
                         <View style={[styles.tag, { backgroundColor: `${colors.textTertiary}15` }]}>
                           <Text style={[styles.tagText, { fontFamily, color: colors.textSecondary }]}>
-                            {item.points} pts
+                            {item.points} {t('homework.points')}
                           </Text>
                         </View>
                         {isOverdue && (
                           <View style={[styles.tag, { backgroundColor: `${colors.error}15` }]}>
                             <Text style={[styles.tagText, { fontFamily, color: colors.error }]}>
-                              Overdue
+                              {t('homework.overdue')}
                             </Text>
                           </View>
                         )}
                       </View>
                     </View>
                     <Ionicons
-                      name="chevron-forward"
+                      name={isRTL ? "chevron-back" : "chevron-forward"}
                       size={20}
                       color={colors.textTertiary}
                     />
@@ -284,7 +323,7 @@ export default function TeacherHomeworkScreen() {
                   <View style={styles.progressContainer}>
                     {/* Submission Progress */}
                     <View style={styles.progressBarContainer}>
-                      <View style={styles.progressHeader}>
+                      <View style={[styles.progressHeader, rtlStyles.progressHeader]}>
                         <Text style={[styles.progressTitle, { fontFamily, color: colors.textPrimary }]}>
                           {t("submissions.title")}
                         </Text>
@@ -307,12 +346,12 @@ export default function TeacherHomeworkScreen() {
 
                     {/* Grading Progress */}
                     <View style={styles.progressBarContainer}>
-                      <View style={styles.progressHeader}>
+                      <View style={[styles.progressHeader, rtlStyles.progressHeader]}>
                         <Text style={[styles.progressTitle, { fontFamily, color: colors.textPrimary }]}>
-                          Grading Progress
+                          {t('homework.gradingProgress')}
                         </Text>
                         <Text style={[styles.progressSubtitle, { fontFamily, color: colors.textSecondary }]}>
-                          {stats.graded}/{stats.submitted} graded
+                          {stats.graded}/{stats.submitted} {t('homework.graded')}
                         </Text>
                       </View>
                       <View style={[styles.progressBar, { backgroundColor: colors.background }]}>
@@ -330,25 +369,25 @@ export default function TeacherHomeworkScreen() {
                   </View>
 
                   {/* Footer Info */}
-                  <View style={styles.cardFooter}>
-                    <View style={styles.footerInfo}>
-                      <View style={styles.footerItem}>
+                  <View style={[styles.cardFooter, rtlStyles.cardFooter]}>
+                    <View style={[styles.footerInfo, rtlStyles.footerInfo]}>
+                      <View style={[styles.footerItem, rtlStyles.footerItem]}>
                         <Ionicons name="calendar" size={16} color={colors.textSecondary} />
                         <Text style={[styles.footerText, { fontFamily, color: colors.textSecondary }]}>
-                          Due: {formatDueDate(item.due_date)}
+                          {t('homework.due')}: {formatDueDate(item.due_date)}
                         </Text>
                       </View>
                       {stats.averageScore > 0 && (
-                        <View style={styles.footerItem}>
+                        <View style={[styles.footerItem, rtlStyles.footerItem]}>
                           <Ionicons name="trophy" size={16} color={colors.warning} />
                           <Text style={[styles.footerText, { fontFamily, color: colors.warning }]}>
-                            Avg: {stats.averageScore}%
+                            {t('homework.average')}: {stats.averageScore}%
                           </Text>
                         </View>
                       )}
                     </View>
-                    <Text style={[styles.viewText, { fontFamily, color: colors.primary }]}>
-                      View →
+                    <Text style={[styles.viewText, rtlStyles.viewText, { fontFamily, color: colors.primary }]}>
+                      {isRTL ? '← View' : 'View →'}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -377,7 +416,6 @@ const styles = {
     borderBottomColor: 'rgba(0,0,0,0.1)',
   } as any,
   headerContent: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 20,
@@ -388,7 +426,6 @@ const styles = {
     letterSpacing: -0.5,
   } as any,
   newButton: {
-    flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -403,7 +440,7 @@ const styles = {
     color: 'white',
     fontWeight: '700',
     fontSize: 17,
-    marginLeft: 6,
+    marginHorizontal: 6,
   } as any,
   statsOverview: {
     borderRadius: 16,
@@ -417,7 +454,6 @@ const styles = {
     letterSpacing: -0.2,
   } as any,
   statsGrid: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
   } as any,
   statItem: {
@@ -507,14 +543,12 @@ const styles = {
     elevation: 3,
   } as any,
   cardHeader: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 16,
   } as any,
   cardTextContainer: {
     flex: 1,
-    marginRight: 12,
   } as any,
   cardTitle: {
     fontSize: 20,
@@ -529,7 +563,6 @@ const styles = {
     opacity: 0.8,
   } as any,
   tagContainer: {
-    flexDirection: 'row',
     flexWrap: 'wrap' as 'wrap',
     gap: 8,
   } as any,
@@ -550,7 +583,6 @@ const styles = {
     gap: 6,
   } as any,
   progressHeader: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   } as any,
@@ -574,22 +606,19 @@ const styles = {
     borderRadius: 3,
   } as any,
   cardFooter: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   } as any,
   footerInfo: {
-    flexDirection: 'row',
     gap: 16,
   } as any,
   footerItem: {
-    flexDirection: 'row',
     alignItems: 'center',
   } as any,
   footerText: {
     fontSize: 15,
     fontWeight: '500',
-    marginLeft: 6,
+    marginHorizontal: 6,
     opacity: 0.8,
   } as any,
   viewText: {

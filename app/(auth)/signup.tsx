@@ -14,7 +14,8 @@ import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { designTokens } from '../../src/utils/designTokens';
-import { useThemeContext } from '../../src/contexts/ThemeContext';import { useTranslation } from "@/hooks/useTranslation";
+import { useThemeContext } from '../../src/contexts/ThemeContext';
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface Level {
   id: string;
@@ -31,9 +32,9 @@ interface Class {
   level_id: string;
 }
 
-export default function SignUp() {const { t } = useTranslation();
+export default function SignUp() {
+  const { t } = useTranslation();
   const { fontFamily, colors, isDark } = useThemeContext();
-
 
   // Form state
   const [formData, setFormData] = useState({
@@ -78,7 +79,7 @@ export default function SignUp() {const { t } = useTranslation();
       }
     } catch (error) {
       console.error('Failed to load levels:', error);
-      Alert.alert('Error', 'Failed to load school levels');
+      Alert.alert(t("common.error"), t("auth.loadLevelsFailed"));
     } finally {
       setDataLoading(false);
     }
@@ -94,14 +95,13 @@ export default function SignUp() {const { t } = useTranslation();
       }
     } catch (error) {
       console.error('Failed to load grades:', error);
-      Alert.alert('Error', 'Failed to load grades');
+      Alert.alert(t("common.error"), t("auth.loadGradesFailed"));
     } finally {
       setDataLoading(false);
     }
   };
 
   // Add these helper functions at the top of signup.tsx
-  // Add these updated helper functions at the top of signup.tsx
   const mapGradeToNumeric = (grade: string, levelShortName?: string): string => {
     // Handle Prep levels (1st, 2nd, 3rd -> 1, 2, 3)
     if (levelShortName === 'PREP') {
@@ -205,6 +205,7 @@ export default function SignUp() {const { t } = useTranslation();
 
     return defaultMap[grade] || grade;
   };
+
   const loadClasses = async (grade: string, levelId: string) => {
     setDataLoading(true);
     setClasses([]); // Clear previous classes immediately
@@ -224,12 +225,11 @@ export default function SignUp() {const { t } = useTranslation();
       }
     } catch (error) {
       console.error('Failed to load classes:', error);
-      Alert.alert('Error', 'Failed to load classes');
+      Alert.alert(t("common.error"), t("auth.loadClassesFailed"));
     } finally {
       setDataLoading(false);
     }
   };
-
 
   const handleLevelSelect = (levelId: string) => {
     setFormData({
@@ -242,7 +242,6 @@ export default function SignUp() {const { t } = useTranslation();
     loadGrades(levelId);
   };
 
-  // In signup.tsx - update handleGradeSelect function
   const handleGradeSelect = (grade: string) => {
     setFormData({
       ...formData,
@@ -257,7 +256,6 @@ export default function SignUp() {const { t } = useTranslation();
     }
   };
 
-
   const handleClassSelect = (classId: string) => {
     setFormData({
       ...formData,
@@ -269,27 +267,27 @@ export default function SignUp() {const { t } = useTranslation();
   const handleSignUp = async () => {
     // Validation
     if (!formData.email || !formData.password || !formData.name) {
-      Alert.alert('Error', 'Please fill in all required fields');
+      Alert.alert(t("common.error"), t("auth.fillRequiredFields"));
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      Alert.alert(t("common.error"), t("auth.passwordsDoNotMatch"));
       return;
     }
 
     if (formData.password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters long');
+      Alert.alert(t("common.error"), t("auth.passwordLength"));
       return;
     }
 
     if (formData.role === 'student') {
       if (!formData.studentId) {
-        Alert.alert('Error', 'Student ID is required');
+        Alert.alert(t("common.error"), t("auth.studentIdRequired"));
         return;
       }
       if (!formData.levelId || !formData.grade || !formData.classId) {
-        Alert.alert('Error', 'Please select your level, grade, and class');
+        Alert.alert(t("common.error"), t("auth.selectLevelGradeClass"));
         return;
       }
     }
@@ -309,17 +307,17 @@ export default function SignUp() {const { t } = useTranslation();
         password: formData.password,
         role: formData.role,
         student_id: formData.role === 'student' ? formData.studentId : undefined,
-        class_id: formData.role === 'student' ? formData.classId : undefined, // This should link properly
+        class_id: formData.role === 'student' ? formData.classId : undefined,
         profile: {
           name: formData.name,
           level: selectedLevel?.name || '',
           grade: egyptianGrade || '',
-          class: selectedClass?.name || '', // Use selected class name
+          class: selectedClass?.name || '',
           subjects: []
         }
       };
 
-      console.log('Sending signup data:', signUpData); // Debug log
+      console.log('Sending signup data:', signUpData);
 
       const response = await apiService.api.post('/auth/register', signUpData);
 
@@ -336,8 +334,8 @@ export default function SignUp() {const { t } = useTranslation();
     } catch (error: any) {
       console.error('Sign up error:', error);
       Alert.alert(
-        'Error',
-        error.response?.data?.error || error.message || 'Registration failed'
+        t("common.error"),
+        error.response?.data?.error || error.message || t("auth.registrationFailed")
       );
     } finally {
       setLoading(false);
@@ -347,17 +345,17 @@ export default function SignUp() {const { t } = useTranslation();
   // Get display names for selected items
   const getSelectedLevelName = () => {
     const level = levels.find((l) => l.id === formData.levelId);
-    return level ? level.name : 'Select Level';
+    return level ? level.name : t("auth.selectLevel");
   };
 
   const getSelectedGradeName = () => {
-    if (!formData.grade) return 'Select Grade';
+    if (!formData.grade) return t("auth.selectGrade");
     return mapGradeToEgyptian(formData.grade);
   };
 
   const getSelectedClassName = () => {
     const cls = classes.find((c) => c.id === formData.classId);
-    return cls ? cls.name : 'Select Class';
+    return cls ? cls.name : t("auth.selectClass");
   };
 
   return (
@@ -399,13 +397,13 @@ export default function SignUp() {const { t } = useTranslation();
               color: colors.textPrimary,
               marginBottom: designTokens.spacing.xs
             } as any}>
-              Create Account
+              {t("auth.createAccount")}
             </Text>
             <Text style={{ fontFamily, 
               fontSize: designTokens.typography.body.fontSize,
               color: colors.textSecondary
             }}>
-              Join your school community
+              {t("auth.joinCommunity")}
             </Text>
           </View>
 
@@ -419,7 +417,7 @@ export default function SignUp() {const { t } = useTranslation();
                 color: colors.textPrimary,
                 marginBottom: designTokens.spacing.sm
               }}>
-                Full Name *
+                {t("auth.fullName")} *
               </Text>
               <TextInput
                 style={{
@@ -431,7 +429,7 @@ export default function SignUp() {const { t } = useTranslation();
                   color: colors.textPrimary,
                   fontSize: designTokens.typography.body.fontSize
                 }}
-                placeholder="Enter your full name"
+                placeholder={t("auth.enterFullName")}
                 value={formData.name}
                 onChangeText={(text) => setFormData({ ...formData, name: text })}
                 placeholderTextColor={colors.textTertiary} />
@@ -446,7 +444,7 @@ export default function SignUp() {const { t } = useTranslation();
                 color: colors.textPrimary,
                 marginBottom: designTokens.spacing.sm
               }}>
-                Email Address *
+                {t("auth.emailAddress")} *
               </Text>
               <TextInput
                 style={{
@@ -458,7 +456,7 @@ export default function SignUp() {const { t } = useTranslation();
                   color: colors.textPrimary,
                   fontSize: designTokens.typography.body.fontSize
                 }}
-                placeholder="Enter your email"
+                placeholder={t("auth.enterEmail")}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 value={formData.email}
@@ -475,7 +473,7 @@ export default function SignUp() {const { t } = useTranslation();
                 color: colors.textPrimary,
                 marginBottom: designTokens.spacing.md
               }}>
-                I am a *
+                {t("auth.iam")} *
               </Text>
               <View style={{
                 flexDirection: 'row',
@@ -506,7 +504,7 @@ export default function SignUp() {const { t } = useTranslation();
                     color: formData.role === 'student' ? colors.primary : colors.textPrimary,
                     fontSize: designTokens.typography.body.fontSize
                   }}>
-                    Student
+                    {t("common.student")}
                   </Text>
                 </TouchableOpacity>
 
@@ -535,7 +533,7 @@ export default function SignUp() {const { t } = useTranslation();
                     color: formData.role === 'teacher' ? colors.primary : colors.textPrimary,
                     fontSize: designTokens.typography.body.fontSize
                   }}>
-                    Teacher
+                    {t("common.teacher")}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -552,7 +550,7 @@ export default function SignUp() {const { t } = useTranslation();
                   color: colors.textPrimary,
                   marginBottom: designTokens.spacing.sm
                 }}>
-                    Student ID *
+                    {t("auth.studentId")} *
                   </Text>
                   <TextInput
                   style={{
@@ -564,7 +562,7 @@ export default function SignUp() {const { t } = useTranslation();
                     color: colors.textPrimary,
                     fontSize: designTokens.typography.body.fontSize
                   }}
-                  placeholder="Enter your student ID"
+                  placeholder={t("auth.enterStudentId")}
                   value={formData.studentId}
                   onChangeText={(text) => setFormData({ ...formData, studentId: text })}
                   placeholderTextColor={colors.textTertiary}
@@ -580,7 +578,7 @@ export default function SignUp() {const { t } = useTranslation();
                   color: colors.textPrimary,
                   marginBottom: designTokens.spacing.sm
                 }}>
-                    Level *
+                    {t("auth.level")} *
                   </Text>
                   <TouchableOpacity
                   style={{
@@ -643,7 +641,7 @@ export default function SignUp() {const { t } = useTranslation();
                       textAlign: 'center',
                       fontSize: designTokens.typography.body.fontSize
                     }}>
-                            No levels available
+                            {t("common.noItems")}
                           </Text>
                         </View> :
 
@@ -678,7 +676,7 @@ export default function SignUp() {const { t } = useTranslation();
                   color: colors.textPrimary,
                   marginBottom: designTokens.spacing.sm
                 }}>
-                    Grade *
+                    {t("auth.grade")} *
                   </Text>
                   <TouchableOpacity
                   style={{
@@ -697,7 +695,7 @@ export default function SignUp() {const { t } = useTranslation();
                       setShowLevelDropdown(false);
                       setShowClassDropdown(false);
                     } else {
-                      Alert.alert(t("common.error"), 'Please select a level first');
+                      Alert.alert(t("common.error"), t("auth.selectLevelFirst"));
                     }
                   }}
                   disabled={!formData.levelId}>
@@ -746,7 +744,7 @@ export default function SignUp() {const { t } = useTranslation();
                       textAlign: 'center',
                       fontSize: designTokens.typography.body.fontSize
                     }}>
-                            No grades available
+                            {t("common.noItems")}
                           </Text>
                         </View> :
 
@@ -780,9 +778,9 @@ export default function SignUp() {const { t } = useTranslation();
                   fontWeight: '600',
                   color: colors.textPrimary,
                   marginBottom: designTokens.spacing.sm
-                }}>{t("homework.classRequired")}
-
-                </Text>
+                }}>
+                    {t("auth.class")} *
+                  </Text>
                   <TouchableOpacity
                   style={{
                     borderWidth: 1,
@@ -800,7 +798,7 @@ export default function SignUp() {const { t } = useTranslation();
                       setShowLevelDropdown(false);
                       setShowGradeDropdown(false);
                     } else {
-                      Alert.alert(t("common.error"), 'Please select a grade first');
+                      Alert.alert(t("common.error"), t("auth.selectGradeFirst"));
                     }
                   }}
                   disabled={!formData.grade}>
@@ -849,7 +847,7 @@ export default function SignUp() {const { t } = useTranslation();
                       textAlign: 'center',
                       fontSize: designTokens.typography.body.fontSize
                     }}>
-                            No classes available
+                            {t("common.noItems")}
                           </Text>
                         </View> :
 
@@ -886,7 +884,7 @@ export default function SignUp() {const { t } = useTranslation();
                 color: colors.textPrimary,
                 marginBottom: designTokens.spacing.sm
               }}>
-                Password *
+                {t("common.password")} *
               </Text>
               <View style={{ position: 'relative' }}>
                 <TextInput
@@ -900,7 +898,7 @@ export default function SignUp() {const { t } = useTranslation();
                     fontSize: designTokens.typography.body.fontSize,
                     paddingRight: 52
                   }}
-                  placeholder="Enter your password"
+                  placeholder={t("auth.enterPassword")}
                   secureTextEntry={!showPassword}
                   value={formData.password}
                   onChangeText={(text) => setFormData({ ...formData, password: text })}
@@ -931,7 +929,7 @@ export default function SignUp() {const { t } = useTranslation();
                 color: colors.textPrimary,
                 marginBottom: designTokens.spacing.sm
               }}>
-                Confirm Password *
+                {t("auth.confirmPassword")} *
               </Text>
               <View style={{ position: 'relative' }}>
                 <TextInput
@@ -945,7 +943,7 @@ export default function SignUp() {const { t } = useTranslation();
                     fontSize: designTokens.typography.body.fontSize,
                     paddingRight: 52
                   }}
-                  placeholder="Confirm your password"
+                  placeholder={t("auth.confirmYourPassword")}
                   secureTextEntry={!showConfirmPassword}
                   value={formData.confirmPassword}
                   onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
@@ -991,7 +989,7 @@ export default function SignUp() {const { t } = useTranslation();
                   fontSize: designTokens.typography.body.fontSize,
                   marginLeft: designTokens.spacing.sm
                 }}>
-                    Creating Account...
+                    {t("auth.creatingAccount")}
                   </Text>
                 </View> :
 
@@ -1000,7 +998,7 @@ export default function SignUp() {const { t } = useTranslation();
                 fontWeight: '600',
                 fontSize: designTokens.typography.body.fontSize
               }}>
-                  Create Account
+                  {t("auth.createAccount")}
                 </Text>
               }
             </TouchableOpacity>
@@ -1015,7 +1013,7 @@ export default function SignUp() {const { t } = useTranslation();
                 color: colors.textSecondary,
                 fontSize: designTokens.typography.body.fontSize
               }}>
-                Already have an account?{' '}
+                {t("auth.haveAccount")}{' '}
               </Text>
               <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
                 <Text style={{ fontFamily, 
@@ -1023,7 +1021,7 @@ export default function SignUp() {const { t } = useTranslation();
                   fontWeight: '600',
                   fontSize: designTokens.typography.body.fontSize
                 }}>
-                  Sign In
+                  {t("auth.signIn")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1031,5 +1029,4 @@ export default function SignUp() {const { t } = useTranslation();
         </View>
       </ScrollView>
     </View>);
-
 }

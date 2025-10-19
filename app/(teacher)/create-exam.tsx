@@ -6,10 +6,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useThemeContext } from '../../src/contexts/ThemeContext';
 import { designTokens } from '../../src/utils/designTokens';
-import * as FileSystem from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -35,6 +33,11 @@ export default function CreateExamScreen() {
   const [attachmentType, setAttachmentType] = useState<'pdf' | 'image' | null>(null);
   const [attachmentName, setAttachmentName] = useState<string | null>(null);
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
+  const [extractingQuestions, setExtractingQuestions] = useState(false);
+  const [showAIOptions, setShowAIOptions] = useState(false);
+  const [attachmentBase64, setAttachmentBase64] = useState<string | null>(null);
+  const [attachmentMimeType, setAttachmentMimeType] = useState<string | null>(null);
+
   const [questions, setQuestions] = useState<any[]>([
     {
       question: '',
@@ -82,6 +85,7 @@ export default function CreateExamScreen() {
         setAttachmentType(exam.attachment_type === "pdf" || exam.attachment_type === "image" ? exam.attachment_type : null);
         setAttachmentName(exam.attachment_name || null);
         setAllowImageSubmissions(exam.allow_image_submissions || false);
+
 
         // Settings
         if (exam.settings) {
@@ -211,65 +215,142 @@ export default function CreateExamScreen() {
     }
   };
 
-  // Add this function to handle file picking and upload
   const pickAndUploadAttachment = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/pdf', 'image/*'],
-        copyToCacheDirectory: true
+        type: ["application/pdf", "image/*"],
+        copyToCacheDirectory: true,
       });
 
-      if (result.assets && result.assets.length > 0) {
-        const asset = result.assets[0];
-        setUploadingAttachment(true);
+      if (!result.assets || result.assets.length === 0) return;
+      const asset = result.assets[0];
 
-        // For images, we can upload as base64
-        if (asset.mimeType?.startsWith('image/')) {
-          try {
-            // Use fetch to get binary data and convert to base64
-            const response = await fetch(asset.uri);
-            const blob = await response.blob();
+      setUploadingAttachment(true);
 
-            // Convert blob to base64
-            const base64 = await new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => {
-                // Remove the data URL prefix
-                const base64String = (reader.result as string).split(',')[1];
-                resolve(base64String);
-              };
-              reader.onerror = reject;
-              reader.readAsDataURL(blob);
-            });
+      const mimeType = asset.mimeType || "application/octet-stream";
+      const fileName = asset.name || `file-${Date.now()}`;
 
-            // Upload to backend
-            const uploadResponse = await apiService.api.post('/upload/exam-image-base64', {
-              image: `data:${asset.mimeType};base64,${base64}`,
-              fileName: asset.name
-            });
-
-            if (uploadResponse.data.success && uploadResponse.data.url) {
-              setAttachmentUrl(uploadResponse.data.url);
-              setAttachmentType('image');
-              setAttachmentName(asset.name);
-              Alert.alert(t('common.success'), t('exams.imageUploaded'));
-            }
-          } catch (error) {
-            console.error('Image upload error:', error);
-            Alert.alert(t('common.error'), t('exams.imageUploadFailed'));
+      const response = await fetch(asset.uri);
+      const blob = await response.blob();
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          // FIX: Extract ONLY the base64 part without the prefix
+          if (result.includes("base64,")) {
+            resolve(result.split("base64,")[1]);
+          } else {
+            // If no prefix, use the whole result
+            resolve(result);
           }
-        }
-        // For PDFs, we need to handle differently
-        else if (asset.mimeType === 'application/pdf') {
-          Alert.alert(t('exams.info'), t('exams.pdfUploadInfo'));
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      const uploadResponse = await apiService.api.post("/upload/file", {
+        file: `data:${mimeType};base64,${base64Data}`,
+        fileName,
+        fileType: mimeType,
+      });
+
+      if (uploadResponse.data.success && uploadResponse.data.data?.url) {
+        const uploadedUrl = uploadResponse.data.data.url;
+        const type = mimeType.startsWith("image/")
+          ? "image"
+          : mimeType === "application/pdf"
+            ? "pdf"
+            : "other";
+
+        setAttachmentUrl(uploadedUrl);
+        setAttachmentType(type);
+        setAttachmentName(fileName);
+        setAttachmentBase64(base64Data); // This now has JUST the base64 string
+        setAttachmentMimeType(mimeType);
+
+        setShowAIOptions(true);
+        Alert.alert(t("common.success"), t("exams.fileUploaded"));
+
+        if (mimeType.startsWith("image/") || mimeType === "application/pdf") {
+          setShowAIOptions(true);
+          setTimeout(() => {
+            handleAIExtraction("file", uploadedUrl, fileName, base64Data, mimeType);
+          }, 600);
         }
 
-        setUploadingAttachment(false);
+      } else {
+        throw new Error(uploadResponse.data.error || "Upload failed");
       }
-    } catch (error) {
-      console.error('Document picker error:', error);
-      Alert.alert(t('common.error'), t('exams.documentPickFailed'));
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      Alert.alert(t("common.error"), error.message || t("exams.fileUploadFailed"));
+    } finally {
       setUploadingAttachment(false);
+    }
+  };
+
+  const handleAIExtraction = async (
+    source: "file" | "text",
+    content: string,
+    fileName?: string,
+    base64Data?: string,
+    mimeType?: string
+  ) => {
+    try {
+      setExtractingQuestions(true);
+
+      let response;
+      if (source === "file") {
+        // FIX: Send the data in the correct format that the backend expects
+        console.log("Sending extraction request with:", {
+          hasBase64Data: !!base64Data,
+          fileName,
+          mimeType,
+          contentLength: content?.length
+        });
+
+        response = await apiService.api.post("/ai/extract-from-image", {
+          base64Data,      // This should be the base64 string without data URL prefix
+          fileName,
+          mimeType,
+          imageUrl: content // Also send the uploaded URL as imageUrl
+        });
+      } else if (source === "text") {
+        response = await apiService.api.post("/ai/extract-from-text", { text: content });
+      }
+
+      const result = response?.data;
+      if (!result?.success || !result.data) {
+        throw new Error(result?.error || t("exams.extractionFailed"));
+      }
+
+      const data = result.data;
+      const newQuestions = Array.isArray(data.questions)
+        ? data.questions.filter((q) => q.question && q.question.trim().length > 5)
+        : [];
+
+      if (newQuestions.length === 0) {
+        Alert.alert(t("common.info"), t("exams.noQuestionsFound"));
+        return;
+      }
+
+      // Merge unique questions
+      const merged = [
+        ...new Map(
+          [...questions, ...newQuestions].map((q) => [q.question.trim(), q])
+        ).values(),
+      ];
+
+      setQuestions(merged);
+      Alert.alert(
+        t("common.success"),
+        `${merged.length - questions.length} ${t("exams.questionsExtracted")}`
+      );
+    } catch (error: any) {
+      console.error("AI extraction error:", error);
+      Alert.alert(t("common.error"), error.message || t("exams.extractionFailed"));
+    } finally {
+      setExtractingQuestions(false);
     }
   };
 
@@ -1036,7 +1117,7 @@ export default function CreateExamScreen() {
       style={{ flex: 1, backgroundColor: colors.background, paddingBottom: 70 }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={{ padding: designTokens.spacing.xl, paddingBottom: 80  }}>
+      <View style={{ padding: designTokens.spacing.xl, paddingBottom: 80 }}>
         <Text style={{
           fontFamily,
           fontSize: designTokens.typography.title1.fontSize,
@@ -1592,6 +1673,112 @@ export default function CreateExamScreen() {
                 {t("exams.attachmentDesc")}
               </Text>
             </View>
+            {attachmentUrl && (
+              <View style={{
+                padding: designTokens.spacing.lg,
+                backgroundColor: colors.background,
+                borderRadius: designTokens.borderRadius.lg,
+                marginTop: designTokens.spacing.md,
+                borderWidth: 1,
+                borderColor: colors.border
+              }}>
+                <View style={{
+                  flexDirection: isRTL ? 'row-reverse' : 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: designTokens.spacing.md
+                }}>
+                  <Text style={{
+                    fontFamily,
+                    fontSize: designTokens.typography.title3.fontSize,
+                    fontWeight: designTokens.typography.title3.fontWeight,
+                    color: colors.textPrimary,
+                    textAlign: isRTL ? 'right' : 'left'
+                  } as any}>
+                    {t("exams.aiExtraction")}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setShowAIOptions(!showAIOptions)}
+                    style={{
+                      padding: 8
+                    }}
+                  >
+                    <Ionicons
+                      name={showAIOptions ? "chevron-up" : isRTL ? "chevron-forward" : "chevron-down"}
+                      size={20}
+                      color={colors.textSecondary}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                {showAIOptions && (
+                  <View>
+                    <Text
+                      style={{
+                        fontFamily,
+                        fontSize: designTokens.typography.footnote.fontSize,
+                        color: colors.textSecondary,
+                        marginBottom: designTokens.spacing.md,
+                        textAlign: isRTL ? "right" : "left",
+                      }}
+                    >
+                      {t("exams.aiExtractionDesc")}
+                    </Text>
+
+                    <TouchableOpacity
+                      onPress={() =>
+                        handleAIExtraction(
+                          "file",
+                          attachmentUrl!,
+                          attachmentName!,
+                          attachmentBase64!,
+                          attachmentMimeType!
+                        )
+                      }
+                      disabled={extractingQuestions}
+                      style={{
+                        backgroundColor: extractingQuestions ? colors.textTertiary : colors.primary,
+                        borderRadius: designTokens.borderRadius.lg,
+                        padding: designTokens.spacing.md,
+                        alignItems: "center",
+                        marginBottom: designTokens.spacing.sm,
+                      }}
+                    >
+
+                      {extractingQuestions ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <Text
+                          style={{
+                            fontFamily,
+                            fontSize: designTokens.typography.body.fontSize,
+                            fontWeight: "600",
+                            color: "#fff",
+                            textAlign: "center",
+                          }}
+                        >
+                          {attachmentType === "pdf"
+                            ? t("exams.extractFromPDF")
+                            : t("exams.extractQuestions")}
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+
+                    <Text
+                      style={{
+                        fontFamily,
+                        fontSize: designTokens.typography.caption1.fontSize,
+                        color: colors.textTertiary,
+                        fontStyle: "italic",
+                        textAlign: isRTL ? "right" : "left",
+                      }}
+                    >
+                      {t("exams.aiExtractionNote")}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
           </View>
         </View>
 

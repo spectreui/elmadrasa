@@ -1,7 +1,7 @@
 // src/contexts/AuthContext.tsx - Fixed version
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { apiService } from '../services/api';
-import { User, AuthState } from '../types';
+import { User, AuthState } from '../types/index.js';
 import { View, ActivityIndicator } from 'react-native';
 import { router, usePathname } from 'expo-router';
 

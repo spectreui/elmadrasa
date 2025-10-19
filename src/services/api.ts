@@ -4,7 +4,7 @@ import { LoginRequest, AuthResponse, ApiResponse, User, Exam } from "../types";
 import { storage } from "../utils/storage";
 import { router } from 'expo-router';
 
-// const API_BASE_URL = "http://10.168.230.72:5001/api";
+// const API_BASE_URL = "http://192.168.1.113:5001/api";
 const API_BASE_URL = "https://elmadrasa-server.vercel.app/api";
 
 // --- Shared routing config (used by both api.ts and _layout.tsx) ---
@@ -521,7 +521,11 @@ class ApiService {
     });
   }
 
-  // Add to your ApiService class in api.ts
+  // In api.ts - add this method to your ApiService class
+  async uploadFileBase64(fileData: { file: string; fileName: string; fileType: string }): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.post("/upload/file", fileData);
+  }
+
 
   // Admin methods
   public async getAdminStats(): Promise<AxiosResponse<ApiResponse<any>>> {
@@ -718,7 +722,7 @@ class ApiService {
   /**
    * Update only user language
    */
-  async updateUserLanguage(language: 'en' | 'ar') {
+  async updateUserLanguage(language: 'en' | 'ar' | 'ar-eg') {
     return this.api.patch('/users/me/language', { language });
   }
 
@@ -801,6 +805,14 @@ class ApiService {
       answers,
       updatedQuestions // Include in request body
     });
+  }
+
+  async extractQuestionsFromImage(imageUrl: string): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.post("/ai/extract-from-image", { imageUrl });
+  }
+
+  async extractQuestionsFromText(text: string): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.post("/ai/extract-from-text", { text });
   }
 }
 

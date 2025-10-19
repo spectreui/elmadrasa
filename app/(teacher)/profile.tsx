@@ -102,14 +102,14 @@ export default function TeacherProfileScreen() {
   };
 
   const toggleLanguage = () => {
-    const newLanguage = language === 'en' ? 'ar' : 'en';
+    const newLanguage = language.startsWith('ar') ? 'en' : 'ar-eg';
     setLanguage(newLanguage);
   };
 
-  const SettingItem = ({ 
-    title, 
-    description, 
-    value, 
+  const SettingItem = ({
+    title,
+    description,
+    value,
     onToggle,
     icon
   }: {
@@ -134,7 +134,7 @@ export default function TeacherProfileScreen() {
       )}
       <View style={[
         styles.settingContent,
-        { 
+        {
           marginHorizontal: icon ? designTokens.spacing.md : 0,
           alignItems: isRTL ? 'flex-end' : 'flex-start'
         }
@@ -157,16 +157,16 @@ export default function TeacherProfileScreen() {
     </Animated.View>
   );
 
-  const ProfileSection = ({ 
-    title, 
+  const ProfileSection = ({
+    title,
     children,
     showDivider = true
-  }: { 
-    title: string; 
+  }: {
+    title: string;
     children: React.ReactNode;
     showDivider?: boolean;
   }) => (
-    <Animated.View 
+    <Animated.View
       style={styles.profileSection}
       entering={FadeInUp.duration(400)}
       layout={Layout.springify()}
@@ -174,7 +174,7 @@ export default function TeacherProfileScreen() {
       <Text
         style={[
           styles.sectionTitle,
-          { 
+          {
             color: colors.textPrimary,
             textAlign: isRTL ? 'right' : 'left'
           }
@@ -199,15 +199,15 @@ export default function TeacherProfileScreen() {
     </Animated.View>
   );
 
-  const StatCard = ({ 
-    title, 
-    value, 
-    icon, 
-    color 
-  }: { 
-    title: string; 
-    value: string | number; 
-    icon: string; 
+  const StatCard = ({
+    title,
+    value,
+    icon,
+    color
+  }: {
+    title: string;
+    value: string | number;
+    icon: string;
     color: string;
   }) => (
     <View style={[styles.statCard, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
@@ -226,13 +226,13 @@ export default function TeacherProfileScreen() {
     </View>
   );
 
-  const ProgressBar = ({ 
-    title, 
-    value, 
-    color 
-  }: { 
-    title: string; 
-    value: number; 
+  const ProgressBar = ({
+    title,
+    value,
+    color
+  }: {
+    title: string;
+    value: number;
     color: string;
   }) => (
     <View style={[styles.progressBarContainer, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
@@ -248,10 +248,10 @@ export default function TeacherProfileScreen() {
         styles.progressBarTrack,
         { backgroundColor: colors.separator }
       ]}>
-        <Animated.View 
+        <Animated.View
           style={[
             styles.progressBarFill,
-            { 
+            {
               backgroundColor: color,
               width: `${value}%`,
               alignSelf: isRTL ? 'flex-end' : 'flex-start'
@@ -268,14 +268,14 @@ export default function TeacherProfileScreen() {
       {/* Header */}
       <View style={[
         styles.header,
-        { 
+        {
           flexDirection: isRTL ? 'row-reverse' : 'row'
         }
       ]}>
         <Text
           style={[
             styles.headerTitle,
-            { 
+            {
               color: colors.textPrimary,
               textAlign: isRTL ? 'right' : 'left'
             }
@@ -287,7 +287,7 @@ export default function TeacherProfileScreen() {
         {/* Action Buttons */}
         <View style={[
           styles.headerActions,
-          { 
+          {
             flexDirection: isRTL ? 'row-reverse' : 'row'
           }
         ]}>
@@ -304,7 +304,7 @@ export default function TeacherProfileScreen() {
               color={colors.textPrimary}
             />
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             onPress={toggleTheme}
             style={[
@@ -325,7 +325,7 @@ export default function TeacherProfileScreen() {
       <View
         style={[
           styles.tabContainer,
-          { 
+          {
             backgroundColor: colors.separator,
             flexDirection: isRTL ? 'row-reverse' : 'row'
           }
@@ -410,7 +410,7 @@ export default function TeacherProfileScreen() {
                     </Text>
                     <View style={[
                       styles.statusBadge,
-                      { 
+                      {
                         backgroundColor: '#34C75915',
                         flexDirection: isRTL ? 'row-reverse' : 'row'
                       }
@@ -426,7 +426,7 @@ export default function TeacherProfileScreen() {
                 <View style={[styles.profileDetails, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
                   <View style={[
                     styles.detailRow,
-                    { 
+                    {
                       flexDirection: isRTL ? 'row-reverse' : 'row'
                     }
                   ]}>
@@ -439,9 +439,9 @@ export default function TeacherProfileScreen() {
                   </View>
                   <View style={[
                     styles.detailRow,
-                    { 
+                    {
                       flexDirection: isRTL ? 'row-reverse' : 'row'
-                      }
+                    }
                   ]}>
                     <Text style={[styles.detailLabel, { fontFamily, color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
                       {t('profile.email')}
@@ -452,9 +452,9 @@ export default function TeacherProfileScreen() {
                   </View>
                   <View style={[
                     styles.detailRow,
-                    { 
+                    {
                       flexDirection: isRTL ? 'row-reverse' : 'row'
-                      }
+                    }
                   ]}>
                     <Text style={[styles.detailLabel, { fontFamily, color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
                       {t('profile.accountCreated')}
@@ -546,7 +546,7 @@ export default function TeacherProfileScreen() {
                   <TouchableOpacity
                     style={[
                       styles.toolItem,
-                      { 
+                      {
                         borderBottomColor: colors.separator,
                         flexDirection: isRTL ? 'row-reverse' : 'row'
                       }
@@ -556,16 +556,16 @@ export default function TeacherProfileScreen() {
                     <Text style={[styles.toolText, { fontFamily, color: colors.primary, textAlign: isRTL ? 'right' : 'left' }]}>
                       {t('tools.exportData')}
                     </Text>
-                    <Ionicons 
-                      name={isRTL ? "chevron-back" : "chevron-forward"} 
-                      size={20} 
-                      color={colors.primary} 
+                    <Ionicons
+                      name={isRTL ? "chevron-back" : "chevron-forward"}
+                      size={20}
+                      color={colors.primary}
                     />
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[
                       styles.toolItem,
-                      { 
+                      {
                         borderBottomColor: colors.separator,
                         flexDirection: isRTL ? 'row-reverse' : 'row'
                       }
@@ -575,16 +575,16 @@ export default function TeacherProfileScreen() {
                     <Text style={[styles.toolText, { fontFamily, color: colors.primary, textAlign: isRTL ? 'right' : 'left' }]}>
                       {t('tools.classAnalytics')}
                     </Text>
-                    <Ionicons 
-                      name={isRTL ? "chevron-back" : "chevron-forward"} 
-                      size={20} 
-                      color={colors.primary} 
+                    <Ionicons
+                      name={isRTL ? "chevron-back" : "chevron-forward"}
+                      size={20}
+                      color={colors.primary}
                     />
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[
                       styles.toolItem,
-                      { 
+                      {
                         flexDirection: isRTL ? 'row-reverse' : 'row'
                       }
                     ]}
@@ -593,10 +593,10 @@ export default function TeacherProfileScreen() {
                     <Text style={[styles.toolText, { fontFamily, color: colors.primary, textAlign: isRTL ? 'right' : 'left' }]}>
                       {t('tools.teachingResources')}
                     </Text>
-                    <Ionicons 
-                      name={isRTL ? "chevron-back" : "chevron-forward"} 
-                      size={20} 
-                      color={colors.primary} 
+                    <Ionicons
+                      name={isRTL ? "chevron-back" : "chevron-forward"}
+                      size={20}
+                      color={colors.primary}
                     />
                   </TouchableOpacity>
                 </View>
@@ -605,7 +605,7 @@ export default function TeacherProfileScreen() {
           )}
 
           {/* Logout Button */}
-          <Animated.View 
+          <Animated.View
             style={styles.logoutContainer}
             entering={FadeInUp.delay(500)}
           >
@@ -614,7 +614,7 @@ export default function TeacherProfileScreen() {
               disabled={loading}
               style={[
                 styles.logoutButton,
-                { 
+                {
                   backgroundColor: colors.error + '10',
                   borderColor: colors.error + '20'
                 }

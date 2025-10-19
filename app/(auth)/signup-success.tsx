@@ -1,3 +1,4 @@
+// signup-success.tsx (localized)
 // app/(auth)/signup-success.tsx
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
@@ -5,11 +6,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { designTokens } from '../../src/utils/designTokens';
 import { useThemeContext } from '../../src/contexts/ThemeContext';
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function SignUpSuccess() {
   const { role, name } = useLocalSearchParams();
   const router = useRouter();
   const { fontFamily, colors } = useThemeContext();
+  const { t } = useTranslation();
 
   return (
     <View style={{ 
@@ -46,7 +49,7 @@ export default function SignUpSuccess() {
           textAlign: 'center',
           marginBottom: designTokens.spacing.md,
         } as any}>
-          Welcome, {name}!
+          {t("auth.welcome")}, {name}
         </Text>
 
         <Text style={{ fontFamily, 
@@ -57,8 +60,8 @@ export default function SignUpSuccess() {
           marginBottom: designTokens.spacing.xxl,
         }}>
           {role === 'teacher' 
-            ? 'Your account is pending admin approval. You will receive an email once approved.'
-            : 'Your account has been created successfully. Please wait for admin approval before logging in.'
+            ? t("auth.pendingApproval.teacher")
+            : t("auth.pendingApproval.student")
           }
         </Text>
 
@@ -79,7 +82,7 @@ export default function SignUpSuccess() {
             fontWeight: '600',
             fontSize: designTokens.typography.body.fontSize,
           }}>
-            Go to Login
+            {t("auth.goToLogin")}
           </Text>
         </TouchableOpacity>
       </View>
