@@ -150,9 +150,9 @@ export default function RootLayout() {
                   <SafeAreaView>
                     <FancyTabBarProvider>
                       {/* ✅ Global keyboard + bottom nav spacing */}
-                      <KeyboardWrapper>
+                      {/* <KeyboardWrapper> */}
                         <Slot />
-                      </KeyboardWrapper>
+                      {/* </KeyboardWrapper> */}
                     </FancyTabBarProvider>
                   </SafeAreaView>
                 </NotificationProvider>
