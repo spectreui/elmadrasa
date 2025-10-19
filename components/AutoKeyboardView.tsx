@@ -1,47 +1,71 @@
-// components/AutoKeyboardView.tsx
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
-  ScrollView,
-  StyleSheet,
+  TouchableWithoutFeedback,
+  Animated,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-interface Props {
+type Props = {
   children: React.ReactNode;
-  scrollable?: boolean;
-}
+};
 
-export default function AutoKeyboardView({ children, scrollable = false }: Props) {
-  const insets = useSafeAreaInsets();
+export default function KeyboardWrapper({ children }: Props) {
+  const translateY = useRef(new Animated.Value(0)).current;
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
-  const content = scrollable ? (
-    <ScrollView
-      contentContainerStyle={[
-        styles.container,
-        { paddingBottom: insets.bottom + 16 },
-      ]}
-      keyboardShouldPersistTaps="handled"
-    >
-      {children}
-    </ScrollView>
-  ) : (
-    <>{children}</>
-  );
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      (e) => {
+        const height = e.endCoordinates.height;
+        setKeyboardHeight(height);
+
+        Animated.timing(translateY, {
+          toValue: Platform.OS === "ios" ? -height / 2.8 : -height / 3.5,
+          duration: Platform.OS === "ios" ? 250 : 100,
+          useNativeDriver: true,
+        }).start();
+      }
+    );
+
+    const hideSub = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => {
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: Platform.OS === "ios" ? 250 : 100,
+          useNativeDriver: true,
+        }).start();
+        setKeyboardHeight(0);
+      }
+    );
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [translateY]);
 
   return (
     <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={insets.bottom + 20} // adds space for keyboard + nav bar
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      {content}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <SafeAreaView style={{ flex: 1 }}>
+          <Animated.View
+            style={{
+              flex: 1,
+              transform: [{ translateY }],
+            }}
+          >
+            {children}
+          </Animated.View>
+        </SafeAreaView>
+      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  container: { flexGrow: 1 },
-});
