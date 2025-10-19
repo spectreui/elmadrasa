@@ -84,6 +84,7 @@ export const designTokens = {
     xl: 20,
     xxl: 24,
     xxxl: 32,
+    xxxxl: 40,
   },
   borderRadius: {
     sm: 4,

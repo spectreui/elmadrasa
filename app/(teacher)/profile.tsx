@@ -638,7 +638,7 @@ export default function TeacherProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingBottom: 80
+    // paddingBottom: 80
   },
   header: {
     paddingTop: designTokens.spacing.xxxl,
@@ -684,6 +684,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    marginBottom: 70
   },
   contentPadding: {
     paddingBottom: designTokens.spacing.xxxl,
