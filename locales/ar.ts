@@ -83,6 +83,8 @@ const ar = {
     'common.sort': 'ترتيب',
     'common.student': 'طالب',
     'common.teacher': 'معلم',
+    "common.share": "شارك",
+
 
     // Calender
     'months.january': 'يناير',

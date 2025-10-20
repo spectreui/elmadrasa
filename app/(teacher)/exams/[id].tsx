@@ -3,27 +3,21 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  StyleSheet,
-  Dimensions,
-  Pressable
+  StyleSheet
 } from 'react-native';
 import Alert from '@/components/Alert';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useAuth } from '../../../src/contexts/AuthContext';
-import { apiService } from '../../../src/services/api';
+import { apiService } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { useThemeContext } from '../../../src/contexts/ThemeContext';
-import { designTokens } from '../../../src/utils/designTokens';
+import { useThemeContext } from '@/contexts/ThemeContext';
+import { designTokens } from '@/utils/designTokens';
 import Animated, { FadeInUp, Layout } from 'react-native-reanimated';
 import { ShareModal } from '@/components/ShareModal';
 import { generateExamLink } from '@/utils/linking';
 import { useTranslation } from '@/hooks/useTranslation';
-
-const { width } = Dimensions.get('window');
 
 interface ExamDetails {
   id: string;
@@ -46,14 +40,14 @@ interface ExamDetails {
 
 export default function ExamDetailScreen() {
   const { id } = useLocalSearchParams();
-  const { user } = useAuth();
   const { fontFamily, colors, isDark } = useThemeContext();
   const [exam, setExam] = useState<ExamDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'questions' | 'submissions'>('overview');
   const [showShareModal, setShowShareModal] = useState(false);
-  const { language, isRTL } = useTranslation();
+  const { t, isRTL } = useTranslation();
+  const [submissionsData, setSubmissionsData] = useState(null);
 
   useEffect(() => {
     if (id) {
@@ -67,6 +61,9 @@ export default function ExamDetailScreen() {
       const response = await apiService.getExamById(id as string);
 
       if (response.data.success && response.data.data) {
+        console.log(response.data.data);
+        const submissionsResponse = await apiService.getTeacherExamResults(response.data.data.id as string);
+        console.log(submissionsResponse.data.data)
         const examData = response.data.data;
         const examDetails: ExamDetails = {
           ...examData,
@@ -76,13 +73,14 @@ export default function ExamDetailScreen() {
           total_points: examData.total_points || 0,
         };
         setExam(examDetails);
+        setSubmissionsData(response.data.data.submissions);
       } else {
-        Alert.alert('Error', 'Failed to load exam details');
+        Alert.alert(t('common.error'), t('exams.loadFailed'));
         router.back();
       }
     } catch (error) {
       console.error('Failed to load exam details:', error);
-      Alert.alert('Error', 'Failed to load exam details');
+      Alert.alert(t('common.error'), t('exams.loadFailed'));
       router.back();
     } finally {
       setLoading(false);
@@ -99,25 +97,25 @@ export default function ExamDetailScreen() {
     if (!exam) return;
 
     Alert.alert(
-      'Delete Exam',
-      `Are you sure you want to delete "${exam.title}"? This action cannot be undone.`,
+      t('exams.deleteConfirm'),
+      `${t('common.confirm')} "${exam.title}"? ${t('common.deleteConfirm')}`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               const response = await apiService.deleteExam(exam.id);
               if (response.data.success) {
-                Alert.alert('Success', 'Exam deleted successfully');
+                Alert.alert(t('common.success'), t('exams.deleteSuccess'));
                 router.back();
               } else {
-                Alert.alert('Error', response.data.error || 'Failed to delete exam');
+                Alert.alert(t('common.error'), response.data.error || t('exams.deleteFailed'));
               }
             } catch (error) {
               console.error('Delete exam error:', error);
-              Alert.alert('Error', 'Failed to delete exam');
+              Alert.alert(t('common.error'), t('exams.deleteFailed'));
             }
           },
         },
@@ -148,8 +146,8 @@ export default function ExamDetailScreen() {
               try {
                 await apiService.sendBulkLocalizedNotifications(
                   studentIds,
-                  'exams.activatedTitle', // You'll need to add this key to your translations
-                  'exams.activatedBody',  // You'll need to add this key to your translations
+                  'exams.activatedTitle',
+                  'exams.activatedBody',
                   {
                     title: exam.title
                   },
@@ -188,16 +186,16 @@ export default function ExamDetailScreen() {
             console.log('Failed to send exam activation notifications:', error);
           }
         }
-        Alert.alert('Success', `Exam ${newStatus ? 'activated' : 'deactivated'} successfully`);
+        Alert.alert(t('common.success'), t(`exams.${newStatus ? 'activatedSuccess' : 'deactivatedSuccess'}`));
       } else {
-        Alert.alert('Error', response.data.error || 'Failed to update exam status');
-      console.log(exam.id + "./" + !exam.is_active);
+        Alert.alert(t('common.error'), response.data.error || t('exams.updateFailed'));
+        console.log(exam.id + "./" + !exam.is_active);
       }
     } catch (error) {
       console.error('Toggle exam status error:', error);
 
       console.log(exam.id + "./" + !exam.is_active);
-      Alert.alert('Error', 'Failed to update exam status');
+      Alert.alert(t('common.error'), t('exams.updateFailed'));
     }
   };
 
@@ -211,8 +209,6 @@ export default function ExamDetailScreen() {
     if (Number.isInteger(value)) return value.toString();
     return value.toFixed(1);
   };
-
-
 
   const styles = StyleSheet.create({
     container: {
@@ -236,14 +232,14 @@ export default function ExamDetailScreen() {
       borderBottomWidth: 1,
     },
     backButton: {
-      flexDirection: 'row',
+      flexDirection: isRTL ? 'row-reverse' : 'row',
       alignItems: 'center',
       marginBottom: designTokens.spacing.lg,
     },
     backButtonText: {
       fontSize: designTokens.typography.body.fontSize,
       fontWeight: '600',
-      marginLeft: designTokens.spacing.xs,
+      [isRTL ? 'marginRight' : 'marginLeft']: designTokens.spacing.xs,
     },
     headerContent: {
       flexDirection: 'row',
@@ -265,9 +261,10 @@ export default function ExamDetailScreen() {
       fontWeight: '800',
       marginBottom: designTokens.spacing.xs,
       letterSpacing: -0.3,
+      textAlign: isRTL ? 'right' : 'left',
     },
     subtitleRow: {
-      flexDirection: 'row',
+      flexDirection: isRTL ? 'row-reverse' : 'row',
       alignItems: 'center',
       marginTop: designTokens.spacing.xs,
     },
@@ -277,8 +274,7 @@ export default function ExamDetailScreen() {
     },
     subtitleText: {
       fontSize: designTokens.typography.caption1.fontSize,
-      marginHorizontal: isRTL ? 0 : designTokens.spacing.xs,
-      marginLeft: isRTL ? designTokens.spacing.xs : 0,
+      marginHorizontal: designTokens.spacing.xs,
       opacity: 0.8,
     },
     dot: {
@@ -320,21 +316,21 @@ export default function ExamDetailScreen() {
       flex: 1,
       paddingVertical: designTokens.spacing.md,
       borderRadius: designTokens.borderRadius.lg,
-      flexDirection: 'row',
+      flexDirection: isRTL ? 'row-reverse' : 'row',
       justifyContent: 'center',
       alignItems: 'center',
     },
     tabText: {
       fontSize: designTokens.typography.footnote.fontSize,
-      marginHorizontal: isRTL ? 0 : designTokens.spacing.xs,
-      marginRight: isRTL ? designTokens.spacing.xs : 0,
+      marginHorizontal: designTokens.spacing.xs,
     },
     content: {
       flex: 1,
     },
     contentPadding: {
       paddingHorizontal: designTokens.spacing.xl,
-      paddingBottom: designTokens.spacing.xxxl,
+      paddingBottom: 65,
+      paddingTop: designTokens.spacing.xxxxl,
     },
     section: {
       borderRadius: designTokens.borderRadius.xxl,
@@ -353,10 +349,12 @@ export default function ExamDetailScreen() {
       fontSize: 22,
       fontWeight: '700',
       marginBottom: designTokens.spacing.xs,
+      textAlign: isRTL ? 'right' : 'left',
     },
     sectionSubtitle: {
       fontSize: designTokens.typography.body.fontSize,
       opacity: 0.7,
+      textAlign: isRTL ? 'right' : 'left',
     },
     statsGrid: {
       flexDirection: 'row',
@@ -384,10 +382,12 @@ export default function ExamDetailScreen() {
       fontSize: 24,
       fontWeight: '700',
       marginBottom: designTokens.spacing.xs,
+      textAlign: isRTL ? 'right' : 'left',
     },
     statTitle: {
       fontSize: designTokens.typography.caption1.fontSize,
       opacity: 0.8,
+      textAlign: isRTL ? 'right' : 'left',
     },
     settingsSection: {
       borderTopWidth: 0.5,
@@ -398,22 +398,25 @@ export default function ExamDetailScreen() {
       fontSize: 18,
       fontWeight: '600',
       marginBottom: designTokens.spacing.md,
+      textAlign: isRTL ? 'right' : 'left',
     },
     settingsList: {
       gap: designTokens.spacing.md,
     },
     settingRow: {
-      flexDirection: 'row',
+      flexDirection: isRTL ? 'row-reverse' : 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
     },
     settingLabel: {
       fontSize: designTokens.typography.body.fontSize,
       opacity: 0.8,
+      textAlign: isRTL ? 'right' : 'left',
     },
     settingValue: {
       fontSize: designTokens.typography.body.fontSize,
       fontWeight: '500',
+      textAlign: isRTL ? 'right' : 'left',
     },
     actionsGrid: {
       flexDirection: 'row',
@@ -425,14 +428,14 @@ export default function ExamDetailScreen() {
       borderRadius: designTokens.borderRadius.xl,
       padding: designTokens.spacing.lg,
       borderWidth: 1,
-      flexDirection: 'row',
+      flexDirection: isRTL ? 'row-reverse' : 'row',
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: designTokens.spacing.sm,
     },
     actionButtonText: {
       fontSize: designTokens.typography.body.fontSize,
-      marginLeft: designTokens.spacing.xs,
+      [isRTL ? 'marginRight' : 'marginLeft']: designTokens.spacing.xs,
     },
     questionsList: {
       gap: designTokens.spacing.md,
@@ -451,13 +454,14 @@ export default function ExamDetailScreen() {
       flex: 1,
       fontSize: designTokens.typography.body.fontSize,
       lineHeight: 22,
-      marginHorizontal: isRTL ? designTokens.spacing.sm : designTokens.spacing.xs,
-      marginRight: isRTL ? 0 : designTokens.spacing.sm,
+      marginHorizontal: designTokens.spacing.xs,
+      textAlign: isRTL ? 'right' : 'left',
     },
     questionNumber: {
       fontSize: designTokens.typography.body.fontSize,
       fontWeight: '600',
-      marginRight: designTokens.spacing.xs,
+      marginRight: isRTL ? 0 : designTokens.spacing.xs,
+      marginLeft: isRTL ? designTokens.spacing.xs : 0,
       marginTop: designTokens.spacing.xs,
     },
     pointsBadge: {
@@ -476,6 +480,7 @@ export default function ExamDetailScreen() {
     },
     questionType: {
       fontSize: designTokens.typography.caption1.fontSize,
+      textAlign: isRTL ? 'right' : 'left',
     },
     optionsContainer: {
       marginBottom: designTokens.spacing.md,
@@ -484,6 +489,7 @@ export default function ExamDetailScreen() {
       fontSize: designTokens.typography.caption1.fontSize,
       fontWeight: '600',
       marginBottom: designTokens.spacing.xs,
+      textAlign: isRTL ? 'right' : 'left',
     },
     optionRow: {
       flexDirection: isRTL ? 'row-reverse' : 'row',
@@ -495,8 +501,7 @@ export default function ExamDetailScreen() {
       height: 16,
       borderRadius: 8,
       borderWidth: 2,
-      marginHorizontal: isRTL ? 0 : designTokens.spacing.sm,
-      marginLeft: isRTL ? designTokens.spacing.sm : 0,
+      marginHorizontal: designTokens.spacing.sm,
     },
     optionText: {
       fontSize: designTokens.typography.body.fontSize,
@@ -506,7 +511,7 @@ export default function ExamDetailScreen() {
     explanationContainer: {
       padding: designTokens.spacing.md,
       borderRadius: designTokens.borderRadius.lg,
-      borderLeftWidth: 3,
+      [isRTL ? 'borderRightWidth' : 'borderLeftWidth']: 3,
       marginTop: designTokens.spacing.sm,
     },
     explanationHeader: {
@@ -517,12 +522,12 @@ export default function ExamDetailScreen() {
     explanationTitle: {
       fontSize: designTokens.typography.caption1.fontSize,
       fontWeight: '600',
-      marginHorizontal: isRTL ? 0 : designTokens.spacing.xs,
-      marginRight: isRTL ? designTokens.spacing.xs : 0,
+      marginHorizontal: designTokens.spacing.xs,
     },
     explanationText: {
       fontSize: designTokens.typography.caption1.fontSize,
       lineHeight: 18,
+      textAlign: isRTL ? 'right' : 'left',
     },
     emptyState: {
       alignItems: 'center',
@@ -540,6 +545,7 @@ export default function ExamDetailScreen() {
       fontSize: designTokens.typography.title3.fontSize,
       fontWeight: designTokens.typography.title3.fontWeight,
       marginBottom: designTokens.spacing.xs,
+      textAlign: 'center',
     },
     emptyText: {
       fontSize: designTokens.typography.body.fontSize,
@@ -552,7 +558,7 @@ export default function ExamDetailScreen() {
     primaryButton: {
       borderRadius: designTokens.borderRadius.xl,
       padding: designTokens.spacing.lg,
-      flexDirection: 'row',
+      flexDirection: isRTL ? 'row-reverse' : 'row',
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -560,10 +566,9 @@ export default function ExamDetailScreen() {
       color: 'white',
       fontSize: designTokens.typography.body.fontSize,
       fontWeight: '600',
-      marginLeft: designTokens.spacing.xs,
+      [isRTL ? 'marginRight' : 'marginLeft']: designTokens.spacing.xs,
     },
-  } as any);
-
+  });
 
   const StatCard = ({
     title,
@@ -640,12 +645,187 @@ export default function ExamDetailScreen() {
     </TouchableOpacity>
   );
 
+  const viewSubmissionDetails = (submissionId) => {
+  // Navigate to submission details page or open modal
+  router.push(`/(teacher)/exams/grading/${submissionId}`);
+  // Or open a modal with submission details
+};
+
+const gradeSubmission = (submissionId) => {
+  // Navigate to manual grading page
+  router.push(`/(teacher)/exams/grading/${submissionId}`);
+  // Or open grading modal
+};
+
+  // Add this to your exam page component
+  const SubmissionsTab = () => {
+    if (!submissionsData) {
+      return <div className="text-center py-8">Loading submissions...</div>;
+    }
+
+    const { statistics, scoreDistribution, submissions } = submissionsData;
+
+    return (
+      <div className="space-y-6">
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-500">Total Submissions</h3>
+            <p className="text-2xl font-bold text-gray-900">{statistics.totalSubmissions}</p>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-500">Average Score</h3>
+            <p className="text-2xl font-bold text-blue-600">{statistics.averageScore}%</p>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-500">Highest Score</h3>
+            <p className="text-2xl font-bold text-green-600">{statistics.highestScore}%</p>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-500">Lowest Score</h3>
+            <p className="text-2xl font-bold text-red-600">{statistics.lowestScore}%</p>
+          </div>
+        </div>
+
+        {/* Score Distribution Chart */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4">Score Distribution</h3>
+          <div className="space-y-2">
+            {scoreDistribution.map((range) => (
+              <div key={range.range} className="flex items-center">
+                <span className="w-16 text-sm font-medium">{range.range}%</span>
+                <div className="flex-1 bg-gray-200 rounded-full h-4">
+                  <div
+                    className="bg-blue-600 h-4 rounded-full"
+                    style={{ width: `${(range.count / statistics.totalSubmissions) * 100}%` }}
+                  ></div>
+                </div>
+                <span className="ml-2 text-sm font-medium w-8">{range.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Submissions Table */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold">Student Submissions</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Student
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Class
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Score
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Percentage
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Submitted At
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {submissions.map((submission) => (
+                  <tr key={submission.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {submission.student.name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {submission.student.email}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {submission.student.class}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {submission.score} / {submission.totalPoints}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${submission.percentage >= 80
+                            ? 'bg-green-100 text-green-800'
+                            : submission.percentage >= 60
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                      >
+                        {submission.percentage}%
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(submission.submittedAt).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {submission.needs_manual_grading ? (
+                        submission.is_manually_graded ? (
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
+                            Manually Graded
+                          </span>
+                        ) : (
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold bg-orange-100 text-orange-800 rounded-full">
+                            Needs Grading
+                          </span>
+                        )
+                      ) : (
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">
+                          Auto Graded
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={() => viewSubmissionDetails(submission.id)}
+                        className="text-blue-600 hover:text-blue-900 mr-3"
+                      >
+                        View
+                      </button>
+                      {submission.needs_manual_grading && !submission.is_manually_graded && (
+                        <button
+                          onClick={() => gradeSubmission(submission.id)}
+                          className="text-green-600 hover:text-green-900"
+                        >
+                          Grade
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {submissions.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              No submissions yet
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[styles.loadingText, { fontFamily, color: colors.textSecondary }]}>
-          Loading exam details...
+          {t('common.loading')}
         </Text>
       </View>
     );
@@ -661,23 +841,23 @@ export default function ExamDetailScreen() {
           <Ionicons name="document-text" size={48} color={colors.textTertiary} />
         </View>
         <Text style={[styles.emptyTitle as any, { fontFamily, color: colors.textPrimary }]}>
-          Exam not found
+          {t('exams.noResultsFound')}
         </Text>
         <Text style={[styles.emptyText, { fontFamily, color: colors.textSecondary }]}>
-          The exam you're looking for doesn't exist or has been removed.
+          {t('exams.resultsLoadFailed')}
         </Text>
         <TouchableOpacity
           style={[styles.primaryButton, { backgroundColor: colors.primary }]}
           onPress={() => router.back()}
         >
-          <Text style={styles.primaryButtonText}>Go Back</Text>
+          <Text style={styles.primaryButtonText}>{t('common.goBack')}</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { fontFamily, backgroundColor: colors.background }]}>
+    <View style={[styles.container, { fontFamily, backgroundColor: colors.background }] as any}>
       {/* Header */}
       <View style={[
         styles.header,
@@ -690,9 +870,13 @@ export default function ExamDetailScreen() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={20} color={colors.primary} />
+          <Ionicons
+            name={isRTL ? "arrow-forward" : "arrow-back"}
+            size={20}
+            color={colors.primary}
+          />
           <Text style={[styles.backButtonText, { fontFamily, color: colors.primary }]}>
-            Back to Exams
+            {t('common.goBack')}
           </Text>
         </TouchableOpacity>
 
@@ -730,7 +914,7 @@ export default function ExamDetailScreen() {
                 styles.statusText,
                 { fontFamily, color: exam.is_active ? '#10B981' : '#6B7280' }
               ]}>
-                {exam.is_active ? 'Active' : 'Inactive'}
+                {exam.is_active ? t('common.active') : t('exams.inactive')}
               </Text>
             </View>
           </View>
@@ -757,9 +941,9 @@ export default function ExamDetailScreen() {
           { backgroundColor: isDark ? '#1F2937' : '#F3F4F6' }
         ]}>
           {([
-            { key: 'overview', label: 'Overview', icon: 'grid' },
-            { key: 'questions', label: 'Questions', icon: 'help-circle' },
-            { key: 'submissions', label: 'Submissions', icon: 'document' },
+            { key: 'overview', label: t('dashboard.overview'), icon: 'grid' },
+            { key: 'questions', label: t('exams.questions'), icon: 'help-circle' },
+            { key: 'submissions', label: t('submissions.title'), icon: 'document' },
           ] as const).map((tab) => (
             <TouchableOpacity
               key={tab.key}
@@ -822,12 +1006,12 @@ export default function ExamDetailScreen() {
                 }
               ]}>
                 <Text style={[styles.sectionTitle as any, { fontFamily, color: colors.textPrimary }]}>
-                  Exam Overview
+                  {t('dashboard.overview')}
                 </Text>
 
                 <View style={styles.statsGrid}>
                   <StatCard
-                    title="Submissions"
+                    title={t('submissions.title')}
                     value={exam.submissions_count.toString()}
                     icon="document-text"
                     color={{
@@ -837,8 +1021,8 @@ export default function ExamDetailScreen() {
                     }}
                   />
                   <StatCard
-                    title="Avg Score"
-                    value={exam.average_score ? `${formatStatsValue(exam.average_score)}%` : 'N/A'}
+                    title={t('dashboard.avgScore')}
+                    value={exam.average_score ? `${formatStatsValue(exam.average_score)}%` : t('profile.na')}
                     icon="bar-chart"
                     color={{
                       bg: isDark ? '#10B98120' : '#10B98110',
@@ -847,7 +1031,7 @@ export default function ExamDetailScreen() {
                     }}
                   />
                   <StatCard
-                    title="Questions"
+                    title={t('exams.questions')}
                     value={exam.questions?.length.toString() || '0'}
                     icon="help-circle"
                     color={{
@@ -857,7 +1041,7 @@ export default function ExamDetailScreen() {
                     }}
                   />
                   <StatCard
-                    title="Total Points"
+                    title={t('common.points')}
                     value={getTotalPoints().toString()}
                     icon="star"
                     color={{
@@ -871,36 +1055,36 @@ export default function ExamDetailScreen() {
                 {/* Exam Settings */}
                 <View style={styles.settingsSection}>
                   <Text style={[styles.settingsTitle as any, { fontFamily, color: colors.textPrimary }]}>
-                    Settings
+                    {t('exams.settings')}
                   </Text>
                   <View style={styles.settingsList}>
                     <View style={styles.settingRow}>
                       <Text style={[styles.settingLabel, { fontFamily, color: colors.textSecondary }]}>
-                        Timed Exam
+                        {t('exams.timed')}
                       </Text>
                       <Text style={[styles.settingValue, { fontFamily, color: colors.textPrimary }]}>
-                        {exam.settings?.timed ? `${exam.settings.duration} minutes` : 'No time limit'}
+                        {exam.settings?.timed ? `${exam.settings.duration} ${t('exams.minutes')}` : t('exams.untimed')}
                       </Text>
                     </View>
                     <View style={styles.settingRow}>
                       <Text style={[styles.settingLabel, { fontFamily, color: colors.textSecondary }]}>
-                        Allow Retake
+                        {t('exams.allowRetake')}
                       </Text>
                       <Text style={[styles.settingValue, { fontFamily, color: colors.textPrimary }]}>
-                        {exam.settings?.allow_retake ? 'Yes' : 'No'}
+                        {exam.settings?.allow_retake ? t('common.yes') : t('common.no')}
                       </Text>
                     </View>
                     <View style={styles.settingRow}>
                       <Text style={[styles.settingLabel, { fontFamily, color: colors.textSecondary }]}>
-                        Random Order
+                        {t('exams.randomOrder')}
                       </Text>
                       <Text style={[styles.settingValue, { fontFamily, color: colors.textPrimary }]}>
-                        {exam.settings?.random_order ? 'Yes' : 'No'}
+                        {exam.settings?.random_order ? t('common.yes') : t('common.no')}
                       </Text>
                     </View>
                     <View style={styles.settingRow}>
                       <Text style={[styles.settingLabel, { fontFamily, color: colors.textSecondary }]}>
-                        Created
+                        {t('profile.accountCreated')}
                       </Text>
                       <Text style={[styles.settingValue, { fontFamily, color: colors.textPrimary }]}>
                         {new Date(exam.created_at).toLocaleDateString()}
@@ -919,29 +1103,29 @@ export default function ExamDetailScreen() {
                 }
               ]}>
                 <Text style={[styles.sectionTitle as any, { fontFamily, color: colors.textPrimary }]}>
-                  Quick Actions
+                  {t('dashboard.quickActions')}
                 </Text>
                 <View style={styles.actionsGrid}>
                   <ActionButton
-                    title={exam.is_active ? 'Pause Exam' : 'Activate Exam'}
+                    title={exam.is_active ? t('exams.inactive') : t('exams.active')}
                     icon={exam.is_active ? 'pause' : 'play'}
                     color={exam.is_active ? '#F59E0B' : '#10B981'}
                     onPress={toggleExamStatus}
                   />
                   <ActionButton
-                    title="View Results"
+                    title={t('exams.examAnalytics')}
                     icon="bar-chart"
                     color="#3B82F6"
                     onPress={() => router.push(`/(teacher)/exam-results/${exam.id}`)}
                   />
                   <ActionButton
-                    title="Share Exam"
+                    title={t('common.share')}
                     icon="share"
                     color="#8B5CF6"
                     onPress={() => setShowShareModal(true)}
                   />
                   <ActionButton
-                    title="Analytics"
+                    title={t('dashboard.analytics')}
                     icon="analytics"
                     color="#F97316"
                     onPress={() => router.push('/(teacher)/statistics')}
@@ -966,10 +1150,10 @@ export default function ExamDetailScreen() {
               ]}>
                 <View style={styles.sectionHeader}>
                   <Text style={[styles.sectionTitle as any, { fontFamily, color: colors.textPrimary }]}>
-                    Questions
+                    {t('exams.questions')}
                   </Text>
                   <Text style={[styles.sectionSubtitle, { fontFamily, color: colors.textSecondary }]}>
-                    {exam.questions?.length || 0} questions • {getTotalPoints()} points
+                    {exam.questions?.length || 0} {t('exams.questions')} • {getTotalPoints()} {t('common.points')}
                   </Text>
                 </View>
 
@@ -1003,14 +1187,14 @@ export default function ExamDetailScreen() {
                             }
                           ]}>
                             <Text style={[styles.pointsText, { fontFamily, color: '#3B82F6' }]}>
-                              {question.points} pt{question.points !== 1 ? 's' : ''}
+                              {question.points} {t('common.points')}
                             </Text>
                           </View>
                         </View>
 
                         <View style={styles.questionMeta}>
                           <Text style={[styles.questionType, { fontFamily, color: colors.textSecondary }]}>
-                            Type: <Text style={{ fontFamily, color: colors.textPrimary, fontWeight: '600' }}>
+                            {t('homework.questionType')}: <Text style={{ fontFamily, color: colors.textPrimary, fontWeight: '600' }}>
                               {question.type}
                             </Text>
                           </Text>
@@ -1019,7 +1203,7 @@ export default function ExamDetailScreen() {
                         {question.type === 'mcq' && question.options && (
                           <View style={styles.optionsContainer}>
                             <Text style={[styles.optionsTitle, { fontFamily, color: colors.textSecondary }]}>
-                              Options:
+                              {t('exams.options')}:
                             </Text>
                             {question.options.map((option: string, optIndex: number) => (
                               <View key={optIndex} style={styles.optionRow}>
@@ -1055,13 +1239,13 @@ export default function ExamDetailScreen() {
                             styles.explanationContainer,
                             {
                               backgroundColor: isDark ? '#1E40AF20' : '#3B82F610',
-                              borderLeftColor: '#3B82F6'
+                              [isRTL ? 'borderRightColor' : 'borderLeftColor']: '#3B82F6'
                             }
                           ]}>
                             <View style={styles.explanationHeader}>
                               <Ionicons name="information-circle" size={14} color="#3B82F6" />
                               <Text style={[styles.explanationTitle, { fontFamily, color: '#3B82F6' }]}>
-                                Explanation
+                                {t('exams.explanation')}
                               </Text>
                             </View>
                             <Text style={[styles.explanationText, { fontFamily, color: colors.textSecondary }]}>
@@ -1081,72 +1265,24 @@ export default function ExamDetailScreen() {
                       <Ionicons name="help-circle" size={48} color={colors.textTertiary} />
                     </View>
                     <Text style={[styles.emptyTitle as any, { fontFamily, color: colors.textPrimary }]}>
-                      No questions added
+                      {t('exams.noQuestionsAdded')}
                     </Text>
                     <Text style={[styles.emptyText, { fontFamily, color: colors.textSecondary }]}>
-                      Add questions to this exam to get started
+                      {t('exams.addSectionOrQuestion')}
                     </Text>
                   </View>
                 )}
               </View>
             </Animated.View>
           )}
-
-          {activeTab === 'submissions' && (
-            <Animated.View
-              entering={FadeInUp.duration(300)}
-              layout={Layout.springify()}
-            >
-              <View style={[
-                styles.section,
-                {
-                  backgroundColor: colors.backgroundElevated,
-                  ...designTokens.shadows.sm,
-                }
-              ]}>
-                <View style={styles.sectionHeader}>
-                  <Text style={[styles.sectionTitle as any, { fontFamily, color: colors.textPrimary }]}>
-                    Submissions
-                  </Text>
-                  <Text style={[styles.sectionSubtitle, { fontFamily, color: colors.textSecondary }]}>
-                    {exam.submissions_count || 0} submissions
-                  </Text>
-                </View>
-
-                {exam.submissions_count > 0 ? (
-                  <TouchableOpacity
-                    style={[styles.primaryButton, { backgroundColor: colors.primary }]}
-                    onPress={() => router.push(`/(teacher)/exam-results/${exam.id}`)}
-                  >
-                    <Ionicons name="bar-chart" size={20} color="white" />
-                    <Text style={styles.primaryButtonText}>View All Results</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <View style={styles.emptyState}>
-                    <View style={[
-                      styles.emptyIconContainer,
-                      { backgroundColor: isDark ? '#37415130' : '#E5E7EB' }
-                    ]}>
-                      <Ionicons name="document" size={48} color={colors.textTertiary} />
-                    </View>
-                    <Text style={[styles.emptyTitle as any, { fontFamily, color: colors.textPrimary }]}>
-                      No submissions yet
-                    </Text>
-                    <Text style={[styles.emptyText, { fontFamily, color: colors.textSecondary }]}>
-                      Student submissions will appear here once they take the exam
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </Animated.View>
-          )}
+          {activeTab === 'submissions' && <SubmissionsTab />}
         </View>
       </Animated.ScrollView>
 
       <ShareModal
         visible={showShareModal}
         onClose={() => setShowShareModal(false)}
-        title={`Exam: ${exam?.title || 'Exam'}`}
+        title={`${t('exams.exam')}: ${exam?.title || t('exams.exam')}`}
         link={generateExamLink(
           exam?.id || '',
           { subject: exam?.subject, title: exam?.title }

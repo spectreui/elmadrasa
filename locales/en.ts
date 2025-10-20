@@ -32,6 +32,7 @@ const en = {
   "common.update": "Update",
   "common.view": "View",
   "common.viewAll": "View All",
+  "common.share": "Share",
   // Common
   'common.student': 'Student',
   'common.teacher': 'Teacher',

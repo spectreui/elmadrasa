@@ -106,10 +106,11 @@ export interface Exam {
   total_points?: number; // Make this optional
   taken?: boolean; // Add this to indicate if the exam has been taken by the student
   available_from?: string; // Add this to indicate when the exam becomes available
+  submissions?: any;
 }
 
 // Update the ExamDetails interface to properly type nested questions
-interface ExamDetails extends Exam {
+export interface ExamDetails extends Exam {
   questions: (Question & {
     parent_id?: string;
     is_section?: boolean;
@@ -132,7 +133,6 @@ interface ExamDetails extends Exam {
     };
   };
 }
-
 
 export interface Question {
   id: string;

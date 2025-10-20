@@ -8,7 +8,6 @@ import {
   Modal,
   StyleSheet,
   Platform,
-  Dimensions,
 } from 'react-native';
 import { useThemeContext } from '@/contexts/ThemeContext';
 

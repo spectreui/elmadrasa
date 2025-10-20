@@ -23,10 +23,10 @@ class ApiService {
   private token: string | null = null;
   private tokenKey = 'authToken';
   private isRefreshing = false;
-  private failedQueue: Array<{
+  private failedQueue: {
     resolve: (value?: any) => void;
     reject: (error?: any) => void;
-  }> = [];
+  }[] = [];
 
   constructor() {
     this.api = axios.create({
@@ -228,7 +228,7 @@ class ApiService {
         console.log('✅ Token valid, expires:', new Date(expiry).toISOString());
         return true;
       } catch (e) {
-        console.log('❌ Token payload invalid');
+        console.log('❌ Token payload invalid', e);
         await this.clearToken();
         return false;
       }
@@ -382,8 +382,8 @@ class ApiService {
     return this.api.get(`/exams/${examId}/results`);
   }
 
-  public async getExamSubmissions(examId: string): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.get(`/exams/${examId}/submissions`);
+  public async getExamSubmissions(id: string): Promise<AxiosResponse<ApiResponse<any>>> {
+    return this.api.get(`/exams/${id}/submissions`);
   }
 
   async getStudentDashboardStats() {

@@ -13,7 +13,6 @@ import {
   Modal,
   TextInput,
   Image,
-  Alert as RNAlert
 } from 'react-native';
 import Alert from '@/components/Alert';
 import { useLocalSearchParams, useRouter } from 'expo-router';

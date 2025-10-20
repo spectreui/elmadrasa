@@ -76,43 +76,67 @@ export default function SubmissionGradingScreen() {
     }
   }, [id]);
 
-  // Update the organizeNestedQuestions function
-  const organizeNestedQuestions = (questions: Question[]) => {
+  // In [id].tsx - Replace the organizeNestedQuestions function
+  const organizeNestedQuestions = (questions: Question[]): Question[] => {
+    if (!questions || !Array.isArray(questions)) {
+      return [];
+    }
+
+    console.log('📋 Organizing questions:', questions.length);
+
+    // Create a map for quick lookup
     const questionMap = new Map<string, Question>();
     const rootQuestions: Question[] = [];
 
     // First pass: create map and identify root questions
     questions.forEach(question => {
-      questionMap.set(question.id, { ...question, nested_questions: [] });
+      if (!question.id) {
+        console.warn('⚠️ Question missing ID:', question);
+        return;
+      }
+
+      // Create a clean copy with nested_questions array
+      questionMap.set(question.id, {
+        ...question,
+        nested_questions: []
+      });
 
       if (!question.parent_id) {
         rootQuestions.push(questionMap.get(question.id)!);
       }
     });
 
+    console.log('📋 Root questions found:', rootQuestions.length);
+
     // Second pass: build hierarchy
     questions.forEach(question => {
       if (question.parent_id && questionMap.has(question.parent_id)) {
         const parent = questionMap.get(question.parent_id)!;
-        if (parent.nested_questions) {
-          parent.nested_questions.push(questionMap.get(question.id)!);
+        const child = questionMap.get(question.id)!;
+
+        if (parent && child) {
+          if (!parent.nested_questions) {
+            parent.nested_questions = [];
+          }
+          parent.nested_questions.push(child);
         }
       }
     });
 
     // Sort by question_order if available
-    const sortQuestions = (questions: Question[]) => {
-      return questions.sort((a, b) => (a.question_order || 0) - (b.question_order || 0)).map(q => {
-        if (q.nested_questions && q.nested_questions.length > 0) {
-          q.nested_questions = sortQuestions(q.nested_questions);
-        }
-        return q;
-      });
+    const sortQuestions = (questions: Question[]): Question[] => {
+      return questions
+        .sort((a, b) => (a.question_order || 0) - (b.question_order || 0))
+        .map(q => ({
+          ...q,
+          nested_questions: q.nested_questions ? sortQuestions(q.nested_questions) : []
+        }));
     };
 
-    return sortQuestions(rootQuestions);
-  };
-
+    const sortedRootQuestions = sortQuestions(rootQuestions);
+    console.log('✅ Final organized questions:', sortedRootQuestions.length);
+    return sortedRootQuestions;
+  }
 
   const loadSubmission = async () => {
     try {
@@ -126,11 +150,27 @@ export default function SubmissionGradingScreen() {
 
         const safeAnswers = Array.isArray(data.answers) ? data.answers : [];
         const safeExam = data.exam || {};
-        const safeQuestions = Array.isArray(safeExam.questions) ? safeExam.questions : [];
-        const safeStudent = data.student || { profile: { name: 'Unknown Student' } };
 
-        // Organize nested questions
-        const organizedQuestions = organizeNestedQuestions(safeQuestions);
+        // Use the already organized questions from backend, or organize if needed
+        let organizedQuestions: Question[] = [];
+        if (safeExam.questions && Array.isArray(safeExam.questions)) {
+          // Check if questions are already organized (have nested_questions)
+          const hasNestedQuestions = safeExam.questions.some((q: any) =>
+            q.nested_questions && Array.isArray(q.nested_questions)
+          );
+
+          if (hasNestedQuestions) {
+            // Questions are already organized by backend
+            organizedQuestions = safeExam.questions;
+            console.log('✅ Using backend-organized questions');
+          } else {
+            // Need to organize on frontend
+            organizedQuestions = organizeNestedQuestions(safeExam.questions);
+            console.log('🔄 Organizing questions on frontend');
+          }
+        }
+
+        const safeStudent = data.student || { profile: { name: 'Unknown Student' } };
 
         const safeSubmission: Submission = {
           id: data.id || '',
@@ -153,13 +193,15 @@ export default function SubmissionGradingScreen() {
         const initialExplanations: Record<string, string> = {};
 
         safeAnswers.forEach((answer: Answer) => {
-          initialGrades[answer.question_id] = answer.points || 0;
+          if (answer && answer.question_id) {
+            initialGrades[answer.question_id] = answer.points || 0;
+          }
         });
 
         // Initialize correct answers and explanations from questions (including nested)
         const processQuestions = (questions: Question[]) => {
           questions.forEach((question: Question) => {
-            if (!question.is_section) { // Only process non-section questions
+            if (!question.is_section && question.id) {
               initialCorrectAnswers[question.id] = question.correct_answer || '';
               initialExplanations[question.id] = question.explanation || '';
             }
@@ -175,6 +217,12 @@ export default function SubmissionGradingScreen() {
         setGrades(initialGrades);
         setCorrectAnswers(initialCorrectAnswers);
         setExplanations(initialExplanations);
+
+        console.log('📊 Submission loaded:', {
+          questions: organizedQuestions.length,
+          answers: safeAnswers.length,
+          grades: Object.keys(initialGrades).length
+        });
       }
     } catch (error) {
       console.error('Failed to load submission:', error);
@@ -352,13 +400,13 @@ export default function SubmissionGradingScreen() {
       </View>
     );
   }
-
-  const safeAnswers = Array.isArray(submission.answers) ? submission.answers : [];
+  
   const totalScore = calculateTotalScore();
   const maxScore = submission.total_points;
 
-  // Replace the existing renderQuestions function with this corrected version
   const renderQuestions = (questions: Question[], level = 0, parentIndex = '') => {
+    console.log(`🔄 Rendering ${questions.length} questions at level ${level}`);
+
     return questions.map((question, index) => {
       const questionNumber = parentIndex ? `${parentIndex}.${index + 1}` : `${index + 1}`;
 
@@ -372,14 +420,17 @@ export default function SubmissionGradingScreen() {
                 borderRadius: 16,
                 padding: 20,
                 marginBottom: 16,
-                borderWidth: 0.5,
-                borderColor: colors.border,
+                borderWidth: 1,
+                borderColor: colors.primary,
+                borderLeftWidth: 4,
+                borderLeftColor: colors.primary,
                 shadowColor: '#000',
                 shadowOffset: { width: 0, height: 1 },
                 shadowOpacity: 0.03,
                 shadowRadius: 2,
                 elevation: 1,
-                marginLeft: level * 20
+                marginLeft: level * 25, // Increased indentation
+                position: 'relative'
               }}
             >
               <View style={{
@@ -408,13 +459,13 @@ export default function SubmissionGradingScreen() {
               </Text>
             </View>
 
-            {/* Render nested questions INSIDE the section */}
+            {/* Render nested questions INSIDE the section with clear visual hierarchy */}
             {question.nested_questions && question.nested_questions.length > 0 && (
               <View style={{
-                marginLeft: level * 20 + 10,
+                marginLeft: level * 25 + 15, // Increased indentation for nested items
                 borderLeftWidth: 2,
-                borderLeftColor: colors.border,
-                paddingLeft: 10,
+                borderLeftColor: colors.primary,
+                paddingLeft: 15,
                 marginBottom: 16
               }}>
                 {renderQuestions(question.nested_questions, level + 1, questionNumber)}
@@ -424,7 +475,7 @@ export default function SubmissionGradingScreen() {
         );
       }
 
-      // Regular question rendering (existing logic)
+      // Regular question rendering with enhanced nesting visualization
       const answer = Array.isArray(submission?.answers)
         ? submission.answers.find(a => a?.question_id === question.id)
         : undefined;
@@ -442,16 +493,35 @@ export default function SubmissionGradingScreen() {
             borderRadius: 16,
             padding: 20,
             marginBottom: 16,
-            borderWidth: 0.5,
+            borderWidth: 1,
             borderColor: colors.border,
+            // Enhanced nesting visualization
+            borderLeftWidth: level > 0 ? 3 : 1,
+            borderLeftColor: level > 0 ? colors.primary : colors.border,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.03,
             shadowRadius: 2,
             elevation: 1,
-            marginLeft: level * 20
+            marginLeft: level * 25, // Clear indentation based on nesting level
+            position: 'relative',
+            // Add subtle highlight for nested questions
+            opacity: level > 0 ? 0.95 : 1
           }}
         >
+          {/* Visual nesting indicator line for nested questions */}
+          {level > 0 && (
+            <View style={{
+              position: 'absolute',
+              left: -25,
+              top: 0,
+              bottom: 0,
+              width: 2,
+              backgroundColor: colors.primary,
+              opacity: 0.3
+            }} />
+          )}
+
           {/* Question Header */}
           <View style={{
             flexDirection: 'row',
@@ -460,6 +530,15 @@ export default function SubmissionGradingScreen() {
             marginBottom: 16
           }}>
             <View style={{ flex: 1, marginRight: 12 }}>
+              {/* Nesting indicator icon for nested questions */}
+              {level > 0 && (
+                <Ionicons
+                  name="arrow-forward"
+                  size={14}
+                  color={colors.textTertiary}
+                  style={{ marginBottom: 4 }}
+                />
+              )}
               <Text style={{
                 fontFamily,
                 fontSize: 16,

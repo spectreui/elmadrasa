@@ -193,7 +193,7 @@ export default function CreateExamScreen() {
     loadSubjects();
   }, [classLevel, classes]);
 
-  const generateTempId = () => `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const generateTempId = () => `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   const addQuestion = (parentId: string | null = null) => {
     const newQuestion = {
@@ -286,48 +286,7 @@ export default function CreateExamScreen() {
       setQuestions(updatedQuestions);
     }
   };
-
-  // Add this helper function to calculate display indexes
-  const getQuestionDisplayIndexes = (questions: any[]) => {
-    const sections = questions.filter(q => q.is_section && !q.parent_id);
-    const standaloneQuestions = questions.filter(q => !q.is_section && !q.parent_id);
-
-    let currentSectionIndex = 0;
-    let currentQuestionIndex = 0;
-
-    return questions.map(question => {
-      if (question.is_section && !question.parent_id) {
-        // This is a main section
-        currentSectionIndex++;
-        currentQuestionIndex = 0; // Reset question index for new section
-        return {
-          ...question,
-          displayIndex: `${currentSectionIndex}`,
-          isMainSection: true
-        };
-      } else if (!question.is_section && question.parent_id) {
-        // This is a question inside a section
-        currentQuestionIndex++;
-        const section = sections.find(s => s.id === question.parent_id);
-        const sectionIndex = sections.indexOf(section) + 1;
-        return {
-          ...question,
-          displayIndex: `${sectionIndex}.${currentQuestionIndex}`,
-          isNestedQuestion: true
-        };
-      } else if (!question.is_section && !question.parent_id) {
-        // This is a standalone question (not in any section)
-        currentQuestionIndex++;
-        return {
-          ...question,
-          displayIndex: `${currentQuestionIndex}`,
-          isStandaloneQuestion: true
-        };
-      }
-      return question;
-    });
-  };
-
+  
   // Update the getOrganizedQuestions function to use display indexes
   const getOrganizedQuestions = () => {
     const sections = questions.filter(q => q.is_section && !q.parent_id);
