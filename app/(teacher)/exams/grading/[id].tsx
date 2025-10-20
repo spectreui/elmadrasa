@@ -23,12 +23,17 @@ interface Question {
   correct_answer?: string;
   options?: string[];
   explanation?: string;
+  is_section?: boolean;
+  parent_id?: string;
+  question_order?: number;
+  nested_questions?: Question[]; // Add nested questions support
 }
 
 interface Answer {
   question_id: string;
   answer: string;
   is_correct: boolean;
+  is_section?: boolean;
   points: number;
   needs_grading?: boolean;
 }
@@ -71,6 +76,44 @@ export default function SubmissionGradingScreen() {
     }
   }, [id]);
 
+  // Update the organizeNestedQuestions function
+  const organizeNestedQuestions = (questions: Question[]) => {
+    const questionMap = new Map<string, Question>();
+    const rootQuestions: Question[] = [];
+
+    // First pass: create map and identify root questions
+    questions.forEach(question => {
+      questionMap.set(question.id, { ...question, nested_questions: [] });
+
+      if (!question.parent_id) {
+        rootQuestions.push(questionMap.get(question.id)!);
+      }
+    });
+
+    // Second pass: build hierarchy
+    questions.forEach(question => {
+      if (question.parent_id && questionMap.has(question.parent_id)) {
+        const parent = questionMap.get(question.parent_id)!;
+        if (parent.nested_questions) {
+          parent.nested_questions.push(questionMap.get(question.id)!);
+        }
+      }
+    });
+
+    // Sort by question_order if available
+    const sortQuestions = (questions: Question[]) => {
+      return questions.sort((a, b) => (a.question_order || 0) - (b.question_order || 0)).map(q => {
+        if (q.nested_questions && q.nested_questions.length > 0) {
+          q.nested_questions = sortQuestions(q.nested_questions);
+        }
+        return q;
+      });
+    };
+
+    return sortQuestions(rootQuestions);
+  };
+
+
   const loadSubmission = async () => {
     try {
       setLoading(true);
@@ -86,12 +129,15 @@ export default function SubmissionGradingScreen() {
         const safeQuestions = Array.isArray(safeExam.questions) ? safeExam.questions : [];
         const safeStudent = data.student || { profile: { name: 'Unknown Student' } };
 
+        // Organize nested questions
+        const organizedQuestions = organizeNestedQuestions(safeQuestions);
+
         const safeSubmission: Submission = {
           id: data.id || '',
           exam: {
             title: safeExam.title || 'Unknown Exam',
             subject: safeExam.subject || 'Unknown Subject',
-            questions: safeQuestions
+            questions: organizedQuestions
           },
           student: safeStudent,
           answers: safeAnswers,
@@ -110,11 +156,21 @@ export default function SubmissionGradingScreen() {
           initialGrades[answer.question_id] = answer.points || 0;
         });
 
-        // Initialize correct answers and explanations from questions
-        safeQuestions.forEach((question: Question) => {
-          initialCorrectAnswers[question.id] = question.correct_answer || '';
-          initialExplanations[question.id] = question.explanation || '';
-        });
+        // Initialize correct answers and explanations from questions (including nested)
+        const processQuestions = (questions: Question[]) => {
+          questions.forEach((question: Question) => {
+            if (!question.is_section) { // Only process non-section questions
+              initialCorrectAnswers[question.id] = question.correct_answer || '';
+              initialExplanations[question.id] = question.explanation || '';
+            }
+
+            if (question.nested_questions && question.nested_questions.length > 0) {
+              processQuestions(question.nested_questions);
+            }
+          });
+        };
+
+        processQuestions(organizedQuestions);
 
         setGrades(initialGrades);
         setCorrectAnswers(initialCorrectAnswers);
@@ -128,11 +184,26 @@ export default function SubmissionGradingScreen() {
     }
   };
 
+  // Add a helper function to flatten questions for processing
+  const flattenQuestions = (questions: Question[]): Question[] => {
+    let flatQuestions: Question[] = [];
+
+    questions.forEach(question => {
+      flatQuestions.push(question);
+
+      if (question.nested_questions && question.nested_questions.length > 0) {
+        flatQuestions = [...flatQuestions, ...flattenQuestions(question.nested_questions)];
+      }
+    });
+
+    return flatQuestions;
+  };
+
   const handleGradeChange = (questionId: string, points: number) => {
     if (!submission) return;
 
-    const question = submission.exam.questions.find(q => q.id === questionId);
-    if (question) {
+    const question = flattenQuestions(submission.exam.questions).find(q => q.id === questionId);
+    if (question && !question.is_section) { // Only allow grading non-section questions
       const maxPoints = question.points;
       const clampedPoints = Math.max(0, Math.min(maxPoints, points));
       setGrades(prev => ({ ...prev, [questionId]: clampedPoints }));
@@ -147,7 +218,7 @@ export default function SubmissionGradingScreen() {
     // Sum all grades (both manual and auto-graded)
     let total = 0;
     answers.forEach(answer => {
-      if (answer) {
+      if (answer && !answer.is_section) { // Skip sections
         const manualGrade = grades[answer.question_id];
         total += (manualGrade !== undefined) ? manualGrade : (answer.points || 0);
       }
@@ -179,8 +250,10 @@ export default function SubmissionGradingScreen() {
         return answer;
       });
 
-      // Update questions with new correct answers and explanations
-      const updatedQuestions = submission.exam.questions.map(question => ({
+      // Flatten questions and update with new correct answers and explanations
+      const flatQuestions = flattenQuestions(submission.exam.questions);
+
+      const updatedQuestions = flatQuestions.map(question => ({
         ...question,
         correct_answer: correctAnswers[question.id] || question.correct_answer,
         explanation: explanations[question.id] || question.explanation
@@ -203,7 +276,7 @@ export default function SubmissionGradingScreen() {
           'exams.gradingCompleteTitle',
           'exams.gradingCompleteBody',
           {
-            examTitle: submission.exam.title, // You might want to fetch the actual exam title
+            examTitle: submission.exam.title,
             score: totalScore,
             totalPoints: submission.total_points
           },
@@ -284,8 +357,474 @@ export default function SubmissionGradingScreen() {
   const totalScore = calculateTotalScore();
   const maxScore = submission.total_points;
 
+  // Replace the existing renderQuestions function with this corrected version
+  const renderQuestions = (questions: Question[], level = 0, parentIndex = '') => {
+    return questions.map((question, index) => {
+      const questionNumber = parentIndex ? `${parentIndex}.${index + 1}` : `${index + 1}`;
+
+      if (question.is_section) {
+        return (
+          <View key={question.id}>
+            {/* Section Header */}
+            <View
+              style={{
+                backgroundColor: colors.backgroundElevated,
+                borderRadius: 16,
+                padding: 20,
+                marginBottom: 16,
+                borderWidth: 0.5,
+                borderColor: colors.border,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.03,
+                shadowRadius: 2,
+                elevation: 1,
+                marginLeft: level * 20
+              }}
+            >
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: 8
+              }}>
+                <Ionicons name="folder" size={18} color={colors.primary} />
+                <Text style={{
+                  fontFamily,
+                  fontSize: 18,
+                  fontWeight: '700',
+                  color: colors.primary,
+                  marginLeft: 8
+                }}>
+                  {t('exams.section')} {questionNumber}
+                </Text>
+              </View>
+              <Text style={{
+                fontFamily,
+                fontSize: 16,
+                color: colors.textPrimary,
+                lineHeight: 22
+              }}>
+                {question.question}
+              </Text>
+            </View>
+
+            {/* Render nested questions INSIDE the section */}
+            {question.nested_questions && question.nested_questions.length > 0 && (
+              <View style={{
+                marginLeft: level * 20 + 10,
+                borderLeftWidth: 2,
+                borderLeftColor: colors.border,
+                paddingLeft: 10,
+                marginBottom: 16
+              }}>
+                {renderQuestions(question.nested_questions, level + 1, questionNumber)}
+              </View>
+            )}
+          </View>
+        );
+      }
+
+      // Regular question rendering (existing logic)
+      const answer = Array.isArray(submission?.answers)
+        ? submission.answers.find(a => a?.question_id === question.id)
+        : undefined;
+
+      const currentGrade = grades[question.id] !== undefined ? grades[question.id] : (answer?.points || 0);
+      const maxPoints = question.points || 1;
+      const correctAnswer = correctAnswers[question.id] || question.correct_answer || '';
+      const explanation = explanations[question.id] || question.explanation || '';
+
+      return (
+        <View
+          key={question.id}
+          style={{
+            backgroundColor: colors.backgroundElevated,
+            borderRadius: 16,
+            padding: 20,
+            marginBottom: 16,
+            borderWidth: 0.5,
+            borderColor: colors.border,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.03,
+            shadowRadius: 2,
+            elevation: 1,
+            marginLeft: level * 20
+          }}
+        >
+          {/* Question Header */}
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: 16
+          }}>
+            <View style={{ flex: 1, marginRight: 12 }}>
+              <Text style={{
+                fontFamily,
+                fontSize: 16,
+                fontWeight: '600',
+                color: colors.textPrimary,
+                lineHeight: 22
+              }}>
+                {questionNumber}. {question.question}
+              </Text>
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginTop: 8
+              }}>
+                <View style={{
+                  backgroundColor: question.type === 'text' ? colors.warning + '20' : colors.success + '20',
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
+                  borderRadius: 12,
+                  marginRight: 8
+                }}>
+                  <Text style={{
+                    fontFamily,
+                    fontSize: 12,
+                    color: question.type === 'text' ? colors.warning : colors.success,
+                    fontWeight: '600'
+                  }}>
+                    {question.type === 'text' ? t('exams.textAnswer') : t('exams.multipleChoice')}
+                  </Text>
+                </View>
+                <Text style={{
+                  fontFamily,
+                  fontSize: 14,
+                  color: colors.textSecondary
+                }}>
+                  {maxPoints} {t('exams.points')}
+                </Text>
+              </View>
+            </View>
+
+            <View style={{
+              backgroundColor: colors.primary + '15',
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+              borderRadius: 12
+            }}>
+              <Text style={{
+                fontFamily,
+                fontSize: 14,
+                fontWeight: '700',
+                color: colors.primary
+              }}>
+                {currentGrade}/{maxPoints}
+              </Text>
+            </View>
+          </View>
+
+          {/* Answer Section */}
+          <View style={{
+            backgroundColor: colors.background,
+            borderRadius: 12,
+            padding: 16,
+            marginBottom: 16
+          }}>
+            <Text style={{
+              fontFamily,
+              fontSize: 13,
+              color: colors.textSecondary,
+              marginBottom: 8,
+              fontWeight: '500'
+            }}>
+              {t('exams.studentAnswer')}
+            </Text>
+
+            {answer ? (
+              <Text style={{
+                fontFamily,
+                fontSize: 15,
+                color: colors.textPrimary,
+                lineHeight: 20
+              }}>
+                {answer.answer || t('exams.noAnswer')}
+              </Text>
+            ) : (
+              <Text style={{
+                fontFamily,
+                fontSize: 15,
+                color: colors.textTertiary,
+                fontStyle: 'italic'
+              }}>
+                {t('exams.noAnswer')}
+              </Text>
+            )}
+
+            {/* MCQ Options Display */}
+            {question.type === 'mcq' && question.options && (
+              <View style={{ marginTop: 12 }}>
+                <Text style={{
+                  fontFamily,
+                  fontSize: 13,
+                  color: colors.textSecondary,
+                  marginBottom: 8,
+                  fontWeight: '500'
+                }}>
+                  {t('exams.correctAnswer')}
+                </Text>
+                <View style={{
+                  flexDirection: 'row',
+                  flexWrap: 'wrap',
+                  gap: 8
+                }}>
+                  {question.options.map((option, optIndex) => (
+                    <View
+                      key={optIndex}
+                      style={{
+                        backgroundColor: option === question.correct_answer ? colors.success + '20' : colors.backgroundElevated,
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        borderRadius: 20,
+                        borderWidth: 1,
+                        borderColor: option === question.correct_answer ? colors.success : colors.border
+                      }}
+                    >
+                      <Text style={{
+                        fontFamily,
+                        fontSize: 13,
+                        color: option === question.correct_answer ? colors.success : colors.textPrimary
+                      }}>
+                        {String.fromCharCode(65 + optIndex)}. {option}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
+
+          {/* Correct Answer Section (for text questions) */}
+          {question.type === 'text' && (
+            <View style={{
+              backgroundColor: colors.background,
+              borderRadius: 12,
+              padding: 16,
+              marginBottom: 16,
+              borderWidth: 1,
+              borderColor: colors.border
+            }}>
+              <View style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 8
+              }}>
+                <Text style={{
+                  fontFamily,
+                  fontSize: 13,
+                  color: colors.textSecondary,
+                  fontWeight: '500'
+                }}>
+                  {t('exams.correctAnswer')}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setCorrectAnswers(prev => ({
+                    ...prev,
+                    [question.id]: ''
+                  }))}
+                >
+                  <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
+                </TouchableOpacity>
+              </View>
+              <TextInput
+                value={correctAnswer}
+                onChangeText={(text) => setCorrectAnswers(prev => ({
+                  ...prev,
+                  [question.id]: text
+                }))}
+                placeholder={t('exams.enterCorrectAnswer')}
+                placeholderTextColor={colors.textTertiary}
+                multiline
+                textAlignVertical="top"
+                style={{
+                  fontFamily,
+                  fontSize: 15,
+                  color: colors.textPrimary,
+                  minHeight: 60,
+                  paddingTop: 4
+                }}
+              />
+            </View>
+          )}
+
+          {/* Explanation Section */}
+          <View style={{
+            backgroundColor: colors.background,
+            borderRadius: 12,
+            padding: 16,
+            marginBottom: 16,
+            borderWidth: 1,
+            borderColor: colors.border
+          }}>
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 8
+            }}>
+              <Text style={{
+                fontFamily,
+                fontSize: 13,
+                color: colors.textSecondary,
+                fontWeight: '500'
+              }}>
+                {t('exams.explanation')}
+              </Text>
+              <TouchableOpacity
+                onPress={() => setExplanations(prev => ({
+                  ...prev,
+                  [question.id]: ''
+                }))}
+              >
+                <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              value={explanation}
+              onChangeText={(text) => setExplanations(prev => ({
+                ...prev,
+                [question.id]: text
+              }))}
+              placeholder={t('exams.enterExplanation')}
+              placeholderTextColor={colors.textTertiary}
+              multiline
+              textAlignVertical="top"
+              style={{
+                fontFamily,
+                fontSize: 15,
+                color: colors.textPrimary,
+                minHeight: 60,
+                paddingTop: 4
+              }}
+            />
+          </View>
+
+          {/* Grading Controls */}
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <Text style={{
+              fontFamily,
+              fontSize: 15,
+              color: colors.textPrimary,
+              fontWeight: '500'
+            }}>
+              {t('exams.assignPoints')}
+            </Text>
+
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: colors.background,
+              borderRadius: 24,
+              borderWidth: 1,
+              borderColor: colors.border
+            }}>
+              <TouchableOpacity
+                onPress={() => handleGradeChange(question.id, currentGrade - 1)}
+                style={{
+                  width: 40,
+                  height: 40,
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                disabled={currentGrade <= 0}
+              >
+                <Ionicons
+                  name="remove"
+                  size={18}
+                  color={currentGrade <= 0 ? colors.textTertiary : colors.textPrimary}
+                />
+              </TouchableOpacity>
+
+              <View style={{
+                width: 60,
+                alignItems: 'center'
+              }}>
+                <Text style={{
+                  fontFamily,
+                  fontSize: 16,
+                  fontWeight: '700',
+                  color: colors.textPrimary
+                }}>
+                  {currentGrade}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                onPress={() => handleGradeChange(question.id, currentGrade + 1)}
+                style={{
+                  width: 40,
+                  height: 40,
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                disabled={currentGrade >= maxPoints}
+              >
+                <Ionicons
+                  name="add"
+                  size={18}
+                  color={currentGrade >= maxPoints ? colors.textTertiary : colors.textPrimary}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Slider for precise grading */}
+          <View style={{
+            marginTop: 16,
+            height: 40,
+            justifyContent: 'center'
+          }}>
+            <View style={{
+              height: 6,
+              backgroundColor: colors.border,
+              borderRadius: 3
+            }}>
+              <View
+                style={{
+                  height: 6,
+                  backgroundColor: colors.primary,
+                  borderRadius: 3,
+                  width: `${(currentGrade / maxPoints) * 100}%`
+                }}
+              />
+            </View>
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              marginTop: 4
+            }}>
+              <Text style={{
+                fontFamily,
+                fontSize: 12,
+                color: colors.textTertiary
+              }}>
+                0
+              </Text>
+              <Text style={{
+                fontFamily,
+                fontSize: 12,
+                color: colors.textTertiary
+              }}>
+                {maxPoints}
+              </Text>
+            </View>
+          </View>
+        </View>
+      );
+    });
+  };
+
+
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background, paddingBottom: 70 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
       <View style={{
         paddingHorizontal: 20,
@@ -388,398 +927,7 @@ export default function SubmissionGradingScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* All Questions */}
-        {submission.exam.questions.map((question, index) => {
-          const answer = safeAnswers.find(a => a?.question_id === question.id);
-          const currentGrade = grades[question.id] !== undefined ? grades[question.id] : (answer?.points || 0);
-          const maxPoints = question.points || 1;
-          const correctAnswer = correctAnswers[question.id] || question.correct_answer || '';
-          const explanation = explanations[question.id] || question.explanation || '';
-
-          return (
-            <View
-              key={question.id}
-              style={{
-                backgroundColor: colors.backgroundElevated,
-                borderRadius: 16,
-                padding: 20,
-                marginBottom: 16,
-                borderWidth: 0.5,
-                borderColor: colors.border,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.03,
-                shadowRadius: 2,
-                elevation: 1
-              }}
-            >
-              {/* Question Header */}
-              <View style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                marginBottom: 16
-              }}>
-                <View style={{ flex: 1, marginRight: 12 }}>
-                  <Text style={{
-                    fontFamily,
-                    fontSize: 16,
-                    fontWeight: '600',
-                    color: colors.textPrimary,
-                    lineHeight: 22
-                  }}>
-                    {index + 1}. {question.question}
-                  </Text>
-                  <View style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    marginTop: 8
-                  }}>
-                    <View style={{
-                      backgroundColor: question.type === 'text' ? colors.warning + '20' : colors.success + '20',
-                      paddingHorizontal: 8,
-                      paddingVertical: 4,
-                      borderRadius: 12,
-                      marginRight: 8
-                    }}>
-                      <Text style={{
-                        fontFamily,
-                        fontSize: 12,
-                        color: question.type === 'text' ? colors.warning : colors.success,
-                        fontWeight: '600'
-                      }}>
-                        {question.type === 'text' ? t('exams.textAnswer') : t('exams.multipleChoice')}
-                      </Text>
-                    </View>
-                    <Text style={{
-                      fontFamily,
-                      fontSize: 14,
-                      color: colors.textSecondary
-                    }}>
-                      {maxPoints} {t('exams.points')}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={{
-                  backgroundColor: colors.primary + '15',
-                  paddingHorizontal: 10,
-                  paddingVertical: 6,
-                  borderRadius: 12
-                }}>
-                  <Text style={{
-                    fontFamily,
-                    fontSize: 14,
-                    fontWeight: '700',
-                    color: colors.primary
-                  }}>
-                    {currentGrade}/{maxPoints}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Answer Section */}
-              <View style={{
-                backgroundColor: colors.background,
-                borderRadius: 12,
-                padding: 16,
-                marginBottom: 16
-              }}>
-                <Text style={{
-                  fontFamily,
-                  fontSize: 13,
-                  color: colors.textSecondary,
-                  marginBottom: 8,
-                  fontWeight: '500'
-                }}>
-                  {t('exams.studentAnswer')}
-                </Text>
-
-                {answer ? (
-                  <Text style={{
-                    fontFamily,
-                    fontSize: 15,
-                    color: colors.textPrimary,
-                    lineHeight: 20
-                  }}>
-                    {answer.answer || t('exams.noAnswer')}
-                  </Text>
-                ) : (
-                  <Text style={{
-                    fontFamily,
-                    fontSize: 15,
-                    color: colors.textTertiary,
-                    fontStyle: 'italic'
-                  }}>
-                    {t('exams.noAnswer')}
-                  </Text>
-                )}
-
-                {/* MCQ Options Display */}
-                {question.type === 'mcq' && question.options && (
-                  <View style={{ marginTop: 12 }}>
-                    <Text style={{
-                      fontFamily,
-                      fontSize: 13,
-                      color: colors.textSecondary,
-                      marginBottom: 8,
-                      fontWeight: '500'
-                    }}>
-                      {t('exams.correctAnswer')}
-                    </Text>
-                    <View style={{
-                      flexDirection: 'row',
-                      flexWrap: 'wrap',
-                      gap: 8
-                    }}>
-                      {question.options.map((option, optIndex) => (
-                        <View
-                          key={optIndex}
-                          style={{
-                            backgroundColor: option === question.correct_answer ? colors.success + '20' : colors.backgroundElevated,
-                            paddingHorizontal: 12,
-                            paddingVertical: 6,
-                            borderRadius: 20,
-                            borderWidth: 1,
-                            borderColor: option === question.correct_answer ? colors.success : colors.border
-                          }}
-                        >
-                          <Text style={{
-                            fontFamily,
-                            fontSize: 13,
-                            color: option === question.correct_answer ? colors.success : colors.textPrimary
-                          }}>
-                            {String.fromCharCode(65 + optIndex)}. {option}
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
-                  </View>
-                )}
-              </View>
-
-              {/* Correct Answer Section (for text questions) */}
-              {question.type === 'text' && (
-                <View style={{
-                  backgroundColor: colors.background,
-                  borderRadius: 12,
-                  padding: 16,
-                  marginBottom: 16,
-                  borderWidth: 1,
-                  borderColor: colors.border
-                }}>
-                  <View style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: 8
-                  }}>
-                    <Text style={{
-                      fontFamily,
-                      fontSize: 13,
-                      color: colors.textSecondary,
-                      fontWeight: '500'
-                    }}>
-                      {t('exams.correctAnswer')}
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => setCorrectAnswers(prev => ({
-                        ...prev,
-                        [question.id]: ''
-                      }))}
-                    >
-                      <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
-                    </TouchableOpacity>
-                  </View>
-                  <TextInput
-                    value={correctAnswer}
-                    onChangeText={(text) => setCorrectAnswers(prev => ({
-                      ...prev,
-                      [question.id]: text
-                    }))}
-                    placeholder={t('exams.enterCorrectAnswer')}
-                    placeholderTextColor={colors.textTertiary}
-                    multiline
-                    textAlignVertical="top"
-                    style={{
-                      fontFamily,
-                      fontSize: 15,
-                      color: colors.textPrimary,
-                      minHeight: 60,
-                      paddingTop: 4
-                    }}
-                  />
-                </View>
-              )}
-
-              {/* Explanation Section */}
-              <View style={{
-                backgroundColor: colors.background,
-                borderRadius: 12,
-                padding: 16,
-                marginBottom: 16,
-                borderWidth: 1,
-                borderColor: colors.border
-              }}>
-                <View style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: 8
-                }}>
-                  <Text style={{
-                    fontFamily,
-                    fontSize: 13,
-                    color: colors.textSecondary,
-                    fontWeight: '500'
-                  }}>
-                    {t('exams.explanation')}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => setExplanations(prev => ({
-                      ...prev,
-                      [question.id]: ''
-                    }))}
-                  >
-                    <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
-                  </TouchableOpacity>
-                </View>
-                <TextInput
-                  value={explanation}
-                  onChangeText={(text) => setExplanations(prev => ({
-                    ...prev,
-                    [question.id]: text
-                  }))}
-                  placeholder={t('exams.enterExplanation')}
-                  placeholderTextColor={colors.textTertiary}
-                  multiline
-                  textAlignVertical="top"
-                  style={{
-                    fontFamily,
-                    fontSize: 15,
-                    color: colors.textPrimary,
-                    minHeight: 60,
-                    paddingTop: 4
-                  }}
-                />
-              </View>
-
-              {/* Grading Controls */}
-              <View style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between'
-              }}>
-                <Text style={{
-                  fontFamily,
-                  fontSize: 15,
-                  color: colors.textPrimary,
-                  fontWeight: '500'
-                }}>
-                  {t('exams.assignPoints')}
-                </Text>
-
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: colors.background,
-                  borderRadius: 24,
-                  borderWidth: 1,
-                  borderColor: colors.border
-                }}>
-                  <TouchableOpacity
-                    onPress={() => handleGradeChange(question.id, currentGrade - 1)}
-                    style={{
-                      width: 40,
-                      height: 40,
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                    disabled={currentGrade <= 0}
-                  >
-                    <Ionicons
-                      name="remove"
-                      size={18}
-                      color={currentGrade <= 0 ? colors.textTertiary : colors.textPrimary}
-                    />
-                  </TouchableOpacity>
-
-                  <View style={{
-                    width: 60,
-                    alignItems: 'center'
-                  }}>
-                    <Text style={{
-                      fontFamily,
-                      fontSize: 16,
-                      fontWeight: '700',
-                      color: colors.textPrimary
-                    }}>
-                      {currentGrade}
-                    </Text>
-                  </View>
-
-                  <TouchableOpacity
-                    onPress={() => handleGradeChange(question.id, currentGrade + 1)}
-                    style={{
-                      width: 40,
-                      height: 40,
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                    disabled={currentGrade >= maxPoints}
-                  >
-                    <Ionicons
-                      name="add"
-                      size={18}
-                      color={currentGrade >= maxPoints ? colors.textTertiary : colors.textPrimary}
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Slider for precise grading */}
-              <View style={{
-                marginTop: 16,
-                height: 40,
-                justifyContent: 'center'
-              }}>
-                <View style={{
-                  height: 6,
-                  backgroundColor: colors.border,
-                  borderRadius: 3
-                }}>
-                  <View
-                    style={{
-                      height: 6,
-                      backgroundColor: colors.primary,
-                      borderRadius: 3,
-                      width: `${(currentGrade / maxPoints) * 100}%`
-                    }}
-                  />
-                </View>
-                <View style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  marginTop: 4
-                }}>
-                  <Text style={{
-                    fontFamily,
-                    fontSize: 12,
-                    color: colors.textTertiary
-                  }}>
-                    0
-                  </Text>
-                  <Text style={{
-                    fontFamily,
-                    fontSize: 12,
-                    color: colors.textTertiary
-                  }}>
-                    {maxPoints}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          );
-        })}
+        {submission.exam.questions && renderQuestions(submission.exam.questions)}
 
         {/* Feedback Section */}
         <View style={{

@@ -108,12 +108,31 @@ export interface Exam {
   available_from?: string; // Add this to indicate when the exam becomes available
 }
 
-export interface ExamDetails extends Exam {
-  questions: Question[];
-  submissions_count: number;
-  average_score: number;
-  total_points: number;
+// Update the ExamDetails interface to properly type nested questions
+interface ExamDetails extends Exam {
+  questions: (Question & {
+    parent_id?: string;
+    is_section?: boolean;
+    question_order?: number;
+    attachment_url?: string;
+    attachment_type?: 'image' | 'pdf';
+    nested_questions?: (Question & {
+      parent_id?: string;
+      is_section?: boolean;
+      question_order?: number;
+      attachment_url?: string;
+      attachment_type?: 'image' | 'pdf';
+      nested_questions?: any[];
+    })[];
+  })[];
+  teacher?: {
+    id: string;
+    profile: {
+      name: string;
+    };
+  };
 }
+
 
 export interface Question {
   id: string;

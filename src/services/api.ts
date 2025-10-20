@@ -4,8 +4,8 @@ import { LoginRequest, AuthResponse, ApiResponse, User, Exam } from "../types";
 import { storage } from "../utils/storage";
 import { router } from 'expo-router';
 
-// const API_BASE_URL = "http://192.168.1.113:5001/api";
-const API_BASE_URL = "https://elmadrasa-server.vercel.app/api";
+const API_BASE_URL = "http://192.168.1.124:5001/api";
+// const API_BASE_URL = "https://elmadrasa-server.vercel.app/api";
 
 // --- Shared routing config (used by both api.ts and _layout.tsx) ---
 export const SHARED_BASE_ROUTES = ["/exams", "/homework", "/profile"];

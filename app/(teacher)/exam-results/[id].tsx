@@ -35,6 +35,7 @@ interface Answer {
   needs_grading: boolean;
   is_manually_graded?: boolean;
   feedback?: string;
+  is_section?: boolean;
 }
 
 interface Submission {
@@ -238,7 +239,7 @@ export default function TeacherExamResultsScreen() {
     // Initialize grading answers state
     const initialGrading: Record<string, { points: number; feedback: string }> = {};
     submission.answers.forEach(answer => {
-      if (answer.needs_grading) {
+      if (answer.needs_grading && !answer.is_section) {
         initialGrading[answer.question_id] = {
           points: answer.points,
           feedback: answer.feedback || ''
@@ -285,6 +286,10 @@ export default function TeacherExamResultsScreen() {
       // Calculate new total score
       let newScore = 0;
       const updatedAnswers = selectedSubmission.answers.map(answer => {
+        if (answer.is_section) {
+          return answer; // Skip sections
+        }
+        
         if (answer.needs_grading && gradingAnswers[answer.question_id]) {
           const gradedAnswer = gradingAnswers[answer.question_id];
           newScore += gradedAnswer.points;
@@ -898,7 +903,9 @@ export default function TeacherExamResultsScreen() {
                   {t("exams.questionAnalysis")}
                 </Text>
                 <View style={styles.answersList}>
-                  {selectedSubmission.answers.map((answer: Answer, index: number) =>
+                  {selectedSubmission.answers
+                    .filter(answer => !answer.is_section) // Filter out sections
+                    .map((answer: Answer, index: number) =>
                     <View
                       key={index}
                       style={[styles.answerItem, { borderColor: colors.border }]}>

@@ -1,6 +1,6 @@
-// app/(teacher)/create-exam.tsx - RTL SUPPORT ADDED
+// app/(teacher)/create-exam.tsx - UPDATED FOR NESTED QUESTIONS
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Switch, Modal, FlatList, ActivityIndicator, Image, Platform, I18nManager } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Switch, Modal, FlatList, ActivityIndicator, Image } from 'react-native';
 import Alert from '@/components/Alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -15,7 +15,7 @@ export default function CreateExamScreen() {
   const { language, isRTL, t } = useTranslation();
   const { fontFamily, colors } = useThemeContext();
   const { user } = useAuth();
-  const { edit } = useLocalSearchParams(); // Get edit parameter
+  const { edit } = useLocalSearchParams();
   const [title, setTitle] = useState('');
   const [subject, setSubject] = useState('');
   const [classLevel, setClassLevel] = useState('');
@@ -38,15 +38,7 @@ export default function CreateExamScreen() {
   const [attachmentBase64, setAttachmentBase64] = useState<string | null>(null);
   const [attachmentMimeType, setAttachmentMimeType] = useState<string | null>(null);
 
-  const [questions, setQuestions] = useState<any[]>([
-    {
-      question: '',
-      type: 'mcq',
-      options: ['', ''],
-      correct_answer: '',
-      points: '1'
-    }]
-  );
+  const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [classes, setClasses] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
@@ -86,7 +78,6 @@ export default function CreateExamScreen() {
         setAttachmentName(exam.attachment_name || null);
         setAllowImageSubmissions(exam.allow_image_submissions || false);
 
-
         // Settings
         if (exam.settings) {
           setTimed(exam.settings.timed || false);
@@ -95,10 +86,12 @@ export default function CreateExamScreen() {
           setRandomOrder(exam.settings.random_order || false);
         }
 
-        // Questions
+        // Questions - flatten nested structure for editing
         if (exam.questions && exam.questions.length > 0) {
-          setQuestions(exam.questions.map((q: any) => ({
+          const flattenedQuestions = flattenQuestions(exam.questions);
+          setQuestions(flattenedQuestions.map((q: any) => ({
             ...q,
+            id: q.id || Date.now().toString() + Math.random(), // Ensure unique IDs
             points: q.points?.toString() || '1'
           })));
         }
@@ -113,6 +106,29 @@ export default function CreateExamScreen() {
     } finally {
       setLoadingData(false);
     }
+  };
+
+  // Helper to flatten nested questions for editing
+  const flattenQuestions = (nestedQuestions: any[], parentId: string | null = null, orderOffset = 0) => {
+    let flatQuestions: any[] = [];
+    let order = orderOffset;
+
+    nestedQuestions.forEach((question) => {
+      order++;
+      flatQuestions.push({
+        ...question,
+        question_order: order,
+        parent_id: parentId
+      });
+
+      if (question.nested_questions && question.nested_questions.length > 0) {
+        const nested = flattenQuestions(question.nested_questions, question.id, order);
+        flatQuestions = [...flatQuestions, ...nested];
+        order += nested.length;
+      }
+    });
+
+    return flatQuestions;
   };
 
   // Load teacher's classes
@@ -177,42 +193,184 @@ export default function CreateExamScreen() {
     loadSubjects();
   }, [classLevel, classes]);
 
-  const addQuestion = () => {
-    setQuestions([
-      ...questions,
-      {
-        question: '',
-        type: 'mcq',
-        options: ['', ''],
-        correct_answer: '',
-        points: '1'
-      }]
+  const generateTempId = () => `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+  const addQuestion = (parentId: string | null = null) => {
+    const newQuestion = {
+      id: generateTempId(),
+      question: '',
+      type: 'mcq',
+      options: ['', ''],
+      correct_answer: '',
+      points: '1',
+      is_section: false,
+      parent_id: parentId,
+      question_order: questions.length + 1
+    };
+
+    setQuestions([...questions, newQuestion]);
+  };
+
+  const addSection = () => {
+    const newSection = {
+      id: generateTempId(),
+      question: '',
+      type: 'mcq',
+      options: [],
+      correct_answer: '',
+      points: '1', // Changed from '0' to '1' - sections should have at least 1 point
+      is_section: true,
+      parent_id: null,
+      question_order: questions.length + 1
+    };
+
+    setQuestions([...questions, newSection]);
+  };
+
+  // Add question to a specific section
+  const addQuestionToSection = (sectionId: string) => {
+    const newQuestion = {
+      id: generateTempId(),
+      question: '',
+      type: 'mcq',
+      options: ['', ''],
+      correct_answer: '',
+      points: '1',
+      is_section: false,
+      parent_id: sectionId,
+      question_order: questions.length + 1
+    };
+
+    setQuestions([...questions, newQuestion]);
+  };
+
+  const updateQuestion = (id: string, field: string, value: any) => {
+    const updatedQuestions = questions.map(q =>
+      q.id === id ? { ...q, [field]: value } : q
     );
-  };
-
-  const updateQuestion = (index: number, field: string, value: any) => {
-    const updatedQuestions = [...questions];
-    updatedQuestions[index] = { ...updatedQuestions[index], [field]: value };
     setQuestions(updatedQuestions);
   };
 
-  const addOption = (questionIndex: number) => {
-    const updatedQuestions = [...questions];
-    updatedQuestions[questionIndex].options.push('');
+  const addOption = (questionId: string) => {
+    const updatedQuestions = questions.map(q => {
+      if (q.id === questionId) {
+        return { ...q, options: [...q.options, ''] };
+      }
+      return q;
+    });
     setQuestions(updatedQuestions);
   };
 
-  const updateOption = (questionIndex: number, optionIndex: number, value: string) => {
-    const updatedQuestions = [...questions];
-    updatedQuestions[questionIndex].options[optionIndex] = value;
+  const updateOption = (questionId: string, optionIndex: number, value: string) => {
+    const updatedQuestions = questions.map(q => {
+      if (q.id === questionId) {
+        const newOptions = [...q.options];
+        newOptions[optionIndex] = value;
+        return { ...q, options: newOptions };
+      }
+      return q;
+    });
     setQuestions(updatedQuestions);
   };
 
-  const removeQuestion = (index: number) => {
-    if (questions.length > 1) {
-      const updatedQuestions = questions.filter((_, i) => i !== index);
+  const removeQuestion = (id: string) => {
+    if (questions.length > 0) {
+      const questionToRemove = questions.find(q => q.id === id);
+      let updatedQuestions = questions.filter(q => q.id !== id);
+
+      // Remove all nested questions if this was a section
+      if (questionToRemove?.is_section) {
+        updatedQuestions = updatedQuestions.filter(q => q.parent_id !== id);
+      }
+
       setQuestions(updatedQuestions);
     }
+  };
+
+  // Add this helper function to calculate display indexes
+  const getQuestionDisplayIndexes = (questions: any[]) => {
+    const sections = questions.filter(q => q.is_section && !q.parent_id);
+    const standaloneQuestions = questions.filter(q => !q.is_section && !q.parent_id);
+
+    let currentSectionIndex = 0;
+    let currentQuestionIndex = 0;
+
+    return questions.map(question => {
+      if (question.is_section && !question.parent_id) {
+        // This is a main section
+        currentSectionIndex++;
+        currentQuestionIndex = 0; // Reset question index for new section
+        return {
+          ...question,
+          displayIndex: `${currentSectionIndex}`,
+          isMainSection: true
+        };
+      } else if (!question.is_section && question.parent_id) {
+        // This is a question inside a section
+        currentQuestionIndex++;
+        const section = sections.find(s => s.id === question.parent_id);
+        const sectionIndex = sections.indexOf(section) + 1;
+        return {
+          ...question,
+          displayIndex: `${sectionIndex}.${currentQuestionIndex}`,
+          isNestedQuestion: true
+        };
+      } else if (!question.is_section && !question.parent_id) {
+        // This is a standalone question (not in any section)
+        currentQuestionIndex++;
+        return {
+          ...question,
+          displayIndex: `${currentQuestionIndex}`,
+          isStandaloneQuestion: true
+        };
+      }
+      return question;
+    });
+  };
+
+  // Update the getOrganizedQuestions function to use display indexes
+  const getOrganizedQuestions = () => {
+    const sections = questions.filter(q => q.is_section && !q.parent_id);
+    const organized = [];
+
+    let standaloneQuestionCounter = 0;
+    let sectionCounter = 0;
+
+    // Process sections and their questions
+    for (const section of sections) {
+      sectionCounter++;
+      organized.push({
+        ...section,
+        displayIndex: `${sectionCounter}`,
+        isMainSection: true
+      });
+
+      // Add questions under this section
+      const sectionQuestions = questions.filter(q => q.parent_id === section.id && !q.is_section);
+      let questionCounter = 0;
+
+      for (const question of sectionQuestions) {
+        questionCounter++;
+        organized.push({
+          ...question,
+          displayIndex: `${sectionCounter}.${questionCounter}`,
+          isNestedQuestion: true
+        });
+      }
+    }
+
+    // Add standalone questions (not in any section)
+    const questionsWithoutSections = questions.filter(q => !q.is_section && !q.parent_id);
+    for (const question of questionsWithoutSections) {
+      standaloneQuestionCounter++;
+      organized.push({
+        ...question,
+        displayIndex: `${standaloneQuestionCounter}`,
+        isStandaloneQuestion: true
+      });
+    }
+
+    return organized;
   };
 
   const pickAndUploadAttachment = async () => {
@@ -236,11 +394,9 @@ export default function CreateExamScreen() {
         const reader = new FileReader();
         reader.onload = () => {
           const result = reader.result as string;
-          // FIX: Extract ONLY the base64 part without the prefix
           if (result.includes("base64,")) {
             resolve(result.split("base64,")[1]);
           } else {
-            // If no prefix, use the whole result
             resolve(result);
           }
         };
@@ -265,7 +421,7 @@ export default function CreateExamScreen() {
         setAttachmentUrl(uploadedUrl);
         setAttachmentType(type);
         setAttachmentName(fileName);
-        setAttachmentBase64(base64Data); // This now has JUST the base64 string
+        setAttachmentBase64(base64Data);
         setAttachmentMimeType(mimeType);
 
         setShowAIOptions(true);
@@ -301,19 +457,11 @@ export default function CreateExamScreen() {
 
       let response;
       if (source === "file") {
-        // FIX: Send the data in the correct format that the backend expects
-        console.log("Sending extraction request with:", {
-          hasBase64Data: !!base64Data,
-          fileName,
-          mimeType,
-          contentLength: content?.length
-        });
-
         response = await apiService.api.post("/ai/extract-from-image", {
-          base64Data,      // This should be the base64 string without data URL prefix
+          base64Data,
           fileName,
           mimeType,
-          imageUrl: content // Also send the uploaded URL as imageUrl
+          imageUrl: content
         });
       } else if (source === "text") {
         response = await apiService.api.post("/ai/extract-from-text", { text: content });
@@ -334,17 +482,22 @@ export default function CreateExamScreen() {
         return;
       }
 
-      // Merge unique questions
+      // Merge unique questions with unique IDs
       const merged = [
-        ...new Map(
-          [...questions, ...newQuestions].map((q) => [q.question.trim(), q])
-        ).values(),
+        ...questions,
+        ...newQuestions.map((q: any) => ({
+          ...q,
+          id: Date.now().toString() + Math.random(),
+          points: q.points?.toString() || '1',
+          parent_id: null,
+          question_order: questions.length + newQuestions.indexOf(q) + 1
+        }))
       ];
 
       setQuestions(merged);
       Alert.alert(
         t("common.success"),
-        `${merged.length - questions.length} ${t("exams.questionsExtracted")}`
+        `${newQuestions.length} ${t("exams.questionsExtracted")}`
       );
     } catch (error: any) {
       console.error("AI extraction error:", error);
@@ -360,8 +513,14 @@ export default function CreateExamScreen() {
       return;
     }
 
-    if (questions.some((q) => !q.question ||
-      q.type === 'mcq' && (!q.options.some((opt: string) => opt) || !q.correct_answer))) {
+    // Validate questions - ensure sections also have valid points
+    const hasInvalidQuestions = questions.some((q) =>
+      !q.question ||
+      (!q.is_section && q.type === 'mcq' && (!q.options.some((opt: string) => opt) || !q.correct_answer)) ||
+      (parseInt(q.points) <= 0) // Ensure all questions/sections have positive points
+    );
+
+    if (hasInvalidQuestions) {
       Alert.alert(t('common.error'), t('exams.completeQuestions'));
       return;
     }
@@ -375,6 +534,15 @@ export default function CreateExamScreen() {
     try {
       setLoading(true);
 
+      // Prepare questions with proper structure and order
+      const preparedQuestions = getOrganizedQuestions().map((q, index) => ({
+        ...q,
+        points: parseInt(q.points) || (q.is_section ? 1 : 1), // Ensure minimum 1 point
+        question_order: index + 1,
+        // Remove temporary ID for backend
+        ...(q.id?.startsWith('temp_') && { id: undefined })
+      }));
+
       const examData = {
         title,
         subject,
@@ -384,10 +552,7 @@ export default function CreateExamScreen() {
         allow_image_submissions: allowImageSubmissions,
         attachment_url: attachmentUrl,
         attachment_type: attachmentType,
-        questions: questions.map((q) => ({
-          ...q,
-          points: parseInt(q.points) || 1
-        })),
+        questions: preparedQuestions,
         settings: {
           timed,
           duration: timed ? parseInt(duration) || 60 : 60,
@@ -398,19 +563,14 @@ export default function CreateExamScreen() {
 
       let response;
       if (isEditing) {
-        // Update existing exam
         response = await apiService.updateExam(edit as string, examData);
       } else {
-        // Create new exam
         response = await apiService.createExam(examData);
       }
 
       if (response.data.success) {
-        // ✅ Send push notifications when exam is created/updated
         try {
-          // Only send notifications for new exams or when exam becomes active
           if (!isEditing) {
-            // Get students in the class to notify them
             const studentsResponse = await apiService.getStudentsByClass(
               classes.find((c) => c.name === classLevel)?.id || ''
             );
@@ -419,7 +579,6 @@ export default function CreateExamScreen() {
               const students = studentsResponse.data.data || [];
               const studentIds = students.map(student => student.user_id);
 
-              // Send localized bulk notification to all students
               try {
                 await apiService.sendBulkLocalizedNotifications(
                   studentIds,
@@ -438,7 +597,6 @@ export default function CreateExamScreen() {
                 console.log(`✅ Sent localized exam notifications to ${studentIds.length} students`);
               } catch (notificationError) {
                 console.log('Failed to send bulk notifications:', notificationError);
-                // Fallback: try individual notifications
                 for (const student of students) {
                   try {
                     await apiService.sendLocalizedNotification(
@@ -478,6 +636,32 @@ export default function CreateExamScreen() {
       setLoading(false);
     }
   };
+
+  // Group questions by sections for rendering
+  const groupedQuestions = () => {
+    // Sort questions by question_order first
+    const sortedQuestions = [...questions].sort((a, b) =>
+      (a.question_order || 0) - (b.question_order || 0)
+    );
+
+    const sections: any[] = [];
+    const ungrouped: any[] = [];
+
+    sortedQuestions.forEach(q => {
+      if (q.is_section) {
+        sections.push({
+          ...q,
+          questions: sortedQuestions.filter(subQ => subQ.parent_id === q.id)
+        });
+      } else if (!q.parent_id) {
+        ungrouped.push(q);
+      }
+    });
+
+    return { sections, ungrouped };
+  };
+
+  const { sections, ungrouped } = groupedQuestions();
 
   const DatePickerModal = ({
     visible,
@@ -1118,6 +1302,7 @@ export default function CreateExamScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={{ padding: designTokens.spacing.xl, paddingBottom: 80 }}>
+
         <Text style={{
           fontFamily,
           fontSize: designTokens.typography.title1.fontSize,
@@ -1803,240 +1988,197 @@ export default function CreateExamScreen() {
               color: colors.textPrimary,
               textAlign: isRTL ? 'right' : 'left'
             } as any}>
-              {t("exams.questions")} ({questions.length})
+              {t("exams.questions")} ({questions.filter(q => !q.is_section).length})
             </Text>
-            <TouchableOpacity
-              onPress={addQuestion}
-              style={{
-                backgroundColor: colors.primary,
-                borderRadius: designTokens.borderRadius.full,
-                width: 36,
-                height: 36,
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Ionicons name="add" size={20} color="#fff" />
-            </TouchableOpacity>
+            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 8 }}>
+              <TouchableOpacity
+                onPress={addSection}
+                style={{
+                  backgroundColor: colors.primary,
+                  borderRadius: designTokens.borderRadius.full,
+                  width: 36,
+                  height: 36,
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Ionicons name="folder" size={20} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => addQuestion()}
+                style={{
+                  backgroundColor: colors.primary,
+                  borderRadius: designTokens.borderRadius.full,
+                  width: 36,
+                  height: 36,
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Ionicons name="add" size={20} color="#fff" />
+              </TouchableOpacity>
+            </View>
           </View>
 
-          {questions.map((question, qIndex) =>
-            <View
-              key={qIndex}
-              style={{
-                backgroundColor: colors.background,
-                borderRadius: designTokens.borderRadius.lg,
-                padding: designTokens.spacing.md,
-                marginBottom: designTokens.spacing.md,
-                borderWidth: 1,
-                borderColor: colors.border
-              }}
-            >
-              <View style={{
-                flexDirection: isRTL ? 'row-reverse' : 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: designTokens.spacing.md
-              }}>
-                <Text style={{
-                  fontFamily,
-                  fontSize: designTokens.typography.body.fontSize,
-                  color: colors.textPrimary,
-                  fontWeight: '600',
-                  textAlign: isRTL ? 'right' : 'left'
+          {getOrganizedQuestions().map((question, index) => {
+            const isSection = question.is_section;
+            const isNestedQuestion = question.parent_id && !question.is_section;
+            const section = isNestedQuestion ? questions.find(q => q.id === question.parent_id) : null;
+
+            return (
+              <View
+                key={question.id}
+                style={{
+                  backgroundColor: colors.background,
+                  borderRadius: designTokens.borderRadius.lg,
+                  padding: designTokens.spacing.md,
+                  marginBottom: designTokens.spacing.md,
+                  borderWidth: 1,
+                  borderColor: isSection ? colors.primary : colors.border,
+                  borderLeftWidth: isSection ? 4 : 1,
+                  borderLeftColor: isSection ? colors.primary : colors.border,
+                  marginLeft: isNestedQuestion ? designTokens.spacing.xl : 0,
+                  opacity: isNestedQuestion ? 0.9 : 1
+                }}
+              >
+                {/* Header with question/section indicator */}
+                <View style={{
+                  flexDirection: isRTL ? 'row-reverse' : 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: designTokens.spacing.md
                 }}>
-                  {t("exams.question")} {qIndex + 1}
-                </Text>
-                {questions.length > 1 &&
-                  <TouchableOpacity onPress={() => removeQuestion(qIndex)}>
-                    <Ionicons name="trash" size={20} color="#EF4444" />
-                  </TouchableOpacity>
-                }
-              </View>
+                  <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', flex: 1 }}>
+                    {isSection && (
+                      <Ionicons
+                        name="folder"
+                        size={16}
+                        color={colors.primary}
+                        style={{ marginHorizontal: 8 }}
+                      />
+                    )}
+                    {isNestedQuestion && (
+                      <Ionicons
+                        name="arrow-forward"
+                        size={16}
+                        color={colors.textTertiary}
+                        style={{ marginHorizontal: 8 }}
+                      />
+                    )}
+                    <Text style={{
+                      fontFamily,
+                      fontSize: designTokens.typography.body.fontSize,
+                      color: isSection ? colors.primary : colors.textPrimary,
+                      fontWeight: '600',
+                      textAlign: isRTL ? 'right' : 'left',
+                      flex: 1
+                    }}>
+                      {isSection ? t("exams.section") : t("exams.question")} {question.displayIndex}
+                      {isNestedQuestion && ` (${section?.question || t("exams.section")})`}
+                    </Text>
+                  </View>
 
-              {/* Question Type Selector - Modern Pills */}
-              <View style={{
-                flexDirection: isRTL ? 'row-reverse' : 'row',
-                marginBottom: designTokens.spacing.md,
-                backgroundColor: colors.backgroundElevated,
-                borderRadius: designTokens.borderRadius.lg,
-                padding: 4
-              }}>
-                <TouchableOpacity
-                  onPress={() => updateQuestion(qIndex, 'type', 'mcq')}
-                  style={{
-                    flex: 1,
-                    backgroundColor: question.type === 'mcq' ? colors.primary : 'transparent',
-                    borderRadius: designTokens.borderRadius.md,
-                    paddingVertical: designTokens.spacing.sm,
-                    alignItems: 'center'
-                  }}
-                >
-                  <Text style={{
-                    fontFamily,
-                    fontSize: designTokens.typography.footnote.fontSize,
-                    color: question.type === 'mcq' ? '#fff' : colors.textSecondary,
-                    fontWeight: question.type === 'mcq' ? '600' : 'normal',
-                    textAlign: 'center'
-                  }}>
-                    {t("homework.multipleChoice")}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => updateQuestion(qIndex, 'type', 'text')}
-                  style={{
-                    flex: 1,
-                    backgroundColor: question.type === 'text' ? colors.primary : 'transparent',
-                    borderRadius: designTokens.borderRadius.md,
-                    paddingVertical: designTokens.spacing.sm,
-                    alignItems: 'center'
-                  }}
-                >
-                  <Text style={{
-                    fontFamily,
-                    fontSize: designTokens.typography.footnote.fontSize,
-                    color: question.type === 'text' ? '#fff' : colors.textSecondary,
-                    fontWeight: question.type === 'text' ? '600' : 'normal',
-                    textAlign: 'center'
-                  }}>
-                    {t("homework.textAnswer")}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+                  {/* Action buttons */}
+                  <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
+                    {isSection && (
+                      <TouchableOpacity
+                        onPress={() => addQuestionToSection(question.id)}
+                        style={{
+                          padding: 6,
+                          borderRadius: 6,
+                          backgroundColor: colors.primary + '20'
+                        }}
+                      >
+                        <Ionicons name="add" size={16} color={colors.primary} />
+                      </TouchableOpacity>
+                    )}
+                    {questions.length > 1 && (
+                      <TouchableOpacity onPress={() => removeQuestion(question.id)}>
+                        <Ionicons name="trash" size={20} color="#EF4444" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
 
-              {/* Question Input */}
-              <View style={{ marginBottom: designTokens.spacing.md }}>
-                <Text style={{
-                  fontFamily,
-                  fontSize: designTokens.typography.footnote.fontSize,
-                  color: colors.textSecondary,
-                  marginBottom: designTokens.spacing.xs,
-                  fontWeight: '500',
-                  textAlign: isRTL ? 'right' : 'left'
-                }}>
-                  {t("exams.question")} *
-                </Text>
-                <TextInput
-                  value={question.question}
-                  onChangeText={(text) => updateQuestion(qIndex, 'question', text)}
-                  placeholder={t("exams.enterQuestion")}
-                  placeholderTextColor={colors.textTertiary}
-                  multiline
-                  style={{
-                    backgroundColor: 'transparent',
-                    borderRadius: designTokens.borderRadius.md,
-                    padding: designTokens.spacing.sm,
-                    fontSize: designTokens.typography.body.fontSize,
-                    color: colors.textPrimary,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    minHeight: 80,
-                    textAlign: isRTL ? 'right' : 'left'
-                  }}
-                />
-              </View>
-
-              {/* Options for Multiple Choice */}
-              {question.type === 'mcq' &&
-                <View style={{ marginBottom: designTokens.spacing.md }}>
+                {/* Section Toggle - Only show for non-section questions */}
+                {!isSection && (
                   <View style={{
                     flexDirection: isRTL ? 'row-reverse' : 'row',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    marginBottom: designTokens.spacing.xs
+                    marginBottom: designTokens.spacing.md
                   }}>
                     <Text style={{
                       fontFamily,
                       fontSize: designTokens.typography.footnote.fontSize,
                       color: colors.textSecondary,
-                      fontWeight: '500',
                       textAlign: isRTL ? 'right' : 'left'
                     }}>
-                      {t("exams.options")} *
+                      {t("exams.isSection")}
                     </Text>
+                    <Switch
+                      value={question.is_section}
+                      onValueChange={(value) => updateQuestion(question.id, 'is_section', value)}
+                      trackColor={{ false: colors.border, true: colors.primary }}
+                      thumbColor={question.is_section ? '#fff' : '#f4f3f4'}
+                      style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }}
+                    />
+                  </View>
+                )}
+
+                {/* Question Type Selector - Only for non-sections */}
+                {!isSection && (
+                  <View style={{
+                    flexDirection: isRTL ? 'row-reverse' : 'row',
+                    marginBottom: designTokens.spacing.md,
+                    backgroundColor: colors.backgroundElevated,
+                    borderRadius: designTokens.borderRadius.lg,
+                    padding: 4
+                  }}>
                     <TouchableOpacity
-                      onPress={() => addOption(qIndex)}
+                      onPress={() => updateQuestion(question.id, 'type', 'mcq')}
                       style={{
-                        flexDirection: isRTL ? 'row-reverse' : 'row',
+                        flex: 1,
+                        backgroundColor: question.type === 'mcq' ? colors.primary : 'transparent',
+                        borderRadius: designTokens.borderRadius.md,
+                        paddingVertical: designTokens.spacing.sm,
                         alignItems: 'center'
                       }}
                     >
-                      <Ionicons name="add-circle" size={16} color={colors.primary} />
                       <Text style={{
                         fontFamily,
-                        fontSize: designTokens.typography.caption1.fontSize,
-                        color: colors.primary,
-                        marginHorizontal: 4,
-                        textAlign: isRTL ? 'right' : 'left'
+                        fontSize: designTokens.typography.footnote.fontSize,
+                        color: question.type === 'mcq' ? '#fff' : colors.textSecondary,
+                        fontWeight: question.type === 'mcq' ? '600' : 'normal',
+                        textAlign: 'center'
                       }}>
-                        {t("common.add")}
+                        {t("homework.multipleChoice")}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => updateQuestion(question.id, 'type', 'text')}
+                      style={{
+                        flex: 1,
+                        backgroundColor: question.type === 'text' ? colors.primary : 'transparent',
+                        borderRadius: designTokens.borderRadius.md,
+                        paddingVertical: designTokens.spacing.sm,
+                        alignItems: 'center'
+                      }}
+                    >
+                      <Text style={{
+                        fontFamily,
+                        fontSize: designTokens.typography.footnote.fontSize,
+                        color: question.type === 'text' ? '#fff' : colors.textSecondary,
+                        fontWeight: question.type === 'text' ? '600' : 'normal',
+                        textAlign: 'center'
+                      }}>
+                        {t("homework.textAnswer")}
                       </Text>
                     </TouchableOpacity>
                   </View>
+                )}
 
-                  {question.options.map((option: string, optIndex: number) =>
-                    <View key={optIndex} style={{
-                      flexDirection: isRTL ? 'row-reverse' : 'row',
-                      alignItems: 'center',
-                      marginBottom: 8
-                    }}>
-                      <View style={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: 12,
-                        backgroundColor: colors.backgroundElevated,
-                        borderWidth: 2,
-                        borderColor: colors.border,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginHorizontal: 8
-                      }}>
-                        <Text style={{
-                          fontFamily,
-                          fontSize: designTokens.typography.caption2.fontSize,
-                          color: colors.textSecondary,
-                          textAlign: 'center'
-                        }}>
-                          {String.fromCharCode(65 + optIndex)}
-                        </Text>
-                      </View>
-                      <TextInput
-                        value={option}
-                        onChangeText={(text) => updateOption(qIndex, optIndex, text)}
-                        placeholder={`${t("exams.option")} ${String.fromCharCode(65 + optIndex)}`}
-                        placeholderTextColor={colors.textTertiary}
-                        style={{
-                          flex: 1,
-                          backgroundColor: 'transparent',
-                          borderRadius: designTokens.borderRadius.md,
-                          padding: designTokens.spacing.sm,
-                          fontSize: designTokens.typography.body.fontSize,
-                          color: colors.textPrimary,
-                          borderWidth: 1,
-                          borderColor: colors.border,
-                          textAlign: isRTL ? 'right' : 'left'
-                        }}
-                      />
-
-                      {question.options.length > 2 &&
-                        <TouchableOpacity
-                          onPress={() => {
-                            const updatedQuestions = [...questions];
-                            updatedQuestions[qIndex].options.splice(optIndex, 1);
-                            setQuestions(updatedQuestions);
-                          }}
-                          style={{ marginHorizontal: 8 }}
-                        >
-                          <Ionicons name="close-circle" size={24} color="#EF4444" />
-                        </TouchableOpacity>
-                      }
-                    </View>
-                  )}
-                </View>
-              }
-
-              {/* Correct Answer */}
-              {question.type === 'mcq' ? (
+                {/* Question/Section Input */}
                 <View style={{ marginBottom: designTokens.spacing.md }}>
                   <Text style={{
                     fontFamily,
@@ -2046,120 +2188,289 @@ export default function CreateExamScreen() {
                     fontWeight: '500',
                     textAlign: isRTL ? 'right' : 'left'
                   }}>
-                    {t("exams.correctAnswer")} *
+                    {isSection ? t("exams.sectionTitle") : t("exams.question")} *
                   </Text>
+                  <TextInput
+                    value={question.question}
+                    onChangeText={(text) => updateQuestion(question.id, 'question', text)}
+                    placeholder={isSection ? t("exams.enterSectionTitle") : t("exams.enterQuestion")}
+                    placeholderTextColor={colors.textTertiary}
+                    multiline
+                    style={{
+                      backgroundColor: 'transparent',
+                      borderRadius: designTokens.borderRadius.md,
+                      padding: designTokens.spacing.sm,
+                      fontSize: designTokens.typography.body.fontSize,
+                      color: colors.textPrimary,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      minHeight: isSection ? 60 : 80,
+                      textAlign: isRTL ? 'right' : 'left'
+                    }}
+                  />
+                </View>
 
-                  <View style={{
-                    flexDirection: isRTL ? 'row-reverse' : 'row',
-                    flexWrap: 'wrap',
-                    gap: 8
-                  }}>
-                    {question.options.map((option: string, optIndex: number) =>
+                {/* Options for Multiple Choice (non-sections only) */}
+                {!isSection && question.type === 'mcq' &&
+                  <View style={{ marginBottom: designTokens.spacing.md }}>
+                    <View style={{
+                      flexDirection: isRTL ? 'row-reverse' : 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: designTokens.spacing.xs
+                    }}>
+                      <Text style={{
+                        fontFamily,
+                        fontSize: designTokens.typography.footnote.fontSize,
+                        color: colors.textSecondary,
+                        fontWeight: '500',
+                        textAlign: isRTL ? 'right' : 'left'
+                      }}>
+                        {t("exams.options")} *
+                      </Text>
                       <TouchableOpacity
-                        key={optIndex}
-                        onPress={() => updateQuestion(qIndex, 'correct_answer', option)}
+                        onPress={() => addOption(question.id)}
                         style={{
-                          backgroundColor: question.correct_answer === option ? colors.primary : colors.backgroundElevated,
-                          borderRadius: designTokens.borderRadius.lg,
-                          paddingVertical: designTokens.spacing.xs,
-                          paddingHorizontal: designTokens.spacing.md,
-                          borderWidth: 1,
-                          borderColor: question.correct_answer === option ? colors.primary : colors.border
+                          flexDirection: isRTL ? 'row-reverse' : 'row',
+                          alignItems: 'center'
                         }}
                       >
+                        <Ionicons name="add-circle" size={16} color={colors.primary} />
                         <Text style={{
                           fontFamily,
-                          fontSize: designTokens.typography.footnote.fontSize,
-                          color: question.correct_answer === option ? '#fff' : colors.textPrimary,
-                          fontWeight: question.correct_answer === option ? '600' : 'normal',
-                          textAlign: 'center'
+                          fontSize: designTokens.typography.caption1.fontSize,
+                          color: colors.primary,
+                          marginHorizontal: 4,
+                          textAlign: isRTL ? 'right' : 'left'
                         }}>
-                          {String.fromCharCode(65 + optIndex)}
+                          {t("common.add")}
                         </Text>
                       </TouchableOpacity>
+                    </View>
+
+                    {question.options.map((option: string, optIndex: number) =>
+                      <View key={optIndex} style={{
+                        flexDirection: isRTL ? 'row-reverse' : 'row',
+                        alignItems: 'center',
+                        marginBottom: 8
+                      }}>
+                        <View style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: 12,
+                          backgroundColor: colors.backgroundElevated,
+                          borderWidth: 2,
+                          borderColor: colors.border,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginHorizontal: 8
+                        }}>
+                          <Text style={{
+                            fontFamily,
+                            fontSize: designTokens.typography.caption2.fontSize,
+                            color: colors.textSecondary,
+                            textAlign: 'center'
+                          }}>
+                            {String.fromCharCode(65 + optIndex)}
+                          </Text>
+                        </View>
+                        <TextInput
+                          value={option}
+                          onChangeText={(text) => updateOption(question.id, optIndex, text)}
+                          placeholder={`${t("exams.option")} ${String.fromCharCode(65 + optIndex)}`}
+                          placeholderTextColor={colors.textTertiary}
+                          style={{
+                            flex: 1,
+                            backgroundColor: 'transparent',
+                            borderRadius: designTokens.borderRadius.md,
+                            padding: designTokens.spacing.sm,
+                            fontSize: designTokens.typography.body.fontSize,
+                            color: colors.textPrimary,
+                            borderWidth: 1,
+                            borderColor: colors.border,
+                            textAlign: isRTL ? 'right' : 'left'
+                          }}
+                        />
+
+                        {question.options.length > 2 &&
+                          <TouchableOpacity
+                            onPress={() => {
+                              const updatedQuestions = questions.map(q => {
+                                if (q.id === question.id) {
+                                  const newOptions = [...q.options];
+                                  newOptions.splice(optIndex, 1);
+                                  return { ...q, options: newOptions };
+                                }
+                                return q;
+                              });
+                              setQuestions(updatedQuestions);
+                            }}
+                            style={{ marginHorizontal: 8 }}
+                          >
+                            <Ionicons name="close-circle" size={24} color="#EF4444" />
+                          </TouchableOpacity>
+                        }
+                      </View>
                     )}
                   </View>
-                </View>
-              ) : (
-                <View style={{ marginBottom: designTokens.spacing.md }}>
-                  <Text style={{
-                    fontFamily,
-                    fontSize: designTokens.typography.caption1.fontSize,
-                    color: colors.textSecondary
-                  }}>
-                    {t("exams.textAnswerNote")}
-                  </Text>
-                </View>
-              )}
+                }
 
-              {/* Points */}
-              <View>
-                <Text style={{
-                  fontFamily,
-                  fontSize: designTokens.typography.footnote.fontSize,
-                  color: colors.textSecondary,
-                  marginBottom: designTokens.spacing.xs,
-                  fontWeight: '500',
-                  textAlign: isRTL ? 'right' : 'left'
-                }}>
-                  {t("homework.points")}
-                </Text>
-                <View style={{
-                  flexDirection: isRTL ? 'row-reverse' : 'row',
-                  alignItems: 'center'
-                }}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      const currentPoints = parseInt(question.points) || 1;
-                      if (currentPoints > 1) {
-                        updateQuestion(qIndex, 'points', (currentPoints - 1).toString());
-                      }
-                    }}
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 18,
-                      backgroundColor: colors.backgroundElevated,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    <Ionicons name="remove" size={16} color={colors.textPrimary} />
-                  </TouchableOpacity>
+                {/* Correct Answer (non-sections, MCQ only) */}
+                {!isSection && question.type === 'mcq' ? (
+                  <View style={{ marginBottom: designTokens.spacing.md }}>
+                    <Text style={{
+                      fontFamily,
+                      fontSize: designTokens.typography.footnote.fontSize,
+                      color: colors.textSecondary,
+                      marginBottom: designTokens.spacing.xs,
+                      fontWeight: '500',
+                      textAlign: isRTL ? 'right' : 'left'
+                    }}>
+                      {t("exams.correctAnswer")} *
+                    </Text>
 
-                  <Text style={{
-                    fontFamily,
-                    fontSize: designTokens.typography.body.fontSize,
-                    color: colors.textPrimary,
-                    marginHorizontal: 16,
-                    minWidth: 20,
-                    textAlign: 'center'
-                  }}>
-                    {question.points}
-                  </Text>
+                    <View style={{
+                      flexDirection: isRTL ? 'row-reverse' : 'row',
+                      flexWrap: 'wrap',
+                      gap: 8
+                    }}>
+                      {question.options.map((option: string, optIndex: number) =>
+                        <TouchableOpacity
+                          key={optIndex}
+                          onPress={() => updateQuestion(question.id, 'correct_answer', option)}
+                          style={{
+                            backgroundColor: question.correct_answer === option ? colors.primary : colors.backgroundElevated,
+                            borderRadius: designTokens.borderRadius.lg,
+                            paddingVertical: designTokens.spacing.xs,
+                            paddingHorizontal: designTokens.spacing.md,
+                            borderWidth: 1,
+                            borderColor: question.correct_answer === option ? colors.primary : colors.border
+                          }}
+                        >
+                          <Text style={{
+                            fontFamily,
+                            fontSize: designTokens.typography.footnote.fontSize,
+                            color: question.correct_answer === option ? '#fff' : colors.textPrimary,
+                            fontWeight: question.correct_answer === option ? '600' : 'normal',
+                            textAlign: 'center'
+                          }}>
+                            {String.fromCharCode(65 + optIndex)}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </View>
+                ) : !isSection ? (
+                  <View style={{ marginBottom: designTokens.spacing.md }}>
+                    <Text style={{
+                      fontFamily,
+                      fontSize: designTokens.typography.caption1.fontSize,
+                      color: colors.textSecondary
+                    }}>
+                      {t("exams.textAnswerNote")}
+                    </Text>
+                  </View>
+                ) : null}
 
-                  <TouchableOpacity
-                    onPress={() => {
-                      const currentPoints = parseInt(question.points) || 1;
-                      updateQuestion(qIndex, 'points', (currentPoints + 1).toString());
-                    }}
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 18,
-                      backgroundColor: colors.backgroundElevated,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    <Ionicons name="add" size={16} color={colors.textPrimary} />
-                  </TouchableOpacity>
-                </View>
+                {/* Points (non-sections only) */}
+                {!isSection && (
+                  <View>
+                    <Text style={{
+                      fontFamily,
+                      fontSize: designTokens.typography.footnote.fontSize,
+                      color: colors.textSecondary,
+                      marginBottom: designTokens.spacing.xs,
+                      fontWeight: '500',
+                      textAlign: isRTL ? 'right' : 'left'
+                    }}>
+                      {t("homework.points")}
+                    </Text>
+                    <View style={{
+                      flexDirection: isRTL ? 'row-reverse' : 'row',
+                      alignItems: 'center'
+                    }}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          const currentPoints = parseInt(question.points) || 1;
+                          if (currentPoints > 1) {
+                            updateQuestion(question.id, 'points', (currentPoints - 1).toString());
+                          }
+                        }}
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 18,
+                          backgroundColor: colors.backgroundElevated,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <Ionicons name="remove" size={16} color={colors.textPrimary} />
+                      </TouchableOpacity>
+
+                      <Text style={{
+                        fontFamily,
+                        fontSize: designTokens.typography.body.fontSize,
+                        color: colors.textPrimary,
+                        marginHorizontal: 16,
+                        minWidth: 20,
+                        textAlign: 'center'
+                      }}>
+                        {question.points}
+                      </Text>
+
+                      <TouchableOpacity
+                        onPress={() => {
+                          const currentPoints = parseInt(question.points) || 1;
+                          updateQuestion(question.id, 'points', (currentPoints + 1).toString());
+                        }}
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 18,
+                          backgroundColor: colors.backgroundElevated,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <Ionicons name="add" size={16} color={colors.textPrimary} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
               </View>
+            );
+          })}
+
+          {questions.length === 0 && (
+            <View style={{
+              padding: designTokens.spacing.xl,
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Ionicons name="help-circle" size={48} color={colors.textTertiary} />
+              <Text style={{
+                fontFamily,
+                fontSize: designTokens.typography.body.fontSize,
+                color: colors.textTertiary,
+                marginTop: designTokens.spacing.md,
+                textAlign: 'center'
+              }}>
+                {t("exams.noQuestionsAdded")}
+              </Text>
+              <Text style={{
+                fontFamily,
+                fontSize: designTokens.typography.footnote.fontSize,
+                color: colors.textTertiary,
+                marginTop: designTokens.spacing.sm,
+                textAlign: 'center'
+              }}>
+                {t("exams.addSectionOrQuestion")}
+              </Text>
             </View>
           )}
         </View>
@@ -2191,6 +2502,8 @@ export default function CreateExamScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
+
 
       {/* Modals */}
       <PickerModal
@@ -2238,3 +2551,385 @@ export default function CreateExamScreen() {
     </ScrollView>
   );
 }
+
+// Question Item Component for Reusability
+const QuestionItem = ({
+  question,
+  allQuestions,
+  onUpdate,
+  onAddOption,
+  onUpdateOption,
+  onRemove,
+  onMove,
+  onNest,
+  onUnnest,
+  sections,
+  isRTL,
+  colors,
+  fontFamily,
+  t,
+  isNested = false,
+  addNestedQuestion // New prop for sections
+}: any) => {
+  const [showNestingOptions, setShowNestingOptions] = useState(false);
+
+  const canMoveUp = allQuestions.findIndex((q: any) => q.id === question.id) > 0;
+  const canMoveDown = allQuestions.findIndex((q: any) => q.id === question.id) < allQuestions.length - 1;
+
+  return (
+    <View
+      style={{
+        backgroundColor: colors.background,
+        borderRadius: designTokens.borderRadius.lg,
+        padding: designTokens.spacing.md,
+        marginBottom: designTokens.spacing.md,
+        borderWidth: 1,
+        borderColor: colors.border,
+        marginLeft: isNested ? 20 : 0,
+        position: 'relative'
+      }}
+    >
+      {/* Nesting indicator line for nested questions */}
+      {isNested && (
+        <View style={{
+          position: 'absolute',
+          left: -15,
+          top: 0,
+          bottom: 0,
+          width: 2,
+          backgroundColor: colors.primary,
+        }} />
+      )}
+
+      <View style={{
+        flexDirection: isRTL ? 'row-reverse' : 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: designTokens.spacing.md
+      }}>
+        <Text style={{
+          fontFamily,
+          fontSize: designTokens.typography.body.fontSize,
+          color: colors.textPrimary,
+          fontWeight: '600',
+          textAlign: isRTL ? 'right' : 'left'
+        }}>
+          {question.is_section ? t("exams.section") : t("exams.question")}
+          {question.parent_id && ` (${t("exams.nested")})`}
+        </Text>
+
+        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 8 }}>
+          {/* Add question button for sections */}
+          {question.is_section && addNestedQuestion && (
+            <TouchableOpacity
+              onPress={() => addNestedQuestion(question.id)}
+              style={{
+                backgroundColor: colors.primary,
+                borderRadius: designTokens.borderRadius.full,
+                width: 28,
+                height: 28,
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Ionicons name="add" size={16} color="#fff" />
+            </TouchableOpacity>
+          )}
+
+          {/* Nesting options button */}
+          {!question.is_section && (
+            <TouchableOpacity
+              onPress={() => setShowNestingOptions(!showNestingOptions)}
+              style={{ padding: 4 }}
+            >
+              <Ionicons name="git-branch" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+          )}
+
+          {/* Move up/down buttons */}
+          <TouchableOpacity
+            onPress={() => onMove(question.id, 'up')}
+            disabled={!canMoveUp}
+            style={{ padding: 4, opacity: canMoveUp ? 1 : 0.3 }}
+          >
+            <Ionicons name={isRTL ? "arrow-down" : "arrow-up"} size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => onMove(question.id, 'down')}
+            disabled={!canMoveDown}
+            style={{ padding: 4, opacity: canMoveDown ? 1 : 0.3 }}
+          >
+            <Ionicons name={isRTL ? "arrow-up" : "arrow-down"} size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          {/* Remove button */}
+          {allQuestions.length > 1 && (
+            <TouchableOpacity onPress={() => onRemove(question.id)}>
+              <Ionicons name="trash" size={20} color="#EF4444" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Question Input */}
+      <View style={{ marginBottom: designTokens.spacing.md }}>
+        <Text style={{
+          fontFamily,
+          fontSize: designTokens.typography.footnote.fontSize,
+          color: colors.textSecondary,
+          marginBottom: designTokens.spacing.xs,
+          fontWeight: '500',
+          textAlign: isRTL ? 'right' : 'left'
+        }}>
+          {question.is_section ? t("exams.sectionTitle") : t("exams.question")} *
+        </Text>
+        <TextInput
+          value={question.question}
+          onChangeText={(text) => onUpdate(question.id, 'question', text)}
+          placeholder={question.is_section ? t("exams.enterSectionTitle") : t("exams.enterQuestion")}
+          placeholderTextColor={colors.textTertiary}
+          multiline
+          style={{
+            backgroundColor: 'transparent',
+            borderRadius: designTokens.borderRadius.md,
+            padding: designTokens.spacing.sm,
+            fontSize: designTokens.typography.body.fontSize,
+            color: colors.textPrimary,
+            borderWidth: 1,
+            borderColor: colors.border,
+            minHeight: 80,
+            textAlign: isRTL ? 'right' : 'left'
+          }}
+        />
+      </View>
+
+      {/* Options for Multiple Choice */}
+      {!question.is_section && question.type === 'mcq' && (
+        <View style={{ marginBottom: designTokens.spacing.md }}>
+          <View style={{
+            flexDirection: isRTL ? 'row-reverse' : 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: designTokens.spacing.xs
+          }}>
+            <Text style={{
+              fontFamily,
+              fontSize: designTokens.typography.footnote.fontSize,
+              color: colors.textSecondary,
+              fontWeight: '500',
+              textAlign: isRTL ? 'right' : 'left'
+            }}>
+              {t("exams.options")} *
+            </Text>
+            <TouchableOpacity
+              onPress={() => onAddOption(question.id)}
+              style={{
+                flexDirection: isRTL ? 'row-reverse' : 'row',
+                alignItems: 'center'
+              }}
+            >
+              <Ionicons name="add-circle" size={16} color={colors.primary} />
+              <Text style={{
+                fontFamily,
+                fontSize: designTokens.typography.caption1.fontSize,
+                color: colors.primary,
+                marginHorizontal: 4,
+                textAlign: isRTL ? 'right' : 'left'
+              }}>
+                {t("common.add")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {question.options.map((option: string, optIndex: number) => (
+            <View key={optIndex} style={{
+              flexDirection: isRTL ? 'row-reverse' : 'row',
+              alignItems: 'center',
+              marginBottom: 8
+            }}>
+              <View style={{
+                width: 24,
+                height: 24,
+                borderRadius: 12,
+                backgroundColor: colors.backgroundElevated,
+                borderWidth: 2,
+                borderColor: colors.border,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginHorizontal: 8
+              }}>
+                <Text style={{
+                  fontFamily,
+                  fontSize: designTokens.typography.caption2.fontSize,
+                  color: colors.textSecondary,
+                  textAlign: 'center'
+                }}>
+                  {String.fromCharCode(65 + optIndex)}
+                </Text>
+              </View>
+              <TextInput
+                value={option}
+                onChangeText={(text) => onUpdateOption(question.id, optIndex, text)}
+                placeholder={`${t("exams.option")} ${String.fromCharCode(65 + optIndex)}`}
+                placeholderTextColor={colors.textTertiary}
+                style={{
+                  flex: 1,
+                  backgroundColor: 'transparent',
+                  borderRadius: designTokens.borderRadius.md,
+                  padding: designTokens.spacing.sm,
+                  fontSize: designTokens.typography.body.fontSize,
+                  color: colors.textPrimary,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  textAlign: isRTL ? 'right' : 'left'
+                }}
+              />
+
+              {question.options.length > 2 && (
+                <TouchableOpacity
+                  onPress={() => {
+                    const updatedOptions = [...question.options];
+                    updatedOptions.splice(optIndex, 1);
+                    onUpdate(question.id, 'options', updatedOptions);
+                  }}
+                  style={{ marginHorizontal: 8 }}
+                >
+                  <Ionicons name="close-circle" size={24} color="#EF4444" />
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Correct Answer */}
+      {!question.is_section && question.type === 'mcq' ? (
+        <View style={{ marginBottom: designTokens.spacing.md }}>
+          <Text style={{
+            fontFamily,
+            fontSize: designTokens.typography.footnote.fontSize,
+            color: colors.textSecondary,
+            marginBottom: designTokens.spacing.xs,
+            fontWeight: '500',
+            textAlign: isRTL ? 'right' : 'left'
+          }}>
+            {t("exams.correctAnswer")} *
+          </Text>
+
+          <View style={{
+            flexDirection: isRTL ? 'row-reverse' : 'row',
+            flexWrap: 'wrap',
+            gap: 8
+          }}>
+            {question.options.map((option: string, optIndex: number) => (
+              <TouchableOpacity
+                key={optIndex}
+                onPress={() => onUpdate(question.id, 'correct_answer', option)}
+                style={{
+                  backgroundColor: question.correct_answer === option ? colors.primary : colors.backgroundElevated,
+                  borderRadius: designTokens.borderRadius.lg,
+                  paddingVertical: designTokens.spacing.xs,
+                  paddingHorizontal: designTokens.spacing.md,
+                  borderWidth: 1,
+                  borderColor: question.correct_answer === option ? colors.primary : colors.border
+                }}
+              >
+                <Text style={{
+                  fontFamily,
+                  fontSize: designTokens.typography.footnote.fontSize,
+                  color: question.correct_answer === option ? '#fff' : colors.textPrimary,
+                  fontWeight: question.correct_answer === option ? '600' : 'normal',
+                  textAlign: 'center'
+                }}>
+                  {String.fromCharCode(65 + optIndex)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      ) : !question.is_section ? (
+        <View style={{ marginBottom: designTokens.spacing.md }}>
+          <Text style={{
+            fontFamily,
+            fontSize: designTokens.typography.caption1.fontSize,
+            color: colors.textSecondary
+          }}>
+            {t("exams.textAnswerNote")}
+          </Text>
+        </View>
+      ) : null}
+
+      {/* Points */}
+      {!question.is_section && (
+        <View>
+          <Text style={{
+            fontFamily,
+            fontSize: designTokens.typography.footnote.fontSize,
+            color: colors.textSecondary,
+            marginBottom: designTokens.spacing.xs,
+            fontWeight: '500',
+            textAlign: isRTL ? 'right' : 'left'
+          }}>
+            {t("homework.points")}
+          </Text>
+          <View style={{
+            flexDirection: isRTL ? 'row-reverse' : 'row',
+            alignItems: 'center'
+          }}>
+            <TouchableOpacity
+              onPress={() => {
+                const currentPoints = parseInt(question.points) || 1;
+                if (currentPoints > 1) {
+                  onUpdate(question.id, 'points', (currentPoints - 1).toString());
+                }
+              }}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: colors.backgroundElevated,
+                borderWidth: 1,
+                borderColor: colors.border,
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Ionicons name="remove" size={16} color={colors.textPrimary} />
+            </TouchableOpacity>
+
+            <Text style={{
+              fontFamily,
+              fontSize: designTokens.typography.body.fontSize,
+              color: colors.textPrimary,
+              marginHorizontal: 16,
+              minWidth: 20,
+              textAlign: 'center'
+            }}>
+              {question.points}
+            </Text>
+
+            <TouchableOpacity
+              onPress={() => {
+                const currentPoints = parseInt(question.points) || 1;
+                onUpdate(question.id, 'points', (currentPoints + 1).toString());
+              }}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: colors.backgroundElevated,
+                borderWidth: 1,
+                borderColor: colors.border,
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Ionicons name="add" size={16} color={colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+    </View>
+  );
+};
