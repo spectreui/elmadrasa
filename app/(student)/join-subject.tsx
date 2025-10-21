@@ -8,8 +8,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   Dimensions,
-  RefreshControl,
-  I18nManager
+  RefreshControl
 } from 'react-native';
 import Alert from '@/components/Alert';
 import { router } from 'expo-router';

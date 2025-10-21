@@ -12,8 +12,6 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useThemeContext } from '../contexts/ThemeContext';
 
-const { width } = Dimensions.get('window');
-
 // Function to detect mobile browsers
 const isMobileBrowser = (): boolean => {
   if (typeof window === 'undefined') return false;
@@ -43,7 +41,7 @@ interface SmartBannerProps {
   currentPath: string;
 }
 
-export const SmartBanner = ({ 
+const SmartBanner = ({ 
   appName,
   appScheme,
   currentPath
@@ -117,7 +115,7 @@ export const SmartBanner = ({
     <View style={[styles.container, { fontFamily, 
       backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
       borderColor: colors.border,
-    }]}>
+    }] as any}>
       <View style={styles.content}>
         <View style={styles.appInfo}>
           <View style={[styles.appIcon, { backgroundColor: colors.primary }]}>
