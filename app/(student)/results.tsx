@@ -382,10 +382,10 @@ export default function ResultsScreen() {
                 </Text>
               </View>
               <View style={styles.summaryItem}>
-                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                <Text style={[styles.summaryLabel, { textAlign: "right", color: colors.textSecondary }]}>
                   {t("results.bestSubject")}
                 </Text>
-                <Text style={[styles.summaryValue, { color: colors.textPrimary, fontFamily }]}>
+                <Text style={[styles.summaryValue, { textAlign: "right", color: colors.textPrimary, fontFamily }]}>
                   {subjectPerformance.length > 0
                     ? subjectPerformance.reduce((best, current) =>
                       current.averageScore > best.averageScore ? current : best
@@ -394,10 +394,10 @@ export default function ResultsScreen() {
                 </Text>
               </View>
               <View style={styles.summaryItem}>
-                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                <Text style={[styles.summaryLabel, { textAlign: "right", color: colors.textSecondary }]}>
                   {t("results.totalTime")}
                 </Text>
-                <Text style={[styles.summaryValue, { color: colors.textPrimary, fontFamily }]}>
+                <Text style={[styles.summaryValue, { textAlign: "right", color: colors.textPrimary, fontFamily }]}>
                   {results.reduce((total, result) => {
                     const time = parseInt(result.timeSpent);
                     return total + (isNaN(time) ? 0 : time);

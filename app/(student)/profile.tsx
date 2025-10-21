@@ -404,7 +404,7 @@ export default function ProfileScreen() {
                       <View style={[styles.statusContainer, {
                         backgroundColor: '#34C75915',
                         alignSelf: isRTL ? 'flex-end' : 'flex-start',
-                        flexDirection: isRTL ? 'row-reverse' : 'row'
+                        flexDirection: 'row'
                       }]}>
                         <View style={styles.statusDot} />
                         <Text style={styles.statusText}>
@@ -456,7 +456,7 @@ export default function ProfileScreen() {
                           {profileStats.averageScore || '0'}%
                         </Text>
                         <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-                          {t("profile.average")}
+                          {t("profile.averageScore")}
                         </Text>
                       </View>
                       <View style={styles.statItem}>
