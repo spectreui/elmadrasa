@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
-  Dimensions,
   Platform
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -18,8 +17,6 @@ import { useThemeContext } from '@/contexts/ThemeContext';
 import { designTokens } from '@/src/utils/designTokens';
 import { useTranslation } from "@/hooks/useTranslation";
 import { BlurView } from 'expo-blur';
-
-const { width, height } = Dimensions.get('window');
 
 interface Homework {
   id: string;
