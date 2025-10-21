@@ -21,7 +21,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { useTranslation } from "@/hooks/useTranslation";
 
 export default function ProfileScreen() {
-  const { t, isRTL } = useTranslation();
+  const { t, isRTL, language, setLanguage } = useTranslation();
   const { user, logout } = useAuth();
   const { fontFamily, colors, isDark, toggleTheme } = useThemeContext();
   const [activeTab, setActiveTab] = useState<'profile' | 'settings'>('profile');
@@ -86,18 +86,23 @@ export default function ProfileScreen() {
     }));
   };
 
-  const SettingItem = ({ 
-    title, 
-    description, 
-    value, 
-    onToggle 
-  }: { 
-    title: string; 
-    description: string; 
-    value: boolean; 
-    onToggle: () => void; 
+  const toggleLanguage = () => {
+    const newLanguage = language === 'en' ? 'ar' : 'en';
+    setLanguage(newLanguage);
+  };
+
+  const SettingItem = ({
+    title,
+    description,
+    value,
+    onToggle
+  }: {
+    title: string;
+    description: string;
+    value: boolean;
+    onToggle: () => void;
   }) => (
-    <View style={[styles.settingItem, { 
+    <View style={[styles.settingItem, {
       borderBottomColor: colors.separator,
       flexDirection: isRTL ? 'row-reverse' : 'row'
     }]}>
@@ -121,14 +126,14 @@ export default function ProfileScreen() {
 
   const ProfileSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <View style={styles.profileSection}>
-      <Text style={[styles.sectionTitle, { 
+      <Text style={[styles.sectionTitle, {
         color: colors.textPrimary,
         paddingHorizontal: designTokens.spacing.xl,
         textAlign: isRTL ? 'right' : 'left'
       }]}>
         {title}
       </Text>
-      <View style={[styles.sectionContainer, { 
+      <View style={[styles.sectionContainer, {
         backgroundColor: colors.backgroundElevated,
         marginHorizontal: designTokens.spacing.xl,
         ...designTokens.shadows.sm
@@ -141,7 +146,7 @@ export default function ProfileScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
-      <View style={[styles.header, { 
+      <View style={[styles.header, {
         flexDirection: isRTL ? 'row-reverse' : 'row'
       }]}>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
@@ -160,7 +165,7 @@ export default function ProfileScreen() {
       </View>
 
       {/* Tab Navigation */}
-      <View style={[styles.tabContainer, { 
+      <View style={[styles.tabContainer, {
         backgroundColor: colors.separator,
         marginHorizontal: designTokens.spacing.xl,
         flexDirection: isRTL ? 'row-reverse' : 'row'
@@ -215,14 +220,14 @@ export default function ProfileScreen() {
             <>
               <ProfileSection title={t("profile.title")}>
                 <View style={styles.profileContent}>
-                  <View style={[styles.profileHeader, { 
+                  <View style={[styles.profileHeader, {
                     flexDirection: isRTL ? 'row-reverse' : 'row'
                   }]}>
-                    <View style={[styles.avatarContainer, { 
+                    <View style={[styles.avatarContainer, {
                       backgroundColor: colors.primary + '15',
                       [isRTL ? 'marginLeft' : 'marginRight']: designTokens.spacing.lg
                     }]}>
-                      <Text style={[styles.avatarText, { 
+                      <Text style={[styles.avatarText, {
                         fontFamily,
                         color: colors.primary
                       }]}>
@@ -236,7 +241,7 @@ export default function ProfileScreen() {
                       <Text style={[styles.userClass, { color: colors.textSecondary }]}>
                         {user?.profile?.class ? `${t("classes.class")} ${user.profile.class}` : t("profile.notSet")}
                       </Text>
-                      <View style={[styles.statusContainer, { 
+                      <View style={[styles.statusContainer, {
                         backgroundColor: '#34C75915',
                         alignSelf: isRTL ? 'flex-end' : 'flex-start',
                         flexDirection: isRTL ? 'row-reverse' : 'row'
@@ -249,7 +254,7 @@ export default function ProfileScreen() {
                     </View>
                   </View>
 
-                  <View style={[styles.infoSection, { 
+                  <View style={[styles.infoSection, {
                     borderTopColor: colors.separator,
                     flexDirection: isRTL ? 'row-reverse' : 'row'
                   }]}>
@@ -284,7 +289,7 @@ export default function ProfileScreen() {
               {profileStats && (
                 <ProfileSection title={t("profile.performance")}>
                   <View style={styles.statsContainer}>
-                    <View style={[styles.statsRow, { 
+                    <View style={[styles.statsRow, {
                       flexDirection: isRTL ? 'row-reverse' : 'row'
                     }]}>
                       <View style={styles.statItem}>
@@ -331,7 +336,21 @@ export default function ProfileScreen() {
 
               <ProfileSection title={t("system.preferences")}>
                 <View style={styles.settingsContainer}>
-                  <View style={[styles.settingItem, { 
+
+                  <TouchableOpacity
+                    onPress={toggleLanguage}
+                    style={[styles.settingItem, {
+                      borderBottomColor: colors.separator,
+                      flexDirection: isRTL ? 'row-reverse' : 'row'
+                    }]}
+                  >
+                    <Ionicons
+                      name={language === 'en' ? 'language' : 'globe'}
+                      size={20}
+                      color={colors.textPrimary}
+                    />
+                  </TouchableOpacity>
+                  <View style={[styles.settingItem, {
                     borderBottomColor: colors.separator,
                     flexDirection: isRTL ? 'row-reverse' : 'row'
                   }]}>
@@ -356,14 +375,14 @@ export default function ProfileScreen() {
             </>
           )}
 
-          <View style={{ 
+          <View style={{
             paddingHorizontal: designTokens.spacing.xl,
             marginTop: designTokens.spacing.xl
           }}>
             <TouchableOpacity
               onPress={handleLogout}
               disabled={loading}
-              style={[styles.logoutButton, { 
+              style={[styles.logoutButton, {
                 backgroundColor: colors.error + '10',
                 borderColor: colors.error + '20'
               }]}
