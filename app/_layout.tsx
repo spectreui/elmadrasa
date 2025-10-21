@@ -81,6 +81,7 @@ export default function RootLayout() {
   useEffect(() => {
     const checkIntro = async () => {
       try {
+        await AsyncStorage.setItem("introShown", 'true');
         const seen = await AsyncStorage.getItem("introShown");
         setShowIntro(seen !== "true");
       } catch (e) {
