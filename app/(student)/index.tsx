@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
   },
   section: {
     paddingHorizontal: designTokens.spacing.xl,
-    marginBottom: designTokens.spacing.xl,
+    marginBottom: 110,
   },
   sectionHeader: {
     flexDirection: 'row',

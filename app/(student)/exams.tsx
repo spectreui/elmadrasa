@@ -443,6 +443,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: designTokens.spacing.xl,
+    paddingBottom: 70,
   },
   title: {
     fontSize: designTokens.typography.title1.fontSize,

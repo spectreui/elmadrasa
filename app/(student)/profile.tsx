@@ -375,7 +375,7 @@ export default function ProfileScreen() {
           />
         }
       >
-        <View style={{ paddingBottom: designTokens.spacing.xxxl }}>
+        <View style={{ paddingBottom: 80 }}>
           {activeTab === 'profile' ? (
             <>
               <ProfileSection title={t("profile.title")}>

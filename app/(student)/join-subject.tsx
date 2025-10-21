@@ -155,7 +155,8 @@ export default function JoinSubjectScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent'
+    backgroundColor: 'transparent',
+    paddingBottom: 70,
   },
   header: {
     paddingTop: designTokens.spacing.xxxl,

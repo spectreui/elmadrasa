@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: designTokens.spacing.xl,
-    paddingBottom: designTokens.spacing.xxxl
+    paddingBottom: 70,
   },
   section: {
     marginBottom: designTokens.spacing.xl

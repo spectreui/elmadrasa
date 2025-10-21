@@ -105,6 +105,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="homework/[id]"
         options={{
+          tabBarStyle: {
+            display: 'none'
+          },
           href: null
         }
         } />
@@ -122,6 +125,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="exam/results/[id]"
         options={{
+          tabBarStyle: {
+            display: 'none'
+          },
           href: null
         }
         } />
@@ -136,10 +142,7 @@ export default function TabLayout() {
               name={focused ? "person" : "person-outline"}
               size={size}
               color={color} />
-
-
         }} />
-
-    </Tabs>);
-
+    </Tabs>
+  );
 }

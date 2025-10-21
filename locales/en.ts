@@ -105,6 +105,7 @@ const en = {
   'dashboard.homework': 'Homework',
   'dashboard.results': 'Results',
   'dashboard.noUpcomingExams': 'No upcoming exams',
+  'dashboard.upcomingExams': 'Upcoming Exams',
   'dashboard.allCaughtUp': "You're all caught up for now",
   'dashboard.due': 'Due',
 

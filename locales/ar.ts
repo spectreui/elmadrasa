@@ -105,6 +105,7 @@ const ar = {
   'dashboard.homework': 'الواجب',
   'dashboard.results': 'النتائج',
   'dashboard.noUpcomingExams': 'لا توجد اختبارات قادمة',
+  'dashboard.upcomingExams': 'الاختبارات القادمة',
   'dashboard.allCaughtUp': 'لقد انتهيت من كل شيء الآن',
   'dashboard.due': 'مستحق في',
 
