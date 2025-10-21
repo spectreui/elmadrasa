@@ -91,20 +91,22 @@ export default function ProfileScreen() {
     setLanguage(newLanguage);
   };
 
-  const SettingItem = ({
-    title,
-    description,
-    value,
-    onToggle
-  }: {
-    title: string;
-    description: string;
-    value: boolean;
+  const SettingItem = ({ 
+    title, 
+    description, 
+    value, 
+    onToggle,
+    showBorder = true
+  }: { 
+    title: string; 
+    description: string; 
+    value: boolean; 
     onToggle: () => void;
+    showBorder?: boolean;
   }) => (
-    <View style={[styles.settingItem, {
-      borderBottomColor: colors.separator,
-      flexDirection: isRTL ? 'row-reverse' : 'row'
+    <View style={[styles.settingItem, showBorder && { 
+      borderBottomWidth: 1,
+      borderBottomColor: colors.separator
     }]}>
       <View style={{ flex: 1, [isRTL ? 'marginLeft' : 'marginRight']: designTokens.spacing.md }}>
         <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>
@@ -126,14 +128,14 @@ export default function ProfileScreen() {
 
   const ProfileSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <View style={styles.profileSection}>
-      <Text style={[styles.sectionTitle, {
+      <Text style={[styles.sectionTitle, { 
         color: colors.textPrimary,
         paddingHorizontal: designTokens.spacing.xl,
         textAlign: isRTL ? 'right' : 'left'
       }]}>
         {title}
       </Text>
-      <View style={[styles.sectionContainer, {
+      <View style={[styles.sectionContainer, { 
         backgroundColor: colors.backgroundElevated,
         marginHorizontal: designTokens.spacing.xl,
         ...designTokens.shadows.sm
@@ -146,7 +148,7 @@ export default function ProfileScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
-      <View style={[styles.header, {
+      <View style={[styles.header, { 
         flexDirection: isRTL ? 'row-reverse' : 'row'
       }]}>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
@@ -165,7 +167,7 @@ export default function ProfileScreen() {
       </View>
 
       {/* Tab Navigation */}
-      <View style={[styles.tabContainer, {
+      <View style={[styles.tabContainer, { 
         backgroundColor: colors.separator,
         marginHorizontal: designTokens.spacing.xl,
         flexDirection: isRTL ? 'row-reverse' : 'row'
@@ -220,14 +222,14 @@ export default function ProfileScreen() {
             <>
               <ProfileSection title={t("profile.title")}>
                 <View style={styles.profileContent}>
-                  <View style={[styles.profileHeader, {
+                  <View style={[styles.profileHeader, { 
                     flexDirection: isRTL ? 'row-reverse' : 'row'
                   }]}>
-                    <View style={[styles.avatarContainer, {
+                    <View style={[styles.avatarContainer, { 
                       backgroundColor: colors.primary + '15',
                       [isRTL ? 'marginLeft' : 'marginRight']: designTokens.spacing.lg
                     }]}>
-                      <Text style={[styles.avatarText, {
+                      <Text style={[styles.avatarText, { 
                         fontFamily,
                         color: colors.primary
                       }]}>
@@ -241,7 +243,7 @@ export default function ProfileScreen() {
                       <Text style={[styles.userClass, { color: colors.textSecondary }]}>
                         {user?.profile?.class ? `${t("classes.class")} ${user.profile.class}` : t("profile.notSet")}
                       </Text>
-                      <View style={[styles.statusContainer, {
+                      <View style={[styles.statusContainer, { 
                         backgroundColor: '#34C75915',
                         alignSelf: isRTL ? 'flex-end' : 'flex-start',
                         flexDirection: isRTL ? 'row-reverse' : 'row'
@@ -254,9 +256,8 @@ export default function ProfileScreen() {
                     </View>
                   </View>
 
-                  <View style={[styles.infoSection, {
-                    borderTopColor: colors.separator,
-                    flexDirection: isRTL ? 'row-reverse' : 'row'
+                  <View style={[styles.infoSection, { 
+                    borderTopColor: colors.separator
                   }]}>
                     <View style={styles.infoRow}>
                       <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
@@ -289,7 +290,7 @@ export default function ProfileScreen() {
               {profileStats && (
                 <ProfileSection title={t("profile.performance")}>
                   <View style={styles.statsContainer}>
-                    <View style={[styles.statsRow, {
+                    <View style={[styles.statsRow, { 
                       flexDirection: isRTL ? 'row-reverse' : 'row'
                     }]}>
                       <View style={styles.statItem}>
@@ -330,59 +331,40 @@ export default function ProfileScreen() {
                     description={t("notifications.generalDesc")}
                     value={settings.notifications}
                     onToggle={() => toggleSetting('notifications')}
+                    showBorder={true}
+                  />
+                  <SettingItem
+                    title={t("profile.language")}
+                    description={language === 'en' ? 'English' : 'العربية'}
+                    value={language === 'ar'}
+                    onToggle={toggleLanguage}
+                    showBorder={false}
                   />
                 </View>
               </ProfileSection>
 
               <ProfileSection title={t("system.preferences")}>
                 <View style={styles.settingsContainer}>
-
-                  <TouchableOpacity
-                    onPress={toggleLanguage}
-                    style={[styles.settingItem, {
-                      borderBottomColor: colors.separator,
-                      flexDirection: isRTL ? 'row-reverse' : 'row'
-                    }]}
-                  >
-                    <Ionicons
-                      name={language === 'en' ? 'language' : 'globe'}
-                      size={20}
-                      color={colors.textPrimary}
-                    />
-                  </TouchableOpacity>
-                  <View style={[styles.settingItem, {
-                    borderBottomColor: colors.separator,
-                    flexDirection: isRTL ? 'row-reverse' : 'row'
-                  }]}>
-                    <View style={{ flex: 1, [isRTL ? 'marginLeft' : 'marginRight']: designTokens.spacing.md }}>
-                      <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>
-                        {t("system.darkMode")}
-                      </Text>
-                      <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
-                        {t("system.darkModeDesc")}
-                      </Text>
-                    </View>
-                    <Switch
-                      value={isDark}
-                      onValueChange={toggleTheme}
-                      trackColor={{ false: colors.separator, true: colors.primary + '40' }}
-                      thumbColor={isDark ? colors.primary : colors.backgroundElevated}
-                      ios_backgroundColor={colors.separator}
-                    />
-                  </View>
+                  <SettingItem
+                    title={t("system.darkMode")}
+                    description={t("system.darkModeDesc")}
+                    value={isDark}
+                    onToggle={toggleTheme}
+                    showBorder={false}
+                  />
                 </View>
               </ProfileSection>
             </>
           )}
 
-          <View style={{
+          <View style={{ 
             paddingHorizontal: designTokens.spacing.xl,
             marginTop: designTokens.spacing.xl
           }}>
             <TouchableOpacity
               onPress={handleLogout}
               disabled={loading}
-              style={[styles.logoutButton, {
+              style={[styles.logoutButton, { 
                 backgroundColor: colors.error + '10',
                 borderColor: colors.error + '20'
               }]}
@@ -472,7 +454,7 @@ const styles = StyleSheet.create({
   },
   userClass: {
     fontSize: designTokens.typography.body.fontSize,
-    marginBottom: 2
+    marginBottom: designTokens.spacing.md
   },
   statusContainer: {
     paddingHorizontal: designTokens.spacing.sm,
@@ -498,15 +480,19 @@ const styles = StyleSheet.create({
     paddingTop: designTokens.spacing.lg
   },
   infoRow: {
-    marginBottom: designTokens.spacing.md
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: designTokens.spacing.sm
   },
   infoLabel: {
     fontSize: designTokens.typography.body.fontSize,
-    marginBottom: 2
+    flex: 1
   },
   infoValue: {
     fontSize: designTokens.typography.body.fontSize,
-    fontWeight: '500'
+    fontWeight: '500',
+    flex: 1,
+    textAlign: 'right'
   },
   statsContainer: {
     padding: designTokens.spacing.lg
@@ -533,12 +519,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: designTokens.spacing.lg,
-    borderBottomWidth: 1
+    paddingVertical: designTokens.spacing.lg
   },
   settingTitle: {
     fontSize: designTokens.typography.body.fontSize,
-    fontWeight: '400',
+    fontWeight: '500',
     marginBottom: 2
   },
   settingDescription: {
