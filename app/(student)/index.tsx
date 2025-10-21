@@ -285,11 +285,11 @@ export default function StudentDashboard() {
       </View>
 
       {/* Quick Actions */}
-      <View style={styles.section}>
+      <View style={[styles.section, {marginBottom: designTokens.spacing.md}]}>
         <Text
           style={[
             styles.sectionTitle,
-            { fontFamily, color: colors.textPrimary }
+            {marginBottom: designTokens.spacing.md, fontFamily, color: colors.textPrimary }
           ]}
         >
           {t("dashboard.quickActions")}
@@ -319,7 +319,7 @@ export default function StudentDashboard() {
       </View>
 
       {/* Upcoming Exams */}
-      <View style={styles.section}>
+      <View style={[styles.section, {marginBottom: 110}]}>
         <View style={[styles.sectionHeader, isRTL && styles.rtlRow]}>
           <Text
             style={[
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
   },
   section: {
     paddingHorizontal: designTokens.spacing.xl,
-    marginBottom: 110,
+    marginBottom: designTokens.spacing.xxxl,
   },
   sectionHeader: {
     flexDirection: 'row',
