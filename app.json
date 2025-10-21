@@ -24,6 +24,7 @@
     "experiments": {
       "typedRoutes": true
     },
+    "jsEngine": "hermes",
     "android": {
       "jsEngine": "hermes",
       "package": "com.elmadrasa.app",
