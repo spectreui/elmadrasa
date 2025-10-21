@@ -14,6 +14,11 @@ const LiquidGlassTabBar = (props : any) => {
             backdropFilter: 'blur(20px) saturate(180%)',
             WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         },
+        android: {
+            backgroundColor: isDark ? 'rgba(0, 0, 0, 0.25)' : 'rgba(255, 255, 255, 0.25)',
+            backdropFilter: 'blur(30px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+        },
         ios: {
             backgroundColor: isDark ? 'rgba(0, 0, 0, 0.25)' : 'rgba(255, 255, 255, 0.25)',
             backdropFilter: 'blur(20px) saturate(180%)',
@@ -27,7 +32,7 @@ const LiquidGlassTabBar = (props : any) => {
             left: 15,
             right: 15,
             borderWidth: 1,
-            borderColor: isDark ? 'rgba(255, 255, 255, 0.18)' : 'rgba(100, 98, 98, 0.18)' ,
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(100, 98, 98, 0.25)' ,
             overflow: 'hidden',
             borderRadius: 50,
         },
@@ -43,7 +48,7 @@ const LiquidGlassTabBar = (props : any) => {
             {/* Native BlurView - won't affect web */}
             {Platform.OS !== 'web' && (
                 <BlurView
-                    intensity={100}
+                    intensity={150}
                     tint={isDark ? "dark" : "light"}
                     style={StyleSheet.absoluteFill}
                 />

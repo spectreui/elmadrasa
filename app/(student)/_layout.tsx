@@ -1,13 +1,12 @@
 import { Tabs, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../src/contexts/AuthContext";
-import { useThemeContext } from "@/contexts/ThemeContext"; import { useTranslation } from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
+import LiquidGlassTabBar from "@/components/TabBar";
 
 export default function TabLayout() {
   const { t } = useTranslation();
   const { isAuthenticated, user } = useAuth();
-  const { colors } = useThemeContext();
-
 
   if (!isAuthenticated) {
     return <Redirect href="/(auth)/login" />;
@@ -17,27 +16,31 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      tabBar={props => <LiquidGlassTabBar {...props} />}
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.backgroundElevated,
-          borderTopColor: colors.border,
+          backgroundColor: 'transparent',
+          borderTopWidth: 0,
+          elevation: 0,
           height: 70,
           paddingBottom: 0,
-          paddingTop: 8
+          paddingTop: 8,
+          position: 'relative',
         },
         tabBarActiveTintColor: "#3b82f6",
-        tabBarInactiveTintColor: "#6b7280",
+        tabBarInactiveTintColor: "rgba(107, 114, 128, 0.7)",
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: "500"
-        }
-      }}>
+        },
+      }}
+    >
 
       <Tabs.Screen
         name="index"
         options={{
-          title: "Dashboard",
+          title: t("home"),
           tabBarIcon: ({ color, size, focused }) =>
             <Ionicons
               name={focused ? "home" : "home-outline"}
@@ -50,7 +53,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="exams"
         options={{
-          title: "Exams",
+          title: t("exams"),
           tabBarIcon: ({ color, size, focused }) =>
             <Ionicons
               name={focused ? "document-text" : "document-text-outline"}
@@ -63,7 +66,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="homework"
         options={{
-          title: "Homework",
+          title: t("dashboard.homework"),
           tabBarIcon: ({ color, size, focused }) =>
             <Ionicons
               name={focused ? "book" : "book-outline"}
@@ -76,7 +79,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="results"
         options={{
-          title: "Results",
+          title: t("dashboard.results"),
           tabBarIcon: ({ color, size, focused }) =>
             <Ionicons
               name={focused ? "bar-chart" : "bar-chart-outline"}
@@ -89,7 +92,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="join-subject"
         options={{
-          title: "Join Subject",
+          title: t("classes.joinSubject"),
           tabBarIcon: ({ color, size, focused }) =>
             <Ionicons
               name={focused ? "add" : "add-outline"}

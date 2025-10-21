@@ -1,6 +1,4 @@
 // src/utils/designTokens.ts
-import { TextStyle } from 'react-native';
-
 export const designTokens = {
   colors: {
     light: {

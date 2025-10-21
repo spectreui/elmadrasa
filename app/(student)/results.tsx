@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   StyleSheet,
-  I18nManager
 } from "react-native";
 import Alert from '@/components/Alert';
 import { apiService } from "../../src/services/api";

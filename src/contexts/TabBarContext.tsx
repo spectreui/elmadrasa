@@ -11,7 +11,7 @@ export const useFancyTabBar = () => {
   return useContext(FancyTabBarContext);
 };
 
-export const FancyTabBarProvider = ({ children }) => {
+export const FancyTabBarProvider = ({ children }: any) => {
   const [isTabBarVisible, setIsTabBarVisible] = useState(true);
 
   const value = {
