@@ -323,7 +323,7 @@ export const useAlert = () => {
 };
 
 // Imperative API (works exactly like native Alert)
-export const Alert = {
+const Alert = {
   alert: (
     title: string,
     message?: string,

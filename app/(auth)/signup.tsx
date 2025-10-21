@@ -34,7 +34,7 @@ interface Class {
 
 export default function SignUp() {
   const { t } = useTranslation();
-  const { fontFamily, colors, isDark } = useThemeContext();
+  const { fontFamily, colors } = useThemeContext();
 
   // Form state
   const [formData, setFormData] = useState({

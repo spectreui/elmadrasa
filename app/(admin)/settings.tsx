@@ -1,11 +1,10 @@
 // app/(admin)/settings.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Switch } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import Alert from '@/components/Alert';
-import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { Theme, cn } from '../../src/utils/themeUtils';
+import { cn } from '../../src/utils/themeUtils';
 import { useThemeContext } from '@/contexts/ThemeContext';import { useTranslation } from "@/hooks/useTranslation";
 
 interface Level {
@@ -40,7 +39,7 @@ export default function SettingsPage() {const { t } = useTranslation();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const { fontFamily, colors } = useThemeContext();
+  const { colors } = useThemeContext();
 
 
   // Form states

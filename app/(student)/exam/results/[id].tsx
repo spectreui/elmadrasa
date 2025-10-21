@@ -4,7 +4,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   SafeAreaView,
@@ -28,13 +27,13 @@ interface ResultData {
     needs_manual_grading?: boolean;
     is_manually_graded?: boolean;
     feedback?: string;
-    answers: Array<{
+    answers: {
       question_id: string;
       answer: string;
       is_correct: boolean;
       points: number;
       needs_grading?: boolean;
-    }>;
+    }[];
   };
   exam: {
     id: string;
@@ -46,7 +45,7 @@ interface ResultData {
         name: string;
       };
     };
-    questions: Array<{
+    questions: {
       id: string;
       question: string;
       type: 'mcq' | 'text';
@@ -54,7 +53,7 @@ interface ResultData {
       correct_answer: string;
       points: number;
       explanation?: string;
-    }>;
+    }[];
   };
 }
 
@@ -211,7 +210,7 @@ export default function ExamResultsScreen() {
               Awaiting Manual Grading
             </Text>
             <Text style={[styles.pendingSubtext, { color: colors.textSecondary, fontFamily }]}>
-              Your teacher will grade this submission manually. You'll be notified when it's ready.
+              Your teacher will grade this submission manually. You&apos;ll be notified when it&apos;s ready.
             </Text>
           </View>
         ) : (
@@ -500,7 +499,7 @@ export default function ExamResultsScreen() {
                   </Text>
                 </View>
                 <Text style={[styles.summaryHint, { color: colors.textTertiary, fontFamily }]}>
-                  Tap "Show All Answers" to review each question in detail
+                  Tap &quot;Show All Answers&quot; to review each question in detail
                 </Text>
               </View>
             )}

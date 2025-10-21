@@ -3,14 +3,11 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   Switch,
   ActivityIndicator,
   RefreshControl,
-  StyleSheet,
-  Dimensions,
-  I18nManager
+  StyleSheet
 } from 'react-native';
 import Alert from '@/components/Alert';
 import { router } from 'expo-router';
@@ -20,8 +17,6 @@ import { useLanguage } from '../../src/contexts/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { designTokens } from '../../src/utils/designTokens';
 import Animated, { FadeInUp, Layout } from 'react-native-reanimated';
-
-const { width } = Dimensions.get('window');
 
 interface TeacherStats {
   totalStudents: number;
@@ -102,7 +97,7 @@ export default function TeacherProfileScreen() {
   };
 
   const toggleLanguage = () => {
-    const newLanguage = language.startsWith('ar') ? 'en' : 'ar-eg';
+    const newLanguage = language === 'en' ? 'ar' : 'en';
     setLanguage(newLanguage);
   };
 

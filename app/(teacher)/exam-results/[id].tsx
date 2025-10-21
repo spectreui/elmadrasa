@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import Alert from '@/components/Alert';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useAuth } from '../../../src/contexts/AuthContext';
 import { apiService } from '../../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '@/contexts/ThemeContext';
@@ -85,7 +84,6 @@ interface ExamResults {
 export default function TeacherExamResultsScreen() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams();
-  const { user } = useAuth();
   const [results, setResults] = useState<ExamResults | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -231,24 +229,6 @@ export default function TeacherExamResultsScreen() {
     }
   }
 
-  const handleViewSubmission = (submission: Submission) => {
-    setSelectedSubmission(submission);
-    setDetailModalVisible(true);
-    setOverallFeedback(submission.feedback || '');
-
-    // Initialize grading answers state
-    const initialGrading: Record<string, { points: number; feedback: string }> = {};
-    submission.answers.forEach(answer => {
-      if (answer.needs_grading && !answer.is_section) {
-        initialGrading[answer.question_id] = {
-          points: answer.points,
-          feedback: answer.feedback || ''
-        };
-      }
-    });
-    setGradingAnswers(initialGrading);
-  };
-
   const handleSendFeedback = () => {
     setFeedbackModalVisible(true);
   };
@@ -289,7 +269,7 @@ export default function TeacherExamResultsScreen() {
         if (answer.is_section) {
           return answer; // Skip sections
         }
-        
+
         if (answer.needs_grading && gradingAnswers[answer.question_id]) {
           const gradedAnswer = gradingAnswers[answer.question_id];
           newScore += gradedAnswer.points;
@@ -906,105 +886,105 @@ export default function TeacherExamResultsScreen() {
                   {selectedSubmission.answers
                     .filter(answer => !answer.is_section) // Filter out sections
                     .map((answer: Answer, index: number) =>
-                    <View
-                      key={index}
-                      style={[styles.answerItem, { borderColor: colors.border }]}>
-                      <View style={styles.answerHeader as any}>
-                        <Text style={[styles.questionNumber as any, { fontFamily, color: colors.textPrimary }]}>
-                          {t("exams.question")} {index + 1}
-                        </Text>
-                        <View style={[styles.answerStatus, {
-                          backgroundColor: answer.needs_grading ?
-                            (answer.is_manually_graded ? `${colors.success}20` : `${colors.warning}20`) :
-                            `${colors.primary}20`
-                        }]}>
-                          <Text style={[styles.statusText as any, {
-                            fontFamily,
-                            color: answer.needs_grading ?
-                              (answer.is_manually_graded ? colors.success : colors.warning) :
-                              colors.primary
+                      <View
+                        key={index}
+                        style={[styles.answerItem, { borderColor: colors.border }]}>
+                        <View style={styles.answerHeader as any}>
+                          <Text style={[styles.questionNumber as any, { fontFamily, color: colors.textPrimary }]}>
+                            {t("exams.question")} {index + 1}
+                          </Text>
+                          <View style={[styles.answerStatus, {
+                            backgroundColor: answer.needs_grading ?
+                              (answer.is_manually_graded ? `${colors.success}20` : `${colors.warning}20`) :
+                              `${colors.primary}20`
                           }]}>
-                            {answer.needs_grading ?
-                              (answer.is_manually_graded ? t("exams.manuallyGraded") : t("exams.needsGrading")) :
-                              t("exams.autoGraded")}
-                          </Text>
+                            <Text style={[styles.statusText as any, {
+                              fontFamily,
+                              color: answer.needs_grading ?
+                                (answer.is_manually_graded ? colors.success : colors.warning) :
+                                colors.primary
+                            }]}>
+                              {answer.needs_grading ?
+                                (answer.is_manually_graded ? t("exams.manuallyGraded") : t("exams.needsGrading")) :
+                                t("exams.autoGraded")}
+                            </Text>
+                          </View>
                         </View>
-                      </View>
 
-                      <Text style={[styles.answerPoints, { fontFamily, color: colors.textSecondary }]}>
-                        {t("exams.points")}: {answer.points}
-                      </Text>
+                        <Text style={[styles.answerPoints, { fontFamily, color: colors.textSecondary }]}>
+                          {t("exams.points")}: {answer.points}
+                        </Text>
 
-                      {answer.answer && (
-                        <View style={styles.answerContainer}>
-                          <Text style={[styles.answerLabel as any, { fontFamily, color: colors.textSecondary }]}>
-                            {t("exams.studentAnswer")}:
-                          </Text>
-                          <Text style={[styles.answerText, { fontFamily, color: colors.textPrimary }]}>
-                            {answer.answer}
-                          </Text>
-                        </View>
-                      )}
+                        {answer.answer && (
+                          <View style={styles.answerContainer}>
+                            <Text style={[styles.answerLabel as any, { fontFamily, color: colors.textSecondary }]}>
+                              {t("exams.studentAnswer")}:
+                            </Text>
+                            <Text style={[styles.answerText, { fontFamily, color: colors.textPrimary }]}>
+                              {answer.answer}
+                            </Text>
+                          </View>
+                        )}
 
-                      {answer.needs_grading && (
-                        <View style={[styles.gradingSection, {borderTopColor: isDark ? designTokens.colors.dark.border : designTokens.colors.light.border}]}>
-                          <Text style={[styles.gradingLabel as any, { fontFamily, color: colors.textSecondary }]}>
-                            {t("exams.pointsAwarded")}:
-                          </Text>
-                          <View style={styles.pointsInputContainer as any}>
+                        {answer.needs_grading && (
+                          <View style={[styles.gradingSection, { borderTopColor: isDark ? designTokens.colors.dark.border : designTokens.colors.light.border }]}>
+                            <Text style={[styles.gradingLabel as any, { fontFamily, color: colors.textSecondary }]}>
+                              {t("exams.pointsAwarded")}:
+                            </Text>
+                            <View style={styles.pointsInputContainer as any}>
+                              <TextInput
+                                style={[styles.pointsInput, {
+                                  borderColor: colors.border,
+                                  backgroundColor: colors.background,
+                                  color: colors.textPrimary
+                                }]}
+                                value={gradingAnswers[answer.question_id]?.points.toString() || answer.points.toString()}
+                                onChangeText={(text) => handleGradeAnswer(
+                                  answer.question_id,
+                                  parseInt(text) || 0,
+                                  gradingAnswers[answer.question_id]?.feedback || ''
+                                )}
+                                keyboardType="numeric"
+                              />
+                              <Text style={[styles.pointsMax, { fontFamily, color: colors.textSecondary }]}>
+                                / {answer.points}
+                              </Text>
+                            </View>
+
+                            <Text style={[styles.gradingLabel as any, { fontFamily, color: colors.textSecondary }]}>
+                              {t("exams.feedback")}:
+                            </Text>
                             <TextInput
-                              style={[styles.pointsInput, {
+                              style={[styles.feedbackInputSmall, {
                                 borderColor: colors.border,
                                 backgroundColor: colors.background,
                                 color: colors.textPrimary
                               }]}
-                              value={gradingAnswers[answer.question_id]?.points.toString() || answer.points.toString()}
+                              placeholder={t("exams.addFeedback")}
+                              placeholderTextColor={colors.textTertiary}
+                              multiline
+                              value={gradingAnswers[answer.question_id]?.feedback || ''}
                               onChangeText={(text) => handleGradeAnswer(
                                 answer.question_id,
-                                parseInt(text) || 0,
-                                gradingAnswers[answer.question_id]?.feedback || ''
+                                gradingAnswers[answer.question_id]?.points || answer.points,
+                                text
                               )}
-                              keyboardType="numeric"
                             />
-                            <Text style={[styles.pointsMax, { fontFamily, color: colors.textSecondary }]}>
-                              / {answer.points}
+                          </View>
+                        )}
+
+                        {answer.feedback && !answer.needs_grading && (
+                          <View style={styles.feedbackSection}>
+                            <Text style={[styles.feedbackLabel as any, { fontFamily, color: colors.textSecondary }]}>
+                              {t("exams.feedback")}:
+                            </Text>
+                            <Text style={[styles.feedbackText, { fontFamily, color: colors.textPrimary }]}>
+                              {answer.feedback}
                             </Text>
                           </View>
-
-                          <Text style={[styles.gradingLabel as any, { fontFamily, color: colors.textSecondary }]}>
-                            {t("exams.feedback")}:
-                          </Text>
-                          <TextInput
-                            style={[styles.feedbackInputSmall, {
-                              borderColor: colors.border,
-                              backgroundColor: colors.background,
-                              color: colors.textPrimary
-                            }]}
-                            placeholder={t("exams.addFeedback")}
-                            placeholderTextColor={colors.textTertiary}
-                            multiline
-                            value={gradingAnswers[answer.question_id]?.feedback || ''}
-                            onChangeText={(text) => handleGradeAnswer(
-                              answer.question_id,
-                              gradingAnswers[answer.question_id]?.points || answer.points,
-                              text
-                            )}
-                          />
-                        </View>
-                      )}
-
-                      {answer.feedback && !answer.needs_grading && (
-                        <View style={styles.feedbackSection}>
-                          <Text style={[styles.feedbackLabel as any, { fontFamily, color: colors.textSecondary }]}>
-                            {t("exams.feedback")}:
-                          </Text>
-                          <Text style={[styles.feedbackText, { fontFamily, color: colors.textPrimary }]}>
-                            {answer.feedback}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  )}
+                        )}
+                      </View>
+                    )}
                 </View>
               </View>
 

@@ -1,6 +1,6 @@
 // app/(student)/exams.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';
@@ -13,7 +13,7 @@ import Alert from '@/components/Alert';
 
 export default function ExamsScreen() {
   const { user } = useAuth();
-  const { fontFamily, colors, isDark } = useThemeContext();
+  const { fontFamily, colors } = useThemeContext();
   const [exams, setExams] = useState<Exam[]>([]);
   const [takenExams, setTakenExams] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -39,7 +39,7 @@ export default function ExamsScreen() {
 
         // Check which exams have been taken
         const takenStatuses = await Promise.all(
-          allExams.map(async (exam) => {
+          allExams.map(async (exam : any) => {
             try {
               const status = await apiService.checkExamTaken(exam.id);
               return { examId: exam.id, taken: status };
@@ -63,7 +63,7 @@ export default function ExamsScreen() {
         let upcoming = 0;
         let missed = 0;
 
-        allExams.forEach(exam => {
+        allExams.forEach((exam: any) => {
           if (takenSet.has(exam.id)) {
             completed++;
           } else {

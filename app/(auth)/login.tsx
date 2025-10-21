@@ -10,7 +10,6 @@ import {
   Platform,
   ScrollView,
   StatusBar,
-  Dimensions
 } from
   "react-native";
 import Alert from '@/components/Alert';
@@ -20,8 +19,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { designTokens } from "../../src/utils/designTokens";
 import { useThemeContext } from "../../src/contexts/ThemeContext";
 import { useTranslation } from "@/hooks/useTranslation";
-
-const { width } = Dimensions.get('window');
 
 export default function LoginScreen() {
   const { t, isRTL } = useTranslation();

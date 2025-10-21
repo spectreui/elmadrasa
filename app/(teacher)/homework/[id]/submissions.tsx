@@ -1,9 +1,8 @@
 // app/(teacher)/homework/[id]/submissions.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, Modal, RefreshControl, StyleSheet, I18nManager } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, Modal, RefreshControl } from 'react-native';
 import Alert from '@/components/Alert';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useAuth } from '../../../../src/contexts/AuthContext';
 import { apiService } from '../../../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { designTokens } from '../../../../src/utils/designTokens';
@@ -77,7 +76,6 @@ interface Homework {
 export default function HomeworkSubmissionsScreen() {
   const { t, isRTL } = useTranslation();
   const { id } = useLocalSearchParams();
-  const { user } = useAuth();
   const [homework, setHomework] = useState<Homework | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -228,14 +226,6 @@ export default function HomeworkSubmissionsScreen() {
       });
     }
     setQuestionGrades(initialQuestionGrades);
-  };
-
-  const getGradeColor = (grade?: number) => {
-    if (grade === undefined || grade === null) return '#9CA3AF'; // Gray
-    if (grade >= 90) return '#10B981'; // Green
-    if (grade >= 80) return '#3B82F6'; // Blue
-    if (grade >= 70) return '#F59E0B'; // Amber
-    return '#EF4444'; // Red
   };
 
   const getGradeStatus = (submission: Submission) => {
@@ -454,7 +444,7 @@ export default function HomeworkSubmissionsScreen() {
               marginBottom: designTokens.spacing.xs,
               textAlign: isRTL ? 'right' : 'left'
             }}>
-              {t("submissions.overallGrade")}: {submission.grade}/{homework.points}
+              {t("submissions.overallGrade")}: {submission.grade}/{homework?.points}
             </Text>
 
             {/* Component grades */}
@@ -627,7 +617,7 @@ export default function HomeworkSubmissionsScreen() {
           marginBottom: designTokens.spacing.md,
           textAlign: isRTL ? 'right' : 'left'
         }}>
-          {homework?.class} • {t(homework?.subject)} • {isRTL ? `${t("submissions.title")} ${submissions.length}` : `${submissions.length} ${t("submissions.title")}`}
+          {homework?.class} • {t(homework?.subject as string)} • {isRTL ? `${t("submissions.title")} ${submissions.length}` : `${submissions.length} ${t("submissions.title")}`}
 
         </Text>
 

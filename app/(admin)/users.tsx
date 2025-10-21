@@ -2,10 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, RefreshControl } from 'react-native';
 import Alert from '@/components/Alert';
-import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { Theme, cn } from '../../src/utils/themeUtils';
+import { cn } from '../../src/utils/themeUtils';
 import { useThemeContext } from '@/contexts/ThemeContext';import { useTranslation } from "@/hooks/useTranslation";
 
 interface User {
@@ -27,7 +26,7 @@ export default function UsersManagement() {const { t } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'student' | 'teacher'>('all');
-  const { fontFamily, colors } = useThemeContext();
+  const { colors } = useThemeContext();
 
 
   useEffect(() => {

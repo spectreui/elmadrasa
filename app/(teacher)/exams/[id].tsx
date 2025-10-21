@@ -38,6 +38,42 @@ interface ExamDetails {
   total_points: number;
 }
 
+interface SubmissionStatistics {
+  totalSubmissions: number;
+  averageScore: number;
+  highestScore: number;
+  lowestScore: number;
+}
+
+interface ScoreRange {
+  range: string;
+  count: number;
+}
+
+interface Student {
+  name: string;
+  email: string;
+  class: string;
+}
+
+interface Submission {
+  id: string;
+  student: Student;
+  score: number;
+  totalPoints: number;
+  percentage: number;
+  submittedAt: string;
+  needs_manual_grading: boolean;
+  is_manually_graded: boolean;
+}
+
+interface SubmissionsData {
+  statistics: SubmissionStatistics;
+  scoreDistribution: ScoreRange[];
+  submissions: Submission[];
+}
+
+
 export default function ExamDetailScreen() {
   const { id } = useLocalSearchParams();
   const { fontFamily, colors, isDark } = useThemeContext();
@@ -47,7 +83,8 @@ export default function ExamDetailScreen() {
   const [activeTab, setActiveTab] = useState<'overview' | 'questions' | 'submissions'>('overview');
   const [showShareModal, setShowShareModal] = useState(false);
   const { t, isRTL } = useTranslation();
-  const [submissionsData, setSubmissionsData] = useState(null);
+  const [submissionsData, setSubmissionsData] = useState<SubmissionsData | null>(null);
+
 
   useEffect(() => {
     if (id) {
@@ -73,7 +110,8 @@ export default function ExamDetailScreen() {
           total_points: examData.total_points || 0,
         };
         setExam(examDetails);
-        setSubmissionsData(response.data.data.submissions);
+        // Add type assertion or proper typing for submissions data
+        setSubmissionsData(submissionsResponse.data.data as SubmissionsData);
       } else {
         Alert.alert(t('common.error'), t('exams.loadFailed'));
         router.back();
@@ -145,7 +183,7 @@ export default function ExamDetailScreen() {
               // Send localized bulk notification to all students
               try {
                 await apiService.sendBulkLocalizedNotifications(
-                  studentIds,
+                  studentIds as string[],
                   'exams.activatedTitle',
                   'exams.activatedBody',
                   {
@@ -164,7 +202,7 @@ export default function ExamDetailScreen() {
                 for (const studentId of studentIds) {
                   try {
                     await apiService.sendLocalizedNotification(
-                      studentId,
+                      studentId as string,
                       'exams.activatedTitle',
                       'exams.activatedBody',
                       {
@@ -645,180 +683,176 @@ export default function ExamDetailScreen() {
     </TouchableOpacity>
   );
 
-  const viewSubmissionDetails = (submissionId) => {
-  // Navigate to submission details page or open modal
-  router.push(`/(teacher)/exams/grading/${submissionId}`);
-  // Or open a modal with submission details
-};
+  const viewSubmissionDetails = (submissionId: any) => {
+    // Navigate to submission details page or open modal
+    router.push(`/(teacher)/exams/grading/${submissionId}`);
+    // Or open a modal with submission details
+  };
 
-const gradeSubmission = (submissionId) => {
-  // Navigate to manual grading page
-  router.push(`/(teacher)/exams/grading/${submissionId}`);
-  // Or open grading modal
-};
+  const gradeSubmission = (submissionId: any) => {
+    // Navigate to manual grading page
+    router.push(`/(teacher)/exams/grading/${submissionId}`);
+    // Or open grading modal
+  };
 
   // Add this to your exam page component
   const SubmissionsTab = () => {
-    if (!submissionsData) {
-      return <div className="text-center py-8">Loading submissions...</div>;
-    }
-
-    const { statistics, scoreDistribution, submissions } = submissionsData;
-
+  if (!submissionsData) {
     return (
-      <div className="space-y-6">
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-sm font-medium text-gray-500">Total Submissions</h3>
-            <p className="text-2xl font-bold text-gray-900">{statistics.totalSubmissions}</p>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-sm font-medium text-gray-500">Average Score</h3>
-            <p className="text-2xl font-bold text-blue-600">{statistics.averageScore}%</p>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-sm font-medium text-gray-500">Highest Score</h3>
-            <p className="text-2xl font-bold text-green-600">{statistics.highestScore}%</p>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-sm font-medium text-gray-500">Lowest Score</h3>
-            <p className="text-2xl font-bold text-red-600">{statistics.lowestScore}%</p>
-          </div>
-        </div>
-
-        {/* Score Distribution Chart */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Score Distribution</h3>
-          <div className="space-y-2">
-            {scoreDistribution.map((range) => (
-              <div key={range.range} className="flex items-center">
-                <span className="w-16 text-sm font-medium">{range.range}%</span>
-                <div className="flex-1 bg-gray-200 rounded-full h-4">
-                  <div
-                    className="bg-blue-600 h-4 rounded-full"
-                    style={{ width: `${(range.count / statistics.totalSubmissions) * 100}%` }}
-                  ></div>
-                </div>
-                <span className="ml-2 text-sm font-medium w-8">{range.count}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Submissions Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold">Student Submissions</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Student
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Class
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Score
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Percentage
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Submitted At
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {submissions.map((submission) => (
-                  <tr key={submission.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {submission.student.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {submission.student.email}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {submission.student.class}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {submission.score} / {submission.totalPoints}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${submission.percentage >= 80
-                            ? 'bg-green-100 text-green-800'
-                            : submission.percentage >= 60
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                      >
-                        {submission.percentage}%
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(submission.submittedAt).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {submission.needs_manual_grading ? (
-                        submission.is_manually_graded ? (
-                          <span className="inline-flex px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
-                            Manually Graded
-                          </span>
-                        ) : (
-                          <span className="inline-flex px-2 py-1 text-xs font-semibold bg-orange-100 text-orange-800 rounded-full">
-                            Needs Grading
-                          </span>
-                        )
-                      ) : (
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">
-                          Auto Graded
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => viewSubmissionDetails(submission.id)}
-                        className="text-blue-600 hover:text-blue-900 mr-3"
-                      >
-                        View
-                      </button>
-                      {submission.needs_manual_grading && !submission.is_manually_graded && (
-                        <button
-                          onClick={() => gradeSubmission(submission.id)}
-                          className="text-green-600 hover:text-green-900"
-                        >
-                          Grade
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {submissions.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              No submissions yet
-            </div>
-          )}
-        </div>
-      </div>
+      <View style={{ padding: 20, alignItems: 'center' }}>
+        <Text>{t('common.loading')}</Text>
+      </View>
     );
-  };
+  }
+
+  const { statistics, scoreDistribution, submissions } = submissionsData;
+
+  return (
+    <View style={{ padding: 20 }}>
+      {/* Statistics Cards */}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
+        <View style={{ width: '48%', backgroundColor: '#fff', padding: 15, borderRadius: 8 }}>
+          <Text style={{ fontSize: 14, color: '#666' }}>{t('submissions.totalSubmissions')}</Text>
+          <Text style={{ fontSize: 24, fontWeight: 'bold' }}>{statistics.totalSubmissions}</Text>
+        </View>
+        <View style={{ width: '48%', backgroundColor: '#fff', padding: 15, borderRadius: 8 }}>
+          <Text style={{ fontSize: 14, color: '#666' }}>{t('dashboard.avgScore')}</Text>
+          <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#3B82F6' }}>{statistics.averageScore}%</Text>
+        </View>
+        <View style={{ width: '48%', backgroundColor: '#fff', padding: 15, borderRadius: 8 }}>
+          <Text style={{ fontSize: 14, color: '#666' }}>{t('dashboard.highestScore')}</Text>
+          <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#10B981' }}>{statistics.highestScore}%</Text>
+        </View>
+        <View style={{ width: '48%', backgroundColor: '#fff', padding: 15, borderRadius: 8 }}>
+          <Text style={{ fontSize: 14, color: '#666' }}>{t('dashboard.lowestScore')}</Text>
+          <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#EF4444' }}>{statistics.lowestScore}%</Text>
+        </View>
+      </View>
+
+      {/* Score Distribution */}
+      <View style={{ backgroundColor: '#fff', padding: 20, borderRadius: 8, marginBottom: 20 }}>
+        <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 15 }}>
+          {t('submissions.scoreDistribution')}
+        </Text>
+        <View style={{ gap: 10 }}>
+          {scoreDistribution.map((range: ScoreRange) => (
+            <View key={range.range} style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ width: 60, fontSize: 14, fontWeight: '500' }}>{range.range}%</Text>
+              <View style={{ flex: 1, height: 16, backgroundColor: '#E5E7EB', borderRadius: 8 }}>
+                <View
+                  style={{
+                    height: '100%',
+                    backgroundColor: '#3B82F6',
+                    borderRadius: 8,
+                    width: `${(range.count / statistics.totalSubmissions) * 100}%`
+                  }}
+                />
+              </View>
+              <Text style={{ width: 30, textAlign: 'right', marginLeft: 10, fontSize: 14, fontWeight: '500' }}>
+                {range.count}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Submissions List */}
+      <View style={{ backgroundColor: '#fff', borderRadius: 8 }}>
+        <View style={{ padding: 15, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' }}>
+          <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
+            {t('submissions.studentSubmissions')}
+          </Text>
+        </View>
+        {submissions.length > 0 ? (
+          <View style={{ padding: 15 }}>
+            {submissions.map((submission: Submission) => (
+              <View 
+                key={submission.id} 
+                style={{ 
+                  padding: 15, 
+                  borderBottomWidth: 1, 
+                  borderBottomColor: '#E5E7EB' 
+                }}
+              >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <View>
+                    <Text style={{ fontSize: 16, fontWeight: '600' }}>
+                      {submission.student.name}
+                    </Text>
+                    <Text style={{ fontSize: 14, color: '#666' }}>
+                      {submission.student.email}
+                    </Text>
+                  </View>
+                  <Text style={{ fontSize: 14, color: '#666' }}>
+                    {submission.student.class}
+                  </Text>
+                </View>
+                
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <Text style={{ fontSize: 14 }}>
+                    {t('submissions.score')}: {submission.score} / {submission.totalPoints}
+                  </Text>
+                  <Text style={{ 
+                    fontSize: 14, 
+                    fontWeight: '600',
+                    color: submission.percentage >= 80 
+                      ? '#10B981' 
+                      : submission.percentage >= 60 
+                        ? '#F59E0B' 
+                        : '#EF4444'
+                  }}>
+                    {submission.percentage}%
+                  </Text>
+                </View>
+                
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ fontSize: 12, color: '#666' }}>
+                    {new Date(submission.submittedAt).toLocaleString()}
+                  </Text>
+                  <View style={{ flexDirection: 'row' }}>
+                    <TouchableOpacity
+                      onPress={() => viewSubmissionDetails(submission.id)}
+                      style={{ 
+                        padding: 8, 
+                        backgroundColor: '#3B82F615', 
+                        borderRadius: 6,
+                        marginRight: 10
+                      }}
+                    >
+                      <Text style={{ color: '#3B82F6', fontSize: 14 }}>
+                        {t('common.view')}
+                      </Text>
+                    </TouchableOpacity>
+                    {submission.needs_manual_grading && !submission.is_manually_graded && (
+                      <TouchableOpacity
+                        onPress={() => gradeSubmission(submission.id)}
+                        style={{ 
+                          padding: 8, 
+                          backgroundColor: '#10B98115', 
+                          borderRadius: 6
+                        }}
+                      >
+                        <Text style={{ color: '#10B981', fontSize: 14 }}>
+                          {t('submissions.grade')}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View style={{ padding: 40, alignItems: 'center' }}>
+            <Text style={{ fontSize: 16, color: '#666' }}>
+              {t('submissions.noSubmissions')}
+            </Text>
+          </View>
+        )}
+      </View>
+    </View>
+  );
+};
 
   if (loading) {
     return (

@@ -3,12 +3,9 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  RefreshControl,
-  Image,
-  Switch } from
+  RefreshControl} from
 "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
@@ -463,7 +460,7 @@ export default function StudentDashboard() {const { t } = useTranslation();
               textAlign: 'center'
             }}>
 
-              You're all caught up for now
+              You&apos;re all caught up for now
             </Text>
           </View> :
 

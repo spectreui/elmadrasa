@@ -23,7 +23,7 @@ const { width } = Dimensions.get('window');
 export default function JoinSubjectScreen() {const { t } = useTranslation();
   const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const { fontFamily, colors, isDark } = useThemeContext();
+  const { colors } = useThemeContext();
   const [refreshing, setRefreshing] = useState(false);
 
 
@@ -165,7 +165,7 @@ export default function JoinSubjectScreen() {const { t } = useTranslation();
             <Text style={responsiveStyles.cardText}>
               1. Get the join code from your teacher{'\n'}
               2. Enter it below{'\n'}
-              3. You'll be automatically enrolled in that subject
+              3. You&apos;ll be automatically enrolled in that subject
             </Text>
           </View>
 

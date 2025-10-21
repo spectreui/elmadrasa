@@ -6,11 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  RefreshControl,
-  Dimensions,
-  I18nManager
+  RefreshControl
 } from 'react-native';
-import { useAuth } from '../../../src/contexts/AuthContext';
 import { apiService } from '../../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '@/contexts/ThemeContext';
@@ -18,8 +15,6 @@ import { designTokens } from '../../../src/utils/designTokens';
 import { router } from 'expo-router';
 import Alert from '@/components/Alert';
 import { useTranslation } from "@/hooks/useTranslation";
-
-const { width } = Dimensions.get('window');
 
 interface Homework {
   id: string;
@@ -40,7 +35,6 @@ interface Homework {
 
 export default function TeacherHomeworkScreen() {
   const { t, isRTL } = useTranslation();
-  const { user, isAuthenticated } = useAuth();
   const [homework, setHomework] = useState<Homework[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

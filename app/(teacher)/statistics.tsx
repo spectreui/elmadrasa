@@ -6,10 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  I18nManager,
   Dimensions
 } from 'react-native';
-import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '@/contexts/ThemeContext';
@@ -30,7 +28,6 @@ interface StatisticsData {
 
 export default function StatisticsScreen() {
   const { t, isRTL } = useTranslation();
-  const { user } = useAuth();
   const [classStats, setClassStats] = useState<ClassStats[]>([]);
   const [performanceTrend, setPerformanceTrend] = useState<PerformanceTrend[]>([]);
   const [quickStats, setQuickStats] = useState({

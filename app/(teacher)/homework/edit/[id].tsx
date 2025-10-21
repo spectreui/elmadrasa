@@ -7,9 +7,7 @@ import {
   TouchableOpacity,
   TextInput,
   Switch,
-  Alert,
-  Dimensions,
-  Platform
+  Alert
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { apiService } from '../../../../src/services/api';
@@ -17,9 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '@/contexts/ThemeContext';
 import { designTokens } from '../../../../src/utils/designTokens';
 import { useTranslation } from "@/hooks/useTranslation";
-import { BlurView } from 'expo-blur';
-
-const { width } = Dimensions.get('window');
 
 interface Homework {
   id: string;
@@ -48,7 +43,7 @@ interface Question {
 }
 
 export default function EditHomeworkScreen() {
-  const { t, isRTL } = useTranslation();
+  const { isRTL } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [homework, setHomework] = useState<Homework | null>(null);
   const [loading, setLoading] = useState(true);

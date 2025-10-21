@@ -8,8 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Pressable,
-  Image,
-  I18nManager
+  Image
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';

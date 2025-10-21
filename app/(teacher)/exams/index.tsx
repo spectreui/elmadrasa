@@ -43,11 +43,6 @@ export default function TeacherExamsScreen() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [currentExam, setCurrentExam] = useState<TeacherExam | null>(null);
 
-  const shareExam = (exam: TeacherExam) => {
-    setCurrentExam(exam);
-    setShowShareModal(true);
-  };
-
   useEffect(() => {
     if (!loading) {
       if (isAuthenticated && user?.role === 'student') {

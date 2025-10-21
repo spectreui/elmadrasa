@@ -7,7 +7,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 export default function TabLayout() {
   const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
-  const { isDark, colors } = useThemeContext();
+  const { colors } = useThemeContext();
 
   if (!isAuthenticated) {
     return <Redirect href="/(auth)/login" />;

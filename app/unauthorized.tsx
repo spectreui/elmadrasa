@@ -11,11 +11,11 @@ export default function UnAuthorizedScreen() {
   const { fontFamily } = useThemeContext();
 
   return (
-    <View style={[styles.container, { fontFamily, paddingTop: insets.top }]}>
+    <View style={[styles.container, { fontFamily, paddingTop: insets.top }] as any}>
       <View style={styles.content}>
         <Text style={styles.title}>Unauthorized</Text>
         <Text style={styles.subtitle}>
-          Sorry, you can't access this page.
+          Sorry, you can&apos;t access this page.
         </Text>
         
         <TouchableOpacity 

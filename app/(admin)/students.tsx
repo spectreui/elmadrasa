@@ -2,10 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import Alert from '@/components/Alert';
-import { router } from 'expo-router';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { Theme, cn } from '../../src/utils/themeUtils';
+import { cn } from '../../src/utils/themeUtils';
 import { useThemeContext } from '@/contexts/ThemeContext';import { useTranslation } from "@/hooks/useTranslation";
 
 export default function StudentsManagementScreen() {const { t } = useTranslation();
@@ -16,7 +15,7 @@ export default function StudentsManagementScreen() {const { t } = useTranslation
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [selectedClass, setSelectedClass] = useState('');
   const [assigning, setAssigning] = useState(false);
-  const { fontFamily, colors } = useThemeContext();
+  const { colors } = useThemeContext();
 
 
   useEffect(() => {
@@ -59,83 +58,7 @@ export default function StudentsManagementScreen() {const { t } = useTranslation
     }
   };
 
-  const handleAssignClass = async () => {
-    if (!selectedStudent || !selectedClass) {
-      Alert.alert('Error', 'Please select a class');
-      return;
-    }
-
-    setAssigning(true);
-    try {
-      const classObj = classes.find((c) => c.id === selectedClass);
-      if (!classObj) {
-        Alert.alert('Error', 'Invalid class selected');
-        return;
-      }
-
-      console.log(`🎯 Assigning ${selectedStudent.profile?.name} to ${classObj.name}`);
-
-      // Create or update student record with class assignment
-      const studentData = {
-        user_id: selectedStudent.id,
-        full_name: selectedStudent.profile?.name || selectedStudent.email,
-        class_id: classObj.id,
-        level_id: classObj.level_id,
-        metadata: {
-          class_name: classObj.name,
-          grade: classObj.grade,
-          section: classObj.section
-        }
-      };
-
-      console.log('📦 Student data to create:', studentData);
-
-      // First, check if student record already exists
-      const existingStudentsRes = await apiService.getStudents();
-      const existingStudent = existingStudentsRes.data.data?.find(
-        (s: any) => s.user_id === selectedStudent.id
-      );
-
-      if (existingStudent) {
-        // Update existing student
-        await apiService.updateStudent(existingStudent.id, {
-          class_id: classObj.id,
-          level_id: classObj.level_id,
-          metadata: {
-            ...existingStudent.metadata,
-            class_name: classObj.name,
-            grade: classObj.grade,
-            section: classObj.section
-          }
-        });
-      } else {
-        // Create new student record
-        await apiService.createStudent(studentData);
-      }
-
-      // Also update user profile with class info
-      await apiService.updateUserProfile(selectedStudent.id, {
-        class: classObj.name
-      });
-
-      Alert.alert('Success', `Assigned ${selectedStudent.profile?.name} to ${classObj.name}`);
-      setShowClassModal(false);
-      setSelectedStudent(null);
-      setSelectedClass('');
-      await loadData(); // Refresh the data
-    } catch (error: any) {
-      console.error('❌ Assign class error:', error);
-      Alert.alert(
-        'Error',
-        error.response?.data?.error || error.message || 'Failed to assign class'
-      );
-    } finally {
-      setAssigning(false);
-    }
-  };
-
-  // Alternative simpler approach if the above doesn't work
-  // In students.tsx - replace the handleAssignClassSimple function
+  
   const handleAssignClassSimple = async () => {
     if (!selectedStudent || !selectedClass) {
       Alert.alert('Error', 'Please select a class');

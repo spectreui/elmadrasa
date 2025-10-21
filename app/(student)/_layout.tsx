@@ -1,13 +1,12 @@
 import { Tabs, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../src/contexts/AuthContext";
-import { colors } from "@/utils/designSystem";
 import { useThemeContext } from "@/contexts/ThemeContext"; import { useTranslation } from "@/hooks/useTranslation";
 
 export default function TabLayout() {
   const { t } = useTranslation();
-  const { isAuthenticated, loading, user } = useAuth();
-  const { isDark, colors, toggleTheme } = useThemeContext();
+  const { isAuthenticated, user } = useAuth();
+  const { colors } = useThemeContext();
 
 
   if (!isAuthenticated) {

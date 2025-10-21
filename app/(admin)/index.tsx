@@ -2,14 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
-import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { Theme, cn } from '../../src/utils/themeUtils';
+import { cn } from '../../src/utils/themeUtils';
 import { useThemeContext } from '@/contexts/ThemeContext';
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalTeachers: 0,
@@ -19,7 +17,7 @@ export default function AdminDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const { fontFamily, colors } = useThemeContext()
+  const { colors } = useThemeContext()
 
   useEffect(() => {
     loadDashboardData();
@@ -34,7 +32,6 @@ export default function AdminDashboard() {
         teachersRes,
         classesRes,
         subjectsRes,
-        levelsRes,
         pendingRes
       ] = await Promise.all([
         apiService.getUsersByRole('student'),
@@ -50,7 +47,6 @@ export default function AdminDashboard() {
       const totalTeachers = teachersRes.data.data?.length || 0;
       const totalClasses = classesRes.data.data?.length || 0;
       const totalSubjects = subjectsRes.data.data?.length || 0;
-      const totalLevels = levelsRes.data.data?.length || 0;
       const pendingApprovals = pendingRes.data.data?.length || 0;
 
       setStats({

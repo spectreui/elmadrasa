@@ -14,7 +14,7 @@ export default function NotFoundScreen() {
         <Text style={styles.emoji}>🔍</Text>
         <Text style={styles.title}>Page Not Found</Text>
         <Text style={styles.subtitle}>
-          Sorry, the page you're looking for doesn't exist or has been moved.
+          Sorry, the page you&apos;re looking for doesn&apos;t exist or has been moved.
         </Text>
         
         <TouchableOpacity 

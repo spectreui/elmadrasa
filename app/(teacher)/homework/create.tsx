@@ -1230,7 +1230,7 @@ export default function CreateHomeworkScreen() {
                                 value={option}
                                 onChangeText={(text) => updateOption(question.id, optionIndex, text)}
                               />
-                              {question.options.length > 2 && (
+                              {question.options && question.options.length > 2 && (
                                 <TouchableOpacity
                                   onPress={() => removeOption(question.id, optionIndex)}
                                   style={{

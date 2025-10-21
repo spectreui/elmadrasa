@@ -9,7 +9,6 @@ import {
   RefreshControl,
 } from "react-native";
 import Alert from '@/components/Alert';
-import { useAuth } from "../../src/contexts/AuthContext";
 import { apiService } from "../../src/services/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeContext } from "../../src/contexts/ThemeContext";
@@ -17,7 +16,6 @@ import { designTokens } from "../../src/utils/designTokens";
 import Animated, { FadeIn } from "react-native-reanimated";
 
 export default function ResultsScreen() {
-  const { user } = useAuth();
   const { fontFamily, colors } = useThemeContext();
   const [results, setResults] = useState<any[]>([]);
   const [subjectPerformance, setSubjectPerformance] = useState<any[]>([]);
@@ -353,7 +351,7 @@ export default function ResultsScreen() {
         alignItems: 'center',
       }}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{ fontFamily,  fontFamily, 
+        <Text style={{ fontFamily, 
           marginTop: designTokens.spacing.md,
           fontSize: designTokens.typography.body.fontSize,
           color: colors.textSecondary,
@@ -372,7 +370,7 @@ export default function ResultsScreen() {
         paddingHorizontal: designTokens.spacing.xl,
         paddingBottom: designTokens.spacing.lg,
       }}>
-        <Text style={{ fontFamily,  fontFamily, 
+        <Text style={{ fontFamily, 
           fontSize: designTokens.typography.largeTitle.fontSize,
           fontWeight: designTokens.typography.largeTitle.fontWeight,
           color: colors.textPrimary,
@@ -380,7 +378,7 @@ export default function ResultsScreen() {
         } as any}>
           Exam Results
         </Text>
-        <Text style={{ fontFamily,  fontFamily, 
+        <Text style={{ fontFamily, 
           fontSize: designTokens.typography.body.fontSize,
           color: colors.textSecondary,
         }}>
@@ -406,7 +404,7 @@ export default function ResultsScreen() {
         }}>
           {/* Performance Overview */}
           <View style={{ marginBottom: designTokens.spacing.xl }}>
-            <Text style={{ fontFamily,  fontFamily, 
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: colors.textPrimary,
@@ -470,7 +468,7 @@ export default function ResultsScreen() {
 
           {/* Results List */}
           <View style={{ marginBottom: designTokens.spacing.xl }}>
-            <Text style={{ fontFamily,  fontFamily, 
+            <Text style={{ fontFamily, 
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: colors.textPrimary,
@@ -492,7 +490,7 @@ export default function ResultsScreen() {
                 ...designTokens.shadows.sm,
               }}>
                 <Ionicons name="stats-chart" size={48} color={colors.textTertiary} />
-                <Text style={{ fontFamily,  fontFamily, 
+                <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.title3.fontSize,
                   fontWeight: designTokens.typography.title3.fontWeight,
                   color: colors.textPrimary,
@@ -501,7 +499,7 @@ export default function ResultsScreen() {
                 } as any}>
                   No results found
                 </Text>
-                <Text style={{ fontFamily,  fontFamily, 
+                <Text style={{ fontFamily, 
                   fontSize: designTokens.typography.body.fontSize,
                   color: colors.textSecondary,
                   textAlign: 'center',

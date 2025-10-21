@@ -22,7 +22,6 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from "@/hooks/useTranslation";
 
 // Update the ExamDetails interface to properly type nested questions
 interface ExamDetails extends Exam {
@@ -58,7 +57,6 @@ interface QuestionAttachment {
 }
 
 export default function StudentExamScreen() {
-  const { t } = useTranslation();
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const examId = Array.isArray(id) ? id[0] : id;
@@ -123,7 +121,7 @@ export default function StudentExamScreen() {
 
       if (response.data.data && response.data.success) {
         const examData = response.data.data;
-        setExam(examData);
+        setExam(examData as ExamDetails);
 
         const now = new Date();
         const availableFrom = examData?.available_from ? new Date(examData.available_from) : null;
@@ -163,44 +161,6 @@ export default function StudentExamScreen() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const organizeNestedQuestions = (questions: any[]) => {
-    const questionMap = new Map();
-    const rootQuestions: any[] = [];
-
-    // First pass: create map of all questions
-    questions.forEach(question => {
-      questionMap.set(question.id, { ...question, nested_questions: [] });
-    });
-
-    // Second pass: build hierarchy recursively
-    questions.forEach(question => {
-      if (!question.parent_id) {
-        // Root level question/section
-        rootQuestions.push(questionMap.get(question.id));
-      } else if (questionMap.has(question.parent_id)) {
-        // Add as nested question to parent
-        questionMap.get(question.parent_id).nested_questions.push(questionMap.get(question.id));
-      }
-    });
-
-    // Recursive function to sort nested questions at all levels
-    const sortNestedRecursively = (questions: any[]) => {
-      // Sort current level
-      const sorted = questions.sort((a, b) => (a.question_order || 0) - (b.question_order || 0));
-
-      // Recursively sort nested questions
-      sorted.forEach(question => {
-        if (question.nested_questions && question.nested_questions.length > 0) {
-          question.nested_questions = sortNestedRecursively(question.nested_questions);
-        }
-      });
-
-      return sorted;
-    };
-
-    return sortNestedRecursively(rootQuestions);
   };
 
   const checkExamStatus = async () => {
@@ -385,7 +345,7 @@ export default function StudentExamScreen() {
 
       // Convert image to base64
       const base64 = await FileSystem.readAsStringAsync(asset.uri, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: 'base64',
       });
 
       const mimeType = 'image/jpeg';
@@ -429,18 +389,6 @@ export default function StudentExamScreen() {
       questionId,
       questionText,
       currentAnswer
-    });
-  };
-
-  const saveTextAnswer = (answer: string) => {
-    if (textAnswerModal.questionId && answer.trim()) {
-      handleAnswerSelect(textAnswerModal.questionId, answer.trim());
-    }
-    setTextAnswerModal({
-      visible: false,
-      questionId: '',
-      questionText: '',
-      currentAnswer: ''
     });
   };
 
@@ -530,7 +478,7 @@ export default function StudentExamScreen() {
 
           {question.type === 'mcq' ? (
             <View style={styles.optionsContainer}>
-              {question.options.map((option, optionIndex) => (
+              {question.options.map((option: any, optionIndex: any) => (
                 <TouchableOpacity
                   key={optionIndex}
                   style={[

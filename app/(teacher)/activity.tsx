@@ -6,8 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  RefreshControl,
-  I18nManager
+  RefreshControl
 } from 'react-native';
 import { router } from 'expo-router';
 import { useThemeContext } from '../../src/contexts/ThemeContext';

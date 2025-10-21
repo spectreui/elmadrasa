@@ -10,11 +10,10 @@ import {
   Alert
 } from 'react-native';
 import { router } from 'expo-router';
-import { useAuth } from '../../../../src/contexts/AuthContext';
-import { apiService } from '../../../../src/services/api';
+import { apiService } from '@/src/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { useThemeContext } from '../../../../src/contexts/ThemeContext';
-import { designTokens } from '../../../../src/utils/designTokens';
+import { useThemeContext } from '@/src/contexts/ThemeContext';
+import { designTokens } from '@/src/utils/designTokens';
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface Submission {
@@ -29,22 +28,22 @@ interface Submission {
       name: string;
     };
   };
-  answers?: Array<{
+  answers?: {
     question_id: string;
     answer: string;
     is_correct: boolean;
     points: number;
     needs_grading?: boolean;
-  }>;
+  }[];
   total_points: number;
   needs_manual_grading: boolean;
   is_manually_graded: boolean;
+  submitted_at: string;
 }
 
 export default function ManualGradingScreen() {
   const { t } = useTranslation();
   const { colors, fontFamily } = useThemeContext();
-  const { user } = useAuth();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -78,12 +77,6 @@ export default function ManualGradingScreen() {
   const onRefresh = () => {
     setRefreshing(true);
     loadSubmissions();
-  };
-
-  // Safety function to count text questions
-  const countTextQuestions = (answers: any[] | undefined) => {
-    if (!answers || !Array.isArray(answers)) return 0;
-    return answers.filter(a => a?.needs_grading).length;
   };
 
   if (loading) {

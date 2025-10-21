@@ -1,10 +1,10 @@
 // app/_layout.tsx - Fixed version
 import "../global.css";
 import React, { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, Platform } from "react-native";
-import { Slot, usePathname, useRouter, useSegments } from "expo-router";
+import { View, Text} from "react-native";
+import { Slot, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
+import { AuthProvider } from "../src/contexts/AuthContext";
 import { ThemeProvider, useThemeContext } from "../src/contexts/ThemeContext";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
@@ -18,8 +18,6 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AlertProvider } from "@/components/Alert";
 import ElmadrasaAnimation from "@/components/AppleHello";
 import { FancyTabBarProvider } from "@/contexts/TabBarContext";
-import AutoKeyboardView from "@/components/AutoKeyboardView";
-import KeyboardWrapper from "@/components/AutoKeyboardView";
 
 // Keep splash screen until ready
 SplashScreen.preventAutoHideAsync();

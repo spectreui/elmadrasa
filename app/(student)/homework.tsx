@@ -3,24 +3,19 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
   StyleSheet,
-  Dimensions
 } from 'react-native';
 import Alert from '@/components/Alert';
 
 import { router } from 'expo-router';
-import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '../../src/contexts/ThemeContext';
 import { designTokens } from '../../src/utils/designTokens';
 import Animated, { FadeInUp, Layout, FadeIn } from 'react-native-reanimated';
-
-const { width } = Dimensions.get('window');
 
 // Add this helper function before the StudentHomeworkScreen component
 const getGradeColor = (grade: number, maxPoints: number) => {
@@ -44,9 +39,7 @@ const getGradeColor = (grade: number, maxPoints: number) => {
   }
 };
 
-
 export default function StudentHomeworkScreen() {
-  const { user } = useAuth();
   const { fontFamily, colors, isDark } = useThemeContext();
   const [homework, setHomework] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -139,7 +132,6 @@ export default function StudentHomeworkScreen() {
 
   const HomeworkCard = ({ item }: { item: any }) => {
     const dueStatus = getDueStatus(item.due_date, item.submitted, item.grade);
-    const isSmallScreen = width < 350;
 
     return (
       <TouchableOpacity
@@ -341,7 +333,7 @@ export default function StudentHomeworkScreen() {
                 All caught up!
               </Text>
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                You've completed all your assignments. Check back later for new ones.
+                You&apos;ve completed all your assignments. Check back later for new ones.
               </Text>
             </View>
           ) : (
