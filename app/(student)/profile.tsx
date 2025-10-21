@@ -6,8 +6,10 @@ import {
   TouchableOpacity,
   Switch,
   ActivityIndicator,
-  RefreshControl } from
-'react-native';
+  RefreshControl,
+  StyleSheet,
+  I18nManager
+} from 'react-native';
 import Alert from '@/components/Alert';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -15,9 +17,11 @@ import { useThemeContext } from '../../src/contexts/ThemeContext';
 import { apiService } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { designTokens } from '../../src/utils/designTokens';
-import Animated, { FadeIn } from 'react-native-reanimated';import { useTranslation } from "@/hooks/useTranslation";
+import Animated, { FadeIn } from 'react-native-reanimated';
+import { useTranslation } from "@/hooks/useTranslation";
 
-export default function ProfileScreen() {const { t } = useTranslation();
+export default function ProfileScreen() {
+  const { t, isRTL } = useTranslation();
   const { user, logout } = useAuth();
   const { fontFamily, colors, isDark, toggleTheme } = useThemeContext();
   const [activeTab, setActiveTab] = useState<'profile' | 'settings'>('profile');
@@ -28,14 +32,12 @@ export default function ProfileScreen() {const { t } = useTranslation();
     notifications: true
   });
 
-
   useEffect(() => {
     loadProfileData();
   }, []);
 
   const loadProfileData = async () => {
     try {
-      // Load real profile stats from API
       const statsResponse = await apiService.getStudentStats();
       if (statsResponse.data.success) {
         setProfileStats(statsResponse.data.data);
@@ -54,26 +56,26 @@ export default function ProfileScreen() {const { t } = useTranslation();
 
   const handleLogout = () => {
     Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
+      t("auth.logOut"),
+      t("auth.logOutConfirm"),
       [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: async () => {
-          setLoading(true);
-          try {
-            await logout();
-            router.push('/(auth)/login');
-          } catch (error) {
-            console.error('Logout error:', error);
-          } finally {
-            setLoading(false);
+        { text: t("common.cancel"), style: 'cancel' },
+        {
+          text: t("auth.logOut"),
+          style: 'destructive',
+          onPress: async () => {
+            setLoading(true);
+            try {
+              await logout();
+              router.push('/(auth)/login');
+            } catch (error) {
+              console.error('Logout error:', error);
+            } finally {
+              setLoading(false);
+            }
           }
         }
-      }]
-
+      ]
     );
   };
 
@@ -84,495 +86,453 @@ export default function ProfileScreen() {const { t } = useTranslation();
     }));
   };
 
-  const SettingItem = ({ title, description, value, onToggle
-
-
-
-
-  }: {title: string;description: string;value: boolean;onToggle: () => void;}) =>
-  <View
-    style={{
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingVertical: designTokens.spacing.lg,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.separator
-    }}>
-
-      <View style={{ flex: 1, marginRight: designTokens.spacing.md }}>
-        <Text
-        style={{
-          fontSize: designTokens.typography.body.fontSize,
-          color: colors.textPrimary,
-          fontWeight: '400',
-          marginBottom: 2
-        }}>
-
+  const SettingItem = ({ 
+    title, 
+    description, 
+    value, 
+    onToggle 
+  }: { 
+    title: string; 
+    description: string; 
+    value: boolean; 
+    onToggle: () => void; 
+  }) => (
+    <View style={[styles.settingItem, { 
+      borderBottomColor: colors.separator,
+      flexDirection: isRTL ? 'row-reverse' : 'row'
+    }]}>
+      <View style={{ flex: 1, [isRTL ? 'marginLeft' : 'marginRight']: designTokens.spacing.md }}>
+        <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>
           {title}
         </Text>
-        <Text
-        style={{
-          fontSize: designTokens.typography.footnote.fontSize,
-          color: colors.textSecondary
-        }}>
-
+        <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
           {description}
         </Text>
       </View>
       <Switch
-      value={value}
-      onValueChange={onToggle}
-      trackColor={{ false: colors.separator, true: colors.primary + '40' }}
-      thumbColor={value ? colors.primary : colors.backgroundElevated}
-      ios_backgroundColor={colors.separator} />
+        value={value}
+        onValueChange={onToggle}
+        trackColor={{ false: colors.separator, true: colors.primary + '40' }}
+        thumbColor={value ? colors.primary : colors.backgroundElevated}
+        ios_backgroundColor={colors.separator}
+      />
+    </View>
+  );
 
-    </View>;
-
-
-  const ProfileSection = ({ title, children }: {title: string;children: React.ReactNode;}) =>
-  <View style={{ marginBottom: designTokens.spacing.xl }}>
-      <Text
-      style={{
-        fontSize: designTokens.typography.title3.fontSize,
-        fontWeight: designTokens.typography.title3.fontWeight,
+  const ProfileSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <View style={styles.profileSection}>
+      <Text style={[styles.sectionTitle, { 
         color: colors.textPrimary,
-        marginBottom: designTokens.spacing.md,
-        paddingHorizontal: designTokens.spacing.xl
-      } as any}>
-
+        paddingHorizontal: designTokens.spacing.xl,
+        textAlign: isRTL ? 'right' : 'left'
+      }]}>
         {title}
       </Text>
-      <View
-      style={{
+      <View style={[styles.sectionContainer, { 
         backgroundColor: colors.backgroundElevated,
         marginHorizontal: designTokens.spacing.xl,
-        borderRadius: designTokens.borderRadius.xl,
-        overflow: 'hidden',
         ...designTokens.shadows.sm
-      }}>
-
+      }]}>
         {children}
       </View>
-    </View>;
-
+    </View>
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
-      <View
-        style={{
-          paddingTop: designTokens.spacing.xxxl,
-          paddingHorizontal: designTokens.spacing.xl,
-          paddingBottom: designTokens.spacing.lg,
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-
-        <Text
-          style={{
-            fontSize: designTokens.typography.largeTitle.fontSize,
-            fontWeight: designTokens.typography.largeTitle.fontWeight,
-            color: colors.textPrimary
-          } as any}>{t("profile.title")}
-
-
+      <View style={[styles.header, { 
+        flexDirection: isRTL ? 'row-reverse' : 'row'
+      }]}>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
+          {t("profile.title")}
         </Text>
-
-        {/* Dark Mode Toggle */}
         <TouchableOpacity
           onPress={toggleTheme}
-          style={{
-            padding: designTokens.spacing.sm,
-            borderRadius: designTokens.borderRadius.full,
-            backgroundColor: colors.backgroundElevated,
-            ...designTokens.shadows.sm
-          }}>
-
+          style={[styles.themeToggle, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm }]}
+        >
           <Ionicons
             name={isDark ? "sunny" : "moon"}
             size={24}
-            color={colors.textPrimary} />
-
+            color={colors.textPrimary}
+          />
         </TouchableOpacity>
       </View>
 
       {/* Tab Navigation */}
-      <View
-        style={{
-          flexDirection: 'row',
-          backgroundColor: colors.separator,
-          marginHorizontal: designTokens.spacing.xl,
-          borderRadius: designTokens.borderRadius.full,
-          padding: 2,
-          marginBottom: designTokens.spacing.xl
-        }}>
-
+      <View style={[styles.tabContainer, { 
+        backgroundColor: colors.separator,
+        marginHorizontal: designTokens.spacing.xl,
+        flexDirection: isRTL ? 'row-reverse' : 'row'
+      }]}>
         {[
-        { key: 'profile' as const, label: t("profile.title"), icon: 'person' },
-        { key: 'settings' as const, label: t("profile.settings"), icon: 'settings' }].
-        map((tab) =>
-        <TouchableOpacity
-          key={tab.key}
-          style={{
-            flex: 1,
-            paddingVertical: designTokens.spacing.md,
-            alignItems: 'center',
-            borderRadius: designTokens.borderRadius.full,
-            backgroundColor: activeTab === tab.key ? colors.backgroundElevated : 'transparent'
-          }}
-          onPress={() => setActiveTab(tab.key)}>
-
+          { key: 'profile', label: t("profile.title"), icon: 'person' },
+          { key: 'settings', label: t("profile.settings"), icon: 'settings' }
+        ].map((tab) => (
+          <TouchableOpacity
+            key={tab.key}
+            style={[
+              styles.tabButton,
+              {
+                backgroundColor: activeTab === tab.key ? colors.backgroundElevated : 'transparent',
+                flexDirection: isRTL ? 'row-reverse' : 'row'
+              }
+            ]}
+            onPress={() => setActiveTab(tab.key as any)}
+          >
             <Ionicons
-            name={tab.icon as any}
-            size={20}
-            color={activeTab === tab.key ? colors.primary : colors.textSecondary} />
-
-            <Text
-            style={{
-              fontSize: designTokens.typography.caption1.fontSize,
-              color: activeTab === tab.key ? colors.primary : colors.textSecondary,
-              fontWeight: '600',
-              marginTop: 4
-            }}>
-
+              name={tab.icon as any}
+              size={20}
+              color={activeTab === tab.key ? colors.primary : colors.textSecondary}
+            />
+            <Text style={[
+              styles.tabText,
+              {
+                color: activeTab === tab.key ? colors.primary : colors.textSecondary,
+                [isRTL ? 'marginRight' : 'marginLeft']: 4
+              }
+            ]}>
               {tab.label}
             </Text>
           </TouchableOpacity>
-        )}
+        ))}
       </View>
 
       <Animated.ScrollView
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        entering={FadeIn.duration(600)} // Smooth fade-in when screen loads
+        entering={FadeIn.duration(600)}
         refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={colors.primary} />
-
-        }>
-
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+          />
+        }
+      >
         <View style={{ paddingBottom: designTokens.spacing.xxxl }}>
-          {activeTab === 'profile' ?
-          <>
-              {/* Profile Header */}
-              <ProfileSection title="Student Information">
-                <View style={{ padding: designTokens.spacing.lg }}>
-                  <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  marginBottom: designTokens.spacing.xl
-                }}>
-                    <View
-                    style={{
-                      width: 70,
-                      height: 70,
-                      borderRadius: 35,
+          {activeTab === 'profile' ? (
+            <>
+              <ProfileSection title={t("profile.title")}>
+                <View style={styles.profileContent}>
+                  <View style={[styles.profileHeader, { 
+                    flexDirection: isRTL ? 'row-reverse' : 'row'
+                  }]}>
+                    <View style={[styles.avatarContainer, { 
                       backgroundColor: colors.primary + '15',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginRight: designTokens.spacing.lg
-                    }}>
-
-                      <Text style={{ fontFamily, 
-                      fontSize: 28,
-                      fontWeight: '700',
-                      color: colors.primary
-                    }}>
+                      [isRTL ? 'marginLeft' : 'marginRight']: designTokens.spacing.lg
+                    }]}>
+                      <Text style={[styles.avatarText, { 
+                        fontFamily,
+                        color: colors.primary
+                      }]}>
                         {user?.profile?.name?.charAt(0) || 'S'}
                       </Text>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text
-                      style={{
-                        fontSize: designTokens.typography.title2.fontSize,
-                        fontWeight: designTokens.typography.title2.fontWeight,
-                        color: colors.textPrimary,
-                        marginBottom: 2
-                      } as any}>
-
-                        {user?.profile?.name || 'Student'}
+                      <Text style={[styles.userName, { color: colors.textPrimary }]}>
+                        {user?.profile?.name || t("common.student")}
                       </Text>
-                      <Text
-                      style={{
-                        fontSize: designTokens.typography.body.fontSize,
-                        color: colors.textSecondary,
-                        marginBottom: 2
-                      }}>
-
-                        {user?.profile?.class ? `Class ${user.profile.class}` : 'No class assigned'}
+                      <Text style={[styles.userClass, { color: colors.textSecondary }]}>
+                        {user?.profile?.class ? `${t("classes.class")} ${user.profile.class}` : t("profile.notSet")}
                       </Text>
-                      <View style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: '#34C75915',
-                      alignSelf: 'flex-start',
-                      paddingHorizontal: designTokens.spacing.sm,
-                      paddingVertical: designTokens.spacing.xs,
-                      borderRadius: designTokens.borderRadius.full
-                    }}>
-                        <View style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: 4,
-                        backgroundColor: '#34C759',
-                        marginRight: 4
-                      }} />
-                        <Text
-                        style={{
-                          fontSize: designTokens.typography.caption1.fontSize,
-                          color: '#34C759',
-                          fontWeight: '600'
-                        }}>
-
+                      <View style={[styles.statusContainer, { 
+                        backgroundColor: '#34C75915',
+                        alignSelf: isRTL ? 'flex-end' : 'flex-start',
+                        flexDirection: isRTL ? 'row-reverse' : 'row'
+                      }]}>
+                        <View style={styles.statusDot} />
+                        <Text style={styles.statusText}>
                           {user?.is_approved ? t("common.active") : t("common.pending")}
                         </Text>
                       </View>
                     </View>
                   </View>
 
-                  <View style={{
-                  borderTopWidth: 1,
-                  borderTopColor: colors.separator,
-                  paddingTop: designTokens.spacing.lg
-                }}>
-                    <View style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    marginBottom: designTokens.spacing.md
-                  }}>
-                      <Text style={{ fontFamily, 
-                      fontSize: designTokens.typography.body.fontSize,
-                      color: colors.textSecondary
-                    }}>
-                        Student ID
+                  <View style={[styles.infoSection, { 
+                    borderTopColor: colors.separator,
+                    flexDirection: isRTL ? 'row-reverse' : 'row'
+                  }]}>
+                    <View style={styles.infoRow}>
+                      <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+                        {t("profile.studentId")}
                       </Text>
-                      <Text style={{ fontFamily, 
-                      fontSize: designTokens.typography.body.fontSize,
-                      color: colors.textPrimary,
-                      fontWeight: '500'
-                    }}>
-                        {user?.student_id || 'Not set'}
+                      <Text style={[styles.infoValue, { color: colors.textPrimary }]}>
+                        {user?.student_id || t("profile.notSet")}
                       </Text>
                     </View>
-                    <View style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    marginBottom: designTokens.spacing.md
-                  }}>
-                      <Text style={{ fontFamily, 
-                      fontSize: designTokens.typography.body.fontSize,
-                      color: colors.textSecondary
-                    }}>{t("profile.email")}
-
-                    </Text>
-                      <Text style={{ fontFamily, 
-                      fontSize: designTokens.typography.body.fontSize,
-                      color: colors.textPrimary,
-                      fontWeight: '500'
-                    }}>
-                        {user?.email}
+                    <View style={styles.infoRow}>
+                      <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+                        {t("profile.email")}
+                      </Text>
+                      <Text style={[styles.infoValue, { color: colors.textPrimary }]}>
+                        {user?.email || t("profile.na")}
                       </Text>
                     </View>
-                    <View style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between'
-                  }}>
-                      <Text style={{ fontFamily, 
-                      fontSize: designTokens.typography.body.fontSize,
-                      color: colors.textSecondary
-                    }}>{t("profile.accountCreated")}
-
-                    </Text>
-                      <Text style={{ fontFamily, 
-                      fontSize: designTokens.typography.body.fontSize,
-                      color: colors.textPrimary,
-                      fontWeight: '500'
-                    }}>
-                        {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                    <View style={styles.infoRow}>
+                      <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+                        {t("profile.accountCreated")}
+                      </Text>
+                      <Text style={[styles.infoValue, { color: colors.textPrimary }]}>
+                        {user?.created_at ? new Date(user.created_at).toLocaleDateString() : t("profile.na")}
                       </Text>
                     </View>
                   </View>
                 </View>
               </ProfileSection>
 
-              {/* Performance Stats */}
-              {profileStats &&
-            <ProfileSection title="Performance">
-                  <View style={{ padding: designTokens.spacing.lg }}>
-                    <View style={{
-                  flexDirection: 'row',
-                  marginBottom: designTokens.spacing.lg
-                }}>
-                      <View style={{
-                    flex: 1,
-                    alignItems: 'center',
-                    borderRightWidth: 1,
-                    borderRightColor: colors.separator,
-                    paddingRight: designTokens.spacing.lg
-                  }}>
-                        <Text
-                      style={{
-                        fontSize: designTokens.typography.title1.fontSize,
-                        fontWeight: designTokens.typography.title1.fontWeight,
-                        color: colors.textPrimary,
-                        marginBottom: 2
-                      } as any}>
-
+              {profileStats && (
+                <ProfileSection title={t("profile.performance")}>
+                  <View style={styles.statsContainer}>
+                    <View style={[styles.statsRow, { 
+                      flexDirection: isRTL ? 'row-reverse' : 'row'
+                    }]}>
+                      <View style={styles.statItem}>
+                        <Text style={[styles.statValue, { color: colors.textPrimary }]}>
                           {profileStats.averageScore || '0'}%
                         </Text>
-                        <Text style={{ fontFamily, 
-                      fontSize: designTokens.typography.footnote.fontSize,
-                      color: colors.textSecondary
-                    }}>
-                          Average
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                          {t("profile.average")}
                         </Text>
                       </View>
-                      <View style={{
-                    flex: 1,
-                    alignItems: 'center',
-                    borderRightWidth: 1,
-                    borderRightColor: colors.separator,
-                    paddingHorizontal: designTokens.spacing.lg
-                  }}>
-                        <Text
-                      style={{
-                        fontSize: designTokens.typography.title1.fontSize,
-                        fontWeight: designTokens.typography.title1.fontWeight,
-                        color: colors.textPrimary,
-                        marginBottom: 2
-                      } as any}>
-
+                      <View style={styles.statItem}>
+                        <Text style={[styles.statValue, { color: colors.textPrimary }]}>
                           {profileStats.examsCompleted || '0'}
                         </Text>
-                        <Text style={{ fontFamily, 
-                      fontSize: designTokens.typography.footnote.fontSize,
-                      color: colors.textSecondary
-                    }}>
-                          Completed
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                          {t("profile.completed")}
                         </Text>
                       </View>
-                      <View style={{
-                    flex: 1,
-                    alignItems: 'center',
-                    paddingLeft: designTokens.spacing.lg
-                  }}>
-                        <Text
-                      style={{
-                        fontSize: designTokens.typography.title1.fontSize,
-                        fontWeight: designTokens.typography.title1.fontWeight,
-                        color: colors.textPrimary,
-                        marginBottom: 2
-                      } as any}>
-
+                      <View style={styles.statItem}>
+                        <Text style={[styles.statValue, { color: colors.textPrimary }]}>
                           #{profileStats.rank || '--'}
                         </Text>
-                        <Text style={{ fontFamily, 
-                      fontSize: designTokens.typography.footnote.fontSize,
-                      color: colors.textSecondary
-                    }}>
-                          Rank
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                          {t("profile.rank")}
                         </Text>
                       </View>
                     </View>
                   </View>
                 </ProfileSection>
-            }
-            </> :
-
-          <>
-              <ProfileSection title="Preferences">
-                <View style={{ paddingHorizontal: designTokens.spacing.lg }}>
+              )}
+            </>
+          ) : (
+            <>
+              <ProfileSection title={t("profile.preferences")}>
+                <View style={styles.settingsContainer}>
                   <SettingItem
-                  title="Notifications"
-                  description="Exam reminders and updates"
-                  value={settings.notifications}
-                  onToggle={() => toggleSetting('notifications')} />
-
+                    title={t("notifications.general")}
+                    description={t("notifications.generalDesc")}
+                    value={settings.notifications}
+                    onToggle={() => toggleSetting('notifications')}
+                  />
                 </View>
               </ProfileSection>
 
-              {/* Dark Mode Setting */}
-              <ProfileSection title="Appearance">
-                <View style={{ paddingHorizontal: designTokens.spacing.lg }}>
-                  <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    paddingVertical: designTokens.spacing.lg
-                  }}>
-
-                    <View style={{ flex: 1, marginRight: designTokens.spacing.md }}>
-                      <Text
-                      style={{
-                        fontSize: designTokens.typography.body.fontSize,
-                        color: colors.textPrimary,
-                        fontWeight: '400',
-                        marginBottom: 2
-                      }}>{t("system.darkMode")}
-
-
-                    </Text>
-                      <Text
-                      style={{
-                        fontSize: designTokens.typography.footnote.fontSize,
-                        color: colors.textSecondary
-                      }}>{t("system.darkModeDesc")}
-
-
-                    </Text>
+              <ProfileSection title={t("system.preferences")}>
+                <View style={styles.settingsContainer}>
+                  <View style={[styles.settingItem, { 
+                    borderBottomColor: colors.separator,
+                    flexDirection: isRTL ? 'row-reverse' : 'row'
+                  }]}>
+                    <View style={{ flex: 1, [isRTL ? 'marginLeft' : 'marginRight']: designTokens.spacing.md }}>
+                      <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>
+                        {t("system.darkMode")}
+                      </Text>
+                      <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+                        {t("system.darkModeDesc")}
+                      </Text>
                     </View>
                     <Switch
-                    value={isDark}
-                    onValueChange={toggleTheme}
-                    trackColor={{ false: colors.separator, true: colors.primary + '40' }}
-                    thumbColor={isDark ? colors.primary : colors.backgroundElevated}
-                    ios_backgroundColor={colors.separator} />
-
+                      value={isDark}
+                      onValueChange={toggleTheme}
+                      trackColor={{ false: colors.separator, true: colors.primary + '40' }}
+                      thumbColor={isDark ? colors.primary : colors.backgroundElevated}
+                      ios_backgroundColor={colors.separator}
+                    />
                   </View>
                 </View>
               </ProfileSection>
             </>
-          }
+          )}
 
-          {/* Logout Button */}
-          <View style={{
+          <View style={{ 
             paddingHorizontal: designTokens.spacing.xl,
             marginTop: designTokens.spacing.xl
           }}>
             <TouchableOpacity
               onPress={handleLogout}
               disabled={loading}
-              style={{
+              style={[styles.logoutButton, { 
                 backgroundColor: colors.error + '10',
-                padding: designTokens.spacing.lg,
-                borderRadius: designTokens.borderRadius.xl,
-                alignItems: 'center',
-                borderWidth: 1,
                 borderColor: colors.error + '20'
-              }}>
-
-              {loading ?
-              <ActivityIndicator size="small" color={colors.error} /> :
-
-              <Text
-                style={{
-                  fontSize: designTokens.typography.headline.fontSize,
-                  color: colors.error,
-                  fontWeight: '600'
-                }}>{t("auth.logOut")}
-
-
-              </Text>
-              }
+              }]}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color={colors.error} />
+              ) : (
+                <Text style={[styles.logoutText, { color: colors.error }]}>
+                  {t("auth.logOut")}
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
       </Animated.ScrollView>
-    </View>);
-
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  header: {
+    paddingTop: designTokens.spacing.xxxl,
+    paddingHorizontal: designTokens.spacing.xl,
+    paddingBottom: designTokens.spacing.lg,
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  headerTitle: {
+    fontSize: designTokens.typography.largeTitle.fontSize,
+    fontWeight: designTokens.typography.largeTitle.fontWeight,
+  },
+  themeToggle: {
+    padding: designTokens.spacing.sm,
+    borderRadius: designTokens.borderRadius.full,
+  },
+  tabContainer: {
+    borderRadius: designTokens.borderRadius.full,
+    padding: 2,
+    marginBottom: designTokens.spacing.xl
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: designTokens.spacing.md,
+    alignItems: 'center',
+    borderRadius: designTokens.borderRadius.full,
+    flexDirection: 'row'
+  },
+  tabText: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    fontWeight: '600',
+    marginTop: 4
+  },
+  profileSection: {
+    marginBottom: designTokens.spacing.xl
+  },
+  sectionTitle: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: designTokens.typography.title3.fontWeight,
+    marginBottom: designTokens.spacing.md
+  },
+  sectionContainer: {
+    borderRadius: designTokens.borderRadius.xl,
+    overflow: 'hidden'
+  },
+  profileContent: {
+    padding: designTokens.spacing.lg
+  },
+  profileHeader: {
+    alignItems: 'center',
+    marginBottom: designTokens.spacing.xl
+  },
+  avatarContainer: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  avatarText: {
+    fontSize: 28,
+    fontWeight: '700'
+  },
+  userName: {
+    fontSize: designTokens.typography.title2.fontSize,
+    fontWeight: designTokens.typography.title2.fontWeight,
+    marginBottom: 2
+  },
+  userClass: {
+    fontSize: designTokens.typography.body.fontSize,
+    marginBottom: 2
+  },
+  statusContainer: {
+    paddingHorizontal: designTokens.spacing.sm,
+    paddingVertical: designTokens.spacing.xs,
+    borderRadius: designTokens.borderRadius.full,
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#34C759',
+    [I18nManager.isRTL ? 'marginLeft' : 'marginRight']: 4
+  },
+  statusText: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    color: '#34C759',
+    fontWeight: '600'
+  },
+  infoSection: {
+    borderTopWidth: 1,
+    paddingTop: designTokens.spacing.lg
+  },
+  infoRow: {
+    marginBottom: designTokens.spacing.md
+  },
+  infoLabel: {
+    fontSize: designTokens.typography.body.fontSize,
+    marginBottom: 2
+  },
+  infoValue: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '500'
+  },
+  statsContainer: {
+    padding: designTokens.spacing.lg
+  },
+  statsRow: {
+    marginBottom: designTokens.spacing.lg
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center'
+  },
+  statValue: {
+    fontSize: designTokens.typography.title1.fontSize,
+    fontWeight: designTokens.typography.title1.fontWeight,
+    marginBottom: 2
+  },
+  statLabel: {
+    fontSize: designTokens.typography.footnote.fontSize
+  },
+  settingsContainer: {
+    paddingHorizontal: designTokens.spacing.lg
+  },
+  settingItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: designTokens.spacing.lg,
+    borderBottomWidth: 1
+  },
+  settingTitle: {
+    fontSize: designTokens.typography.body.fontSize,
+    fontWeight: '400',
+    marginBottom: 2
+  },
+  settingDescription: {
+    fontSize: designTokens.typography.footnote.fontSize
+  },
+  logoutButton: {
+    padding: designTokens.spacing.lg,
+    borderRadius: designTokens.borderRadius.xl,
+    alignItems: 'center',
+    borderWidth: 1
+  },
+  logoutText: {
+    fontSize: designTokens.typography.headline.fontSize,
+    fontWeight: '600'
+  }
+});

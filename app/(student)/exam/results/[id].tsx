@@ -17,6 +17,7 @@ import { designTokens } from '../../../../src/utils/designTokens';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { ShareModal } from '@/components/ShareModal';
 import { generateExamResultsLink } from '@/utils/linking';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ResultData {
   submission: {
@@ -58,6 +59,7 @@ interface ResultData {
 }
 
 export default function ExamResultsScreen() {
+  const { t, isRTL } = useTranslation();
   const router = useRouter();
   const params = useLocalSearchParams();
   const { fontFamily, colors, isDark } = useThemeContext();
@@ -93,7 +95,7 @@ export default function ExamResultsScreen() {
         if (response.data.success) {
           setResultData(response.data.data);
         } else {
-          Alert.alert('Error', response.data.error || 'Failed to load results');
+          Alert.alert(t('common.error'), response.data.error || t('exams.resultsLoadFailed'));
         }
       } else {
         // If no submission ID, try to get latest submission for the exam
@@ -103,15 +105,15 @@ export default function ExamResultsScreen() {
           if (response.data.success && response.data.data) {
             setResultData(response.data.data);
           } else {
-            Alert.alert('Error', 'No submission found for this exam');
+            Alert.alert(t('common.error'), t('exams.noSubmissionFound'));
           }
         } else {
-          Alert.alert('Error', 'No exam or submission ID provided');
+          Alert.alert(t('common.error'), t('exams.noIdProvided'));
         }
       }
     } catch (error: any) {
       console.error('Failed to load results:', error);
-      Alert.alert('Error', error.message || 'Failed to load results');
+      Alert.alert(t('common.error'), error.message || t('exams.loadResultsFailed'));
     } finally {
       setLoading(false);
     }
@@ -125,10 +127,10 @@ export default function ExamResultsScreen() {
   };
 
   const getGradeText = (percentage: number) => {
-    if (percentage >= 90) return 'Excellent!';
-    if (percentage >= 80) return 'Good Job!';
-    if (percentage >= 70) return 'Not Bad!';
-    return 'Needs Improvement';
+    if (percentage >= 90) return t('exams.excellent');
+    if (percentage >= 80) return t('exams.goodJob');
+    if (percentage >= 70) return t('exams.notBad');
+    return t('exams.needsImprovement');
   };
 
   if (loading) {
@@ -137,7 +139,7 @@ export default function ExamResultsScreen() {
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.textSecondary, fontFamily }]}>
-            Loading Results...
+            {t('exams.loadingResults')}
           </Text>
         </View>
       </SafeAreaView>
@@ -150,16 +152,18 @@ export default function ExamResultsScreen() {
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle" size={64} color={isDark ? '#FF453A' : '#FF3B30'} />
           <Text style={[styles.errorText, { color: isDark ? '#FF453A' : '#FF3B30', fontFamily }]}>
-            Results Not Available
+            {t('exams.resultsNotAvailable')}
           </Text>
           <Text style={[styles.errorSubtext, { color: colors.textSecondary, fontFamily }]}>
-            Unable to load exam results. Please try again later.
+            {t('exams.unableToLoad')}
           </Text>
           <TouchableOpacity
             style={[styles.button, { backgroundColor: colors.primary }]}
             onPress={() => router.push('/exams')}
           >
-            <Text style={[styles.buttonText, { fontFamily }]}>Back to Exams</Text>
+            <Text style={[styles.buttonText, { fontFamily }]}>
+              {t('exams.backToExams')}
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -185,10 +189,14 @@ export default function ExamResultsScreen() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={24} color={colors.primary} />
+          <Ionicons 
+            name={isRTL ? "arrow-forward" : "arrow-back"} 
+            size={24} 
+            color={colors.primary} 
+          />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary, fontFamily }]}>
-          Exam Results
+          {t('exams.examResults')}
         </Text>
         <TouchableOpacity
           style={styles.backButton}
@@ -207,10 +215,10 @@ export default function ExamResultsScreen() {
           <View style={[styles.pendingGrading, { backgroundColor: colors.backgroundElevated }]}>
             <Ionicons name="time" size={32} color={colors.textTertiary} />
             <Text style={[styles.pendingText, { color: colors.textPrimary, fontFamily }]}>
-              Awaiting Manual Grading
+              {t('exams.awaitingGrading')}
             </Text>
             <Text style={[styles.pendingSubtext, { color: colors.textSecondary, fontFamily }]}>
-              Your teacher will grade this submission manually. You&apos;ll be notified when it&apos;s ready.
+              {t('exams.teacherWillGrade')}
             </Text>
           </View>
         ) : (
@@ -244,13 +252,13 @@ export default function ExamResultsScreen() {
               {getGradeText(percentage)}
             </Text>
 
-            <View style={styles.statsGrid}>
+            <View style={[styles.statsGrid, isRTL && styles.rtlRow]}>
               <View style={styles.statItem}>
                 <Text style={[styles.statNumber, { color: colors.textPrimary, fontFamily }]}>
                   {correctAnswers}
                 </Text>
                 <Text style={[styles.statLabel, { color: colors.textTertiary, fontFamily }]}>
-                  Correct
+                  {t('exams.correct')}
                 </Text>
               </View>
               <View style={styles.statItem}>
@@ -258,7 +266,7 @@ export default function ExamResultsScreen() {
                   {totalQuestions - correctAnswers}
                 </Text>
                 <Text style={[styles.statLabel, { color: colors.textTertiary, fontFamily }]}>
-                  Incorrect
+                  {t('exams.incorrect')}
                 </Text>
               </View>
               <View style={styles.statItem}>
@@ -266,7 +274,7 @@ export default function ExamResultsScreen() {
                   {totalQuestions}
                 </Text>
                 <Text style={[styles.statLabel, { color: colors.textTertiary, fontFamily }]}>
-                  Total
+                  {t('exams.total')}
                 </Text>
               </View>
             </View>
@@ -279,10 +287,10 @@ export default function ExamResultsScreen() {
             backgroundColor: colors.backgroundElevated,
             borderColor: colors.primary
           }]}>
-            <View style={styles.feedbackHeader}>
+            <View style={[styles.feedbackHeader, isRTL && styles.rtlRow]}>
               <Ionicons name="chatbubble-ellipses" size={20} color={colors.primary} />
               <Text style={[styles.feedbackTitle, { color: colors.textPrimary, fontFamily }]}>
-                Teacher Feedback
+                {t('exams.teacherFeedback')}
               </Text>
             </View>
             <Text style={[styles.feedbackText, { color: colors.textPrimary, fontFamily }]}>
@@ -295,16 +303,16 @@ export default function ExamResultsScreen() {
           <View style={[styles.answersSection, {
             backgroundColor: colors.backgroundElevated
           }]}>
-            <View style={styles.sectionHeader}>
+            <View style={[styles.sectionHeader, isRTL && styles.rtlRow]}>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary, fontFamily }]}>
-                Answer Review
+                {t('exams.answerReview')}
               </Text>
               <TouchableOpacity
                 style={[styles.toggleButton, { backgroundColor: colors.primary }]}
                 onPress={() => setShowAllAnswers(!showAllAnswers)}
               >
                 <Text style={[styles.toggleButtonText, { fontFamily }]}>
-                  {showAllAnswers ? 'Show Summary' : 'Show All Answers'}
+                  {showAllAnswers ? t('exams.showSummary') : t('exams.showAllAnswers')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -317,9 +325,9 @@ export default function ExamResultsScreen() {
                     <View key={answer.question_id} style={[styles.answerItem, {
                       backgroundColor: isDark ? '#1C1C1E' : '#F8F8F8'
                     }]}>
-                      <View style={styles.questionHeader}>
+                      <View style={[styles.questionHeader, isRTL && styles.rtlRow]}>
                         <Text style={[styles.questionNumber, { color: colors.textPrimary, fontFamily }]}>
-                          Q{index + 1}
+                          {t('exams.questionAbbr')}{index + 1}
                         </Text>
 
                         {answer.needs_grading ? (
@@ -331,7 +339,7 @@ export default function ExamResultsScreen() {
                               styles.pendingBadgeText,
                               { color: isDark ? '#FF9F0A' : '#FF9500', fontFamily }
                             ]}>
-                              Pending Review
+                              {t('exams.pendingReview')}
                             </Text>
                           </View>
                         ) : (
@@ -353,13 +361,13 @@ export default function ExamResultsScreen() {
                                 fontFamily
                               }
                             ]}>
-                              {answer.is_correct ? 'Correct' : 'Incorrect'}
+                              {answer.is_correct ? t('exams.correct') : t('exams.incorrect')}
                             </Text>
                           </View>
                         )}
 
                         <Text style={[styles.pointsText, { color: colors.textTertiary, fontFamily }]}>
-                          {answer.points}/{question?.points || 0} pts
+                          {answer.points}/{question?.points || 0} {t('common.points')}
                         </Text>
                       </View>
 
@@ -372,7 +380,7 @@ export default function ExamResultsScreen() {
                           {question.type === 'mcq' && (
                             <View style={styles.optionsReview}>
                               <Text style={[styles.answerLabel, { color: colors.textSecondary, fontFamily }]}>
-                                Your answer:
+                                {t('exams.yourAnswer')}:
                               </Text>
                               <Text style={[
                                 styles.answerText,
@@ -381,13 +389,13 @@ export default function ExamResultsScreen() {
                                   : (isDark ? styles.incorrectTextDark : styles.incorrectText),
                                 { color: colors.textPrimary, fontFamily }
                               ]}>
-                                {answer.answer || 'No answer provided'}
+                                {answer.answer || t('exams.noAnswerProvided')}
                               </Text>
 
                               {!answer.is_correct && !answer.needs_grading && (
                                 <>
                                   <Text style={[styles.answerLabel, { color: colors.textSecondary, fontFamily }]}>
-                                    Correct answer:
+                                    {t('exams.correctAnswer')}:
                                   </Text>
                                   <Text style={[
                                     styles.correctAnswerText,
@@ -407,7 +415,7 @@ export default function ExamResultsScreen() {
                           {question.type === 'text' && (
                             <View style={styles.textAnswerReview}>
                               <Text style={[styles.answerLabel, { color: colors.textSecondary, fontFamily }]}>
-                                Your answer:
+                                {t('exams.yourAnswer')}:
                               </Text>
                               <Text style={[
                                 styles.textAnswer,
@@ -418,7 +426,7 @@ export default function ExamResultsScreen() {
                                   fontFamily
                                 }
                               ]}>
-                                {answer.answer || 'No answer provided'}
+                                {answer.answer || t('exams.noAnswerProvided')}
                               </Text>
 
                               {answer.needs_grading && (
@@ -431,7 +439,7 @@ export default function ExamResultsScreen() {
                                     color: isDark ? '#FF9F0A' : '#FF9500',
                                     fontFamily
                                   }]}>
-                                    Awaiting teacher review
+                                    {t('exams.awaitingTeacherReview')}
                                   </Text>
                                 </View>
                               )}
@@ -445,7 +453,7 @@ export default function ExamResultsScreen() {
                               borderColor: isDark ? '#30D158' : '#34C759'
                             }]}>
                               <Text style={[styles.correctAnswerLabel, { color: colors.textPrimary, fontFamily }]}>
-                                Correct Answer:
+                                {t('exams.correctAnswer')}:
                               </Text>
                               <Text style={[styles.correctAnswerValue, { color: colors.textPrimary, fontFamily }]}>
                                 {question.correct_answer}
@@ -459,10 +467,10 @@ export default function ExamResultsScreen() {
                               backgroundColor: isDark ? '#0A84FF20' : '#007AFF20',
                               borderColor: isDark ? '#0A84FF' : '#007AFF'
                             }]}>
-                              <View style={styles.explanationHeader}>
+                              <View style={[styles.explanationHeader, isRTL && styles.rtlRow]}>
                                 <Ionicons name="information-circle" size={16} color={isDark ? '#0A84FF' : '#007AFF'} />
                                 <Text style={[styles.explanationTitle, { color: colors.textPrimary, fontFamily }]}>
-                                  Explanation
+                                  {t('exams.explanation')}
                                 </Text>
                               </View>
                               <Text style={[styles.explanationText, { color: colors.textPrimary, fontFamily }]}>
@@ -478,28 +486,28 @@ export default function ExamResultsScreen() {
               </View>
             ) : (
               <View style={styles.summaryView}>
-                <View style={styles.correctAnswers}>
+                <View style={[styles.correctAnswers, isRTL && styles.rtlRow]}>
                   <Ionicons
                     name="checkmark-circle"
                     size={20}
                     color={isDark ? '#30D158' : '#34C759'}
                   />
                   <Text style={[styles.summaryText, { color: colors.textPrimary, fontFamily }]}>
-                    {correctAnswers} questions correct
+                    {correctAnswers} {t('exams.questionsCorrect')}
                   </Text>
                 </View>
-                <View style={styles.incorrectAnswers}>
+                <View style={[styles.incorrectAnswers, isRTL && styles.rtlRow]}>
                   <Ionicons
                     name="close-circle"
                     size={20}
                     color={isDark ? '#FF453A' : '#FF3B30'}
                   />
                   <Text style={[styles.summaryText, { color: colors.textPrimary, fontFamily }]}>
-                    {totalQuestions - correctAnswers} questions incorrect
+                    {totalQuestions - correctAnswers} {t('exams.questionsIncorrect')}
                   </Text>
                 </View>
                 <Text style={[styles.summaryHint, { color: colors.textTertiary, fontFamily }]}>
-                  Tap &quot;Show All Answers&quot; to review each question in detail
+                  {t('exams.tapToShowAll')}
                 </Text>
               </View>
             )}
@@ -507,13 +515,15 @@ export default function ExamResultsScreen() {
         )}
 
         {/* Action Buttons */}
-        <View style={styles.actionButtons}>
+        <View style={[styles.actionButtons, isRTL && styles.rtlActions]}>
           <TouchableOpacity
             style={[styles.primaryButton, { backgroundColor: colors.primary }]}
             onPress={() => router.replace('/(student)/exams')}
           >
             <Ionicons name="list" size={20} color="#FFFFFF" />
-            <Text style={[styles.primaryButtonText, { fontFamily }]}>Back to Exams</Text>
+            <Text style={[styles.primaryButtonText, { fontFamily }]}>
+              {t('exams.backToExams')}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -525,7 +535,7 @@ export default function ExamResultsScreen() {
           >
             <Ionicons name="home" size={20} color={colors.primary} />
             <Text style={[styles.secondaryButtonText, { color: colors.primary, fontFamily }]}>
-              Go to Dashboard
+              {t('exams.goToDashboard')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -533,12 +543,12 @@ export default function ExamResultsScreen() {
         <ShareModal
           visible={showShareModal}
           onClose={() => setShowShareModal(false)}
-          title={`Exam Results: ${resultData?.exam?.title || 'Results'}`}
+          title={`${t('exams.examResults')}: ${resultData?.exam?.title || t('exams.results')}`}
           link={generateExamResultsLink(
             resultData?.submission?.id || '',
             { title: resultData?.exam?.title }
           )}
-          subject="Exam Results"
+          subject={t('exams.examResults')}
         />
       </Animated.ScrollView>
     </SafeAreaView >
@@ -652,6 +662,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
+  },
+  rtlRow: {
+    flexDirection: 'row-reverse',
   },
   statItem: {
     alignItems: 'center',
@@ -870,6 +883,9 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     padding: 16,
+  },
+  rtlActions: {
+    alignItems: 'flex-end',
   },
   primaryButton: {
     flexDirection: 'row',

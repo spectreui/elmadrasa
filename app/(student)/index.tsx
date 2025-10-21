@@ -5,17 +5,20 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
-  RefreshControl} from
-"react-native";
+  RefreshControl,
+  StyleSheet
+} from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { apiService } from "../../src/services/api";
 import { Ionicons } from "@expo/vector-icons";
 import { designTokens } from "../../src/utils/designTokens";
 import { useThemeContext } from "../../src/contexts/ThemeContext";
-import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';import { useTranslation } from "@/hooks/useTranslation";
+import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
+import { useTranslation } from "@/hooks/useTranslation";
 
-export default function StudentDashboard() {const { t } = useTranslation();
+export default function StudentDashboard() {
+  const { t, isRTL } = useTranslation();
   const { user } = useAuth();
   const { isDark, colors, fontFamily, toggleTheme } = useThemeContext();
   const [stats, setStats] = useState<any>(null);
@@ -33,9 +36,9 @@ export default function StudentDashboard() {const { t } = useTranslation();
 
       // Load real data from API
       const [statsResponse, examsResponse] = await Promise.all([
-      apiService.getStudentDashboard(),
-      apiService.getUpcomingExams()]
-      );
+        apiService.getStudentDashboard(),
+        apiService.getUpcomingExams()
+      ]);
 
       if (statsResponse.data.success) {
         setStats(statsResponse.data.data);
@@ -57,242 +60,175 @@ export default function StudentDashboard() {const { t } = useTranslation();
     loadDashboardData();
   };
 
-  const StatCard = ({ title, value, icon, color, index
-
-
-
-
-
-  }: {title: string;value: string | number;icon: string;color: string;index: number; // Add this prop
-  }) => <Animated.View
-    entering={FadeInUp.delay(index * 100)} // Each card appears with delay
-    style={{
-      backgroundColor: colors.backgroundElevated,
-      borderRadius: designTokens.borderRadius.xl,
-      padding: designTokens.spacing.lg,
-      ...designTokens.shadows.md,
-      flex: 1,
-      marginHorizontal: designTokens.spacing.xs
-    }}>
-
-      <View style={{
-      width: 44,
-      height: 44,
-      borderRadius: designTokens.borderRadius.full,
-      backgroundColor: `${color}15`,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: designTokens.spacing.sm
-    }}>
+  const StatCard = ({ title, value, icon, color, index }: {
+    title: string;
+    value: string | number;
+    icon: string;
+    color: string;
+    index: number;
+  }) => (
+    <Animated.View
+      entering={FadeInUp.delay(index * 100)}
+      style={[
+        styles.statCard,
+        {
+          backgroundColor: colors.backgroundElevated,
+          ...designTokens.shadows.md,
+        }
+      ]}
+    >
+      <View style={[styles.statIcon, { backgroundColor: `${color}15` }]}>
         <Ionicons name={icon as any} size={20} color={color} />
       </View>
       <Text
-      style={{
-        fontSize: designTokens.typography.title2.fontSize,
-        fontWeight: designTokens.typography.title2.fontWeight,
-        color: colors.textPrimary,
-        marginBottom: 2
-      } as any}>
-
+        style={[
+          styles.statValue,
+          { fontFamily, color: colors.textPrimary }
+        ]}
+      >
         {value}
       </Text>
       <Text
-      style={{
-        fontSize: designTokens.typography.footnote.fontSize,
-        color: colors.textTertiary
-      }}>
-
+        style={[
+          styles.statLabel,
+          { fontFamily, color: colors.textTertiary }
+        ]}
+      >
         {title}
       </Text>
-    </Animated.View>;
+    </Animated.View>
+  );
 
-
-  const QuickAction = ({ title, icon, onPress, color
-
-
-
-
-  }: {title: string;icon: string;onPress: () => void;color: string;}) =>
-  <TouchableOpacity
-    onPress={onPress}
-    style={{
-      backgroundColor: colors.backgroundElevated,
-      borderRadius: designTokens.borderRadius.xl,
-      padding: designTokens.spacing.lg,
-      ...designTokens.shadows.sm,
-      flex: 1,
-      marginHorizontal: designTokens.spacing.xs,
-      alignItems: 'center'
-    }}>
-
-      <View
-      style={{
-        width: 50,
-        height: 50,
-        borderRadius: designTokens.borderRadius.full,
-        backgroundColor: `${color}15`,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: designTokens.spacing.sm
-      }}>
-
+  const QuickAction = ({ title, icon, onPress, color }: {
+    title: string;
+    icon: string;
+    onPress: () => void;
+    color: string;
+  }) => (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[
+        styles.quickAction,
+        {
+          backgroundColor: colors.backgroundElevated,
+          ...designTokens.shadows.sm,
+        }
+      ]}
+    >
+      <View style={[styles.actionIcon, { backgroundColor: `${color}15` }]}>
         <Ionicons name={icon as any} size={24} color={color} />
       </View>
       <Text
-      style={{
-        fontSize: designTokens.typography.footnote.fontSize,
-        fontWeight: '600',
-        color: colors.textPrimary,
-        textAlign: 'center'
-      }}>
-
+        style={[
+          styles.actionText,
+          { fontFamily, color: colors.textPrimary }
+        ]}
+      >
         {title}
       </Text>
-    </TouchableOpacity>;
+    </TouchableOpacity>
+  );
 
-
-  const UpcomingExamCard = ({ exam }: {exam: any;}) =>
-  <TouchableOpacity
-    onPress={() => router.push(`/exam/${exam.id}`)}
-    style={{
-      backgroundColor: colors.backgroundElevated,
-      borderRadius: designTokens.borderRadius.xl,
-      padding: designTokens.spacing.lg,
-      ...designTokens.shadows.sm,
-      marginBottom: designTokens.spacing.sm
-    }}>
-
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <View style={{
-        width: 40,
-        height: 40,
-        borderRadius: 10,
-        backgroundColor: '#007AFF15',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: designTokens.spacing.md
-      }}>
+  const UpcomingExamCard = ({ exam }: { exam: any }) => (
+    <TouchableOpacity
+      onPress={() => router.push(`/exam/${exam.id}`)}
+      style={[
+        styles.examCard,
+        {
+          backgroundColor: colors.backgroundElevated,
+          ...designTokens.shadows.sm,
+        }
+      ]}
+    >
+      <View style={[styles.examCardRow, isRTL && styles.rtlRow]}>
+        <View style={[styles.examIcon, { backgroundColor: '#007AFF15' }]}>
           <Ionicons name="document-text" size={20} color="#007AFF" />
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={styles.examInfo}>
           <Text
-          style={{
-            fontSize: designTokens.typography.headline.fontSize,
-            fontWeight: designTokens.typography.headline.fontWeight,
-            color: colors.textPrimary,
-            marginBottom: 2
-          } as any}
-          numberOfLines={1}>
-
+            style={[
+              styles.examTitle,
+              { fontFamily, color: colors.textPrimary }
+            ]}
+            numberOfLines={1}
+          >
             {exam.title}
           </Text>
           <Text
-          style={{
-            fontSize: designTokens.typography.footnote.fontSize,
-            color: colors.textSecondary
-          }}>
-
-            {exam.subject} • Due {new Date(exam.due_date).toLocaleDateString()}
+            style={[
+              styles.examDetails,
+              { fontFamily, color: colors.textSecondary }
+            ]}
+          >
+            {exam.subject} • {t('dashboard.due')} {new Date(exam.due_date).toLocaleDateString()}
           </Text>
         </View>
-        <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+        <Ionicons 
+          name={isRTL ? "chevron-back" : "chevron-forward"} 
+          size={20} 
+          color={colors.textTertiary} 
+        />
       </View>
-    </TouchableOpacity>;
-
+    </TouchableOpacity>
+  );
 
   if (loading) {
     return (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: colors.background,
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
-
+      <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text
-          style={{
-            marginTop: designTokens.spacing.md,
-            fontSize: designTokens.typography.body.fontSize,
-            color: colors.textSecondary
-          }}>{t("dashboard.loading")}
-
-
+        <Text style={[styles.loadingText, { fontFamily, color: colors.textSecondary }]}>
+          {t("dashboard.loading")}
         </Text>
-      </View>);
-
+      </View>
+    );
   }
 
   return (
     <Animated.ScrollView
-      style={{ flex: 1, backgroundColor: colors.background }}
+      style={[styles.container, { backgroundColor: colors.background }]}
       showsVerticalScrollIndicator={false}
-      entering={FadeIn.duration(600)} // Smooth fade-in when screen loads
+      entering={FadeIn.duration(600)}
       refreshControl={
-      <RefreshControl
-        refreshing={refreshing}
-        onRefresh={onRefresh}
-        tintColor={colors.primary} />
-
-      }>
-
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.primary}
+        />
+      }
+    >
       {/* Header */}
-      <View style={{
-        padding: designTokens.spacing.xl,
-        paddingTop: designTokens.spacing.xxxl
-      }}>
-        <View style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: designTokens.spacing.md
-        }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <View style={{
-              width: 60,
-              height: 60,
-              borderRadius: designTokens.borderRadius.full,
-              backgroundColor: '#007AFF15',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: designTokens.spacing.md
-            }}>
-              <Text style={{ fontFamily, 
-                fontSize: 24,
-                fontWeight: '700',
-                color: '#007AFF'
-              }}>
+      <View style={styles.header}>
+        <View style={[styles.headerRow, isRTL && styles.rtlRow]}>
+          <View style={[styles.userInfo, isRTL && styles.rtlRow]}>
+            <View style={[styles.userAvatar, { backgroundColor: '#007AFF15' }]}>
+              <Text style={[styles.avatarText, { fontFamily, color: '#007AFF' }]}>
                 {user?.profile?.name?.charAt(0) || 'S'}
               </Text>
             </View>
             <View>
               <Text
-                style={{
-                  fontSize: designTokens.typography.title1.fontSize,
-                  fontWeight: designTokens.typography.title1.fontWeight,
-                  color: colors.textPrimary
-                } as any}>
-
-                Welcome back,
+                style={[
+                  styles.welcomeText,
+                  { fontFamily, color: colors.textPrimary }
+                ]}
+              >
+                {t('dashboard.welcomeBack')}
               </Text>
               <Text
-                style={{
-                  fontSize: designTokens.typography.title2.fontSize,
-                  fontWeight: designTokens.typography.title2.fontWeight,
-                  color: colors.textPrimary
-                } as any}>
-
-                {user?.profile?.name || 'Student'}
+                style={[
+                  styles.userName,
+                  { fontFamily, color: colors.textPrimary }
+                ]}
+              >
+                {user?.profile?.name || t('common.student')}
               </Text>
               <Text
-                style={{
-                  fontSize: designTokens.typography.footnote.fontSize,
-                  color: colors.textSecondary,
-                  marginTop: 2
-                }}>
-
-                {user?.profile?.class ? `Class ${user.profile.class}` : 'No class assigned'}
+                style={[
+                  styles.userClass,
+                  { fontFamily, color: colors.textSecondary }
+                ]}
+              >
+                {user?.profile?.class ? `${t('classes.class')} ${user.profile.class}` : t('dashboard.noClassAssigned')}
               </Text>
             </View>
           </View>
@@ -300,175 +236,318 @@ export default function StudentDashboard() {const { t } = useTranslation();
           {/* Dark Mode Toggle */}
           <TouchableOpacity
             onPress={toggleTheme}
-            style={{
-              padding: designTokens.spacing.sm,
-              borderRadius: designTokens.borderRadius.full,
-              backgroundColor: colors.backgroundElevated,
-              ...designTokens.shadows.sm
-            }}>
-
+            style={[styles.themeToggle, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm }]}
+          >
             <Ionicons
               name={isDark ? "sunny" : "moon"}
               size={24}
-              color={colors.textPrimary} />
-
+              color={colors.textPrimary}
+            />
           </TouchableOpacity>
         </View>
 
         {/* Stats Cards */}
-        <View style={{
-          flexDirection: 'row',
-          marginHorizontal: -designTokens.spacing.xs,
-          marginBottom: designTokens.spacing.xl
-        }}>
+        <View style={[styles.statsRow, isRTL && styles.rtlRow]}>
           <StatCard
-            title="Average Score"
+            title={t("dashboard.avgScore")}
             value={stats?.averageScore ? `${stats.averageScore}%` : '--%'}
             icon="trending-up"
             color="#34C759"
-            index={0} />
+            index={0}
+          />
 
           <StatCard
-            title="Exams Taken"
+            title={t("dashboard.examsTaken")}
             value={stats?.examsCompleted || 0}
             icon="checkmark-circle"
             color="#007AFF"
-            index={1} />
-
+            index={1}
+          />
         </View>
 
-        <View style={{
-          flexDirection: 'row',
-          marginHorizontal: -designTokens.spacing.xs,
-          marginBottom: designTokens.spacing.xxl
-        }}>
+        <View style={[styles.statsRow, isRTL && styles.rtlRow]}>
           <StatCard
-            title="Upcoming Exams"
+            title={t("dashboard.upcomingExams")}
             value={stats?.upcomingExams || 0}
             icon="calendar"
             color="#FF9500"
-            index={2} />
+            index={2}
+          />
 
           <StatCard
-            title="Pending Homework"
+            title={t("dashboard.pendingHomework")}
             value={stats?.pendingHomework || 0}
             icon="book"
             color="#AF52DE"
-            index={3} />
-
+            index={3}
+          />
         </View>
       </View>
 
       {/* Quick Actions */}
-      <View style={{
-        paddingHorizontal: designTokens.spacing.xl,
-        marginBottom: designTokens.spacing.xl
-      }}>
+      <View style={styles.section}>
         <Text
-          style={{
-            fontSize: designTokens.typography.title3.fontSize,
-            fontWeight: designTokens.typography.title3.fontWeight,
-            color: colors.textPrimary,
-            marginBottom: designTokens.spacing.md
-          } as any}>{t("dashboard.quickActions")}
-
-
+          style={[
+            styles.sectionTitle,
+            { fontFamily, color: colors.textPrimary }
+          ]}
+        >
+          {t("dashboard.quickActions")}
         </Text>
-        <View style={{
-          flexDirection: 'row',
-          marginHorizontal: -designTokens.spacing.xs
-        }}>
+        <View style={[styles.actionsRow, isRTL && styles.rtlRow]}>
           <QuickAction
-            title="Take Exam"
+            title={t("dashboard.takeExam")}
             icon="play-circle"
             onPress={() => router.push("/(student)/exams")}
-            color="#007AFF" />
+            color="#007AFF"
+          />
 
           <QuickAction
-            title="Homework"
+            title={t("dashboard.homework")}
             icon="book"
             onPress={() => router.push("/(student)/homework")}
-            color="#34C759" />
+            color="#34C759"
+          />
 
           <QuickAction
-            title="Results"
+            title={t("dashboard.results")}
             icon="bar-chart"
             onPress={() => router.push("/(student)/results")}
-            color="#FF9500" />
-
+            color="#FF9500"
+          />
         </View>
       </View>
 
       {/* Upcoming Exams */}
-      <View style={{
-        paddingHorizontal: designTokens.spacing.xl,
-        marginBottom: designTokens.spacing.xxxl
-      }}>
-        <View style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: designTokens.spacing.md
-        }}>
+      <View style={styles.section}>
+        <View style={[styles.sectionHeader, isRTL && styles.rtlRow]}>
           <Text
-            style={{
-              fontSize: designTokens.typography.title3.fontSize,
-              fontWeight: designTokens.typography.title3.fontWeight,
-              color: colors.textPrimary
-            } as any}>
-
-            Upcoming Exams
+            style={[
+              styles.sectionTitle,
+              { fontFamily, color: colors.textPrimary }
+            ]}
+          >
+            {t("dashboard.upcomingExams")}
           </Text>
           <TouchableOpacity onPress={() => router.push("/(student)/exams")}>
             <Text
-              style={{
-                fontSize: designTokens.typography.footnote.fontSize,
-                color: colors.primary,
-                fontWeight: '600'
-              }}>{t("common.viewAll")}
-
-
+              style={[
+                styles.viewAllText,
+                { fontFamily, color: colors.primary }
+              ]}
+            >
+              {t("common.viewAll")}
             </Text>
           </TouchableOpacity>
         </View>
 
-        {upcomingExams.length === 0 ?
-        <View
-          style={{
-            backgroundColor: colors.backgroundElevated,
-            borderRadius: designTokens.borderRadius.xl,
-            padding: designTokens.spacing.xl,
-            alignItems: 'center',
-            ...designTokens.shadows.sm
-          }}>
-
+        {upcomingExams.length === 0 ? (
+          <View
+            style={[
+              styles.emptyContainer,
+              {
+                backgroundColor: colors.backgroundElevated,
+                ...designTokens.shadows.sm,
+              }
+            ]}
+          >
             <Ionicons name="document-text-outline" size={48} color={colors.textTertiary} />
             <Text
-            style={{
-              fontSize: designTokens.typography.headline.fontSize,
-              color: colors.textSecondary,
-              marginTop: designTokens.spacing.md,
-              marginBottom: designTokens.spacing.xs
-            }}>
-
-              No upcoming exams
+              style={[
+                styles.emptyTitle,
+                { fontFamily, color: colors.textSecondary }
+              ]}
+            >
+              {t("dashboard.noUpcomingExams")}
             </Text>
             <Text
-            style={{
-              fontSize: designTokens.typography.footnote.fontSize,
-              color: colors.textTertiary,
-              textAlign: 'center'
-            }}>
-
-              You&apos;re all caught up for now
+              style={[
+                styles.emptyText,
+                { fontFamily, color: colors.textTertiary }
+              ]}
+            >
+              {t("dashboard.allCaughtUp")}
             </Text>
-          </View> :
-
-        upcomingExams.slice(0, 3).map((exam) =>
-        <UpcomingExamCard key={exam.id} exam={exam} />
-        )
-        }
+          </View>
+        ) : (
+          upcomingExams.slice(0, 3).map((exam) => (
+            <UpcomingExamCard key={exam.id} exam={exam} />
+          ))
+        )}
       </View>
-    </Animated.ScrollView>);
-
+    </Animated.ScrollView>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  header: {
+    padding: designTokens.spacing.xl,
+    paddingTop: designTokens.spacing.xxxl,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: designTokens.spacing.md,
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  userAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: designTokens.borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: designTokens.spacing.md,
+  },
+  avatarText: {
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  welcomeText: {
+    fontSize: designTokens.typography.title1.fontSize,
+    fontWeight: designTokens.typography.title1.fontWeight,
+  },
+  userName: {
+    fontSize: designTokens.typography.title2.fontSize,
+    fontWeight: designTokens.typography.title2.fontWeight,
+  },
+  userClass: {
+    fontSize: designTokens.typography.footnote.fontSize,
+    marginTop: 2,
+  },
+  themeToggle: {
+    padding: designTokens.spacing.sm,
+    borderRadius: designTokens.borderRadius.full,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    marginHorizontal: -designTokens.spacing.xs,
+    marginBottom: designTokens.spacing.xl,
+  },
+  statCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    flex: 1,
+    marginHorizontal: designTokens.spacing.xs,
+  },
+  statIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: designTokens.borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: designTokens.spacing.sm,
+  },
+  statValue: {
+    fontSize: designTokens.typography.title2.fontSize,
+    fontWeight: designTokens.typography.title2.fontWeight,
+    marginBottom: 2,
+  },
+  statLabel: {
+    fontSize: designTokens.typography.footnote.fontSize,
+  },
+  section: {
+    paddingHorizontal: designTokens.spacing.xl,
+    marginBottom: designTokens.spacing.xl,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: designTokens.spacing.md,
+  },
+  sectionTitle: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: designTokens.typography.title3.fontWeight,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    marginHorizontal: -designTokens.spacing.xs,
+  },
+  quickAction: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    ...designTokens.shadows.sm,
+    flex: 1,
+    marginHorizontal: designTokens.spacing.xs,
+    alignItems: 'center',
+  },
+  actionIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: designTokens.borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: designTokens.spacing.sm,
+  },
+  actionText: {
+    fontSize: designTokens.typography.footnote.fontSize,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  examCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    marginBottom: designTokens.spacing.sm,
+  },
+  examCardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  examIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: designTokens.spacing.md,
+  },
+  examInfo: {
+    flex: 1,
+  },
+  examTitle: {
+    fontSize: designTokens.typography.headline.fontSize,
+    fontWeight: designTokens.typography.headline.fontWeight,
+    marginBottom: 2,
+  },
+  examDetails: {
+    fontSize: designTokens.typography.footnote.fontSize,
+  },
+  viewAllText: {
+    fontSize: designTokens.typography.footnote.fontSize,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.xl,
+    alignItems: 'center',
+    ...designTokens.shadows.sm,
+  },
+  emptyTitle: {
+    fontSize: designTokens.typography.headline.fontSize,
+    marginTop: designTokens.spacing.md,
+    marginBottom: designTokens.spacing.xs,
+  },
+  emptyText: {
+    fontSize: designTokens.typography.footnote.fontSize,
+    textAlign: 'center',
+  },
+  loadingText: {
+    marginTop: designTokens.spacing.md,
+    fontSize: designTokens.typography.body.fontSize,
+  },
+  rtlRow: {
+    flexDirection: 'row-reverse',
+  },
+});

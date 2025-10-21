@@ -1,6 +1,6 @@
 // app/(student)/exams.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { apiService } from '../../src/services/api';
@@ -10,8 +10,10 @@ import { useThemeContext } from '../../src/contexts/ThemeContext';
 import { designTokens } from '../../src/utils/designTokens';
 import Animated, { FadeIn, FadeInUp, Layout } from 'react-native-reanimated';
 import Alert from '@/components/Alert';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function ExamsScreen() {
+  const { t, isRTL } = useTranslation();
   const { user } = useAuth();
   const { fontFamily, colors } = useThemeContext();
   const [exams, setExams] = useState<Exam[]>([]);
@@ -24,7 +26,6 @@ export default function ExamsScreen() {
     upcoming: 0,
     missed: 0
   });
-    
 
   const loadExams = useCallback(async () => {
     try {
@@ -39,7 +40,7 @@ export default function ExamsScreen() {
 
         // Check which exams have been taken
         const takenStatuses = await Promise.all(
-          allExams.map(async (exam : any) => {
+          allExams.map(async (exam: any) => {
             try {
               const status = await apiService.checkExamTaken(exam.id);
               return { examId: exam.id, taken: status };
@@ -89,16 +90,16 @@ export default function ExamsScreen() {
           missed
         });
       } else {
-        Alert.alert('Error', 'Failed to load exams data');
+        Alert.alert(t('common.error'), t('exams.loadFailed'));
       }
 
     } catch (error) {
-      Alert.alert('Error', 'Failed to load exams. Please try again.');
+      Alert.alert(t('common.error'), t('exams.loadFailed'));
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadExams();
@@ -160,11 +161,11 @@ export default function ExamsScreen() {
   // Update getStatusText to include missed status
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'available': return 'Available';
-      case 'taken': return 'Completed';
-      case 'upcoming': return 'Upcoming';
-      case 'missed': return 'Missed';
-      default: return 'Unknown';
+      case 'available': return t('exams.available');
+      case 'taken': return t('exams.taken');
+      case 'upcoming': return t('exams.upcoming');
+      case 'missed': return t('exams.missed');
+      default: return t('common.unknown');
     }
   };
 
@@ -193,52 +194,42 @@ export default function ExamsScreen() {
     } else if (status === 'upcoming') {
       const availableFrom = exam.available_from ? new Date(exam.available_from) : null;
       if (availableFrom) {
-        Alert.alert('Coming Soon', `This exam will be available on ${availableFrom.toLocaleString()}.`);
+        Alert.alert(t('exams.upcoming'), `${t('exams.availableOn')} ${availableFrom.toLocaleString()}.`);
       }
     } else if (status === 'missed') {
-      Alert.alert('Exam Expired', 'The due date for this exam has passed.');
+      Alert.alert(t('exams.expired'), t('exams.dueDatePassed'));
     }
   };
-
 
   // Add this helper function outside your component
   const mapClassDisplay = (className: string): string => {
     const classMap: { [key: string]: string } = {
-      '7': '1st Prep', '8': '2nd Prep', '9': '3rd Prep',
-      '10': '1st Secondary', '11': '2nd Secondary', '12': '3rd Secondary'
+      '7': t('classes.prep1'), '8': t('classes.prep2'), '9': t('classes.prep3'),
+      '10': t('classes.sec1'), '11': t('classes.sec2'), '12': t('classes.sec3')
     };
 
     // Handle common Egyptian class formats
     const normalized = className.toLowerCase().trim();
     if (normalized.includes('prep') || normalized.includes('preparatory')) {
-      if (normalized.includes('1') || normalized.includes('first')) return '1st Prep';
-      if (normalized.includes('2') || normalized.includes('second')) return '2nd Prep';
-      if (normalized.includes('3') || normalized.includes('third')) return '3rd Prep';
+      if (normalized.includes('1') || normalized.includes('first')) return t('classes.prep1');
+      if (normalized.includes('2') || normalized.includes('second')) return t('classes.prep2');
+      if (normalized.includes('3') || normalized.includes('third')) return t('classes.prep3');
     }
     if (normalized.includes('secondary')) {
-      if (normalized.includes('1') || normalized.includes('first')) return '1st Secondary';
-      if (normalized.includes('2') || normalized.includes('second')) return '2nd Secondary';
-      if (normalized.includes('3') || normalized.includes('third')) return '3rd Secondary';
+      if (normalized.includes('1') || normalized.includes('first')) return t('classes.sec1');
+      if (normalized.includes('2') || normalized.includes('second')) return t('classes.sec2');
+      if (normalized.includes('3') || normalized.includes('third')) return t('classes.sec3');
     }
 
-    return classMap[className] || `Class ${className}`;
+    return classMap[className] || `${t('classes.class')} ${className}`;
   };
 
   if (loading) {
     return (
-      <View style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: colors.background
-      }}>
+      <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{ fontFamily, 
-          color: colors.textSecondary,
-          marginTop: designTokens.spacing.md,
-          fontSize: designTokens.typography.body.fontSize
-        }}>
-          Loading exams...
+        <Text style={[styles.loadingText, { fontFamily, color: colors.textSecondary }]}>
+          {t('exams.loading')}
         </Text>
       </View>
     );
@@ -246,9 +237,9 @@ export default function ExamsScreen() {
 
   return (
     <Animated.ScrollView
-      style={{ flex: 1, backgroundColor: colors.background }}
+      style={[styles.container, { backgroundColor: colors.background }]}
       showsVerticalScrollIndicator={false}
-      entering={FadeIn.duration(600)} // Smooth fade-in when screen loads
+      entering={FadeIn.duration(600)}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -259,195 +250,75 @@ export default function ExamsScreen() {
         />
       }
     >
-      <View style={{ padding: designTokens.spacing.xl }}>
-        <Text style={{ fontFamily, 
-          fontSize: designTokens.typography.title1.fontSize,
-          fontWeight: designTokens.typography.title1.fontWeight,
-          color: colors.textPrimary,
-          marginBottom: designTokens.spacing.xs
-        } as any}>
-          Exams
+      <View style={styles.content}>
+        <Text style={[styles.title, { fontFamily, color: colors.textPrimary }]}>
+          {t('exams.title2')}
         </Text>
-        <Text style={{ fontFamily, 
-          color: colors.textSecondary,
-          marginBottom: designTokens.spacing.xl,
-          fontSize: designTokens.typography.body.fontSize
-        }}>
-          Take your exams and track your progress
+        <Text style={[styles.subtitle, { fontFamily, color: colors.textSecondary }]}>
+          {t('exams.takeTrack')}
         </Text>
 
         {/* Stats Cards */}
-        <View style={{
-          flexDirection: 'row',
-          marginHorizontal: -designTokens.spacing.xs,
-          marginBottom: designTokens.spacing.xl
-        }}>
-          <View style={{
-            backgroundColor: colors.backgroundElevated,
-            borderRadius: designTokens.borderRadius.xl,
-            padding: designTokens.spacing.lg,
-            ...designTokens.shadows.md,
-            flex: 1,
-            marginHorizontal: designTokens.spacing.xs
-          }}>
-            <View style={{
-              width: 44,
-              height: 44,
-              borderRadius: designTokens.borderRadius.full,
-              backgroundColor: '#3B82F615',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: designTokens.spacing.sm
-            }}>
+        <View style={[styles.statsContainer, isRTL && styles.rtlRow]}>
+          <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.md }]}>
+            <View style={[styles.statIcon, { backgroundColor: '#3B82F615' }]}>
               <Ionicons name="checkmark-circle" size={20} color="#3B82F6" />
             </View>
-            <Text style={{ fontFamily, 
-              fontSize: designTokens.typography.title2.fontSize,
-              fontWeight: designTokens.typography.title2.fontWeight,
-              color: colors.textPrimary,
-              marginBottom: 2
-            } as any}>
+            <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>
               {stats.completed}
             </Text>
-            <Text style={{ fontFamily, 
-              fontSize: designTokens.typography.footnote.fontSize,
-              color: colors.textTertiary
-            }}>
-              Completed
+            <Text style={[styles.statLabel, { fontFamily, color: colors.textTertiary }]}>
+              {t('exams.completed')}
             </Text>
           </View>
 
-          <View style={{
-            backgroundColor: colors.backgroundElevated,
-            borderRadius: designTokens.borderRadius.xl,
-            padding: designTokens.spacing.lg,
-            ...designTokens.shadows.md,
-            flex: 1,
-            marginHorizontal: designTokens.spacing.xs
-          }}>
-            <View style={{
-              width: 44,
-              height: 44,
-              borderRadius: designTokens.borderRadius.full,
-              backgroundColor: '#10B98115',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: designTokens.spacing.sm
-            }}>
+          <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.md }]}>
+            <View style={[styles.statIcon, { backgroundColor: '#10B98115' }]}>
               <Ionicons name="document-text" size={20} color="#10B981" />
             </View>
-            <Text style={{ fontFamily, 
-              fontSize: designTokens.typography.title2.fontSize,
-              fontWeight: designTokens.typography.title2.fontWeight,
-              color: colors.textPrimary,
-              marginBottom: 2
-            } as any}>
+            <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>
               {stats.available}
             </Text>
-            <Text style={{ fontFamily, 
-              fontSize: designTokens.typography.footnote.fontSize,
-              color: colors.textTertiary
-            }}>
-              Available
+            <Text style={[styles.statLabel, { fontFamily, color: colors.textTertiary }]}>
+              {t('exams.available')}
             </Text>
           </View>
 
-          <View style={{
-            backgroundColor: colors.backgroundElevated,
-            borderRadius: designTokens.borderRadius.xl,
-            padding: designTokens.spacing.lg,
-            ...designTokens.shadows.md,
-            flex: 1,
-            marginHorizontal: designTokens.spacing.xs
-          }}>
-            <View style={{
-              width: 44,
-              height: 44,
-              borderRadius: designTokens.borderRadius.full,
-              backgroundColor: '#F59E0B15',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: designTokens.spacing.sm
-            }}>
+          <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.md }]}>
+            <View style={[styles.statIcon, { backgroundColor: '#F59E0B15' }]}>
               <Ionicons name="time" size={20} color="#F59E0B" />
             </View>
-            <Text style={{ fontFamily, 
-              fontSize: designTokens.typography.title2.fontSize,
-              fontWeight: designTokens.typography.title2.fontWeight,
-              color: colors.textPrimary,
-              marginBottom: 2
-            } as any}>
+            <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>
               {stats.upcoming}
             </Text>
-            <Text style={{ fontFamily, 
-              fontSize: designTokens.typography.footnote.fontSize,
-              color: colors.textTertiary
-            }}>
-              Upcoming
+            <Text style={[styles.statLabel, { fontFamily, color: colors.textTertiary }]}>
+              {t('exams.upcoming')}
             </Text>
           </View>
 
-          <View style={{
-            backgroundColor: colors.backgroundElevated,
-            borderRadius: designTokens.borderRadius.xl,
-            padding: designTokens.spacing.lg,
-            ...designTokens.shadows.md,
-            flex: 1,
-            marginHorizontal: designTokens.spacing.xs
-          }}>
-            <View style={{
-              width: 44,
-              height: 44,
-              borderRadius: designTokens.borderRadius.full,
-              backgroundColor: '#EF444415',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: designTokens.spacing.sm
-            }}>
+          <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.md }]}>
+            <View style={[styles.statIcon, { backgroundColor: '#EF444415' }]}>
               <Ionicons name="alert-circle" size={20} color="#EF4444" />
             </View>
-            <Text style={{ fontFamily, 
-              fontSize: designTokens.typography.title2.fontSize,
-              fontWeight: designTokens.typography.title2.fontWeight,
-              color: colors.textPrimary,
-              marginBottom: 2
-            } as any}>
+            <Text style={[styles.statValue, { fontFamily, color: colors.textPrimary }]}>
               {stats.missed}
             </Text>
-            <Text style={{ fontFamily, 
-              fontSize: designTokens.typography.footnote.fontSize,
-              color: colors.textTertiary
-            }}>
-              Missed
+            <Text style={[styles.statLabel, { fontFamily, color: colors.textTertiary }]}>
+              {t('exams.missed')}
             </Text>
           </View>
         </View>
 
         {exams.length === 0 ? (
-          <View style={{
-            backgroundColor: colors.backgroundElevated,
-            borderRadius: designTokens.borderRadius.xl,
-            padding: designTokens.spacing.xl,
-            alignItems: 'center',
-            ...designTokens.shadows.sm
-          }}>
+          <View style={[styles.emptyContainer, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm }]}>
             <Ionicons name="document-text-outline" size={48} color={colors.textTertiary} />
-            <Text style={{ fontFamily, 
-              fontSize: designTokens.typography.headline.fontSize,
-              color: colors.textSecondary,
-              marginTop: designTokens.spacing.md,
-              marginBottom: designTokens.spacing.xs
-            }}>
-              No exams available
+            <Text style={[styles.emptyTitle, { fontFamily, color: colors.textSecondary }]}>
+              {t('exams.noExams')}
             </Text>
-            <Text style={{ fontFamily, 
-              fontSize: designTokens.typography.footnote.fontSize,
-              color: colors.textTertiary,
-              textAlign: 'center'
-            }}>
+            <Text style={[styles.emptyText, { fontFamily, color: colors.textTertiary }]}>
               {user?.profile?.class
-                ? `No exams found for Class ${user.profile.class}. Check back later.`
-                : 'Please check your class assignment.'
+                ? `${t('exams.noExamsForClass')} ${user.profile.class}. ${t('exams.checkBack')}`
+                : t('exams.checkClassAssignment')
               }
             </Text>
           </View>
@@ -460,127 +331,90 @@ export default function ExamsScreen() {
               return (
                 <Animated.View
                   key={exam.id}
-                  entering={FadeInUp.delay(index * 100)} // This makes cards fade in one by one
-                  layout={Layout.springify()} // This animates when cards move/resize
+                  entering={FadeInUp.delay(index * 100)}
+                  layout={Layout.springify()}
                 >
                   <TouchableOpacity
                     onPress={() => handleExamPress(exam)}
                     disabled={status === 'upcoming' || status === 'missed'}
-                    style={{
-                      backgroundColor: colors.backgroundElevated,
-                      borderRadius: designTokens.borderRadius.xl,
-                      padding: designTokens.spacing.lg,
-                      ...designTokens.shadows.sm,
-                      marginBottom: designTokens.spacing.sm,
-                      borderLeftWidth: 4,
-                      borderLeftColor: statusColors.border,
-                      opacity: (status === 'upcoming' || status === 'missed') ? 0.7 : 1
-                    }}
+                    style={[
+                      styles.examCard,
+                      {
+                        backgroundColor: colors.backgroundElevated,
+                        ...designTokens.shadows.sm,
+                        borderLeftWidth: 4,
+                        borderLeftColor: statusColors.border,
+                        opacity: (status === 'upcoming' || status === 'missed') ? 0.7 : 1
+                      },
+                      isRTL && styles.rtlCard
+                    ]}
                   >
-                    {/* Keep the rest of your card content exactly the same */}
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: designTokens.spacing.md }}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontFamily, 
-                          fontSize: designTokens.typography.headline.fontSize,
-                          fontWeight: designTokens.typography.headline.fontWeight,
-                          color: colors.textPrimary,
-                          marginBottom: designTokens.spacing.xs
-                        } as any} numberOfLines={1}>
+                    <View style={[styles.cardHeader, isRTL && styles.rtlRow]}>
+                      <View style={styles.cardTitleContainer}>
+                        <Text style={[styles.examTitle, { fontFamily, color: colors.textPrimary }]} numberOfLines={1}>
                           {exam.title}
                         </Text>
-                        <Text style={{ fontFamily, 
-                          fontSize: designTokens.typography.footnote.fontSize,
-                          color: colors.textSecondary
-                        }}>
+                        <Text style={[styles.examDetails, { fontFamily, color: colors.textSecondary }]}>
                           {exam.subject} • {mapClassDisplay(exam.class)}
                         </Text>
                       </View>
-                      <View style={{
-                        backgroundColor: statusColors.bg,
-                        paddingHorizontal: designTokens.spacing.md,
-                        paddingVertical: designTokens.spacing.xs,
-                        borderRadius: designTokens.borderRadius.full
-                      }}>
-                        <Text style={{ fontFamily, 
-                          fontSize: designTokens.typography.caption2.fontSize,
-                          color: statusColors.text,
-                          fontWeight: '600'
-                        }}>
+                      <View style={[styles.statusBadge, { backgroundColor: statusColors.bg }]}>
+                        <Text style={[styles.statusText, { fontFamily, color: statusColors.text }]}>
                           {getStatusText(status)}
                         </Text>
                       </View>
                     </View>
 
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: designTokens.spacing.md }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={[styles.cardInfo, isRTL && styles.rtlRow]}>
+                      <View style={[styles.infoItem, isRTL && styles.rtlRow]}>
                         <Ionicons name="person" size={16} color={colors.textTertiary} />
-                        <Text style={{ fontFamily, 
-                          fontSize: designTokens.typography.footnote.fontSize,
-                          color: colors.textSecondary,
-                          marginLeft: designTokens.spacing.xs
-                        }} numberOfLines={1}>
-                          {exam.teacher?.profile?.name || 'Teacher'}
+                        <Text style={[styles.infoText, { fontFamily, color: colors.textSecondary, ...(isRTL ? { marginRight: designTokens.spacing.xs } : { marginLeft: designTokens.spacing.xs }) }]} numberOfLines={1}>
+                          {exam.teacher?.profile?.name || t('common.teacher')}
                         </Text>
                       </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={[styles.infoItem, isRTL && styles.rtlRow]}>
                         <Ionicons name="time" size={16} color={colors.textTertiary} />
-                        <Text style={{ fontFamily, 
-                          fontSize: designTokens.typography.footnote.fontSize,
-                          color: colors.textSecondary,
-                          marginLeft: designTokens.spacing.xs
-                        }}>
-                          {exam.settings?.timed ? `${exam.settings.duration}m` : 'Untimed'}
+                        <Text style={[styles.infoText, { fontFamily, color: colors.textSecondary, ...(isRTL ? { marginRight: designTokens.spacing.xs } : { marginLeft: designTokens.spacing.xs }) }]}>
+                          {exam.settings?.timed ? `${exam.settings.duration}${t('exams.minutes')}` : t('exams.untimed')}
                         </Text>
                       </View>
                     </View>
 
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <View>
+                    <View style={[styles.cardFooter, isRTL && styles.rtlRow]}>
+                      <View style={styles.dateContainer}>
                         {exam.available_from && (
-                          <Text style={{ fontFamily, 
-                            fontSize: designTokens.typography.caption1.fontSize,
-                            color: colors.textTertiary,
-                            marginBottom: 4
-                          }}>
-                            Available: {new Date(exam.available_from).toLocaleDateString()} at {new Date(exam.available_from).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          <Text style={[styles.dateText, { fontFamily, color: colors.textTertiary }]}>
+                            {t('exams.available')}: {new Date(exam.available_from).toLocaleDateString()} {t('exams.at')} {new Date(exam.available_from).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </Text>
                         )}
                         {exam.due_date && (
-                          <Text style={{ fontFamily, 
-                            fontSize: designTokens.typography.caption1.fontSize,
-                            color: colors.textTertiary
-                          }}>
-                            Due: {new Date(exam.due_date).toLocaleDateString()} at {new Date(exam.due_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          <Text style={[styles.dateText, { fontFamily, color: colors.textTertiary }]}>
+                            {t('exams.due')}: {new Date(exam.due_date).toLocaleDateString()} {t('exams.at')} {new Date(exam.due_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </Text>
                         )}
                         {!exam.available_from && !exam.due_date && (
-                          <Text style={{ fontFamily, 
-                            fontSize: designTokens.typography.caption1.fontSize,
-                            color: colors.textTertiary
-                          }}>
-                            No time restrictions
+                          <Text style={[styles.dateText, { fontFamily, color: colors.textTertiary }]}>
+                            {t('exams.noTimeRestrictions')}
                           </Text>
                         )}
                       </View>
 
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={{ fontFamily, 
-                          fontSize: designTokens.typography.footnote.fontSize,
+                      <View style={[styles.actionContainer, isRTL && styles.rtlRow]}>
+                        <Text style={[styles.actionText, {
+                          fontFamily,
                           color: (status === 'upcoming' || status === 'missed')
                             ? colors.textTertiary
-                            : colors.primary,
-                          fontWeight: '600',
-                          marginRight: designTokens.spacing.xs
-                        }}>
+                            : colors.primary
+                        }]}>
                           {status === 'taken'
-                            ? 'View Results'
+                            ? t('exams.viewResults')
                             : (status === 'upcoming' || status === 'missed')
-                              ? 'Not Available'
-                              : 'Start Exam'}
+                              ? t('exams.notAvailable')
+                              : t('exams.startExam')}
                         </Text>
                         {(status !== 'upcoming' && status !== 'missed') && (
                           <Ionicons
-                            name="chevron-forward"
+                            name={isRTL ? "chevron-back" : "chevron-forward"}
                             size={16}
                             color={(status === 'upcoming' || status === 'missed') ? colors.textTertiary : colors.primary}
                           />
@@ -597,3 +431,143 @@ export default function ExamsScreen() {
     </Animated.ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  content: {
+    padding: designTokens.spacing.xl,
+  },
+  title: {
+    fontSize: designTokens.typography.title1.fontSize,
+    fontWeight: designTokens.typography.title1.fontWeight,
+    marginBottom: designTokens.spacing.xs,
+  },
+  subtitle: {
+    fontSize: designTokens.typography.body.fontSize,
+    marginBottom: designTokens.spacing.xl,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    marginHorizontal: -designTokens.spacing.xs,
+    marginBottom: designTokens.spacing.xl,
+  },
+  statCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    flex: 1,
+    marginHorizontal: designTokens.spacing.xs,
+  },
+  statIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: designTokens.borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: designTokens.spacing.sm,
+  },
+  statValue: {
+    fontSize: designTokens.typography.title2.fontSize,
+    fontWeight: designTokens.typography.title2.fontWeight,
+    marginBottom: 2,
+  },
+  statLabel: {
+    fontSize: designTokens.typography.footnote.fontSize,
+  },
+  emptyContainer: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.xl,
+    alignItems: 'center',
+    ...designTokens.shadows.sm,
+  },
+  emptyTitle: {
+    fontSize: designTokens.typography.headline.fontSize,
+    marginTop: designTokens.spacing.md,
+    marginBottom: designTokens.spacing.xs,
+  },
+  emptyText: {
+    fontSize: designTokens.typography.footnote.fontSize,
+    textAlign: 'center',
+  },
+  examCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    marginBottom: designTokens.spacing.sm,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: designTokens.spacing.md,
+  },
+  cardTitleContainer: {
+    flex: 1,
+  },
+  examTitle: {
+    fontSize: designTokens.typography.headline.fontSize,
+    fontWeight: designTokens.typography.headline.fontWeight,
+    marginBottom: designTokens.spacing.xs,
+  },
+  examDetails: {
+    fontSize: designTokens.typography.footnote.fontSize,
+  },
+  statusBadge: {
+    paddingHorizontal: designTokens.spacing.md,
+    paddingVertical: designTokens.spacing.xs,
+    borderRadius: designTokens.borderRadius.full,
+  },
+  statusText: {
+    fontSize: designTokens.typography.caption2.fontSize,
+    fontWeight: '600',
+  },
+  cardInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: designTokens.spacing.md,
+  },
+  infoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  infoText: {
+    fontSize: designTokens.typography.footnote.fontSize,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dateContainer: {
+    flex: 1,
+  },
+  dateText: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    marginBottom: 4,
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionText: {
+    fontSize: designTokens.typography.footnote.fontSize,
+    fontWeight: '600',
+    marginRight: designTokens.spacing.xs,
+  },
+  loadingText: {
+    marginTop: designTokens.spacing.md,
+    fontSize: designTokens.typography.body.fontSize,
+  },
+  rtlRow: {
+    flexDirection: 'row-reverse',
+  },
+  rtlCard: {
+    borderLeftWidth: 0,
+    borderRightWidth: 4,
+  },
+});

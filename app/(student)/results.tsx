@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  StyleSheet,
+  I18nManager
 } from "react-native";
 import Alert from '@/components/Alert';
 import { apiService } from "../../src/services/api";
@@ -14,15 +16,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { useThemeContext } from "../../src/contexts/ThemeContext";
 import { designTokens } from "../../src/utils/designTokens";
 import Animated, { FadeIn } from "react-native-reanimated";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function ResultsScreen() {
+  const { t, isRTL } = useTranslation();
   const { fontFamily, colors } = useThemeContext();
   const [results, setResults] = useState<any[]>([]);
   const [subjectPerformance, setSubjectPerformance] = useState<any[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<"all" | "recent" | "top">("all");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-    
 
   useEffect(() => {
     loadResults();
@@ -31,18 +34,7 @@ export default function ResultsScreen() {
   const loadResults = async () => {
     try {
       setLoading(true);
-
-      console.log("🔄 Loading student results...");
-      console.log("🔐 Current API token:", apiService.getToken() ? 'Present' : 'Missing');
-
-      // Load exam results from real API
       const resultsResponse = await apiService.getStudentResults();
-      console.log("📊 Results API response:", {
-        success: resultsResponse.data.success,
-        dataLength: resultsResponse.data.data?.length || 0,
-        error: resultsResponse.data.error
-      });
-
       if (resultsResponse.data.success) {
         setResults(
           Array.isArray(resultsResponse.data.data)
@@ -50,38 +42,19 @@ export default function ResultsScreen() {
             : []
         );
       } else {
-        console.error("Failed to load results:", resultsResponse.data.error);
-        Alert.alert("Error", "Failed to load results");
+        Alert.alert(t("common.error"), t("results.loadFailed"));
       }
 
-      // Load subject performance from real API
       const performanceResponse = await apiService.getSubjectPerformance();
-      console.log("📈 Performance API response:", {
-        success: performanceResponse.data.success,
-        dataLength: performanceResponse.data.data?.length || 0,
-        error: performanceResponse.data.error
-      });
-
       if (performanceResponse.data.success) {
         setSubjectPerformance(
           Array.isArray(performanceResponse.data.data)
             ? performanceResponse.data.data
             : []
         );
-      } else {
-        console.error(
-          "Failed to load performance:",
-          performanceResponse.data.error
-        );
       }
     } catch (error: any) {
-      console.error("❌ Failed to load results:", error);
-      console.error("❌ Error details:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
-      Alert.alert("Error", "Failed to load results data");
+      Alert.alert(t("common.error"), t("results.loadFailed"));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -110,7 +83,7 @@ export default function ResultsScreen() {
 
   const filteredResults = results.filter((result) => {
     if (selectedFilter === "recent") {
-      return results.indexOf(result) < 5; // Last 5 results
+      return results.indexOf(result) < 5;
     }
     if (selectedFilter === "top") {
       return result.percentage >= 80;
@@ -122,154 +95,74 @@ export default function ResultsScreen() {
     const gradeColors = getGradeColor(result.percentage);
 
     return (
-      <View
-        style={{
-          backgroundColor: colors.backgroundElevated,
-          borderRadius: designTokens.borderRadius.xl,
-          padding: designTokens.spacing.lg,
-          ...designTokens.shadows.sm,
-          marginBottom: designTokens.spacing.sm,
-        }}
-      >
-        <View style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          marginBottom: designTokens.spacing.md,
-        }}>
+      <View style={[styles.resultCard, { 
+        backgroundColor: colors.backgroundElevated,
+        ...designTokens.shadows.sm
+      }]}>
+        <View style={[styles.resultHeader, { 
+          flexDirection: isRTL ? 'row-reverse' : 'row'
+        }]}>
           <View style={{ flex: 1 }}>
             <Text
-              style={{
-                fontSize: designTokens.typography.headline.fontSize,
-                fontWeight: designTokens.typography.headline.fontWeight as any,
-                color: colors.textPrimary,
-                marginBottom: 2,
-              }}
+              style={[styles.resultTitle, { color: colors.textPrimary }]}
               numberOfLines={1}
             >
               {result.examTitle}
             </Text>
-            <Text
-              style={{
-                fontSize: designTokens.typography.footnote.fontSize,
-                color: colors.textSecondary,
-              }}
-            >
+            <Text style={[styles.resultSubtitle, { color: colors.textSecondary }]}>
               {result.subject} • {new Date(result.date).toLocaleDateString()}
             </Text>
           </View>
-          <View style={{
+          <View style={[styles.gradeBadge, { 
             backgroundColor: gradeColors.bg,
-            paddingHorizontal: designTokens.spacing.md,
-            paddingVertical: designTokens.spacing.xs,
-            borderRadius: designTokens.borderRadius.full,
-            borderWidth: 1,
-            borderColor: gradeColors.border,
-          }}>
-            <Text
-              style={{
-                fontSize: designTokens.typography.headline.fontSize,
-                fontWeight: designTokens.typography.headline.fontWeight as any,
-                color: gradeColors.text,
-              }}
-            >
+            borderColor: gradeColors.border
+          }]}>
+            <Text style={[styles.gradeText, { color: gradeColors.text }]}>
               {getGradeLabel(result.percentage)}
             </Text>
           </View>
         </View>
 
-        <View style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: designTokens.spacing.md,
-        }}>
-          <View style={{ alignItems: 'center' }}>
-            <Text
-              style={{
-                fontSize: designTokens.typography.title2.fontSize,
-                fontWeight: designTokens.typography.title2.fontWeight,
-                color: colors.textPrimary,
-                marginBottom: 2,
-              } as any}
-            >
+        <View style={[styles.statsRow, { 
+          flexDirection: isRTL ? 'row-reverse' : 'row'
+        }]}>
+          <View style={styles.statItem}>
+            <Text style={[styles.statValue, { color: colors.textPrimary }]}>
               {result.percentage}%
             </Text>
-            <Text
-              style={{
-                fontSize: designTokens.typography.caption1.fontSize,
-                color: colors.textSecondary,
-              }}
-            >
-              Score
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+              {t("results.score")}
             </Text>
           </View>
-          <View style={{
-            height: 30,
-            width: 1,
-            backgroundColor: colors.separator
-          }} />
-          <View style={{ alignItems: 'center' }}>
-            <Text
-              style={{
-                fontSize: designTokens.typography.title3.fontSize,
-                fontWeight: designTokens.typography.title3.fontWeight,
-                color: colors.textPrimary,
-                marginBottom: 2,
-              } as any}
-            >
+          <View style={[styles.divider, { backgroundColor: colors.separator }]} />
+          <View style={styles.statItem}>
+            <Text style={[styles.statValue, { color: colors.textPrimary }]}>
               {result.correctAnswers}/{result.totalQuestions}
             </Text>
-            <Text
-              style={{
-                fontSize: designTokens.typography.caption1.fontSize,
-                color: colors.textSecondary,
-              }}
-            >
-              Correct
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+              {t("results.correct")}
             </Text>
           </View>
-          <View style={{
-            height: 30,
-            width: 1,
-            backgroundColor: colors.separator
-          }} />
-          <View style={{ alignItems: 'center' }}>
-            <Text
-              style={{
-                fontSize: designTokens.typography.title3.fontSize,
-                fontWeight: designTokens.typography.title3.fontWeight,
-                color: colors.textPrimary,
-                marginBottom: 2,
-              } as any}
-            >
+          <View style={[styles.divider, { backgroundColor: colors.separator }]} />
+          <View style={styles.statItem}>
+            <Text style={[styles.statValue, { color: colors.textPrimary }]}>
               {result.timeSpent}
             </Text>
-            <Text
-              style={{
-                fontSize: designTokens.typography.caption1.fontSize,
-                color: colors.textSecondary,
-              }}
-            >
-              Time
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+              {t("results.time")}
             </Text>
           </View>
         </View>
 
-        <View style={{
-          width: '100%',
-          height: 6,
-          backgroundColor: colors.separator,
-          borderRadius: 3,
-          overflow: 'hidden',
-        }}>
+        <View style={[styles.progressBar, { backgroundColor: colors.separator }]}>
           <View
-            style={{
-              height: '100%',
-              width: `${result.percentage}%`,
-              backgroundColor: gradeColors.text,
-              borderRadius: 3,
-            }}
+            style={[
+              styles.progressFill,
+              {
+                width: `${result.percentage}%`,
+                backgroundColor: gradeColors.text
+              }
+            ]}
           />
         </View>
       </View>
@@ -278,38 +171,26 @@ export default function ResultsScreen() {
 
   const SubjectPerformanceCard = ({ subject }: { subject: any }) => (
     <View
-      style={{
-        backgroundColor: colors.backgroundElevated,
-        borderRadius: designTokens.borderRadius.xl,
-        padding: designTokens.spacing.lg,
-        ...designTokens.shadows.sm,
-        minWidth: 140,
-        marginRight: designTokens.spacing.sm,
-      }}
+      style={[
+        styles.performanceCard,
+        {
+          backgroundColor: colors.backgroundElevated,
+          ...designTokens.shadows.sm,
+          [isRTL ? 'marginLeft' : 'marginRight']: designTokens.spacing.sm
+        }
+      ]}
     >
       <Text
-        style={{
-          fontSize: designTokens.typography.footnote.fontSize,
-          fontWeight: '600',
-          color: colors.textPrimary,
-          marginBottom: designTokens.spacing.sm,
-        }}
+        style={[styles.subjectTitle, { color: colors.textPrimary }]}
         numberOfLines={1}
       >
         {subject.subject}
       </Text>
-      <View style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 2,
-      }}>
+      <View style={[styles.trendRow, { 
+        flexDirection: isRTL ? 'row-reverse' : 'row'
+      }]}>
         <Text
-          style={{
-            fontSize: designTokens.typography.title1.fontSize,
-            fontWeight: designTokens.typography.title1.fontWeight,
-            color: colors.textPrimary,
-          } as any}
+          style={[styles.averageScore, { color: colors.textPrimary }]}
         >
           {subject.averageScore}%
         </Text>
@@ -331,32 +212,18 @@ export default function ResultsScreen() {
           }
         />
       </View>
-      <Text
-        style={{
-          fontSize: designTokens.typography.caption1.fontSize,
-          color: colors.textSecondary,
-        }}
-      >
-        {subject.examsTaken} exams
+      <Text style={[styles.examCount, { color: colors.textSecondary }]}>
+        {subject.examsTaken} {t("results.exams")}
       </Text>
     </View>
   );
 
   if (loading) {
     return (
-      <View style={{
-        flex: 1,
-        backgroundColor: colors.background,
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{ fontFamily, 
-          marginTop: designTokens.spacing.md,
-          fontSize: designTokens.typography.body.fontSize,
-          color: colors.textSecondary,
-        }}>
-          Loading your results...
+        <Text style={[styles.loadingText, { color: colors.textSecondary, fontFamily }]}>
+          {t("results.loading")}
         </Text>
       </View>
     );
@@ -365,31 +232,19 @@ export default function ResultsScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
-      <View style={{
-        paddingTop: designTokens.spacing.xxxl,
-        paddingHorizontal: designTokens.spacing.xl,
-        paddingBottom: designTokens.spacing.lg,
-      }}>
-        <Text style={{ fontFamily, 
-          fontSize: designTokens.typography.largeTitle.fontSize,
-          fontWeight: designTokens.typography.largeTitle.fontWeight,
-          color: colors.textPrimary,
-          marginBottom: designTokens.spacing.xs,
-        } as any}>
-          Exam Results
+      <View style={styles.header}>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary, fontFamily }]}>
+          {t("results.title")}
         </Text>
-        <Text style={{ fontFamily, 
-          fontSize: designTokens.typography.body.fontSize,
-          color: colors.textSecondary,
-        }}>
-          Your performance overview and detailed results
+        <Text style={[styles.headerSubtitle, { color: colors.textSecondary, fontFamily }]}>
+          {t("results.overview")}
         </Text>
       </View>
 
       <Animated.ScrollView
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        entering={FadeIn.duration(600)} // Smooth fade-in when screen loads
+        entering={FadeIn.duration(600)}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -398,19 +253,11 @@ export default function ResultsScreen() {
           />
         }
       >
-        <View style={{
-          paddingHorizontal: designTokens.spacing.xl,
-          paddingBottom: designTokens.spacing.xxxl,
-        }}>
+        <View style={styles.content}>
           {/* Performance Overview */}
-          <View style={{ marginBottom: designTokens.spacing.xl }}>
-            <Text style={{ fontFamily, 
-              fontSize: designTokens.typography.title3.fontSize,
-              fontWeight: designTokens.typography.title3.fontWeight,
-              color: colors.textPrimary,
-              marginBottom: designTokens.spacing.md,
-            } as any}>
-              Performance Overview
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary, fontFamily }]}>
+              {t("results.performanceOverview")}
             </Text>
             <ScrollView
               horizontal
@@ -419,7 +266,7 @@ export default function ResultsScreen() {
                 paddingBottom: designTokens.spacing.sm
               }}
             >
-              <View style={{ flexDirection: 'row' }}>
+              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
                 {subjectPerformance.map((subject, index) => (
                   <SubjectPerformanceCard key={index} subject={subject} />
                 ))}
@@ -428,37 +275,34 @@ export default function ResultsScreen() {
           </View>
 
           {/* Filter Tabs */}
-          <View style={{
-            flexDirection: 'row',
+          <View style={[styles.filterTabs, { 
             backgroundColor: colors.separator,
-            borderRadius: designTokens.borderRadius.full,
-            padding: 2,
-            marginBottom: designTokens.spacing.xl,
-          }}>
+            flexDirection: isRTL ? 'row-reverse' : 'row'
+          }]}>
             {[
-              { key: "all", label: "All Results" },
-              { key: "recent", label: "Recent" },
-              { key: "top", label: "Top Scores" },
+              { key: "all", label: t("results.allResults") },
+              { key: "recent", label: t("results.recent") },
+              { key: "top", label: t("results.topScores") }
             ].map((filter) => (
               <TouchableOpacity
                 key={filter.key}
-                style={{
-                  flex: 1,
-                  paddingVertical: designTokens.spacing.sm,
-                  borderRadius: designTokens.borderRadius.full,
-                  backgroundColor: selectedFilter === filter.key ? colors.backgroundElevated : 'transparent',
-                }}
+                style={[
+                  styles.filterTab,
+                  {
+                    backgroundColor: selectedFilter === filter.key ? colors.backgroundElevated : 'transparent'
+                  }
+                ]}
                 onPress={() => setSelectedFilter(filter.key as any)}
               >
                 <Text
-                  style={{
-                    textAlign: 'center',
-                    fontSize: designTokens.typography.footnote.fontSize,
-                    fontWeight: '600',
-                    color: selectedFilter === filter.key
-                      ? colors.textPrimary
-                      : colors.textSecondary,
-                  }}
+                  style={[
+                    styles.filterText,
+                    {
+                      color: selectedFilter === filter.key
+                        ? colors.textPrimary
+                        : colors.textSecondary
+                    }
+                  ]}
                 >
                   {filter.label}
                 </Text>
@@ -467,47 +311,28 @@ export default function ResultsScreen() {
           </View>
 
           {/* Results List */}
-          <View style={{ marginBottom: designTokens.spacing.xl }}>
-            <Text style={{ fontFamily, 
-              fontSize: designTokens.typography.title3.fontSize,
-              fontWeight: designTokens.typography.title3.fontWeight,
-              color: colors.textPrimary,
-              marginBottom: designTokens.spacing.md,
-            } as any}>
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary, fontFamily }]}>
               {selectedFilter === "recent"
-                ? "Recent Results"
+                ? t("results.recentResults")
                 : selectedFilter === "top"
-                  ? "Top Performances"
-                  : "All Results"}
+                  ? t("results.topPerformances")
+                  : t("results.allResults")}
             </Text>
 
             {filteredResults.length === 0 ? (
-              <View style={{
+              <View style={[styles.emptyState, { 
                 backgroundColor: colors.backgroundElevated,
-                borderRadius: designTokens.borderRadius.xl,
-                padding: designTokens.spacing.xxl,
-                alignItems: 'center',
-                ...designTokens.shadows.sm,
-              }}>
+                ...designTokens.shadows.sm
+              }]}>
                 <Ionicons name="stats-chart" size={48} color={colors.textTertiary} />
-                <Text style={{ fontFamily, 
-                  fontSize: designTokens.typography.title3.fontSize,
-                  fontWeight: designTokens.typography.title3.fontWeight,
-                  color: colors.textPrimary,
-                  marginTop: designTokens.spacing.md,
-                  marginBottom: designTokens.spacing.xs,
-                } as any}>
-                  No results found
+                <Text style={[styles.emptyTitle, { color: colors.textPrimary, fontFamily }]}>
+                  {t("results.noResults")}
                 </Text>
-                <Text style={{ fontFamily, 
-                  fontSize: designTokens.typography.body.fontSize,
-                  color: colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: 22,
-                }}>
+                <Text style={[styles.emptySubtitle, { color: colors.textSecondary, fontFamily }]}>
                   {selectedFilter === "top"
-                    ? "No top scores yet"
-                    : "Complete some exams to see your results here"}
+                    ? t("results.noTopScores")
+                    : t("results.completeExams")}
                 </Text>
               </View>
             ) : (
@@ -519,73 +344,36 @@ export default function ResultsScreen() {
 
           {/* Overall Stats */}
           <View
-            style={{
-              backgroundColor: colors.backgroundElevated,
-              borderRadius: designTokens.borderRadius.xl,
-              padding: designTokens.spacing.lg,
-              ...designTokens.shadows.sm,
-            }}
+            style={[
+              styles.summaryCard,
+              {
+                backgroundColor: colors.backgroundElevated,
+                ...designTokens.shadows.sm
+              }
+            ]}
           >
             <Text
-              style={{
-                fontSize: designTokens.typography.title3.fontSize,
-                fontWeight: designTokens.typography.title3.fontWeight,
-                color: colors.textPrimary,
-                marginBottom: designTokens.spacing.md,
-              } as any}
+              style={[styles.summaryTitle, { color: colors.textPrimary, fontFamily }]}
             >
-              Summary
+              {t("results.summary")}
             </Text>
-            <View style={{
-              flexDirection: 'row',
-              flexWrap: 'wrap',
+            <View style={[styles.summaryGrid, { 
               marginHorizontal: -designTokens.spacing.xs,
-            }}>
-              <View style={{
-                width: '50%',
-                paddingHorizontal: designTokens.spacing.xs,
-                marginBottom: designTokens.spacing.md,
-              }}>
-                <Text
-                  style={{
-                    fontSize: designTokens.typography.caption1.fontSize,
-                    color: colors.textSecondary,
-                    marginBottom: 2,
-                  }}
-                >
-                  Total Exams
+              flexDirection: isRTL ? 'row-reverse' : 'row'
+            }]}>
+              <View style={styles.summaryItem}>
+                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                  {t("results.totalExams")}
                 </Text>
-                <Text
-                  style={{
-                    fontSize: designTokens.typography.title2.fontSize,
-                    fontWeight: designTokens.typography.title2.fontWeight,
-                    color: colors.textPrimary,
-                  } as any}
-                >
+                <Text style={[styles.summaryValue, { color: colors.textPrimary, fontFamily }]}>
                   {results.length}
                 </Text>
               </View>
-              <View style={{
-                width: '50%',
-                paddingHorizontal: designTokens.spacing.xs,
-                marginBottom: designTokens.spacing.md,
-              }}>
-                <Text
-                  style={{
-                    fontSize: designTokens.typography.caption1.fontSize,
-                    color: colors.textSecondary,
-                    marginBottom: 2,
-                  }}
-                >
-                  Average Score
+              <View style={styles.summaryItem}>
+                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                  {t("results.averageScore")}
                 </Text>
-                <Text
-                  style={{
-                    fontSize: designTokens.typography.title2.fontSize,
-                    fontWeight: designTokens.typography.title2.fontWeight,
-                    color: colors.textPrimary,
-                  } as any}
-                >
+                <Text style={[styles.summaryValue, { color: colors.textPrimary, fontFamily }]}>
                   {results.length > 0
                     ? Math.round(
                       results.reduce((sum, r) => sum + r.percentage, 0) /
@@ -594,57 +382,27 @@ export default function ResultsScreen() {
                     : 0}%
                 </Text>
               </View>
-              <View style={{
-                width: '50%',
-                paddingHorizontal: designTokens.spacing.xs,
-              }}>
-                <Text
-                  style={{
-                    fontSize: designTokens.typography.caption1.fontSize,
-                    color: colors.textSecondary,
-                    marginBottom: 2,
-                  }}
-                >
-                  Best Subject
+              <View style={styles.summaryItem}>
+                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                  {t("results.bestSubject")}
                 </Text>
-                <Text
-                  style={{
-                    fontSize: designTokens.typography.title2.fontSize,
-                    fontWeight: designTokens.typography.title2.fontWeight,
-                    color: colors.textPrimary,
-                  } as any}
-                >
+                <Text style={[styles.summaryValue, { color: colors.textPrimary, fontFamily }]}>
                   {subjectPerformance.length > 0
                     ? subjectPerformance.reduce((best, current) =>
                       current.averageScore > best.averageScore ? current : best
                     ).subject
-                    : "N/A"}
+                    : t("results.na")}
                 </Text>
               </View>
-              <View style={{
-                width: '50%',
-                paddingHorizontal: designTokens.spacing.xs,
-              }}>
-                <Text
-                  style={{
-                    fontSize: designTokens.typography.caption1.fontSize,
-                    color: colors.textSecondary,
-                    marginBottom: 2,
-                  }}
-                >
-                  Total Time
+              <View style={styles.summaryItem}>
+                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                  {t("results.totalTime")}
                 </Text>
-                <Text
-                  style={{
-                    fontSize: designTokens.typography.title2.fontSize,
-                    fontWeight: designTokens.typography.title2.fontWeight,
-                    color: colors.textPrimary,
-                  } as any}
-                >
+                <Text style={[styles.summaryValue, { color: colors.textPrimary, fontFamily }]}>
                   {results.reduce((total, result) => {
                     const time = parseInt(result.timeSpent);
                     return total + (isNaN(time) ? 0 : time);
-                  }, 0)}m
+                  }, 0)}{t("results.minutes")}
                 </Text>
               </View>
             </View>
@@ -654,3 +412,176 @@ export default function ResultsScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  loadingText: {
+    marginTop: designTokens.spacing.md,
+    fontSize: designTokens.typography.body.fontSize
+  },
+  header: {
+    paddingTop: designTokens.spacing.xxxl,
+    paddingHorizontal: designTokens.spacing.xl,
+    paddingBottom: designTokens.spacing.lg
+  },
+  headerTitle: {
+    fontSize: designTokens.typography.largeTitle.fontSize,
+    fontWeight: designTokens.typography.largeTitle.fontWeight,
+    marginBottom: designTokens.spacing.xs
+  },
+  headerSubtitle: {
+    fontSize: designTokens.typography.body.fontSize
+  },
+  content: {
+    paddingHorizontal: designTokens.spacing.xl,
+    paddingBottom: designTokens.spacing.xxxl
+  },
+  section: {
+    marginBottom: designTokens.spacing.xl
+  },
+  sectionTitle: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: designTokens.typography.title3.fontWeight,
+    marginBottom: designTokens.spacing.md
+  },
+  resultCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    marginBottom: designTokens.spacing.sm
+  },
+  resultHeader: {
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: designTokens.spacing.md
+  },
+  resultTitle: {
+    fontSize: designTokens.typography.headline.fontSize,
+    fontWeight: designTokens.typography.headline.fontWeight,
+    marginBottom: 2
+  },
+  resultSubtitle: {
+    fontSize: designTokens.typography.footnote.fontSize
+  },
+  gradeBadge: {
+    paddingHorizontal: designTokens.spacing.md,
+    paddingVertical: designTokens.spacing.xs,
+    borderRadius: designTokens.borderRadius.full,
+    borderWidth: 1
+  },
+  gradeText: {
+    fontSize: designTokens.typography.headline.fontSize,
+    fontWeight: designTokens.typography.headline.fontWeight
+  },
+  statsRow: {
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: designTokens.spacing.md
+  },
+  statItem: {
+    alignItems: 'center'
+  },
+  statValue: {
+    fontSize: designTokens.typography.title2.fontSize,
+    fontWeight: designTokens.typography.title2.fontWeight,
+    marginBottom: 2
+  },
+  statLabel: {
+    fontSize: designTokens.typography.caption1.fontSize
+  },
+  divider: {
+    height: 30,
+    width: 1
+  },
+  progressBar: {
+    width: '100%',
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden'
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 3
+  },
+  performanceCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg,
+    minWidth: 140
+  },
+  subjectTitle: {
+    fontSize: designTokens.typography.footnote.fontSize,
+    fontWeight: '600',
+    marginBottom: designTokens.spacing.sm
+  },
+  trendRow: {
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 2
+  },
+  averageScore: {
+    fontSize: designTokens.typography.title1.fontSize,
+    fontWeight: designTokens.typography.title1.fontWeight
+  },
+  examCount: {
+    fontSize: designTokens.typography.caption1.fontSize
+  },
+  filterTabs: {
+    borderRadius: designTokens.borderRadius.full,
+    padding: 2,
+    marginBottom: designTokens.spacing.xl
+  },
+  filterTab: {
+    flex: 1,
+    paddingVertical: designTokens.spacing.sm,
+    borderRadius: designTokens.borderRadius.full
+  },
+  filterText: {
+    textAlign: 'center',
+    fontSize: designTokens.typography.footnote.fontSize,
+    fontWeight: '600'
+  },
+  emptyState: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.xxl,
+    alignItems: 'center'
+  },
+  emptyTitle: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: designTokens.typography.title3.fontWeight,
+    marginTop: designTokens.spacing.md,
+    marginBottom: designTokens.spacing.xs
+  },
+  emptySubtitle: {
+    fontSize: designTokens.typography.body.fontSize,
+    textAlign: 'center',
+    lineHeight: 22
+  },
+  summaryCard: {
+    borderRadius: designTokens.borderRadius.xl,
+    padding: designTokens.spacing.lg
+  },
+  summaryTitle: {
+    fontSize: designTokens.typography.title3.fontSize,
+    fontWeight: designTokens.typography.title3.fontWeight,
+    marginBottom: designTokens.spacing.md
+  },
+  summaryGrid: {
+    flexWrap: 'wrap'
+  },
+  summaryItem: {
+    width: '50%',
+    paddingHorizontal: designTokens.spacing.xs,
+    marginBottom: designTokens.spacing.md
+  },
+  summaryLabel: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    marginBottom: 2
+  },
+  summaryValue: {
+    fontSize: designTokens.typography.title2.fontSize,
+    fontWeight: designTokens.typography.title2.fontWeight
+  }
+});

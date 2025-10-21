@@ -22,6 +22,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // Update the ExamDetails interface to properly type nested questions
 interface ExamDetails extends Exam {
@@ -48,7 +49,6 @@ interface ExamDetails extends Exam {
   };
 }
 
-
 interface QuestionAttachment {
   questionId: string;
   url: string;
@@ -57,6 +57,7 @@ interface QuestionAttachment {
 }
 
 export default function StudentExamScreen() {
+  const { t, isRTL } = useTranslation();
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const examId = Array.isArray(id) ? id[0] : id;
@@ -142,21 +143,21 @@ export default function StudentExamScreen() {
         }
       } else {
         if (response.status === 403) {
-          Alert.alert('Exam Expired', response.data.error || 'This exam is no longer available.', [
-            { text: 'OK', onPress: () => router.back() }
+          Alert.alert(t('exams.expired'), response.data.error || t('exams.noLongerAvailable'), [
+            { text: t('common.ok'), onPress: () => router.back() }
           ]);
           return;
         }
-        throw new Error(response.data.error || 'Failed to load exam');
+        throw new Error(response.data.error || t('exams.loadFailed'));
       }
     } catch (error: any) {
       console.error('Failed to load exam:', error);
       if (error.response?.status === 403) {
-        Alert.alert('Access Denied', error.response.data.error || 'You cannot access this exam at this time.', [
-          { text: 'OK', onPress: () => router.back() }
+        Alert.alert(t('common.accessDenied'), error.response.data.error || t('exams.cannotAccess'), [
+          { text: t('common.ok'), onPress: () => router.back() }
         ]);
       } else {
-        Alert.alert('Error', 'Failed to load exam details');
+        Alert.alert(t('common.error'), t('exams.loadDetailsFailed'));
       }
     } finally {
       setLoading(false);
@@ -224,9 +225,9 @@ export default function StudentExamScreen() {
     }
 
     if (Object.keys(answers).length === 0) {
-      Alert.alert('Warning', 'You haven\'t answered any questions. Are you sure you want to submit?', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Submit', onPress: () => submitExam(false) }
+      Alert.alert(t('exams.warning'), t('exams.noAnswersWarning'), [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('exams.submit'), onPress: () => submitExam(false) }
       ]);
       return;
     }
@@ -251,11 +252,11 @@ export default function StudentExamScreen() {
 
     if (unansweredQuestions.length > 0) {
       Alert.alert(
-        'Unanswered Questions',
-        `You have ${unansweredQuestions.length} unanswered question(s). Are you sure you want to submit?`,
+        t('exams.unansweredQuestions'),
+        `${t('exams.youHave')} ${unansweredQuestions.length} ${t('exams.unansweredQuestionsText')}`,
         [
-          { text: 'Continue Editing', style: 'cancel' },
-          { text: 'Submit Anyway', onPress: () => submitExam(false) }
+          { text: t('exams.continueEditing'), style: 'cancel' },
+          { text: t('exams.submitAnyway'), onPress: () => submitExam(false) }
         ]
       );
     } else {
@@ -292,13 +293,13 @@ export default function StudentExamScreen() {
 
         if (submissionData.needsManualGrading) {
           Alert.alert(
-            isAutoSubmit ? 'Auto-Submitted for Grading' : 'Submitted for Grading',
+            isAutoSubmit ? t('exams.autoSubmitted') : t('exams.submitted'),
             isAutoSubmit ?
-              'Your exam was automatically submitted and is waiting for manual grading.' :
-              'Your exam has been submitted and is waiting for manual grading by your teacher.',
+              t('exams.autoSubmittedGrading') :
+              t('exams.submittedGrading'),
             [
               {
-                text: 'OK',
+                text: t('common.ok'),
                 onPress: () => router.push('/(student)/exams')
               }
             ]
@@ -307,12 +308,12 @@ export default function StudentExamScreen() {
           router.replace(`/(student)/exam/results/${examId}?submissionId=${submissionId}`);
         }
       } else {
-        Alert.alert('Submission Failed', response.data.error || 'Unknown error occurred');
+        Alert.alert(t('exams.submissionFailed'), response.data.error || t('exams.unknownError'));
         hasSubmitted.current = false;
       }
     } catch (error: any) {
       console.error('❌ Exam submission error:', error);
-      Alert.alert('Error', 'Failed to submit exam. Please try again.');
+      Alert.alert(t('common.error'), t('exams.submitFailed'));
       hasSubmitted.current = false;
     } finally {
       setSubmitting(false);
@@ -327,7 +328,7 @@ export default function StudentExamScreen() {
       // Request permissions
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission required', 'Sorry, we need camera roll permissions to upload images.');
+        Alert.alert(t('exams.permissionRequired'), t('exams.cameraRollPermission'));
         return;
       }
 
@@ -367,13 +368,13 @@ export default function StudentExamScreen() {
         };
 
         setQuestionAttachments(prev => [...prev, newAttachment]);
-        Alert.alert('Success', 'Attachment uploaded successfully!');
+        Alert.alert(t('common.success'), t('exams.attachmentUploaded'));
       } else {
-        throw new Error(uploadResponse.data.error || 'Upload failed');
+        throw new Error(uploadResponse.data.error || t('exams.uploadFailed'));
       }
     } catch (error: any) {
       console.error('Upload error:', error);
-      Alert.alert('Error', error.message || 'Failed to upload attachment');
+      Alert.alert(t('common.error'), error.message || t('exams.uploadAttachmentFailed'));
     } finally {
       setUploadingImages(false);
     }
@@ -405,11 +406,11 @@ export default function StudentExamScreen() {
 
       if (question.is_section) {
         return (
-          <View key={question.id} style={[styles.sectionCard, { marginLeft: level * 20 }]}>
-            <Text style={styles.sectionTitle}>{questionNumber}. {question.question}</Text>
+          <View key={question.id} style={[styles.sectionCard, { marginLeft: isRTL ? 0 : level * 20, marginRight: isRTL ? level * 20 : 0 }]}>
+            <Text style={[styles.sectionTitle, isRTL && styles.rtlText]}>{questionNumber}. {question.question}</Text>
             {question.attachment_url && (
               <View style={styles.questionAttachment}>
-                <Text style={styles.attachmentLabel}>Section Attachment:</Text>
+                <Text style={[styles.attachmentLabel, isRTL && styles.rtlText]}>{t('exams.sectionAttachment')}:</Text>
                 <Image
                   source={{ uri: question.attachment_url }}
                   style={styles.attachmentImage}
@@ -427,16 +428,16 @@ export default function StudentExamScreen() {
       }
 
       return (
-        <View key={question.id} style={[styles.questionCard, { marginLeft: level * 20 }]}>
-          <Text style={styles.questionNumber}>
-            Question {questionNumber} ({question.points} point{question.points !== 1 ? 's' : ''})
+        <View key={question.id} style={[styles.questionCard, { marginLeft: isRTL ? 0 : level * 20, marginRight: isRTL ? level * 20 : 0 }]}>
+          <Text style={[styles.questionNumber, isRTL && styles.rtlText]}>
+            {t('exams.question')} {questionNumber} ({question.points} {t('common.points')})
           </Text>
-          <Text style={styles.questionText}>{question.question}</Text>
+          <Text style={[styles.questionText, isRTL && styles.rtlText]}>{question.question}</Text>
 
           {/* Display question attachment if exists */}
           {question.attachment_url && (
             <View style={styles.questionAttachment}>
-              <Text style={styles.attachmentLabel}>Question Attachment:</Text>
+              <Text style={[styles.attachmentLabel, isRTL && styles.rtlText]}>{t('exams.questionAttachment')}:</Text>
               <Image
                 source={{ uri: question.attachment_url }}
                 style={styles.attachmentImage}
@@ -448,8 +449,8 @@ export default function StudentExamScreen() {
           {/* Student attachments for this question */}
           {questionAttachments.filter(att => att.questionId === question.id).map((attachment, attIndex) => (
             <View key={attIndex} style={styles.studentAttachment}>
-              <View style={styles.attachmentHeader}>
-                <Text style={styles.attachmentName}>Your attachment {attIndex + 1}</Text>
+              <View style={[styles.attachmentHeader, isRTL && styles.rtlRow]}>
+                <Text style={[styles.attachmentName, isRTL && styles.rtlText]}>{t('exams.yourAttachment')} {attIndex + 1}</Text>
                 <TouchableOpacity onPress={() => removeAttachment(attachment.url)}>
                   <Ionicons name="close-circle" size={20} color="#FF3B30" />
                 </TouchableOpacity>
@@ -470,43 +471,44 @@ export default function StudentExamScreen() {
               ) : (
                 <>
                   <Ionicons name="attach" size={16} color="#007AFF" />
-                  <Text style={styles.uploadButtonText}>Add Attachment</Text>
+                  <Text style={[styles.uploadButtonText, isRTL && styles.rtlText]}>{t('exams.addAttachment')}</Text>
                 </>
               )}
             </TouchableOpacity>
           )}
 
           {question.type === 'mcq' ? (
-            <View style={styles.optionsContainer}>
+            <View style={[styles.optionsContainer, isRTL && styles.rtlOptions]}>
               {question.options.map((option: any, optionIndex: any) => (
                 <TouchableOpacity
                   key={optionIndex}
                   style={[
                     styles.option,
-                    answers[question.id] === option && styles.optionSelected
+                    answers[question.id] === option && styles.optionSelected,
+                    isRTL && styles.rtlOption
                   ]}
                   onPress={() => handleAnswerSelect(question.id, option)}
                 >
-                  <View style={styles.optionRadio}>
+                  <View style={[styles.optionRadio, isRTL && styles.rtlRadio]}>
                     {answers[question.id] === option && (
                       <View style={styles.optionRadioSelected} />
                     )}
                   </View>
-                  <Text style={styles.optionText}>{option}</Text>
+                  <Text style={[styles.optionText, isRTL && styles.rtlText]}>{option}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           ) : (
             <View style={styles.textAnswerContainer}>
-              <Text style={styles.textAnswerHint}>
-                Type your answer below:
+              <Text style={[styles.textAnswerHint, isRTL && styles.rtlText]}>
+                {t('exams.typeAnswer')}
               </Text>
               <TouchableOpacity
                 style={styles.textInputButton}
                 onPress={() => openTextAnswerModal(question.id, question.question, answers[question.id] || '')}
               >
-                <Text style={styles.answerPreview}>
-                  {answers[question.id] || 'Tap to add your answer...'}
+                <Text style={[styles.answerPreview, isRTL && styles.rtlText]}>
+                  {answers[question.id] || t('exams.tapToAddAnswer')}
                 </Text>
                 <Ionicons name="create-outline" size={20} color="#007AFF" />
               </TouchableOpacity>
@@ -562,41 +564,41 @@ export default function StudentExamScreen() {
         presentationStyle="pageSheet"
         onRequestClose={handleCancel}
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Your Answer</Text>
+        <SafeAreaView style={[styles.modalContainer, isRTL && styles.rtlContainer]}>
+          <View style={[styles.modalHeader, isRTL && styles.rtlRow]}>
+            <Text style={[styles.modalTitle, isRTL && styles.rtlText]}>{t('exams.yourAnswer')}</Text>
             <TouchableOpacity onPress={handleCancel}>
               <Ionicons name="close" size={24} color="#000" />
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.modalContent}>
-            <Text style={styles.modalQuestion}>{textAnswerModal.questionText}</Text>
+            <Text style={[styles.modalQuestion, isRTL && styles.rtlText]}>{textAnswerModal.questionText}</Text>
 
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, isRTL && styles.rtlInput]}
               multiline
               numberOfLines={8}
               textAlignVertical="top"
               value={localAnswer}
               onChangeText={setLocalAnswer}
-              placeholder="Type your detailed answer here..."
+              placeholder={t('exams.typeDetailedAnswer')}
               autoFocus={true}
             />
 
-            <View style={styles.modalActions}>
+            <View style={[styles.modalActions, isRTL && styles.rtlRow]}>
               <TouchableOpacity
                 style={styles.cancelButton}
                 onPress={handleCancel}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text style={[styles.cancelButtonText, isRTL && styles.rtlText]}>{t('common.cancel')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.saveButton}
                 onPress={handleSave}
               >
-                <Text style={styles.saveButtonText}>Save Answer</Text>
+                <Text style={[styles.saveButtonText, isRTL && styles.rtlText]}>{t('exams.saveAnswer')}</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -610,7 +612,7 @@ export default function StudentExamScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Loading Exam...</Text>
+          <Text style={[styles.loadingText, isRTL && styles.rtlText]}>{t('exams.loadingExam')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -620,9 +622,9 @@ export default function StudentExamScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Exam not found</Text>
+          <Text style={[styles.errorText, isRTL && styles.rtlText]}>{t('exams.notFound')}</Text>
           <TouchableOpacity style={styles.button} onPress={() => router.back()}>
-            <Text style={styles.buttonText}>Go Back</Text>
+            <Text style={[styles.buttonText, isRTL && styles.rtlText]}>{t('common.goBack')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -637,17 +639,17 @@ export default function StudentExamScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Exam Expired</Text>
-          <Text style={styles.subtitle}>
-            The due date for this exam has passed.
+          <Text style={[styles.errorText, isRTL && styles.rtlText]}>{t('exams.expired')}</Text>
+          <Text style={[styles.subtitle, isRTL && styles.rtlText]}>
+            {t('exams.dueDatePassed')}
           </Text>
           {exam?.due_date && (
-            <Text style={styles.subtitle}>
-              Due date was: {new Date(exam.due_date).toLocaleString()}
+            <Text style={[styles.subtitle, isRTL && styles.rtlText]}>
+              {t('exams.dueDateWas')}: {new Date(exam.due_date).toLocaleString()}
             </Text>
           )}
           <TouchableOpacity style={styles.button} onPress={() => router.push('/exams')}>
-            <Text style={styles.buttonText}>Back to Exams</Text>
+            <Text style={[styles.buttonText, isRTL && styles.rtlText]}>{t('exams.backToExams')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -658,12 +660,12 @@ export default function StudentExamScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Exam Already Taken</Text>
-          <Text style={styles.subtitle}>
-            You have already completed this exam.
+          <Text style={[styles.errorText, isRTL && styles.rtlText]}>{t('exams.alreadyTaken')}</Text>
+          <Text style={[styles.subtitle, isRTL && styles.rtlText]}>
+            {t('exams.alreadyCompleted')}
           </Text>
           <TouchableOpacity style={styles.button} onPress={() => router.push('/exams')}>
-            <Text style={styles.buttonText}>Back to Exams</Text>
+            <Text style={[styles.buttonText, isRTL && styles.rtlText]}>{t('exams.backToExams')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -674,15 +676,15 @@ export default function StudentExamScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Exam Not Available Yet</Text>
-          <Text style={styles.subtitle}>
-            This exam is scheduled for a future date.
+          <Text style={[styles.errorText, isRTL && styles.rtlText]}>{t('exams.notAvailableYet')}</Text>
+          <Text style={[styles.subtitle, isRTL && styles.rtlText]}>
+            {t('exams.scheduledFuture')}
           </Text>
-          <Text style={styles.subtitle}>
-            Available on: {new Date(exam.due_date!).toLocaleDateString()}
+          <Text style={[styles.subtitle, isRTL && styles.rtlText]}>
+            {t('exams.availableOn')}: {new Date(exam.due_date!).toLocaleDateString()}
           </Text>
           <TouchableOpacity style={styles.button} onPress={() => router.push('/exams')}>
-            <Text style={styles.buttonText}>Back to Exams</Text>
+            <Text style={[styles.buttonText, isRTL && styles.rtlText]}>{t('exams.backToExams')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -690,44 +692,44 @@ export default function StudentExamScreen() {
   }
 
   // Helper function to count non-section questions recursively - MOVE THIS UP
-const countNonSectionQuestions = (questions: any[]): number => {
-  return questions.reduce((count, question) => {
-    let totalCount = question.is_section ? count : count + 1;
+  const countNonSectionQuestions = (questions: any[]): number => {
+    return questions.reduce((count, question) => {
+      let totalCount = question.is_section ? count : count + 1;
 
-    if (question.nested_questions && question.nested_questions.length > 0) {
-      totalCount += countNonSectionQuestions(question.nested_questions);
-    }
+      if (question.nested_questions && question.nested_questions.length > 0) {
+        totalCount += countNonSectionQuestions(question.nested_questions);
+      }
 
-    return totalCount;
-  }, 0);
-};
+      return totalCount;
+    }, 0);
+  };
 
-// Update the progress calculation to count only non-section questions
-const answeredQuestions = Object.keys(answers).length;
-const totalQuestions = exam.questions ?
-  exam.questions.reduce((count, question) => {
-    // Count this question if it's not a section
-    let totalCount = question.is_section ? count : count + 1;
+  // Update the progress calculation to count only non-section questions
+  const answeredQuestions = Object.keys(answers).length;
+  const totalQuestions = exam.questions ?
+    exam.questions.reduce((count, question) => {
+      // Count this question if it's not a section
+      let totalCount = question.is_section ? count : count + 1;
 
-    // Also count nested questions recursively
-    if (question.nested_questions && question.nested_questions.length > 0) {
-      const nestedCount = countNonSectionQuestions(question.nested_questions);
-      totalCount += nestedCount;
-    }
+      // Also count nested questions recursively
+      if (question.nested_questions && question.nested_questions.length > 0) {
+        const nestedCount = countNonSectionQuestions(question.nested_questions);
+        totalCount += nestedCount;
+      }
 
-    return totalCount;
-  }, 0) : 0;
+      return totalCount;
+    }, 0) : 0;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, isRTL && styles.rtlContainer]}>
       <TextAnswerModal />
 
       {showWarning && (
         <View style={styles.warningBanner}>
-          <View style={styles.warningContent}>
-            <Text style={styles.warningText}>
+          <View style={[styles.warningContent, isRTL && styles.rtlRow]}>
+            <Text style={[styles.warningText, isRTL && styles.rtlText]}>
               <Ionicons name="warning-outline" size={16} color="#FFA500" />
-              Exam will auto-submit if you leave this page or put the app in background
+              {t('exams.autoSubmitWarning')}
             </Text>
             <TouchableOpacity onPress={() => setShowWarning(false)} style={styles.warningCloseButton}>
               <Text style={styles.warningCloseText}>×</Text>
@@ -737,40 +739,42 @@ const totalQuestions = exam.questions ?
       )}
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, isRTL && styles.rtlRow]}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backButtonText}>← Back</Text>
+          <Text style={[styles.backButtonText, isRTL && styles.rtlText]}>
+            {isRTL ? "العودة ←" : "← Back"}
+          </Text>
         </TouchableOpacity>
 
         {timeLeft !== null && (
           <View style={[styles.timer, timeLeft < 300 && styles.timerWarning]}>
-            <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
+            <Text style={[styles.timerText, isRTL && styles.rtlText]}>{formatTime(timeLeft)}</Text>
           </View>
         )}
       </View>
 
       {/* Exam Info */}
       <View style={styles.examInfo}>
-        <Text style={styles.examTitle}>{exam.title}</Text>
-        <Text style={styles.examSubject}>{exam.subject} • {exam.class}</Text>
+        <Text style={[styles.examTitle, isRTL && styles.rtlText]}>{exam.title}</Text>
+        <Text style={[styles.examSubject, isRTL && styles.rtlText]}>{exam.subject} • {exam.class}</Text>
         {exam.teacher && (
-          <Text style={styles.teacherName}>
-            Teacher: {exam.teacher.profile.name}
+          <Text style={[styles.teacherName, isRTL && styles.rtlText]}>
+            {t('common.teacher')}: {exam.teacher.profile.name}
           </Text>
         )}
 
         {exam.settings?.timed && (
           <View style={styles.examSettings}>
-            <Text style={styles.settingsText}>
-              ⏱️ Timed: {exam.settings.duration} minutes
+            <Text style={[styles.settingsText, isRTL && styles.rtlText]}>
+              ⏱️ {t('exams.timed')}: {exam.settings.duration} {t('exams.minutes')}
             </Text>
           </View>
         )}
 
         {exam.due_date && (
           <View style={styles.dueDateContainer}>
-            <Text style={styles.dueDateText}>
-              Due: {new Date(exam.due_date).toLocaleDateString()} at {new Date(exam.due_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            <Text style={[styles.dueDateText, isRTL && styles.rtlText]}>
+              {t('exams.due')}: {new Date(exam.due_date).toLocaleDateString()} {t('exams.at')} {new Date(exam.due_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </Text>
           </View>
         )}
@@ -778,8 +782,8 @@ const totalQuestions = exam.questions ?
         {exam.allow_image_submissions && (
           <View style={styles.imageSubmissionNote}>
             <Ionicons name="camera" size={16} color="#007AFF" />
-            <Text style={styles.imageSubmissionText}>
-              Image attachments are allowed for questions
+            <Text style={[styles.imageSubmissionText, isRTL && styles.rtlText]}>
+              {t('exams.imageAttachmentsAllowed')}
             </Text>
           </View>
         )}
@@ -791,10 +795,10 @@ const totalQuestions = exam.questions ?
       </Animated.ScrollView>
 
       {/* Submit Button */}
-      <View style={styles.footer}>
-        <Text style={styles.progressText}>
-          Answered: {answeredQuestions}/{totalQuestions}
-          {questionAttachments.length > 0 && ` • Attachments: ${questionAttachments.length}`}
+      <View style={[styles.footer, isRTL && styles.rtlFooter]}>
+        <Text style={[styles.progressText, isRTL && styles.rtlText]}>
+          {t('exams.answered')}: {answeredQuestions}/{totalQuestions}
+          {questionAttachments.length > 0 && ` • ${t('exams.attachments')}: ${questionAttachments.length}`}
         </Text>
         <TouchableOpacity
           style={[styles.submitButton, (submitting || timeLeft === 0) && styles.submitButtonDisabled]}
@@ -804,8 +808,8 @@ const totalQuestions = exam.questions ?
           {submitting ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={styles.submitButtonText}>
-              {timeLeft === 0 ? 'Time Expired' : 'Submit Exam'}
+            <Text style={[styles.submitButtonText, isRTL && styles.rtlText]}>
+              {timeLeft === 0 ? t('exams.timeExpired') : t('exams.submitExam')}
             </Text>
           )}
         </TouchableOpacity>
@@ -818,6 +822,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5'
+  },
+  rtlContainer: {
+    direction: 'rtl'
   },
   loadingContainer: {
     flex: 1,
@@ -839,6 +846,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center'
+  },
+  rtlRow: {
+    flexDirection: 'row-reverse'
   },
   warningText: {
     flex: 1,
@@ -1056,6 +1066,9 @@ const styles = StyleSheet.create({
   optionsContainer: {
     marginTop: 8
   },
+  rtlOptions: {
+    alignItems: 'flex-end'
+  },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1079,6 +1092,10 @@ const styles = StyleSheet.create({
     marginRight: 12,
     justifyContent: 'center',
     alignItems: 'center'
+  },
+  rtlRadio: {
+    marginLeft: 12,
+    marginRight: 0
   },
   optionRadioSelected: {
     width: 10,
@@ -1127,6 +1144,9 @@ const styles = StyleSheet.create({
     padding: 20,
     borderTopWidth: 1,
     borderTopColor: '#E5E5E5'
+  },
+  rtlFooter: {
+    alignItems: 'flex-end'
   },
   progressText: {
     textAlign: 'center',
@@ -1198,6 +1218,9 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     marginBottom: 20
   },
+  rtlInput: {
+    textAlign: 'right'
+  },
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'space-between'
@@ -1227,5 +1250,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600'
+  },
+  rtlText: {
+    textAlign: 'right'
+  },
+  rtlOption: {
+    flexDirection: 'row-reverse'
   }
 });
