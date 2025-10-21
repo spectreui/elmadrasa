@@ -1,6 +1,6 @@
 // src/utils/themeUtils.ts - COMPLETELY REVAMPED
 import { useColorScheme } from 'react-native';
-import { colors, gradients, shadows, animations } from './designSystem';
+import { gradients, shadows, animations } from './designSystem';
 
 export type Theme = {
   colors: {

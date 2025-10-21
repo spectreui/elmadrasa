@@ -170,6 +170,7 @@ export default function ProfileScreen() {
       flex: 1,
       paddingVertical: designTokens.spacing.md,
       alignItems: 'center',
+      justifyContent: 'center',
       borderRadius: designTokens.borderRadius.full,
       flexDirection: isRTL ? 'row-reverse' : 'row'
     },
