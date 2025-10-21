@@ -91,20 +91,20 @@ export default function ProfileScreen() {
     setLanguage(newLanguage);
   };
 
-  const SettingItem = ({ 
-    title, 
-    description, 
-    value, 
+  const SettingItem = ({
+    title,
+    description,
+    value,
     onToggle,
     showBorder = true
-  }: { 
-    title: string; 
-    description: string; 
-    value: boolean; 
+  }: {
+    title: string;
+    description: string;
+    value: boolean;
     onToggle: () => void;
     showBorder?: boolean;
   }) => (
-    <View style={[styles.settingItem, showBorder && { 
+    <View style={[styles.settingItem, showBorder && {
       borderBottomWidth: 1,
       borderBottomColor: colors.separator
     }]}>
@@ -128,14 +128,14 @@ export default function ProfileScreen() {
 
   const ProfileSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <View style={styles.profileSection}>
-      <Text style={[styles.sectionTitle, { 
+      <Text style={[styles.sectionTitle, {
         color: colors.textPrimary,
         paddingHorizontal: designTokens.spacing.xl,
         textAlign: isRTL ? 'right' : 'left'
       }]}>
         {title}
       </Text>
-      <View style={[styles.sectionContainer, { 
+      <View style={[styles.sectionContainer, {
         backgroundColor: colors.backgroundElevated,
         marginHorizontal: designTokens.spacing.xl,
         ...designTokens.shadows.sm
@@ -145,10 +145,167 @@ export default function ProfileScreen() {
     </View>
   );
 
+  const styles = StyleSheet.create({
+    header: {
+      paddingTop: designTokens.spacing.xxxl,
+      paddingHorizontal: designTokens.spacing.xl,
+      paddingBottom: designTokens.spacing.lg,
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    },
+    headerTitle: {
+      fontSize: designTokens.typography.largeTitle.fontSize,
+      fontWeight: designTokens.typography.largeTitle.fontWeight,
+    },
+    themeToggle: {
+      padding: designTokens.spacing.sm,
+      borderRadius: designTokens.borderRadius.full,
+    },
+    tabContainer: {
+      borderRadius: designTokens.borderRadius.full,
+      padding: 2,
+      marginBottom: designTokens.spacing.xl
+    },
+    tabButton: {
+      flex: 1,
+      paddingVertical: designTokens.spacing.md,
+      alignItems: 'center',
+      borderRadius: designTokens.borderRadius.full,
+      flexDirection: isRTL ? 'row-reverse' : 'row'
+    },
+    tabText: {
+      fontSize: designTokens.typography.caption1.fontSize,
+      fontWeight: '600',
+      marginTop: 4
+    },
+    profileSection: {
+      marginBottom: designTokens.spacing.xl
+    },
+    sectionTitle: {
+      fontSize: designTokens.typography.title3.fontSize,
+      fontWeight: designTokens.typography.title3.fontWeight,
+      marginBottom: designTokens.spacing.md
+    },
+    sectionContainer: {
+      borderRadius: designTokens.borderRadius.xl,
+      overflow: 'hidden'
+    },
+    profileContent: {
+      padding: designTokens.spacing.lg
+    },
+    profileHeader: {
+      alignItems: 'center',
+      marginBottom: designTokens.spacing.xl
+    },
+    avatarContainer: {
+      width: 70,
+      height: 70,
+      borderRadius: 35,
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    avatarText: {
+      fontSize: 28,
+      fontWeight: '700'
+    },
+    userName: {
+      fontSize: designTokens.typography.title2.fontSize,
+      fontWeight: designTokens.typography.title2.fontWeight,
+      marginBottom: 2
+    },
+    userClass: {
+      fontSize: designTokens.typography.body.fontSize,
+      marginBottom: designTokens.spacing.md
+    },
+    statusContainer: {
+      paddingHorizontal: designTokens.spacing.sm,
+      paddingVertical: designTokens.spacing.xs,
+      borderRadius: designTokens.borderRadius.full,
+      alignItems: 'center'
+    },
+    statusDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: '#34C759',
+      [I18nManager.isRTL ? 'marginLeft' : 'marginRight']: 4
+    },
+    statusText: {
+      fontSize: designTokens.typography.caption1.fontSize,
+      color: '#34C759',
+      fontWeight: '600'
+    },
+    infoSection: {
+      borderTopWidth: 1,
+      paddingTop: designTokens.spacing.lg
+    },
+    infoRow: {
+      flexDirection: isRTL ? 'row-reverse' : 'row',
+      justifyContent: 'space-between',
+      paddingVertical: designTokens.spacing.sm
+    },
+    infoLabel: {
+      fontSize: designTokens.typography.body.fontSize,
+      flex: 1
+    },
+    infoValue: {
+      fontSize: designTokens.typography.body.fontSize,
+      fontWeight: '500',
+      flex: 1,
+      textAlign: 'right'
+    },
+    statsContainer: {
+      padding: designTokens.spacing.lg
+    },
+    statsRow: {
+      marginBottom: designTokens.spacing.lg
+    },
+    statItem: {
+      flex: 1,
+      alignItems: 'center'
+    },
+    statValue: {
+      fontSize: designTokens.typography.title1.fontSize,
+      fontWeight: designTokens.typography.title1.fontWeight,
+      marginBottom: 2
+    },
+    statLabel: {
+      fontSize: designTokens.typography.footnote.fontSize
+    },
+    settingsContainer: {
+      paddingHorizontal: designTokens.spacing.lg
+    },
+    settingItem: {
+      flexDirection: isRTL ? 'row-reverse' : 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: designTokens.spacing.lg
+    },
+    settingTitle: {
+      fontSize: designTokens.typography.body.fontSize,
+      fontWeight: '500',
+      marginBottom: 2
+    },
+    settingDescription: {
+      fontSize: designTokens.typography.footnote.fontSize
+    },
+    logoutButton: {
+      padding: designTokens.spacing.lg,
+      borderRadius: designTokens.borderRadius.xl,
+      alignItems: 'center',
+      borderWidth: 1
+    },
+    logoutText: {
+      fontSize: designTokens.typography.headline.fontSize,
+      fontWeight: '600'
+    }
+  });
+
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
-      <View style={[styles.header, { 
+      <View style={[styles.header, {
         flexDirection: isRTL ? 'row-reverse' : 'row'
       }]}>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
@@ -167,7 +324,7 @@ export default function ProfileScreen() {
       </View>
 
       {/* Tab Navigation */}
-      <View style={[styles.tabContainer, { 
+      <View style={[styles.tabContainer, {
         backgroundColor: colors.separator,
         marginHorizontal: designTokens.spacing.xl,
         flexDirection: isRTL ? 'row-reverse' : 'row'
@@ -182,7 +339,8 @@ export default function ProfileScreen() {
               styles.tabButton,
               {
                 backgroundColor: activeTab === tab.key ? colors.backgroundElevated : 'transparent',
-                flexDirection: isRTL ? 'row-reverse' : 'row'
+                flexDirection: isRTL ? 'row-reverse' : 'row',
+                paddingHorizontal: designTokens.spacing.md
               }
             ]}
             onPress={() => setActiveTab(tab.key as any)}
@@ -222,14 +380,14 @@ export default function ProfileScreen() {
             <>
               <ProfileSection title={t("profile.title")}>
                 <View style={styles.profileContent}>
-                  <View style={[styles.profileHeader, { 
+                  <View style={[styles.profileHeader, {
                     flexDirection: isRTL ? 'row-reverse' : 'row'
                   }]}>
-                    <View style={[styles.avatarContainer, { 
+                    <View style={[styles.avatarContainer, {
                       backgroundColor: colors.primary + '15',
                       [isRTL ? 'marginLeft' : 'marginRight']: designTokens.spacing.lg
                     }]}>
-                      <Text style={[styles.avatarText, { 
+                      <Text style={[styles.avatarText, {
                         fontFamily,
                         color: colors.primary
                       }]}>
@@ -243,7 +401,7 @@ export default function ProfileScreen() {
                       <Text style={[styles.userClass, { color: colors.textSecondary }]}>
                         {user?.profile?.class ? `${t("classes.class")} ${user.profile.class}` : t("profile.notSet")}
                       </Text>
-                      <View style={[styles.statusContainer, { 
+                      <View style={[styles.statusContainer, {
                         backgroundColor: '#34C75915',
                         alignSelf: isRTL ? 'flex-end' : 'flex-start',
                         flexDirection: isRTL ? 'row-reverse' : 'row'
@@ -256,7 +414,7 @@ export default function ProfileScreen() {
                     </View>
                   </View>
 
-                  <View style={[styles.infoSection, { 
+                  <View style={[styles.infoSection, {
                     borderTopColor: colors.separator
                   }]}>
                     <View style={styles.infoRow}>
@@ -290,7 +448,7 @@ export default function ProfileScreen() {
               {profileStats && (
                 <ProfileSection title={t("profile.performance")}>
                   <View style={styles.statsContainer}>
-                    <View style={[styles.statsRow, { 
+                    <View style={[styles.statsRow, {
                       flexDirection: isRTL ? 'row-reverse' : 'row'
                     }]}>
                       <View style={styles.statItem}>
@@ -357,14 +515,14 @@ export default function ProfileScreen() {
             </>
           )}
 
-          <View style={{ 
+          <View style={{
             paddingHorizontal: designTokens.spacing.xl,
             marginTop: designTokens.spacing.xl
           }}>
             <TouchableOpacity
               onPress={handleLogout}
               disabled={loading}
-              style={[styles.logoutButton, { 
+              style={[styles.logoutButton, {
                 backgroundColor: colors.error + '10',
                 borderColor: colors.error + '20'
               }]}
@@ -383,160 +541,3 @@ export default function ProfileScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  header: {
-    paddingTop: designTokens.spacing.xxxl,
-    paddingHorizontal: designTokens.spacing.xl,
-    paddingBottom: designTokens.spacing.lg,
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  headerTitle: {
-    fontSize: designTokens.typography.largeTitle.fontSize,
-    fontWeight: designTokens.typography.largeTitle.fontWeight,
-  },
-  themeToggle: {
-    padding: designTokens.spacing.sm,
-    borderRadius: designTokens.borderRadius.full,
-  },
-  tabContainer: {
-    borderRadius: designTokens.borderRadius.full,
-    padding: 2,
-    marginBottom: designTokens.spacing.xl
-  },
-  tabButton: {
-    flex: 1,
-    paddingVertical: designTokens.spacing.md,
-    alignItems: 'center',
-    borderRadius: designTokens.borderRadius.full,
-    flexDirection: 'row'
-  },
-  tabText: {
-    fontSize: designTokens.typography.caption1.fontSize,
-    fontWeight: '600',
-    marginTop: 4
-  },
-  profileSection: {
-    marginBottom: designTokens.spacing.xl
-  },
-  sectionTitle: {
-    fontSize: designTokens.typography.title3.fontSize,
-    fontWeight: designTokens.typography.title3.fontWeight,
-    marginBottom: designTokens.spacing.md
-  },
-  sectionContainer: {
-    borderRadius: designTokens.borderRadius.xl,
-    overflow: 'hidden'
-  },
-  profileContent: {
-    padding: designTokens.spacing.lg
-  },
-  profileHeader: {
-    alignItems: 'center',
-    marginBottom: designTokens.spacing.xl
-  },
-  avatarContainer: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  avatarText: {
-    fontSize: 28,
-    fontWeight: '700'
-  },
-  userName: {
-    fontSize: designTokens.typography.title2.fontSize,
-    fontWeight: designTokens.typography.title2.fontWeight,
-    marginBottom: 2
-  },
-  userClass: {
-    fontSize: designTokens.typography.body.fontSize,
-    marginBottom: designTokens.spacing.md
-  },
-  statusContainer: {
-    paddingHorizontal: designTokens.spacing.sm,
-    paddingVertical: designTokens.spacing.xs,
-    borderRadius: designTokens.borderRadius.full,
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#34C759',
-    [I18nManager.isRTL ? 'marginLeft' : 'marginRight']: 4
-  },
-  statusText: {
-    fontSize: designTokens.typography.caption1.fontSize,
-    color: '#34C759',
-    fontWeight: '600'
-  },
-  infoSection: {
-    borderTopWidth: 1,
-    paddingTop: designTokens.spacing.lg
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: designTokens.spacing.sm
-  },
-  infoLabel: {
-    fontSize: designTokens.typography.body.fontSize,
-    flex: 1
-  },
-  infoValue: {
-    fontSize: designTokens.typography.body.fontSize,
-    fontWeight: '500',
-    flex: 1,
-    textAlign: 'right'
-  },
-  statsContainer: {
-    padding: designTokens.spacing.lg
-  },
-  statsRow: {
-    marginBottom: designTokens.spacing.lg
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center'
-  },
-  statValue: {
-    fontSize: designTokens.typography.title1.fontSize,
-    fontWeight: designTokens.typography.title1.fontWeight,
-    marginBottom: 2
-  },
-  statLabel: {
-    fontSize: designTokens.typography.footnote.fontSize
-  },
-  settingsContainer: {
-    paddingHorizontal: designTokens.spacing.lg
-  },
-  settingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: designTokens.spacing.lg
-  },
-  settingTitle: {
-    fontSize: designTokens.typography.body.fontSize,
-    fontWeight: '500',
-    marginBottom: 2
-  },
-  settingDescription: {
-    fontSize: designTokens.typography.footnote.fontSize
-  },
-  logoutButton: {
-    padding: designTokens.spacing.lg,
-    borderRadius: designTokens.borderRadius.xl,
-    alignItems: 'center',
-    borderWidth: 1
-  },
-  logoutText: {
-    fontSize: designTokens.typography.headline.fontSize,
-    fontWeight: '600'
-  }
-});
