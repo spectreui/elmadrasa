@@ -2,9 +2,10 @@ import { Tabs, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { colors } from "@/utils/designSystem";
-import { useThemeContext } from "@/contexts/ThemeContext";import { useTranslation } from "@/hooks/useTranslation";
+import { useThemeContext } from "@/contexts/ThemeContext"; import { useTranslation } from "@/hooks/useTranslation";
 
-export default function TabLayout() {const { t } = useTranslation();
+export default function TabLayout() {
+  const { t } = useTranslation();
   const { isAuthenticated, loading, user } = useAuth();
   const { isDark, colors, toggleTheme } = useThemeContext();
 
@@ -39,10 +40,10 @@ export default function TabLayout() {const { t } = useTranslation();
         options={{
           title: "Dashboard",
           tabBarIcon: ({ color, size, focused }) =>
-          <Ionicons
-            name={focused ? "home" : "home-outline"}
-            size={size}
-            color={color} />
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={size}
+              color={color} />
 
 
         }} />
@@ -52,10 +53,10 @@ export default function TabLayout() {const { t } = useTranslation();
         options={{
           title: "Exams",
           tabBarIcon: ({ color, size, focused }) =>
-          <Ionicons
-            name={focused ? "document-text" : "document-text-outline"}
-            size={size}
-            color={color} />
+            <Ionicons
+              name={focused ? "document-text" : "document-text-outline"}
+              size={size}
+              color={color} />
 
 
         }} />
@@ -65,10 +66,10 @@ export default function TabLayout() {const { t } = useTranslation();
         options={{
           title: "Homework",
           tabBarIcon: ({ color, size, focused }) =>
-          <Ionicons
-            name={focused ? "book" : "book-outline"}
-            size={size}
-            color={color} />
+            <Ionicons
+              name={focused ? "book" : "book-outline"}
+              size={size}
+              color={color} />
 
 
         }} />
@@ -78,10 +79,10 @@ export default function TabLayout() {const { t } = useTranslation();
         options={{
           title: "Results",
           tabBarIcon: ({ color, size, focused }) =>
-          <Ionicons
-            name={focused ? "bar-chart" : "bar-chart-outline"}
-            size={size}
-            color={color} />
+            <Ionicons
+              name={focused ? "bar-chart" : "bar-chart-outline"}
+              size={size}
+              color={color} />
 
 
         }} />
@@ -91,10 +92,10 @@ export default function TabLayout() {const { t } = useTranslation();
         options={{
           title: "Join Subject",
           tabBarIcon: ({ color, size, focused }) =>
-          <Ionicons
-            name={focused ? "add" : "add-outline"}
-            size={size}
-            color={color} />
+            <Ionicons
+              name={focused ? "add" : "add-outline"}
+              size={size}
+              color={color} />
 
 
         }} />
@@ -109,7 +110,10 @@ export default function TabLayout() {const { t } = useTranslation();
       <Tabs.Screen
         name="exam/[id]"
         options={{
-          href: null
+          href: null,
+          tabBarStyle: {
+            display: 'none'
+          }
         }
         } />
 
@@ -126,10 +130,10 @@ export default function TabLayout() {const { t } = useTranslation();
         options={{
           title: t("profile.title"),
           tabBarIcon: ({ color, size, focused }) =>
-          <Ionicons
-            name={focused ? "person" : "person-outline"}
-            size={size}
-            color={color} />
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
+              size={size}
+              color={color} />
 
 
         }} />

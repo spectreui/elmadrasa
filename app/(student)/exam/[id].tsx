@@ -125,12 +125,6 @@ export default function StudentExamScreen() {
         const examData = response.data.data;
         setExam(examData);
 
-        // Organize nested questions
-        if (examData.questions) {
-          const organizedQuestions = organizeNestedQuestions(examData.questions);
-          examData.questions = organizedQuestions;
-        }
-
         const now = new Date();
         const availableFrom = examData?.available_from ? new Date(examData.available_from) : null;
         const dueDate = examData?.due_date ? new Date(examData.due_date) : null;
@@ -175,38 +169,39 @@ export default function StudentExamScreen() {
     const questionMap = new Map();
     const rootQuestions: any[] = [];
 
-    // First pass: create map and identify root questions
+    // First pass: create map of all questions
     questions.forEach(question => {
       questionMap.set(question.id, { ...question, nested_questions: [] });
-
-      if (!question.parent_id) {
-        rootQuestions.push(questionMap.get(question.id));
-      }
     });
 
-    // Second pass: build hierarchy
+    // Second pass: build hierarchy recursively
     questions.forEach(question => {
-      if (question.parent_id && questionMap.has(question.parent_id)) {
+      if (!question.parent_id) {
+        // Root level question/section
+        rootQuestions.push(questionMap.get(question.id));
+      } else if (questionMap.has(question.parent_id)) {
+        // Add as nested question to parent
         questionMap.get(question.parent_id).nested_questions.push(questionMap.get(question.id));
       }
     });
 
-    // Sort by question_order if available
-    const sortedRoots = rootQuestions.sort((a, b) => (a.question_order || 0) - (b.question_order || 0));
+    // Recursive function to sort nested questions at all levels
+    const sortNestedRecursively = (questions: any[]) => {
+      // Sort current level
+      const sorted = questions.sort((a, b) => (a.question_order || 0) - (b.question_order || 0));
 
-    // Also sort nested questions recursively
-    const sortNested = (questions: any[]) => {
-      return questions.sort((a, b) => (a.question_order || 0) - (b.question_order || 0)).map(q => {
-        if (q.nested_questions && q.nested_questions.length > 0) {
-          q.nested_questions = sortNested(q.nested_questions);
+      // Recursively sort nested questions
+      sorted.forEach(question => {
+        if (question.nested_questions && question.nested_questions.length > 0) {
+          question.nested_questions = sortNestedRecursively(question.nested_questions);
         }
-        return q;
       });
+
+      return sorted;
     };
 
-    return sortNested(sortedRoots);
+    return sortNestedRecursively(rootQuestions);
   };
-
 
   const checkExamStatus = async () => {
     try {
@@ -344,12 +339,12 @@ export default function StudentExamScreen() {
             [
               {
                 text: 'OK',
-                onPress: () => router.push('/exams')
+                onPress: () => router.push('/(student)/exams')
               }
             ]
           );
         } else {
-          router.replace(`/exam/results/${examId}?submissionId=${submissionId}`);
+          router.replace(`/(student)/exam/results/${examId}?submissionId=${submissionId}`);
         }
       } else {
         Alert.alert('Submission Failed', response.data.error || 'Unknown error occurred');
@@ -457,6 +452,7 @@ export default function StudentExamScreen() {
 
   const renderNestedQuestions = (questions: any[], level = 0, parentIndex = '') => {
     return questions.map((question, index) => {
+      // Fix the question numbering to properly handle nested levels
       const questionNumber = parentIndex ? `${parentIndex}.${index + 1}` : `${index + 1}`;
 
       if (question.is_section) {
@@ -579,9 +575,7 @@ export default function StudentExamScreen() {
     });
   };
 
-
   // Text Answer Modal Component
-  // Replace the existing TextAnswerModal component with this improved version
   const TextAnswerModal = () => {
     const [localAnswer, setLocalAnswer] = useState(textAnswerModal.currentAnswer);
 
@@ -747,35 +741,34 @@ export default function StudentExamScreen() {
     );
   }
 
-  // Update the progress calculation to count only non-section questions
-  const answeredQuestions = Object.keys(answers).length;
-  const totalQuestions = exam.questions ?
-    exam.questions.reduce((count, question) => {
-      // Count this question if it's not a section
-      let totalCount = question.is_section ? count : count + 1;
+  // Helper function to count non-section questions recursively - MOVE THIS UP
+const countNonSectionQuestions = (questions: any[]): number => {
+  return questions.reduce((count, question) => {
+    let totalCount = question.is_section ? count : count + 1;
 
-      // Also count nested questions recursively
-      if (question.nested_questions && question.nested_questions.length > 0) {
-        const nestedCount = countNonSectionQuestions(question.nested_questions);
-        totalCount += nestedCount;
-      }
+    if (question.nested_questions && question.nested_questions.length > 0) {
+      totalCount += countNonSectionQuestions(question.nested_questions);
+    }
 
-      return totalCount;
-    }, 0) : 0;
+    return totalCount;
+  }, 0);
+};
 
-  // Helper function to count non-section questions recursively
-  const countNonSectionQuestions = (questions: any[]): number => {
-    return questions.reduce((count, question) => {
-      let totalCount = question.is_section ? count : count + 1;
+// Update the progress calculation to count only non-section questions
+const answeredQuestions = Object.keys(answers).length;
+const totalQuestions = exam.questions ?
+  exam.questions.reduce((count, question) => {
+    // Count this question if it's not a section
+    let totalCount = question.is_section ? count : count + 1;
 
-      if (question.nested_questions && question.nested_questions.length > 0) {
-        totalCount += countNonSectionQuestions(question.nested_questions);
-      }
+    // Also count nested questions recursively
+    if (question.nested_questions && question.nested_questions.length > 0) {
+      const nestedCount = countNonSectionQuestions(question.nested_questions);
+      totalCount += nestedCount;
+    }
 
-      return totalCount;
-    }, 0);
-  };
-
+    return totalCount;
+  }, 0) : 0;
 
   return (
     <SafeAreaView style={styles.container}>
