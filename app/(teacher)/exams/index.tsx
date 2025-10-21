@@ -49,7 +49,7 @@ export default function TeacherExamsScreen() {
         router.replace('/(student)/homework');
       }
     }
-  }, [isAuthenticated, loading, user, router]);
+  }, [isAuthenticated, loading, user]);
 
   useEffect(() => {
     loadExams();

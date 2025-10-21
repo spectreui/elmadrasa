@@ -73,7 +73,8 @@
         " UIBackgroundModes": [
           "remote-notification"
         ],
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "ExpoLocalization_supportsRTL": true
       },
       "buildNumber": "3"
     },
@@ -106,8 +107,9 @@
       "router": {},
       "supportsRTL": true,
       "eas": {
-        "projectId": "ad027a37-a112-4f47-a201-d904f5f43de6"
+        "projectId": "4c592a84-1ac8-4407-97a4-c6c5cb492f84"
       }
-    }
+    },
+    "owner": "spectreui"
   }
 }

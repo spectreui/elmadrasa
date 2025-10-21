@@ -41,7 +41,7 @@ export default function TeacherProfileScreen() {
         router.replace('/(student)/homework');
       }
     }
-  }, [isAuthenticated, loading, user, router]);
+  }, [isAuthenticated, loading, user]);
 
   const [teacherStats] = useState<TeacherStats>({
     totalStudents: 156,

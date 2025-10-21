@@ -43,9 +43,6 @@ export default function TeacherDashboard() {
 
   useEffect(() => {
     loadDashboardData();
-    // Set initial language based on system locale
-    console.log(language)
-    // setLanguage(systemRTL ? 'ar' : 'en');
   }, []);
 
 
