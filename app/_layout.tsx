@@ -33,17 +33,35 @@ function ThemeWrapper({ children }: { children: React.ReactNode }) {
 }
 
 // PWA Installation handler
+function registerServiceWorker() {
+  if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then((registration) => {
+          console.log('SW registered: ', registration);
+        })
+        .catch((registrationError) => {
+          console.log('SW registration failed: ', registrationError);
+        });
+    });
+  }
+}
+
+// PWA Installation handler
 function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
 
   useEffect(() => {
-    if (Platform.OS !== 'web') return;
+    if (typeof window === 'undefined') return;
 
     const handler = (e: Event) => {
+      // Prevent Chrome 67 and earlier from automatically showing the prompt
       e.preventDefault();
+      // Stash the event so it can be triggered later
       setDeferredPrompt(e);
       setIsInstallable(true);
+      console.log('PWA installable');
     };
 
     window.addEventListener('beforeinstallprompt', handler as any);
@@ -56,15 +74,16 @@ function usePWAInstall() {
   const installPWA = async () => {
     if (!deferredPrompt) return;
 
+    // Show the install prompt
     deferredPrompt.prompt();
+
+    // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice;
 
-    if (outcome === 'accepted') {
-      console.log('User accepted the install prompt');
-    } else {
-      console.log('User dismissed the install prompt');
-    }
+    // Optionally, send analytics event with outcome of user choice
+    console.log(`User response to the install prompt: ${outcome}`);
 
+    // We've used the prompt, and can't use it again, throw it away
     setDeferredPrompt(null);
     setIsInstallable(false);
   };
@@ -107,6 +126,11 @@ export default function RootLayout() {
   const pathname = usePathname();
   const { isInstallable, installPWA } = usePWAInstall();
 
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      registerServiceWorker();
+    }
+  }, []);
 
   useEffect(() => {
     SplashScreen.hide();
@@ -199,7 +223,7 @@ export default function RootLayout() {
                           justifyContent: 'space-between',
                           flexDirection: 'row'
                         }}>
-                          <Text style={{ color: 'white', flex: 1 }}>
+                          <Text style={{ color: 'white', flex: 1, fontSize: 14 }}>
                             Install El Madrasa app for better experience
                           </Text>
                           <button
@@ -210,7 +234,9 @@ export default function RootLayout() {
                               border: 'none',
                               padding: '8px 12px',
                               borderRadius: 4,
-                              cursor: 'pointer'
+                              cursor: 'pointer',
+                              fontSize: 14,
+                              fontWeight: '600'
                             }}
                           >
                             Install

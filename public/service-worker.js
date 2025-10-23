@@ -2,13 +2,12 @@
 const CACHE_NAME = 'elmadrasa-v1.0.0';
 const urlsToCache = [
   '/',
-  // Add other critical routes
-  '/(auth)/login',
-  '/(student)/',
-  '/(teacher)/'
+  '/index.html',
+  // Add key assets that should be cached
 ];
 
 self.addEventListener('install', (event) => {
+  console.log('Service Worker installing.');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
@@ -18,8 +17,24 @@ self.addEventListener('install', (event) => {
   );
 });
 
+self.addEventListener('activate', (event) => {
+  console.log('Service Worker activating.');
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (!cacheWhitelist.includes(cacheName)) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});
+
 self.addEventListener('fetch', (event) => {
-  // Only cache GET requests
+  // Only handle GET requests
   if (event.request.method !== 'GET') {
     return;
   }
@@ -35,20 +50,5 @@ self.addEventListener('fetch', (event) => {
           }
         });
       })
-  );
-});
-
-self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME];
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (!cacheWhitelist.includes(cacheName)) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
   );
 });
