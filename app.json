@@ -102,6 +102,9 @@
             "type": "image/png"
           }
         ]
+      },
+      "dangerous": {
+        "serviceWorkerPath": "service-worker.js"
       }
     },
     "extra": {

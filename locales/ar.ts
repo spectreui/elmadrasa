@@ -40,6 +40,8 @@ const ar = {
   'common.teacher': 'معلم',
   'common.new': 'جديد',
   'common.info': 'معلومة',
+  "common.offlineMode": "الوضع غير متصل",
+  "common.offline": "غير متصل",
 
   // Months
   'months.january': 'يناير',
@@ -108,6 +110,10 @@ const ar = {
   'dashboard.upcomingExams': 'الاختبارات القادمة',
   'dashboard.allCaughtUp': 'لقد انتهيت من كل شيء الآن',
   'dashboard.due': 'مستحق في',
+  "dashboard.offlineMessage": "عرض البيانات المخزنة. قد تكون بعض الميزات محدودة أثناء عدم الاتصال.",
+  "dashboard.refreshOfflineMessage": "لا يمكن التحديث أثناء عدم الاتصال. عرض البيانات المخزنة.",
+  "dashboard.restrictedOfflineMessage": "هذه الميزة تتطلب اتصال بالإنترنت.",
+  "dashboard.examAccessOfflineMessage": "تفاصيل الامتحان تتطلب اتصال بالإنترنت.",
 
   // Subjects
   'Physics': 'فيزياء',

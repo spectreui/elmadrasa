@@ -14,7 +14,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 export default function ExamsScreen() {
   const { t, isRTL } = useTranslation();
-  const { user } = useAuth();
+  const { user, isOnline } = useAuth();
   const { fontFamily, colors } = useThemeContext();
   const [exams, setExams] = useState<Exam[]>([]);
   const [takenExams, setTakenExams] = useState<Set<string>>(new Set());
@@ -95,6 +95,14 @@ export default function ExamsScreen() {
 
     } catch (error) {
       Alert.alert(t('common.error'), t('exams.loadFailed'));
+      // Show offline message if offline
+      if (!isOnline) {
+        Alert.alert(
+          t("common.offline"),
+          t("dashboard.offlineMessage"),
+          [{ text: t("common.ok") }]
+        );
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -247,6 +255,7 @@ export default function ExamsScreen() {
           tintColor={colors.primary}
           colors={[colors.primary]}
           style={{ backgroundColor: 'transparent' }}
+          enabled={isOnline}
         />
       }
     >
@@ -416,7 +425,7 @@ export default function ExamsScreen() {
                           <Ionicons
                             name={isRTL ? "chevron-back" : "chevron-forward"}
                             size={16}
-                            color={(status === 'upcoming' || status === 'missed') ? colors.textTertiary : colors.primary}
+                            color={getStatusColor(status).text}
                           />
                         )}
                       </View>

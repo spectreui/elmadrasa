@@ -17,6 +17,7 @@ import { useThemeContext } from '../../src/contexts/ThemeContext';
 import { designTokens } from '../../src/utils/designTokens';
 import Animated, { FadeInUp, Layout, FadeIn } from 'react-native-reanimated';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Add this helper function before the StudentHomeworkScreen component
 const getGradeColor = (grade: number, maxPoints: number) => {
@@ -43,6 +44,7 @@ const getGradeColor = (grade: number, maxPoints: number) => {
 export default function StudentHomeworkScreen() {
   const { t, isRTL } = useTranslation();
   const { fontFamily, colors, isDark } = useThemeContext();
+  const { isOnline } = useAuth();
   const [homework, setHomework] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -61,6 +63,14 @@ export default function StudentHomeworkScreen() {
     } catch (error: any) {
       console.error('Failed to load homework:', error);
       Alert.alert(t('common.error'), error.message || t('homework.errors.loadFailed'));
+      // Show offline message if offline
+      if (!isOnline) {
+        Alert.alert(
+          t("common.offline"),
+          t("dashboard.offlineMessage"),
+          [{ text: t("common.ok") }]
+        );
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -320,6 +330,7 @@ export default function StudentHomeworkScreen() {
             onRefresh={onRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}
+          enabled={isOnline}
           />
         }
       >

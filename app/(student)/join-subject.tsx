@@ -18,11 +18,13 @@ import { designTokens } from '../../src/utils/designTokens';
 import { useThemeContext } from '../../src/contexts/ThemeContext';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useTranslation } from "@/hooks/useTranslation";
+import { useAuth } from '@/contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
 
 export default function JoinSubjectScreen() {
   const { t, isRTL } = useTranslation();
+  const { isOnline } = useAuth();
   const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
   const { colors } = useThemeContext();
@@ -52,6 +54,14 @@ export default function JoinSubjectScreen() {
       }
     } catch (error: any) {
       Alert.alert(t("common.error"), error.response?.data?.error || t("classes.joinFailed"));
+      // Show offline message if offline
+      if (!isOnline) {
+        Alert.alert(
+          t("common.offline"),
+          t("dashboard.offlineMessage"),
+          [{ text: t("common.ok") }]
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -85,7 +95,7 @@ export default function JoinSubjectScreen() {
 
         <View style={styles.content}>
           {/* Instructions */}
-          <View style={[styles.card, { 
+          <View style={[styles.card, {
             backgroundColor: colors.backgroundElevated,
             borderColor: colors.border
           }]}>
@@ -103,7 +113,7 @@ export default function JoinSubjectScreen() {
               {t("classes.joinCode")}
             </Text>
             <TextInput
-              style={[styles.input, { 
+              style={[styles.input, {
                 backgroundColor: colors.background,
                 borderColor: colors.border,
                 color: colors.textPrimary,
@@ -124,7 +134,7 @@ export default function JoinSubjectScreen() {
           <TouchableOpacity
             style={[
               styles.button,
-              { 
+              {
                 backgroundColor: colors.primary,
                 ...designTokens.shadows.md
               },

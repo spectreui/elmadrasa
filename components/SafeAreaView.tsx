@@ -1,4 +1,5 @@
 // src/components/SafeAreaView.tsx
+import { useThemeContext } from '@/contexts/ThemeContext';
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,17 +7,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 interface Props {
   children: React.ReactNode;
   style?: any;
-  edges?: Array<'top' | 'bottom' | 'left' | 'right'>;
+  edges?: ('top' | 'bottom' | 'left' | 'right')[];
   backgroundColor?: string;
 }
 
 export function SafeAreaView({
   children,
   style = {},
-  edges = ['top', 'bottom'],
-  backgroundColor = 'transparent',
+  edges = ['top', 'bottom']
 }: Props) {
   const insets = useSafeAreaInsets();
+  const { colors } = useThemeContext();
 
   const edgeInsets = {
     paddingTop: edges.includes('top') ? insets.top : 0,
@@ -29,7 +30,7 @@ export function SafeAreaView({
     <View
       style={[
         styles.container,
-        { backgroundColor },
+        { backgroundColor: colors.background },
         edgeInsets,
         style,
       ]}

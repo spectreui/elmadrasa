@@ -1,7 +1,7 @@
 // app/_layout.tsx - Fixed version
 import "../global.css";
 import React, { useEffect, useState } from "react";
-import { View, Text} from "react-native";
+import { View, Text, Platform } from "react-native";
 import { Slot, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { AuthProvider } from "../src/contexts/AuthContext";
@@ -30,6 +30,46 @@ function ThemeWrapper({ children }: { children: React.ReactNode }) {
       {children}
     </>
   );
+}
+
+// PWA Installation handler
+function usePWAInstall() {
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handler as any);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler as any);
+    };
+  }, []);
+
+  const installPWA = async () => {
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+
+    if (outcome === 'accepted') {
+      console.log('User accepted the install prompt');
+    } else {
+      console.log('User dismissed the install prompt');
+    }
+
+    setDeferredPrompt(null);
+    setIsInstallable(false);
+  };
+
+  return { isInstallable, installPWA };
 }
 
 // Simple fallback if animation fails
@@ -65,6 +105,8 @@ export default function RootLayout() {
   const [storageError, setStorageError] = useState(false);
   const [animationError, setAnimationError] = useState(false);
   const pathname = usePathname();
+  const { isInstallable, installPWA } = usePWAInstall();
+
 
   useEffect(() => {
     SplashScreen.hide();
@@ -148,10 +190,34 @@ export default function RootLayout() {
                   />
                   <SafeAreaView>
                     <FancyTabBarProvider>
-                      {/* ✅ Global keyboard + bottom nav spacing */}
-                      {/* <KeyboardWrapper> */}
-                        <Slot />
-                      {/* </KeyboardWrapper> */}
+                      {/* Show install prompt for PWA */}
+                      {isInstallable && Platform.OS === 'web' && (
+                        <View style={{
+                          backgroundColor: '#007AFF',
+                          padding: 10,
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          flexDirection: 'row'
+                        }}>
+                          <Text style={{ color: 'white', flex: 1 }}>
+                            Install El Madrasa app for better experience
+                          </Text>
+                          <button
+                            onClick={installPWA}
+                            style={{
+                              backgroundColor: 'white',
+                              color: '#007AFF',
+                              border: 'none',
+                              padding: '8px 12px',
+                              borderRadius: 4,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Install
+                          </button>
+                        </View>
+                      )}
+                      <Slot />
                     </FancyTabBarProvider>
                   </SafeAreaView>
                 </NotificationProvider>

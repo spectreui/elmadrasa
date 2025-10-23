@@ -18,6 +18,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { ShareModal } from '@/components/ShareModal';
 import { generateExamResultsLink } from '@/utils/linking';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ResultData {
   submission: {
@@ -60,6 +61,7 @@ interface ResultData {
 
 export default function ExamResultsScreen() {
   const { t, isRTL } = useTranslation();
+  const { isOnline } = useAuth();
   const router = useRouter();
   const params = useLocalSearchParams();
   const { fontFamily, colors, isDark } = useThemeContext();
@@ -80,18 +82,18 @@ export default function ExamResultsScreen() {
   const loadResults = async () => {
     try {
       setLoading(true);
-      
+
       // Get the submission ID from query parameters
-      const submissionId = Array.isArray(params.submissionId) 
-        ? params.submissionId[0] 
+      const submissionId = Array.isArray(params.submissionId)
+        ? params.submissionId[0]
         : params.submissionId;
-      
+
       console.log('Loading results for submission ID:', submissionId);
-      
+
       if (submissionId) {
         // Call the correct API endpoint with submission ID
         const response = await apiService.getSubmissionResults(submissionId);
-        
+
         if (response.data.success) {
           setResultData(response.data.data);
         } else {
@@ -114,6 +116,14 @@ export default function ExamResultsScreen() {
     } catch (error: any) {
       console.error('Failed to load results:', error);
       Alert.alert(t('common.error'), error.message || t('exams.loadResultsFailed'));
+      // Show offline message if offline
+      if (!isOnline) {
+        Alert.alert(
+          t("common.offline"),
+          t("dashboard.offlineMessage"),
+          [{ text: t("common.ok") }]
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -189,10 +199,10 @@ export default function ExamResultsScreen() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons 
-            name={isRTL ? "arrow-forward" : "arrow-back"} 
-            size={24} 
-            color={colors.primary} 
+          <Ionicons
+            name={isRTL ? "arrow-forward" : "arrow-back"}
+            size={24}
+            color={colors.primary}
           />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary, fontFamily }]}>

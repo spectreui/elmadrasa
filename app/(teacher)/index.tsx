@@ -18,9 +18,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { TeacherDashboardStats, RecentActivity } from '../../src/types';
 import { designTokens } from '../../src/utils/designTokens';
 import { useTranslation } from '@/hooks/useTranslation';
+import Alert from '@/components/Alert';
 
 export default function TeacherDashboard() {
-  const { user } = useAuth();
+  const { user, isOnline } = useAuth();
   const { fontFamily, colors } = useThemeContext();
   const [stats, setStats] = useState<TeacherDashboardStats>({
     activeExams: 0,
@@ -75,6 +76,14 @@ export default function TeacherDashboard() {
 
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
+      // Show offline message if offline
+      if (!isOnline) {
+        Alert.alert(
+          t("common.offline"),
+          t("dashboard.offlineMessage"),
+          [{ text: t("common.ok") }]
+        );
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -189,6 +198,7 @@ export default function TeacherDashboard() {
           onRefresh={onRefresh}
           colors={[colors.primary]}
           tintColor={colors.primary}
+          enabled={isOnline}
         />
       }
     >

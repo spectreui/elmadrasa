@@ -46,8 +46,6 @@ export default function TabLayout() {
               name={focused ? "home" : "home-outline"}
               size={size}
               color={color} />
-
-
         }} />
 
       <Tabs.Screen
@@ -59,8 +57,6 @@ export default function TabLayout() {
               name={focused ? "document-text" : "document-text-outline"}
               size={size}
               color={color} />
-
-
         }} />
 
       <Tabs.Screen
@@ -72,8 +68,6 @@ export default function TabLayout() {
               name={focused ? "book" : "book-outline"}
               size={size}
               color={color} />
-
-
         }} />
 
       <Tabs.Screen
@@ -85,8 +79,6 @@ export default function TabLayout() {
               name={focused ? "bar-chart" : "bar-chart-outline"}
               size={size}
               color={color} />
-
-
         }} />
 
       <Tabs.Screen
@@ -98,8 +90,6 @@ export default function TabLayout() {
               name={focused ? "add" : "add-outline"}
               size={size}
               color={color} />
-
-
         }} />
 
       <Tabs.Screen

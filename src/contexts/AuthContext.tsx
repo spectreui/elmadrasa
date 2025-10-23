@@ -1,7 +1,7 @@
-// src/contexts/AuthContext.tsx - Fixed version
+// src/contexts/AuthContext.tsx - Enhanced with offline support
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { apiService } from '../services/api';
-import { User, AuthState } from '../types/index.js';
+import { AuthState } from '../types/index.js';
 import { View, ActivityIndicator } from 'react-native';
 import { router, usePathname } from 'expo-router';
 
@@ -11,6 +11,7 @@ interface AuthContextType extends AuthState {
   isLoading: boolean;
   error: string | null;
   clearError: () => void;
+  isOnline: boolean; // Add this
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,6 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(true); // Add this state
   
   // Refs to prevent loops
   const authCheckInProgress = useRef(false);
@@ -37,6 +39,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       router.replace(path);
     }
   }, [currentPathname]);
+
+  // Check network connectivity
+  useEffect(() => {
+    const checkNetworkStatus = async () => {
+      try {
+        // Simple network check
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        
+        const response = await fetch('https://www.google.com', { 
+          method: 'HEAD', 
+          mode: 'no-cors',
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        setIsOnline(true);
+      } catch (error) {
+        console.log('🌐 Network offline detected');
+        setIsOnline(false);
+      }
+    };
+
+    // Check immediately
+    checkNetworkStatus();
+
+    // Check every 30 seconds
+    const interval = setInterval(checkNetworkStatus, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Single initial auth check - runs only once
   useEffect(() => {
@@ -64,9 +97,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // Validate token
+        // Validate token (allow expired tokens when offline)
         const isValid = await apiService.validateToken();
-        if (!isValid) {
+        if (!isValid && isOnline) {
           console.log('❌ Token invalid');
           setAuthState({
             user: null,
@@ -77,28 +110,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // Get user data
+        // Get user data (will use cache when offline)
         console.log('👤 Fetching current user...');
-        const response = await apiService.getCurrentUser();
+        try {
+          const response = await apiService.getCurrentUser();
+          
+          if (response.data.success && response.data.data) {
+            const user = response.data.data;
+            console.log('✅ User authenticated:', user.email);
 
-        if (response.data.success && response.data.data) {
-          const user = response.data.data;
-          console.log('✅ User authenticated:', user.email);
-
-          setAuthState({
-            user,
-            token,
-            isAuthenticated: true,
-            loading: false,
-          });
-        } else {
-          throw new Error('Failed to get user data');
+            setAuthState({
+              user,
+              token,
+              isAuthenticated: true,
+              loading: false,
+            });
+          } else {
+            throw new Error('Failed to get user data');
+          }
+        } catch (error) {
+          // If offline, allow access with existing token
+          if (!isOnline) {
+            console.log('📱 Allowing offline access with existing token');
+            setAuthState({
+              user: null, // Will use cached data in components
+              token,
+              isAuthenticated: true,
+              loading: false,
+            });
+          } else {
+            throw error;
+          }
         }
       } catch (error: any) {
         console.error('❌ Initial auth check failed:', error);
         
-        // Clear invalid token
-        await apiService.clearToken();
+        // Only clear token if online
+        if (isOnline) {
+          await apiService.clearToken();
+        }
         
         setAuthState({
           user: null,
@@ -112,11 +162,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initializeAuth();
-  }, []); // Empty dependency array - runs only once
+  }, [isOnline]); // Add isOnline as dependency
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
+
+    // Prevent login when offline
+    if (!isOnline) {
+      const error = new Error('Cannot login while offline');
+      setError('Cannot login while offline');
+      setIsLoading(false);
+      throw error;
+    }
 
     try {
       console.log('🔐 Starting login process...');
@@ -156,8 +214,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       console.error('💥 Login error:', error);
 
-      // Clear any potentially corrupted token
-      await apiService.clearToken();
+      // Only clear token if online
+      if (isOnline) {
+        await apiService.clearToken();
+      }
 
       const errorMessage = error.response?.data?.error || error.message || 'Login failed';
       setError(errorMessage);
@@ -181,7 +241,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('🚪 Logging out...');
       setIsLoading(true);
       
-      await apiService.clearToken();
+      // Only clear token if online
+      if (isOnline) {
+        await apiService.clearToken();
+      } else {
+        console.log('📱 Offline logout - preserving token for offline access');
+      }
 
       setAuthState({
         user: null,
@@ -193,8 +258,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       console.log('✅ Logout successful');
       
-      // Redirect to login
-      safeRedirect('/(auth)/login');
+      // Only redirect if online
+      if (isOnline) {
+        safeRedirect('/(auth)/login');
+      }
     } catch (error) {
       console.error('❌ Logout error:', error);
       setError('Logout failed');
@@ -205,7 +272,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: false,
         loading: false,
       });
-      safeRedirect('/(auth)/login');
+      
+      // Only redirect if online
+      if (isOnline) {
+        safeRedirect('/(auth)/login');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -229,6 +300,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     error,
     clearError,
+    isOnline, // Add this
   };
 
   return (

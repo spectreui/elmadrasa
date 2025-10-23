@@ -16,9 +16,11 @@ import { useThemeContext } from "../../src/contexts/ThemeContext";
 import { designTokens } from "../../src/utils/designTokens";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ResultsScreen() {
   const { t, isRTL } = useTranslation();
+  const { isOnline } = useAuth();
   const { fontFamily, colors } = useThemeContext();
   const [results, setResults] = useState<any[]>([]);
   const [subjectPerformance, setSubjectPerformance] = useState<any[]>([]);
@@ -54,6 +56,14 @@ export default function ResultsScreen() {
       }
     } catch (error: any) {
       Alert.alert(t("common.error"), t("results.loadFailed"));
+      // Show offline message if offline
+      if (!isOnline) {
+        Alert.alert(
+          t("common.offline"),
+          t("dashboard.offlineMessage"),
+          [{ text: t("common.ok") }]
+        );
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);

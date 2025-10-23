@@ -40,6 +40,8 @@ const en = {
   'common.teacher': 'Teacher',
   'common.new': 'New',
   'common.info': 'Information',
+  "common.offlineMode": "Offline Mode",
+  "common.offline": "Offline",
 
   // Months
   'months.january': 'January',
@@ -108,6 +110,10 @@ const en = {
   'dashboard.upcomingExams': 'Upcoming Exams',
   'dashboard.allCaughtUp': "You're all caught up for now",
   'dashboard.due': 'Due',
+  "dashboard.offlineMessage": "Showing cached data. Some features may be limited while offline.",
+  "dashboard.refreshOfflineMessage": "Cannot refresh while offline. Showing cached data.",
+  "dashboard.restrictedOfflineMessage": "This feature requires internet connection.",
+  "dashboard.examAccessOfflineMessage": "Exam details require internet connection.",
 
   // Subjects
   'Physics': 'Physics',

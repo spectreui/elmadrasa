@@ -15,6 +15,7 @@ import { designTokens } from '../../../src/utils/designTokens';
 import { router } from 'expo-router';
 import Alert from '@/components/Alert';
 import { useTranslation } from "@/hooks/useTranslation";
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Homework {
   id: string;
@@ -35,6 +36,7 @@ interface Homework {
 
 export default function TeacherHomeworkScreen() {
   const { t, isRTL } = useTranslation();
+  const { isOnline } = useAuth();
   const [homework, setHomework] = useState<Homework[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -53,6 +55,14 @@ export default function TeacherHomeworkScreen() {
     } catch (error: any) {
       console.error('Failed to load homework:', error);
       Alert.alert(t('common.error'), error.message || t('homework.errors.loadFailed'));
+      // Show offline message if offline
+      if (!isOnline) {
+        Alert.alert(
+          t("common.offline"),
+          t("dashboard.offlineMessage"),
+          [{ text: t("common.ok") }]
+        );
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -231,6 +241,7 @@ export default function TeacherHomeworkScreen() {
             onRefresh={onRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}
+            enabled={isOnline}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -275,7 +286,7 @@ export default function TeacherHomeworkScreen() {
                       <Text style={[styles.cardTitle, { fontFamily, color: colors.textPrimary }]}>
                         {item.title}
                       </Text>
-                      <Text 
+                      <Text
                         style={[styles.cardDescription, { fontFamily, color: colors.textSecondary }]}
                         numberOfLines={2}
                       >

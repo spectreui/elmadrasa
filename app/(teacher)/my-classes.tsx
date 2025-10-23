@@ -8,9 +8,11 @@ import * as Clipboard from 'expo-clipboard';
 import { useThemeContext } from '@/contexts/ThemeContext';
 import { designTokens } from '../../src/utils/designTokens';
 import { useTranslation } from "@/hooks/useTranslation";
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function MyClassesScreen() {
   const { t, isRTL } = useTranslation();
+  const { isOnline } = useAuth();
   const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
   const [joinCodes, setJoinCodes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +33,14 @@ export default function MyClassesScreen() {
       setJoinCodes(codesRes.data.data || []);
     } catch (error) {
       console.error('Failed to load teacher classes:', error);
+      // Show offline message if offline
+      if (!isOnline) {
+        Alert.alert(
+          t("common.offline"),
+          t("dashboard.offlineMessage"),
+          [{ text: t("common.ok") }]
+        );
+      }
     } finally {
       setLoading(false);
     }

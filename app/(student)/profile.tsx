@@ -22,7 +22,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 
 export default function ProfileScreen() {
   const { t, isRTL, language, setLanguage } = useTranslation();
-  const { user, logout } = useAuth();
+  const { user, logout, isOnline } = useAuth();
   const { fontFamily, colors, isDark, toggleTheme } = useThemeContext();
   const [activeTab, setActiveTab] = useState<'profile' | 'settings'>('profile');
   const [loading, setLoading] = useState(false);
@@ -44,6 +44,14 @@ export default function ProfileScreen() {
       }
     } catch (error) {
       console.error('Failed to load profile data:', error);
+      // Show offline message if offline
+      if (!isOnline) {
+        Alert.alert(
+          t("common.offline"),
+          t("dashboard.offlineMessage"),
+          [{ text: t("common.ok") }]
+        );
+      }
     } finally {
       setRefreshing(false);
     }

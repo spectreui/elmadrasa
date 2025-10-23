@@ -2,7 +2,9 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { LoginRequest, AuthResponse, ApiResponse, User, Exam } from "../types";
 import { storage } from "../utils/storage";
+import { saveToCache, getFromCache, CACHE_KEYS } from '../utils/cache';
 import { router } from 'expo-router';
+import NetInfo from '@react-native-community/netinfo';
 
 // const API_BASE_URL = "http://192.168.1.124:5001/api";
 const API_BASE_URL = "https://elmadrasa-server.vercel.app/api";
@@ -28,6 +30,17 @@ class ApiService {
     reject: (error?: any) => void;
   }[] = [];
 
+  private readonly CACHE_KEYS = {
+    DASHBOARD: 'student_dashboard',
+    EXAMS: 'student_exams',
+    HOMEWORK: 'student_homework',
+    PROFILE: 'user_profile',
+    STATS: 'student_stats',
+    RESULTS: 'student_results',
+    SUBJECTS: 'student_subjects',
+    PROGRESS: 'student_progress'
+  };
+
   constructor() {
     this.api = axios.create({
       baseURL: API_BASE_URL,
@@ -40,6 +53,16 @@ class ApiService {
 
     this.initializeToken();
     this.setupInterceptors();
+  }
+
+  // Check network connectivity
+  private async isOnline(): Promise<boolean> {
+    try {
+      const response = await fetch('https://www.google.com', { method: 'HEAD', mode: 'no-cors' });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private async initializeToken(): Promise<void> {
@@ -330,13 +353,68 @@ class ApiService {
   }
 
   // Student methods
-  async getStudentDashboard(): Promise<AxiosResponse<ApiResponse<any>>> {
-    console.log('📊 Fetching dashboard data...');
-    return this.api.get("/students/dashboard");
+  async getStudentDashboard(): Promise<any> {
+    try {
+      const online = await this.isOnline();
+
+      if (!online) {
+        // Try to get from cache
+        const cached = await getFromCache(CACHE_KEYS.DASHBOARD);
+        if (cached) {
+          console.log('📱 Using cached dashboard data');
+          return { data: cached, status: 200 };
+        }
+        throw new Error('No internet connection and no cached data');
+      }
+
+      // Online - fetch fresh data
+      const response = await this.api.get("/students/dashboard");
+
+      // Cache the response
+      await saveToCache(CACHE_KEYS.DASHBOARD, response.data);
+
+      return response;
+    } catch (error) {
+      // If online request fails, try cache as fallback
+      const cached = await getFromCache(CACHE_KEYS.DASHBOARD);
+      if (cached) {
+        console.log('📱 Using cached dashboard data as fallback');
+        return { data: cached, status: 200 };
+      }
+      throw error;
+    }
   }
 
   async getExams() {
-    return this.api.get('/students/exams');
+    try {
+      const online = await this.isOnline();
+
+      if (!online) {
+        // Try to get from cache
+        const cached = await getFromCache(CACHE_KEYS.EXAMS);
+        if (cached) {
+          console.log('📱 Using cached exams data');
+          return { data: cached, status: 200 };
+        }
+        throw new Error('No internet connection and no cached data');
+      }
+
+      // Online - fetch fresh data
+      const response = await this.api.get('/students/exams');
+
+      // Cache the response
+      await saveToCache(CACHE_KEYS.EXAMS, response.data);
+
+      return response;
+    } catch (error) {
+      // If online request fails, try cache as fallback
+      const cached = await getFromCache(CACHE_KEYS.EXAMS);
+      if (cached) {
+        console.log('📱 Using cached exams data as fallback');
+        return { data: cached, status: 200 };
+      }
+      throw error;
+    }
   }
 
   async getUpcomingExams() {
@@ -365,13 +443,45 @@ class ApiService {
     return this.api.get("/students/performance");
   }
 
-  public async getExamById(id: string): Promise<AxiosResponse<ApiResponse<Exam>>> {
+  public async getExamById(id: string): Promise<any> {
+    const online = await this.isOnline();
+    if (!online) {
+      throw new Error('Cannot access exam details offline');
+    }
     return this.api.get(`/exams/${id}`);
   }
 
   // Teacher methods
-  public async getTeacherStats(): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.get("/teachers/stats");
+  public async getTeacherStats(): Promise<any> {
+    try {
+      const online = await this.isOnline();
+
+      if (!online) {
+        // Try to get from cache
+        const cached = await getFromCache(CACHE_KEYS.TEACHER_STATS);
+        if (cached) {
+          console.log('📱 Using cached teacher stats data');
+          return { data: cached, status: 200 };
+        }
+        throw new Error('No internet connection and no cached data');
+      }
+
+      // Online - fetch fresh data
+      const response = await this.api.get("/teachers/stats");
+
+      // Cache the response
+      await saveToCache(CACHE_KEYS.TEACHER_STATS, response.data);
+
+      return response;
+    } catch (error) {
+      // If online request fails, try cache as fallback
+      const cached = await getFromCache(CACHE_KEYS.TEACHER_STATS);
+      if (cached) {
+        console.log('📱 Using cached teacher stats data as fallback');
+        return { data: cached, status: 200 };
+      }
+      throw error;
+    }
   }
 
   public async getRecentActivity(): Promise<AxiosResponse<ApiResponse<any>>> {
@@ -402,13 +512,68 @@ class ApiService {
     return this.api.get("/teachers/achievements");
   }
 
-  public async getTeacherDashboardStats(): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.get("/teachers/stats");
+  public async getTeacherDashboardStats(): Promise<any> {
+    try {
+      const online = await this.isOnline();
+
+      if (!online) {
+        // Try to get from cache
+        const cached = await getFromCache(CACHE_KEYS.TEACHER_DASHBOARD);
+        if (cached) {
+          console.log('📱 Using cached teacher dashboard data');
+          return { data: cached, status: 200 };
+        }
+        throw new Error('No internet connection and no cached data');
+      }
+
+      // Online - fetch fresh data
+      const response = await this.api.get("/teachers/stats");
+
+      // Cache the response
+      await saveToCache(CACHE_KEYS.TEACHER_DASHBOARD, response.data);
+
+      return response;
+    } catch (error) {
+      // If online request fails, try cache as fallback
+      const cached = await getFromCache(CACHE_KEYS.TEACHER_DASHBOARD);
+      if (cached) {
+        console.log('📱 Using cached teacher dashboard data as fallback');
+        return { data: cached, status: 200 };
+      }
+      throw error;
+    }
   }
 
+  public async getTeacherClassesWithStats(): Promise<any> {
+    try {
+      const online = await this.isOnline();
 
-  public async getTeacherClassesWithStats(): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.get("/teachers/classes");
+      if (!online) {
+        // Try to get from cache
+        const cached = await getFromCache(CACHE_KEYS.TEACHER_CLASSES);
+        if (cached) {
+          console.log('📱 Using cached teacher classes data');
+          return { data: cached, status: 200 };
+        }
+        throw new Error('No internet connection and no cached data');
+      }
+
+      // Online - fetch fresh data
+      const response = await this.api.get("/teachers/classes");
+
+      // Cache the response
+      await saveToCache(CACHE_KEYS.TEACHER_CLASSES, response.data);
+
+      return response;
+    } catch (error) {
+      // If online request fails, try cache as fallback
+      const cached = await getFromCache(CACHE_KEYS.TEACHER_CLASSES);
+      if (cached) {
+        console.log('📱 Using cached teacher classes data as fallback');
+        return { data: cached, status: 200 };
+      }
+      throw error;
+    }
   }
 
   public async getExamStatistics(examId: string): Promise<AxiosResponse<ApiResponse<any>>> {
@@ -424,8 +589,36 @@ class ApiService {
     return this.api.get(`/teachers/exams/${examId}/results`);
   }
 
-  public async getRecentTeacherActivity(): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.get("/teachers/activity");
+  public async getRecentTeacherActivity(): Promise<any> {
+    try {
+      const online = await this.isOnline();
+
+      if (!online) {
+        // Try to get from cache
+        const cached = await getFromCache(CACHE_KEYS.TEACHER_ACTIVITY);
+        if (cached) {
+          console.log('📱 Using cached teacher activity data');
+          return { data: cached, status: 200 };
+        }
+        throw new Error('No internet connection and no cached data');
+      }
+
+      // Online - fetch fresh data
+      const response = await this.api.get("/teachers/activity");
+
+      // Cache the response
+      await saveToCache(CACHE_KEYS.TEACHER_ACTIVITY, response.data);
+
+      return response;
+    } catch (error) {
+      // If online request fails, try cache as fallback
+      const cached = await getFromCache(CACHE_KEYS.TEACHER_ACTIVITY);
+      if (cached) {
+        console.log('📱 Using cached teacher activity data as fallback');
+        return { data: cached, status: 200 };
+      }
+      throw error;
+    }
   }
 
   public async deleteExam(examId: string): Promise<AxiosResponse<ApiResponse<any>>> {
@@ -642,16 +835,75 @@ class ApiService {
     return response.data;
   }
 
-  // src/services/api.ts - Add this method
-  async getTeacherClassesAndSubjects(): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.get("/teachers/classes-subjects");
-  }
-  // src/services/api.ts - Update homework methods
-  async getHomework(): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.get("/homework/student");
+  async getTeacherClassesAndSubjects(): Promise<any> {
+    try {
+      const online = await this.isOnline();
+
+      if (!online) {
+        // Try to get from cache
+        const cached = await getFromCache(CACHE_KEYS.TEACHER_CLASS_STATS);
+        if (cached) {
+          console.log('📱 Using cached teacher class stats data');
+          return { data: cached, status: 200 };
+        }
+        throw new Error('No internet connection and no cached data');
+      }
+
+      // Online - fetch fresh data
+      const response = await this.api.get("/teachers/classes-subjects");
+
+      // Cache the response
+      await saveToCache(CACHE_KEYS.TEACHER_CLASS_STATS, response.data);
+
+      return response;
+    } catch (error) {
+      // If online request fails, try cache as fallback
+      const cached = await getFromCache(CACHE_KEYS.TEACHER_CLASS_STATS);
+      if (cached) {
+        console.log('📱 Using cached teacher class stats data as fallback');
+        return { data: cached, status: 200 };
+      }
+      throw error;
+    }
   }
 
-  async getHomeworkById(id: string): Promise<AxiosResponse<ApiResponse<any>>> {
+  async getHomework() {
+    try {
+      const online = await this.isOnline();
+
+      if (!online) {
+        // Try to get from cache
+        const cached = await getFromCache(CACHE_KEYS.HOMEWORK);
+        if (cached) {
+          console.log('📱 Using cached homework data');
+          return { data: cached, status: 200 };
+        }
+        throw new Error('No internet connection and no cached data');
+      }
+
+      // Online - fetch fresh data
+      const response = await this.api.get("/homework/student");
+
+      // Cache the response
+      await saveToCache(CACHE_KEYS.HOMEWORK, response.data);
+
+      return response;
+    } catch (error) {
+      // If online request fails, try cache as fallback
+      const cached = await getFromCache(CACHE_KEYS.HOMEWORK);
+      if (cached) {
+        console.log('📱 Using cached homework data as fallback');
+        return { data: cached, status: 200 };
+      }
+      throw error;
+    }
+  }
+
+  async getHomeworkById(id: string): Promise<any> {
+    const online = await this.isOnline();
+    if (!online) {
+      throw new Error('Cannot access homework details offline');
+    }
     return this.api.get(`/homework/${id}`);
   }
 
@@ -680,12 +932,37 @@ class ApiService {
     return this.api.put(`/admin/students/${studentId}`, data);
   }
 
-
-  // src/services/api.ts - Add these methods if missing
-
   // Teacher homework methods
-  async getTeacherHomework(): Promise<AxiosResponse<ApiResponse<any>>> {
-    return this.api.get("/homework/teacher/all");
+  async getTeacherHomework(): Promise<any> {
+    try {
+      const online = await this.isOnline();
+
+      if (!online) {
+        // Try to get from cache
+        const cached = await getFromCache(CACHE_KEYS.TEACHER_HOMEWORK);
+        if (cached) {
+          console.log('📱 Using cached teacher homework data');
+          return { data: cached, status: 200 };
+        }
+        throw new Error('No internet connection and no cached data');
+      }
+
+      // Online - fetch fresh data
+      const response = await this.api.get("/homework/teacher/all");
+
+      // Cache the response
+      await saveToCache(CACHE_KEYS.TEACHER_HOMEWORK, response.data);
+
+      return response;
+    } catch (error) {
+      // If online request fails, try cache as fallback
+      const cached = await getFromCache(CACHE_KEYS.TEACHER_HOMEWORK);
+      if (cached) {
+        console.log('📱 Using cached teacher homework data as fallback');
+        return { data: cached, status: 200 };
+      }
+      throw error;
+    }
   }
 
   async getHomeworkSubmissions(homeworkId: string): Promise<AxiosResponse<ApiResponse<any>>> {
@@ -707,7 +984,35 @@ class ApiService {
   }
 
   async getUserProfile() {
-    return this.api.get('/users/me');
+    try {
+      const online = await this.isOnline();
+
+      if (!online) {
+        // Try to get from cache
+        const cached = await getFromCache(CACHE_KEYS.PROFILE);
+        if (cached) {
+          console.log('📱 Using cached profile data');
+          return { data: cached, status: 200 };
+        }
+        throw new Error('No internet connection and no cached data');
+      }
+
+      // Online - fetch fresh data
+      const response = await this.api.get('/users/me');
+
+      // Cache the response
+      await saveToCache(CACHE_KEYS.PROFILE, response.data);
+
+      return response;
+    } catch (error) {
+      // If online request fails, try cache as fallback
+      const cached = await getFromCache(CACHE_KEYS.PROFILE);
+      if (cached) {
+        console.log('📱 Using cached profile data as fallback');
+        return { data: cached, status: 200 };
+      }
+      throw error;
+    }
   }
 
   async updateUser(profileData: {

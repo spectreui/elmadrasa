@@ -16,10 +16,11 @@ import { designTokens } from "../../src/utils/designTokens";
 import { useThemeContext } from "../../src/contexts/ThemeContext";
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useTranslation } from "@/hooks/useTranslation";
+import Alert from "@/components/Alert";
 
 export default function StudentDashboard() {
   const { t, isRTL } = useTranslation();
-  const { user } = useAuth();
+  const { user, isOnline } = useAuth();
   const { isDark, colors, fontFamily, toggleTheme } = useThemeContext();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +35,7 @@ export default function StudentDashboard() {
     try {
       setLoading(true);
 
-      // Load real data from API
+      // Load real data from API (will use cache when offline)
       const [statsResponse, examsResponse] = await Promise.all([
         apiService.getStudentDashboard(),
         apiService.getUpcomingExams()
@@ -49,6 +50,14 @@ export default function StudentDashboard() {
       }
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
+      // Show offline message if offline
+      if (!isOnline) {
+        Alert.alert(
+          t("common.offline"),
+          t("dashboard.offlineMessage"),
+          [{ text: t("common.ok") }]
+        );
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -56,6 +65,17 @@ export default function StudentDashboard() {
   };
 
   const onRefresh = () => {
+    // Prevent refresh when offline
+    if (!isOnline) {
+      Alert.alert(
+        t("common.offline"),
+        t("dashboard.refreshOfflineMessage"),
+        [{ text: t("common.ok") }]
+      );
+      setRefreshing(false);
+      return;
+    }
+
     setRefreshing(true);
     loadDashboardData();
   };
@@ -163,10 +183,10 @@ export default function StudentDashboard() {
             {exam.subject} • {t('dashboard.due')} {new Date(exam.due_date).toLocaleDateString()}
           </Text>
         </View>
-        <Ionicons 
-          name={isRTL ? "chevron-back" : "chevron-forward"} 
-          size={20} 
-          color={colors.textTertiary} 
+        <Ionicons
+          name={isRTL ? "chevron-back" : "chevron-forward"}
+          size={20}
+          color={colors.textTertiary}
         />
       </View>
     </TouchableOpacity>
@@ -193,6 +213,7 @@ export default function StudentDashboard() {
           refreshing={refreshing}
           onRefresh={onRefresh}
           tintColor={colors.primary}
+          enabled={isOnline}
         />
       }
     >
@@ -230,6 +251,16 @@ export default function StudentDashboard() {
               >
                 {user?.profile?.class ? `${t('classes.class')} ${user.profile.class}` : t('dashboard.noClassAssigned')}
               </Text>
+              {!isOnline && (
+                <Text
+                  style={[
+                    styles.offlineIndicator,
+                    { fontFamily, color: '#FF9500' }
+                  ]}
+                >
+                  {t("common.offlineMode")}
+                </Text>
+              )}
             </View>
           </View>
 
@@ -285,11 +316,11 @@ export default function StudentDashboard() {
       </View>
 
       {/* Quick Actions */}
-      <View style={[styles.section, {marginBottom: designTokens.spacing.md}]}>
+      <View style={[styles.section, { marginBottom: designTokens.spacing.md }]}>
         <Text
           style={[
             styles.sectionTitle,
-            {marginBottom: designTokens.spacing.md, fontFamily, color: colors.textPrimary }
+            { marginBottom: designTokens.spacing.md, fontFamily, color: colors.textPrimary }
           ]}
         >
           {t("dashboard.quickActions")}
@@ -319,7 +350,7 @@ export default function StudentDashboard() {
       </View>
 
       {/* Upcoming Exams */}
-      <View style={[styles.section, {marginBottom: 110}]}>
+      <View style={[styles.section, { marginBottom: 110 }]}>
         <View style={[styles.sectionHeader, isRTL && styles.rtlRow]}>
           <Text
             style={[
@@ -397,6 +428,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: designTokens.spacing.md,
+  },
+  offlineIndicator: {
+    fontSize: designTokens.typography.caption1.fontSize,
+    marginTop: 4,
+  },
+  offlineText: {
+    marginTop: designTokens.spacing.sm,
+    fontSize: designTokens.typography.footnote.fontSize,
   },
   userInfo: {
     flexDirection: 'row',

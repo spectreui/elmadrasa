@@ -34,7 +34,7 @@ interface TeacherExam extends Exam {
 export default function TeacherExamsScreen() {
   const { t, isRTL } = useTranslation();
   const { fontFamily, colors } = useThemeContext();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isOnline } = useAuth();
   const [exams, setExams] = useState<TeacherExam[]>([]);
   const [allExams, setAllExams] = useState<TeacherExam[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +46,7 @@ export default function TeacherExamsScreen() {
   useEffect(() => {
     if (!loading) {
       if (isAuthenticated && user?.role === 'student') {
-        router.replace('/(student)/homework');
+        router.replace('/(student)/exams');
       }
     }
   }, [isAuthenticated, loading, user]);
@@ -75,8 +75,18 @@ export default function TeacherExamsScreen() {
     } catch (error: any) {
       console.error("Failed to load exams:", error);
       Alert.alert(t("common.error"), t("exams.loadFailed"));
-      setAllExams([]);
-      setExams([]);
+
+      // Show offline message if offline
+      if (!isOnline) {
+        Alert.alert(
+          t("common.offline"),
+          t("dashboard.offlineMessage"),
+          [{ text: t("common.ok") }]
+        );
+      } else {
+        setAllExams([]);
+        setExams([]);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -453,6 +463,7 @@ export default function TeacherExamsScreen() {
           refreshing={refreshing}
           onRefresh={onRefresh}
           tintColor={colors.primary}
+          enabled={isOnline}
         />
       }
     >

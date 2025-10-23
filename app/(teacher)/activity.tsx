@@ -15,6 +15,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { RecentActivity } from '../../src/types';
 import { designTokens } from '../../src/utils/designTokens';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuth } from '@/contexts/AuthContext';
+import Alert from '@/components/Alert';
 
 export default function TeacherActivity() {
   const { fontFamily, colors } = useThemeContext();
@@ -22,6 +24,7 @@ export default function TeacherActivity() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { t, language, isRTL } = useTranslation();
+  const { isOnline } = useAuth();
 
   useEffect(() => {
     loadActivities();
@@ -37,6 +40,14 @@ export default function TeacherActivity() {
       }
     } catch (error) {
       console.error('Failed to load activities:', error);
+      // Show offline message if offline
+      if (!isOnline) {
+        Alert.alert(
+          t("common.offline"),
+          t("dashboard.offlineMessage"),
+          [{ text: t("common.ok") }]
+        );
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -88,6 +99,7 @@ export default function TeacherActivity() {
           onRefresh={onRefresh}
           colors={[colors.primary]}
           tintColor={colors.primary}
+          enabled={isOnline}
         />
       }
     >
