@@ -80,6 +80,21 @@
       "buildNumber": "3"
     },
     "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "/favicon.png",
+      "name": "El Madrasa",
+      "shortName": "El Madrasa",
+      "description": "Educational platform for students and teachers",
+      "language": "en",
+      "dir": "ltr",
+      "themeColor": "#007AFF",
+      "backgroundColor": "#0F172A",
+      "display": "standalone",
+      "orientation": "portrait",
+      "scope": "/",
+      "startUrl": "/",
+      "icon": "./assets/images/icon.png",
       "pwa": {
         "name": "Elmadrasa",
         "shortName": "Elmadrasa",
@@ -101,7 +116,10 @@
             "sizes": "512x512",
             "type": "image/png"
           }
-        ]
+        ],
+        "dangerous": {
+          "serviceWorkerPath": "service-worker.js"
+        }
       },
       "dangerous": {
         "serviceWorkerPath": "service-worker.js"
