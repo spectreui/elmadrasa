@@ -1,4 +1,4 @@
-// app/_layout.tsx - Fixed version
+// app/_layout.tsx
 import "../global.css";
 import React, { useEffect, useState } from "react";
 import { View, Text, Platform } from "react-native";
@@ -19,8 +19,8 @@ import { AlertProvider } from "@/components/Alert";
 import ElmadrasaAnimation from "@/components/AppleHello";
 import { FancyTabBarProvider } from "@/contexts/TabBarContext";
 
-// Keep splash screen until ready
-SplashScreen.preventAutoHideAsync();
+// ✅ Make sure the splash screen stays until fonts + intro are ready
+SplashScreen.preventAutoHideAsync().catch(() => { });
 
 function ThemeWrapper({ children }: { children: React.ReactNode }) {
   const { isDark } = useThemeContext();
@@ -32,58 +32,45 @@ function ThemeWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
-// PWA Installation handler
+// ✅ Only register SW in web environment
 function registerServiceWorker() {
-  if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/service-worker.js')
+  if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker
+        .register("/service-worker.js")
         .then((registration) => {
-          console.log('SW registered: ', registration);
+          console.log("✅ Service Worker registered:", registration);
         })
-        .catch((registrationError) => {
-          console.log('SW registration failed: ', registrationError);
+        .catch((error) => {
+          console.warn("❌ Service Worker registration failed:", error);
         });
     });
   }
 }
 
-// PWA Installation handler
+// ✅ PWA installation handler
 function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
-    const handler = (e: Event) => {
-      // Prevent Chrome 67 and earlier from automatically showing the prompt
+    const handler = (e: any) => {
       e.preventDefault();
-      // Stash the event so it can be triggered later
       setDeferredPrompt(e);
       setIsInstallable(true);
-      console.log('PWA installable');
     };
 
-    window.addEventListener('beforeinstallprompt', handler as any);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handler as any);
-    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
   const installPWA = async () => {
     if (!deferredPrompt) return;
-
-    // Show the install prompt
     deferredPrompt.prompt();
-
-    // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice;
-
-    // Optionally, send analytics event with outcome of user choice
-    console.log(`User response to the install prompt: ${outcome}`);
-
-    // We've used the prompt, and can't use it again, throw it away
+    console.log("PWA install outcome:", outcome);
     setDeferredPrompt(null);
     setIsInstallable(false);
   };
@@ -91,7 +78,6 @@ function usePWAInstall() {
   return { isInstallable, installPWA };
 }
 
-// Simple fallback if animation fails
 function IntroFallback() {
   return (
     <View
@@ -108,7 +94,7 @@ function IntroFallback() {
 }
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
+  const [loaded] = useFonts({
     "Inter-Regular": require("@/assets/fonts/Inter-Regular.otf"),
     "Inter-SemiBold": require("@/assets/fonts/Inter-SemiBold.otf"),
     "Sf-Arabic-semibold": require("@/assets/fonts/SF-Arabic-semibold.ttf"),
@@ -126,24 +112,26 @@ export default function RootLayout() {
   const pathname = usePathname();
   const { isInstallable, installPWA } = usePWAInstall();
 
+  // ✅ Register service worker on web only
   useEffect(() => {
-    if (Platform.OS === 'web') {
+    if (Platform.OS === "web") {
       registerServiceWorker();
     }
   }, []);
 
+  // ✅ Hide splash once app ready
   useEffect(() => {
-    SplashScreen.hide();
+    if (loaded && (showIntro === false || helloDone)) {
+      SplashScreen.hideAsync().catch(() => { });
+    }
+  }, [loaded, showIntro, helloDone]);
+
+  // ✅ Pre-warm token
+  useEffect(() => {
+    apiService.validateToken().catch(() => { });
   }, []);
 
-  // ✅ Pre-warm token (to avoid unauthorized flickers)
-  useEffect(() => {
-    (async () => {
-      await apiService.validateToken();
-    })();
-  }, []);
-
-  // ✅ Check if intro was seen
+  // ✅ Check intro state
   useEffect(() => {
     const checkIntro = async () => {
       try {
@@ -162,16 +150,18 @@ export default function RootLayout() {
   const handleHelloDone = async () => {
     try {
       await AsyncStorage.setItem("introShown", "true");
-      setHelloDone(true);
     } catch (e) {
-      console.error("❌ Error saving intro state:", e);
+      console.warn("❌ Error saving intro state:", e);
+    } finally {
       setHelloDone(true);
     }
   };
 
   const renderIntro = () => {
     try {
-      return <ElmadrasaAnimation onAnimationComplete={handleHelloDone} speed={2} />;
+      return (
+        <ElmadrasaAnimation onAnimationComplete={handleHelloDone} speed={2} />
+      );
     } catch (error) {
       console.error("❌ Animation error:", error);
       setAnimationError(true);
@@ -180,22 +170,12 @@ export default function RootLayout() {
     }
   };
 
-  useEffect(() => {
-    if (loaded && (showIntro === false || helloDone || storageError || animationError)) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded, showIntro, helloDone, storageError, animationError]);
-
   if (showIntro === null) {
     return <View style={{ flex: 1, backgroundColor: "#000" }} />;
   }
 
-  if (showIntro && !helloDone && !animationError) {
-    return renderIntro();
-  }
-
-  if (showIntro && !helloDone && animationError) {
-    return <IntroFallback />;
+  if (showIntro && !helloDone) {
+    return animationError ? <IntroFallback /> : renderIntro();
   }
 
   // ✅ Main App
@@ -214,29 +194,37 @@ export default function RootLayout() {
                   />
                   <SafeAreaView>
                     <FancyTabBarProvider>
-                      {/* Show install prompt for PWA */}
-                      {isInstallable && Platform.OS === 'web' && (
-                        <View style={{
-                          backgroundColor: '#007AFF',
-                          padding: 10,
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          flexDirection: 'row'
-                        }}>
-                          <Text style={{ color: 'white', flex: 1, fontSize: 14 }}>
-                            Install El Madrasa app for better experience
+                      {/* ✅ Show install prompt for PWA */}
+                      {isInstallable && Platform.OS === "web" && (
+                        <View
+                          style={{
+                            backgroundColor: "#007AFF",
+                            padding: 10,
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            flexDirection: "row",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: "white",
+                              flex: 1,
+                              fontSize: 14,
+                            }}
+                          >
+                            Install El Madrasa app for a better experience
                           </Text>
                           <button
                             onClick={installPWA}
                             style={{
-                              backgroundColor: 'white',
-                              color: '#007AFF',
-                              border: 'none',
-                              padding: '8px 12px',
+                              backgroundColor: "white",
+                              color: "#007AFF",
+                              border: "none",
+                              padding: "8px 12px",
                               borderRadius: 4,
-                              cursor: 'pointer',
+                              cursor: "pointer",
                               fontSize: 14,
-                              fontWeight: '600'
+                              fontWeight: "600",
                             }}
                           >
                             Install
