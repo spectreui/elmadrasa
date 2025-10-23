@@ -121,7 +121,7 @@ export default function ExamsScreen() {
   // Update the getExamStatus function to handle the new status field
   const getExamStatus = (exam: Exam): 'available' | 'taken' | 'upcoming' | 'missed' => {
     // Use the status from backend if available, otherwise calculate it
-    if (exam.status) {
+    if (exam.status) { 
       return exam.status as 'available' | 'taken' | 'upcoming' | 'missed';
     }
 

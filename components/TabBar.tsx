@@ -8,6 +8,10 @@ import { useThemeContext } from '@/contexts/ThemeContext';
 const LiquidGlassTabBar = (props : any) => {
     const { isDark } = useThemeContext();
     // Web-compatible glass effect styles
+    const blurIntensity = Platform.select({
+        ios: isDark ? 80 : 70,
+        android: isDark ? 60 : 30,
+    });
     const webGlassStyle = Platform.select({
         web: {
             backgroundColor: isDark ? 'rgba(0, 0, 0, 0.25)' : 'rgba(255, 255, 255, 0.25)',
@@ -15,7 +19,7 @@ const LiquidGlassTabBar = (props : any) => {
             WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         },
         android: {
-            backgroundColor: isDark ? 'rgba(0, 0, 0, 0.20)' : 'rgba(255, 255, 255, 0.20)',
+            backgroundColor: isDark ? 'rgba(0, 0, 0, 0.0)' : 'rgba(255, 255, 255, 0.0)',
             backdropFilter: 'blur(30px) saturate(180%)',
             WebkitBackdropFilter: 'blur(30px) saturate(180%)',
         },
@@ -48,10 +52,10 @@ const LiquidGlassTabBar = (props : any) => {
             {/* Native BlurView - won't affect web */}
             {Platform.OS !== 'web' && (
                 <BlurView
-                    intensity={isDark ? 90 : 80}
+                    intensity={blurIntensity}
                     tint={isDark ? "dark" : "light"}
-                    style={StyleSheet.absoluteFill} 
-                    experimentalBlurMethod='ExperimentalBlurMethod'
+                    style={[StyleSheet.absoluteFill, {backgroundColor: 'transparent'}]}
+                    experimentalBlurMethod='dimezisBlurView'
                 />
             )}
 
