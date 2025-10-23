@@ -81,7 +81,7 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "server",
       "favicon": "/favicon.png",
       "name": "El Madrasa",
       "shortName": "El Madrasa",
@@ -96,6 +96,8 @@
       "startUrl": "/",
       "icon": "./assets/images/icon.png",
       "pwa": {
+        "bundler": "metro",
+        "output": "server",
         "name": "Elmadrasa",
         "shortName": "Elmadrasa",
         "themeColor": "#007AFF",
