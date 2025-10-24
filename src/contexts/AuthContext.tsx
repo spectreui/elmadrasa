@@ -1,11 +1,11 @@
-// src/contexts/AuthContext.tsx - Fixed role-based routing for root dashboard
+// src/contexts/AuthContext.tsx - Fixed offline authenticated user detection
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { apiService } from '../services/api';
 import { AuthState } from '../types/index.js';
 import { View, ActivityIndicator } from 'react-native';
 import { router, usePathname } from 'expo-router';
 import NetInfo from '@react-native-community/netinfo';
-import { getFromCache, saveToCache } from '../utils/cache';
+import { getFromCache, saveToCache, CACHE_KEYS } from '../utils/cache';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -36,22 +36,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const networkListener = useRef<any>(null);
 
   const safeRedirect = useCallback((path: string) => {
-    if (currentPathname !== path) {
-      console.log(`➡️ Redirecting from ${currentPathname} to ${path}`);
-      router.replace(path);
-    }
+    console.log(`➡️ Redirecting from ${currentPathname} to ${path}`);
+    router.replace(path);
   }, [currentPathname]);
 
   const checkNetworkStatus = useCallback(async (): Promise<boolean> => {
     try {
       const state = await NetInfo.fetch();
-      const online = state.isConnected === true && state.isInternetReachable === true;
+      // More reliable check - isConnected is enough for most cases
+      const online = state.isConnected === true;
+      console.log('🌐 Network check result:', {
+        isConnected: state.isConnected,
+        isInternetReachable: state.isInternetReachable,
+        type: state.type,
+        online
+      });
       setIsOnline(online);
       return online;
     } catch (error) {
-      console.log('🌐 Network check failed:', error);
-      setIsOnline(false);
-      return false;
+      console.log('🌐 Network check failed, assuming online:', error);
+      setIsOnline(true);
+      return true;
     }
   }, []);
 
@@ -59,8 +64,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkNetworkStatus();
 
     networkListener.current = NetInfo.addEventListener(state => {
-      const online = state.isConnected === true && state.isInternetReachable === true;
-      console.log('🌐 Network status changed:', online ? 'Online' : 'Offline');
+      // More reliable check
+      const online = state.isConnected === true;
+      console.log('🌐 Network status changed:', online ? 'Online' : 'Offline', {
+        isConnected: state.isConnected,
+        isInternetReachable: state.isInternetReachable,
+        type: state.type
+      });
       setIsOnline(online);
     });
 
@@ -71,55 +81,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [checkNetworkStatus]);
 
-  // Fixed automatic role-based routing for root dashboard
+  // Handle ALL routing logic including root path
   useEffect(() => {
     if (authState.loading) return;
     
-    // Only handle authenticated users
-    if (!authState.isAuthenticated || !authState.user?.role) return;
-    
-    // Don't redirect public pages
-    const publicPages = ['/', '/login', '/register', '/forgot-password', '/unauthorized', '/network-error', '/not-found'];
-    if (publicPages.includes(currentPathname)) return;
-    
-    // Get user role
-    const userRole = authState.user.role;
-    
-    // Special case: root path redirects to user's role group root
-    if (currentPathname === '/') {
-      const roleGroupPath = `/(${userRole})`;
-      console.log(`🏠 Redirecting root to ${userRole} role group: ${roleGroupPath}`);
+    // Handle root path redirection for authenticated users
+    if (currentPathname === '/' && authState.isAuthenticated && authState.user?.role) {
+      const roleGroupPath = `/(${authState.user.role})`;
+      console.log(`🏠 Redirecting authenticated user from root to ${roleGroupPath}`);
       safeRedirect(roleGroupPath);
       return;
     }
     
-    // Check if current path is already in correct role format
-    const roleGroupRegex = new RegExp(`^/\\(${userRole}\\)/*`);
-    if (roleGroupRegex.test(currentPathname)) {
-      // Already in correct role path, no redirect needed
+    // Handle root path for unauthenticated users
+    if (currentPathname === '/' && !authState.isAuthenticated) {
+      console.log('🏠 Redirecting unauthenticated user to login');
+      safeRedirect('/login');
       return;
     }
     
-    // Check if current path is in a different role format
-    const anyRoleGroupRegex = /^\/\([^)]+\)\//;
-    if (anyRoleGroupRegex.test(currentPathname)) {
-      // Replace with correct role
-      const newPath = currentPathname.replace(anyRoleGroupRegex, `/(${userRole})/`);
-      console.log(`🔄 Mapping role group ${currentPathname} to ${newPath} for ${userRole}`);
-      safeRedirect(newPath);
-      return;
-    }
-    
-    // Handle flat paths (without role) - convert to role-specific path
-    if (currentPathname.startsWith('/') && !currentPathname.startsWith('/_')) {
-      // Skip if already in correct format
-      if (!currentPathname.startsWith(`/(${userRole})`)) {
-        // For root path, go to role group root
-        // For other paths, add role group prefix
-        const newPath = currentPathname === '/' 
-          ? `/(${userRole})` 
-          : `/(${userRole})${currentPathname}`;
-        console.log(`🔄 Mapping flat path ${currentPathname} to ${newPath} for ${userRole}`);
+    // Handle role-based path correction for authenticated users
+    if (authState.isAuthenticated && authState.user?.role) {
+      // Don't redirect public pages
+      const publicPages = ['/', '/login', '/register', '/forgot-password', '/unauthorized', '/network-error', '/not-found'];
+      if (publicPages.includes(currentPathname)) return;
+      
+      // Get user role
+      const userRole = authState.user.role;
+      
+      // Check if we're in the wrong role group
+      const roleGroupRegex = /^\/\(([^)]+)\)/;
+      const match = currentPathname.match(roleGroupRegex);
+      
+      if (match && match[1] !== userRole) {
+        // Wrong role - redirect to correct role path
+        const newPath = currentPathname.replace(roleGroupRegex, `/(${userRole})`);
+        console.log(`🔄 Wrong role detected, redirecting to: ${newPath}`);
+        safeRedirect(newPath);
+      } else if (!match && !currentPathname.startsWith('/_')) {
+        // No role group - add it
+        const newPath = `/(${userRole})${currentPathname}`;
+        console.log(`🔄 Adding role group, redirecting to: ${newPath}`);
         safeRedirect(newPath);
       }
     }
@@ -150,116 +152,162 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
+        // Always try to validate token first
         const isValid = await apiService.validateToken();
-        if (!isValid && isOnline) {
-          console.log('❌ Token invalid');
-          setAuthState({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-            loading: false,
-          });
-          return;
-        }
+        console.log('🔑 Token validation result:', { isValid, isOnline });
+        
+        // If we have a valid token, try to get user data
+        if (isValid) {
+          console.log('👤 Fetching current user with valid token...');
+          try {
+            const response = await apiService.getCurrentUser();
+            
+            if (response.data.success && response.data.data) {
+              const user = response.data.data;
+              console.log('✅ User authenticated:', user.email, 'Role:', user.role);
 
-        console.log('👤 Fetching current user...');
-        try {
-          const response = await apiService.getCurrentUser();
-          
-          if (response.data.success && response.data.data) {
-            const user = response.data.data;
-            console.log('✅ User authenticated:', user.email, 'Role:', user.role);
+              // Cache user profile
+              await saveToCache(CACHE_KEYS.PROFILE, response.data);
 
-            // Cache user profile
-            await saveToCache('user_profile', response.data);
-
-            setAuthState({
-              user,
-              token,
-              isAuthenticated: true,
-              loading: false,
-            });
-          } else {
-            throw new Error('Failed to get user data');
-          }
-        } catch (error: any) {
-          console.log('❌ User fetch failed:', error.message);
-          
-          // Try to get user from cache when offline
-          if (!isOnline) {
-            console.log('📱 Trying to get user from cache...');
-            const cachedProfile = await getFromCache('user_profile');
-            if (cachedProfile?.data) {
-              console.log('📱 Using cached user data, Role:', cachedProfile.data.role);
               setAuthState({
-                user: cachedProfile.data,
+                user,
                 token,
                 isAuthenticated: true,
                 loading: false,
               });
               return;
             } else {
-              // If no cached data, but we have a valid token, create minimal user object
-              console.log('📱 No cached user data, creating minimal user object');
-              const minimalUser = {
+              throw new Error('Failed to get user data');
+            }
+          } catch (error: any) {
+            console.log('❌ User fetch failed:', error.message, { isOnline });
+            
+            // Try to get user from cache when offline
+            if (!isOnline) {
+              console.log('📱 Offline mode - trying to get user from cache...');
+              const cachedProfile = await getFromCache(CACHE_KEYS.PROFILE);
+              if (cachedProfile?.data) {
+                console.log('📱 Using cached user data, Role:', cachedProfile.data.role);
+                setAuthState({
+                  user: cachedProfile.data,
+                  token,
+                  isAuthenticated: true, // IMPORTANT: Set to true for offline users
+                  loading: false,
+                });
+                return;
+              } else {
+                // Try to extract role from token as fallback
+                console.log('📱 No cached user data, trying to extract role from token');
+                const tokenData = apiService.decodeToken(token);
+                const role = tokenData?.role || 'student'; // Default to student
+                
+                setAuthState({
+                  user: {
+                    id: 'offline-user',
+                    email: 'offline@user.com',
+                    role: role,
+                    name: 'Offline User'
+                  },
+                  token,
+                  isAuthenticated: true, // IMPORTANT: Set to true for offline users
+                  loading: false,
+                });
+                return;
+              }
+            }
+            
+            // Only clear token for online 401 errors
+            if (isOnline && error.response?.status === 401) {
+              console.log('❌ Token expired or invalid - clearing token');
+              await apiService.clearToken();
+            }
+            
+            setAuthState({
+              user: null,
+              token: null,
+              isAuthenticated: false,
+              loading: false,
+            });
+            return;
+          }
+        }
+        
+        // If token is invalid but we're offline, still try to authenticate
+        if (!isValid && !isOnline) {
+          console.log('📱 Token invalid but offline - trying cached user data');
+          const cachedProfile = await getFromCache(CACHE_KEYS.PROFILE);
+          if (cachedProfile?.data) {
+            console.log('📱 Using cached user data despite invalid token, Role:', cachedProfile.data.role);
+            setAuthState({
+              user: cachedProfile.data,
+              token,
+              isAuthenticated: true, // IMPORTANT: Set to true for offline users
+              loading: false,
+            });
+            return;
+          } else {
+            // Try to extract role from token as fallback
+            console.log('📱 No cached user data, trying to extract role from token');
+            const tokenData = apiService.decodeToken(token);
+            const role = tokenData?.role || 'student'; // Default to student
+            
+            setAuthState({
+              user: {
                 id: 'offline-user',
                 email: 'offline@user.com',
-                role: 'student', // Default to student when offline
+                role: role,
                 name: 'Offline User'
-              };
-              setAuthState({
-                user: minimalUser,
-                token,
-                isAuthenticated: true,
-                loading: false,
-              });
-              return;
-            }
+              },
+              token,
+              isAuthenticated: true, // IMPORTANT: Set to true for offline users
+              loading: false,
+            });
+            return;
           }
-          
-          if (isOnline && error.response?.status === 401) {
-            console.log('❌ Token expired or invalid - clearing token');
-            await apiService.clearToken();
-          }
-          
-          setAuthState({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-            loading: false,
-          });
         }
+        
+        // Token is invalid and we're online - clear it
+        console.log('❌ Token invalid and online - clearing token');
+        await apiService.clearToken();
+        setAuthState({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          loading: false,
+        });
       } catch (error: any) {
         console.error('❌ Initial auth check failed:', error);
         
         // Try to get user from cache when offline
         if (!isOnline) {
           console.log('📱 Trying to get user from cache (offline auth check)...');
-          const cachedProfile = await getFromCache('user_profile');
+          const cachedProfile = await getFromCache(CACHE_KEYS.PROFILE);
           if (cachedProfile?.data) {
             console.log('📱 Using cached user data for offline auth, Role:', cachedProfile.data.role);
             setAuthState({
               user: cachedProfile.data,
               token: apiService.getToken(),
-              isAuthenticated: true,
+              isAuthenticated: true, // IMPORTANT: Set to true for offline users
               loading: false,
             });
             return;
           } else {
-            // If no cached data, but we have a valid token, create minimal user object
-            console.log('📱 No cached user data, creating minimal user object for offline');
+            // Try to extract role from token as fallback
             const token = apiService.getToken();
             if (token) {
-              const minimalUser = {
-                id: 'offline-user',
-                email: 'offline@user.com',
-                role: 'student', // Default to student when offline
-                name: 'Offline User'
-              };
+              console.log('📱 No cached user data, extracting role from token');
+              const tokenData = apiService.decodeToken(token);
+              const role = tokenData?.role || 'student'; // Default to student
+              
               setAuthState({
-                user: minimalUser,
+                user: {
+                  id: 'offline-user',
+                  email: 'offline@user.com',
+                  role: role,
+                  name: 'Offline User'
+                },
                 token,
-                isAuthenticated: true,
+                isAuthenticated: true, // IMPORTANT: Set to true for offline users
                 loading: false,
               });
               return;
@@ -267,6 +315,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
         
+        // Only clear token for online 401 errors
         if (isOnline && error.response?.status === 401) {
           await apiService.clearToken();
         }
@@ -308,7 +357,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('✅ Login successful for:', user.email, 'Role:', user.role);
 
           // Cache user profile
-          await saveToCache('user_profile', response.data);
+          await saveToCache(CACHE_KEYS.PROFILE, response.data);
 
           setAuthState({
             user,
@@ -333,6 +382,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       console.error('💥 Login error:', error);
 
+      // Only clear token for online 401 errors
       if (isOnline && error.response?.status === 401) {
         await apiService.clearToken();
       }
