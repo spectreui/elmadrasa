@@ -18,6 +18,8 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AlertProvider } from "@/components/Alert";
 import ElmadrasaAnimation from "@/components/AppleHello";
 import { FancyTabBarProvider } from "@/contexts/TabBarContext";
+import { PageTitleHandler } from '@/components/PageTitleHandler';
+import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 
 // ✅ Prevent splash screen auto-hide
 SplashScreen.preventAutoHideAsync().catch(() => { });
@@ -52,140 +54,6 @@ function registerServiceWorker() {
       console.log('🚫 Service Worker disabled in development mode');
     }
   }
-}
-
-// ✅ PWA installation handler
-function usePWAInstall() {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isInstallable, setIsInstallable] = useState(false);
-  const [userEngaged, setUserEngaged] = useState(false);
-  const [engagementTime, setEngagementTime] = useState(0);
-  const mountedRef = useRef(true);
-
-  // Track user engagement
-  useEffect(() => {
-    if (typeof window === "undefined" || !mountedRef.current) return;
-
-    let engagementTimer: NodeJS.Timeout;
-    const startTime = Date.now();
-    
-    engagementTimer = setInterval(() => {
-      if (!mountedRef.current) return;
-      const timeSpent = Math.floor((Date.now() - startTime) / 1000);
-      setEngagementTime(timeSpent);
-      
-      // Show prompt after 30 seconds OR if user engaged for 10+ seconds AND we have prompt
-      if (timeSpent >= 30 || (userEngaged && timeSpent >= 10 && deferredPrompt)) {
-        if (deferredPrompt && mountedRef.current) {
-          console.log(`⏰ ${timeSpent >= 30 ? '30+ seconds' : 'User engaged 10+ seconds'} - showing install prompt`);
-          setIsInstallable(true);
-        }
-      }
-    }, 1000);
-
-    const engagementEvents = ['click', 'scroll', 'keydown', 'touchstart', 'mousemove'];
-    const handleEngagement = () => {
-      if (!userEngaged && mountedRef.current) {
-        console.log('🎯 User engaged with the app');
-        setUserEngaged(true);
-      }
-    };
-
-    engagementEvents.forEach(event => {
-      document.addEventListener(event, handleEngagement, { passive: true });
-    });
-
-    return () => {
-      clearInterval(engagementTimer);
-      engagementEvents.forEach(event => {
-        document.removeEventListener(event, handleEngagement);
-      });
-    };
-  }, [deferredPrompt, userEngaged]);
-
-  // Expose globally for manual testing (only in development)
-  useEffect(() => {
-    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-      window.setDeferredPrompt = setDeferredPrompt;
-      window.setIsInstallable = setIsInstallable;
-      window.getPWAState = () => ({
-        deferredPrompt: !!deferredPrompt,
-        isInstallable,
-        hasSW: !!navigator.serviceWorker?.controller,
-        hasManifest: !!document.querySelector('link[rel="manifest"]'),
-        engagementTime,
-        userEngaged
-      });
-    }
-    
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.setDeferredPrompt = undefined as any;
-        window.setIsInstallable = undefined as any;
-        window.getPWAState = undefined as any;
-      }
-    };
-  }, [deferredPrompt, isInstallable, engagementTime, userEngaged]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const handler = (e: Event) => {
-      console.log('📱 beforeinstallprompt event fired!', e);
-      e.preventDefault();
-      setDeferredPrompt(e);
-      
-      // Immediately show if user already engaged
-      if (userEngaged) {
-        console.log('🚀 User already engaged - showing prompt immediately');
-        setIsInstallable(true);
-      }
-    };
-
-    window.addEventListener("beforeinstallprompt", handler);
-    
-    window.addEventListener('appinstalled', () => {
-      console.log('🎉 App was installed');
-      setIsInstallable(false);
-      setDeferredPrompt(null);
-    });
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handler);
-    };
-  }, [userEngaged]);
-
-  const installPWA = async () => {
-    if (!deferredPrompt) {
-      console.log('No install prompt available');
-      return;
-    }
-    
-    console.log('📲 Triggering install prompt...', deferredPrompt);
-    
-    if (typeof deferredPrompt.prompt === 'function') {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`User response: ${outcome}`);
-      
-      if (outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-        setIsInstallable(false);
-        setDeferredPrompt(null);
-      }
-    } else {
-      console.warn('❌ deferredPrompt.prompt is not a function:', deferredPrompt);
-    }
-  };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  return { isInstallable, installPWA, deferredPrompt };
 }
 
 // Add TypeScript declarations
@@ -242,62 +110,6 @@ function PWASetup() {
   }, [colors.background, isDark]);
 
   return null;
-}
-
-// ✅ Install Prompt Component
-function PWAInstallPrompt() {
-  const { colors } = useThemeContext();
-  const { isInstallable, installPWA } = usePWAInstall();
-
-  if (!isInstallable) return null;
-
-  return (
-    <View
-      style={{
-        backgroundColor: colors.primary || '#007AFF',
-        padding: 12,
-        alignItems: "center",
-        justifyContent: "space-between",
-        flexDirection: "row",
-        marginHorizontal: 16,
-        marginTop: 8,
-        borderRadius: 8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-      }}
-    >
-      <Text
-        style={{
-          color: "white",
-          flex: 1,
-          fontSize: 14,
-          fontWeight: "500",
-          marginRight: 12,
-        }}
-      >
-        Install El Madrasa app for a better experience
-      </Text>
-      <button
-        onClick={installPWA}
-        style={{
-          backgroundColor: "white",
-          color: colors.primary || '#007AFF',
-          border: "none",
-          padding: "8px 16px",
-          borderRadius: 6,
-          cursor: "pointer",
-          fontSize: 14,
-          fontWeight: "600",
-          whiteSpace: "nowrap",
-        }}
-      >
-        Install
-      </button>
-    </View>
-  );
 }
 
 function ThemeWrapper({ children }: { children: React.ReactNode }) {
@@ -412,6 +224,7 @@ export default function RootLayout() {
             <ThemeWrapper>
               <AlertProvider>
                 <NotificationProvider>
+                  <PageTitleHandler />
                   <SmartBanner
                     appName="El Madrasa"
                     appScheme="elmadrasa"

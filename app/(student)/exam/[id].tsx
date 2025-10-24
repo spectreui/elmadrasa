@@ -23,6 +23,8 @@ import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useThemeContext } from '@/contexts/ThemeContext';
+import { designTokens } from '@/utils/designTokens';
 
 // Update the ExamDetails interface to properly type nested questions
 interface ExamDetails extends Exam {
@@ -57,10 +59,11 @@ interface QuestionAttachment {
 }
 
 export default function StudentExamScreen() {
-  const { t, isRTL } = useTranslation();
+  const { t, isRTL, language, toggleLanguage } = useTranslation();
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const examId = Array.isArray(id) ? id[0] : id;
+  const { isDark, colors, toggleTheme } = useThemeContext();
 
   const [exam, setExam] = useState<ExamDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -279,11 +282,7 @@ export default function StudentExamScreen() {
       // Extract image URLs from attachments
       const imageUrls = questionAttachments.map(att => att.url);
 
-      const response = await apiService.api.post('/submissions/submit', {
-        examId: examId,
-        answers: answers,
-        imageUrls: imageUrls
-      });
+      const response = await apiService.submitExamAnswers(examId, answers, imageUrls);
 
       console.log('✅ Exam submission response:', response.data);
 
@@ -353,11 +352,12 @@ export default function StudentExamScreen() {
       const fileName = `question-${questionId}-${Date.now()}.jpg`;
 
       // Upload to server
-      const uploadResponse = await apiService.api.post('/upload/file', {
+      const uploadResponse = await apiService.uploadFileBase64({
         file: `data:${mimeType};base64,${base64}`,
         fileName,
-        fileType: mimeType,
-      });
+        fileType: mimeType
+      }
+      );
 
       if (uploadResponse.data.success) {
         const newAttachment: QuestionAttachment = {
@@ -406,11 +406,15 @@ export default function StudentExamScreen() {
 
       if (question.is_section) {
         return (
-          <View key={question.id} style={[styles.sectionCard, { marginLeft: isRTL ? 0 : level * 20, marginRight: isRTL ? level * 20 : 0 }]}>
-            <Text style={[styles.sectionTitle, isRTL && styles.rtlText]}>{questionNumber}. {question.question}</Text>
+          <View key={question.id} style={[styles.sectionCard, {
+            marginLeft: isRTL ? 0 : level * 20,
+            marginRight: isRTL ? level * 20 : 0,
+            backgroundColor: colors.backgroundSecondary
+          }]}>
+            <Text style={[styles.sectionTitle, isRTL && styles.rtlText, { color: colors.textPrimary }]}>{questionNumber}. {question.question}</Text>
             {question.attachment_url && (
               <View style={styles.questionAttachment}>
-                <Text style={[styles.attachmentLabel, isRTL && styles.rtlText]}>{t('exams.sectionAttachment')}:</Text>
+                <Text style={[styles.attachmentLabel, isRTL && styles.rtlText, { color: colors.textSecondary }]}>{t('exams.sectionAttachment')}:</Text>
                 <Image
                   source={{ uri: question.attachment_url }}
                   style={styles.attachmentImage}
@@ -428,16 +432,20 @@ export default function StudentExamScreen() {
       }
 
       return (
-        <View key={question.id} style={[styles.questionCard, { marginLeft: isRTL ? 0 : level * 20, marginRight: isRTL ? level * 20 : 0 }]}>
-          <Text style={[styles.questionNumber, isRTL && styles.rtlText]}>
+        <View key={question.id} style={[styles.questionCard, {
+          marginLeft: isRTL ? 0 : level * 20,
+          marginRight: isRTL ? level * 20 : 0,
+          backgroundColor: colors.backgroundElevated
+        }]}>
+          <Text style={[styles.questionNumber, isRTL && styles.rtlText, { color: colors.primary }]}>
             {t('exams.question')} {questionNumber} ({question.points} {t('common.points')})
           </Text>
-          <Text style={[styles.questionText, isRTL && styles.rtlText]}>{question.question}</Text>
+          <Text style={[styles.questionText, isRTL && styles.rtlText, { color: colors.textPrimary }]}>{question.question}</Text>
 
           {/* Display question attachment if exists */}
           {question.attachment_url && (
             <View style={styles.questionAttachment}>
-              <Text style={[styles.attachmentLabel, isRTL && styles.rtlText]}>{t('exams.questionAttachment')}:</Text>
+              <Text style={[styles.attachmentLabel, isRTL && styles.rtlText, { color: colors.textSecondary }]}>{t('exams.questionAttachment')}:</Text>
               <Image
                 source={{ uri: question.attachment_url }}
                 style={styles.attachmentImage}
@@ -448,11 +456,11 @@ export default function StudentExamScreen() {
 
           {/* Student attachments for this question */}
           {questionAttachments.filter(att => att.questionId === question.id).map((attachment, attIndex) => (
-            <View key={attIndex} style={styles.studentAttachment}>
+            <View key={attIndex} style={[styles.studentAttachment, { backgroundColor: colors.backgroundSecondary }]}>
               <View style={[styles.attachmentHeader, isRTL && styles.rtlRow]}>
-                <Text style={[styles.attachmentName, isRTL && styles.rtlText]}>{t('exams.yourAttachment')} {attIndex + 1}</Text>
+                <Text style={[styles.attachmentName, isRTL && styles.rtlText, { color: colors.primary }]}>{t('exams.yourAttachment')} {attIndex + 1}</Text>
                 <TouchableOpacity onPress={() => removeAttachment(attachment.url)}>
-                  <Ionicons name="close-circle" size={20} color="#FF3B30" />
+                  <Ionicons name="close-circle" size={20} color={colors.accentTertiary} />
                 </TouchableOpacity>
               </View>
               <Image source={{ uri: attachment.url }} style={styles.attachmentImage} resizeMode="contain" />
@@ -462,16 +470,19 @@ export default function StudentExamScreen() {
           {/* Upload attachment button */}
           {exam?.allow_image_submissions && (
             <TouchableOpacity
-              style={styles.uploadButton}
+              style={[styles.uploadButton, {
+                backgroundColor: colors.backgroundSecondary,
+                borderColor: colors.border
+              }]}
               onPress={() => uploadAttachment(question.id)}
               disabled={uploadingImages}
             >
               {uploadingImages ? (
-                <ActivityIndicator size="small" color="#007AFF" />
+                <ActivityIndicator size="small" color={colors.primary} />
               ) : (
                 <>
-                  <Ionicons name="attach" size={16} color="#007AFF" />
-                  <Text style={[styles.uploadButtonText, isRTL && styles.rtlText]}>{t('exams.addAttachment')}</Text>
+                  <Ionicons name="attach" size={16} color={colors.primary} />
+                  <Text style={[styles.uploadButtonText, isRTL && styles.rtlText, { color: colors.primary }]}>{t('exams.addAttachment')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -485,32 +496,39 @@ export default function StudentExamScreen() {
                   style={[
                     styles.option,
                     answers[question.id] === option && styles.optionSelected,
-                    isRTL && styles.rtlOption
+                    isRTL && styles.rtlOption,
+                    {
+                      backgroundColor: answers[question.id] === option ? colors.backgroundSecondary : colors.backgroundSecondary,
+                      borderColor: answers[question.id] === option ? colors.primary : colors.border
+                    }
                   ]}
                   onPress={() => handleAnswerSelect(question.id, option)}
                 >
-                  <View style={[styles.optionRadio, isRTL && styles.rtlRadio]}>
+                  <View style={[styles.optionRadio, isRTL && styles.rtlRadio, { borderColor: colors.textTertiary }]}>
                     {answers[question.id] === option && (
-                      <View style={styles.optionRadioSelected} />
+                      <View style={[styles.optionRadioSelected, { backgroundColor: colors.primary }]} />
                     )}
                   </View>
-                  <Text style={[styles.optionText, isRTL && styles.rtlText]}>{option}</Text>
+                  <Text style={[styles.optionText, isRTL && styles.rtlText, { color: colors.textPrimary }]}>{option}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           ) : (
             <View style={styles.textAnswerContainer}>
-              <Text style={[styles.textAnswerHint, isRTL && styles.rtlText]}>
+              <Text style={[styles.textAnswerHint, isRTL && styles.rtlText, { color: colors.textSecondary }]}>
                 {t('exams.typeAnswer')}
               </Text>
               <TouchableOpacity
-                style={styles.textInputButton}
+                style={[styles.textInputButton, {
+                  backgroundColor: colors.backgroundSecondary,
+                  borderColor: colors.border
+                }]}
                 onPress={() => openTextAnswerModal(question.id, question.question, answers[question.id] || '')}
               >
-                <Text style={[styles.answerPreview, isRTL && styles.rtlText]}>
+                <Text style={[styles.answerPreview, isRTL && styles.rtlText, { color: answers[question.id] ? colors.textPrimary : colors.textTertiary }]}>
                   {answers[question.id] || t('exams.tapToAddAnswer')}
                 </Text>
-                <Ionicons name="create-outline" size={20} color="#007AFF" />
+                <Ionicons name="create-outline" size={20} color={colors.primary} />
               </TouchableOpacity>
             </View>
           )}
@@ -564,41 +582,46 @@ export default function StudentExamScreen() {
         presentationStyle="pageSheet"
         onRequestClose={handleCancel}
       >
-        <SafeAreaView style={[styles.modalContainer, isRTL && styles.rtlContainer]}>
-          <View style={[styles.modalHeader, isRTL && styles.rtlRow]}>
-            <Text style={[styles.modalTitle, isRTL && styles.rtlText]}>{t('exams.yourAnswer')}</Text>
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <View style={[styles.modalHeader, isRTL && styles.rtlRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.modalTitle, isRTL && styles.rtlText, { color: colors.textPrimary }]}>{t('exams.yourAnswer')}</Text>
             <TouchableOpacity onPress={handleCancel}>
-              <Ionicons name="close" size={24} color="#000" />
+              <Ionicons name="close" size={24} color={colors.textPrimary} />
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.modalContent}>
-            <Text style={[styles.modalQuestion, isRTL && styles.rtlText]}>{textAnswerModal.questionText}</Text>
+            <Text style={[styles.modalQuestion, isRTL && styles.rtlText, { color: colors.textPrimary }]}>{textAnswerModal.questionText}</Text>
 
             <TextInput
-              style={[styles.textInput, isRTL && styles.rtlInput]}
+              style={[styles.textInput, isRTL && styles.rtlInput, {
+                borderColor: colors.border,
+                color: colors.textPrimary,
+                backgroundColor: colors.backgroundElevated
+              }]}
               multiline
               numberOfLines={8}
               textAlignVertical="top"
               value={localAnswer}
               onChangeText={setLocalAnswer}
               placeholder={t('exams.typeDetailedAnswer')}
+              placeholderTextColor={colors.textTertiary}
               autoFocus={true}
             />
 
             <View style={[styles.modalActions, isRTL && styles.rtlRow]}>
               <TouchableOpacity
-                style={styles.cancelButton}
+                style={[styles.cancelButton, { backgroundColor: colors.backgroundSecondary }]}
                 onPress={handleCancel}
               >
-                <Text style={[styles.cancelButtonText, isRTL && styles.rtlText]}>{t('common.cancel')}</Text>
+                <Text style={[styles.cancelButtonText, isRTL && styles.rtlText, { color: colors.textSecondary }]}>{t('common.cancel')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.saveButton}
+                style={[styles.saveButton, { backgroundColor: colors.primary }]}
                 onPress={handleSave}
               >
-                <Text style={[styles.saveButtonText, isRTL && styles.rtlText]}>{t('exams.saveAnswer')}</Text>
+                <Text style={[styles.saveButtonText, isRTL && styles.rtlText, { color: '#FFFFFF' }]}>{t('exams.saveAnswer')}</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -609,10 +632,10 @@ export default function StudentExamScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={[styles.loadingText, isRTL && styles.rtlText]}>{t('exams.loadingExam')}</Text>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, isRTL && styles.rtlText, { color: colors.textSecondary }]}>{t('exams.loadingExam')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -620,11 +643,11 @@ export default function StudentExamScreen() {
 
   if (!exam) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.errorContainer}>
-          <Text style={[styles.errorText, isRTL && styles.rtlText]}>{t('exams.notFound')}</Text>
-          <TouchableOpacity style={styles.button} onPress={() => router.back()}>
-            <Text style={[styles.buttonText, isRTL && styles.rtlText]}>{t('common.goBack')}</Text>
+          <Text style={[styles.errorText, isRTL && styles.rtlText, { color: colors.accentTertiary }]}>{t('exams.notFound')}</Text>
+          <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]} onPress={() => router.back()}>
+            <Text style={[styles.buttonText, isRTL && styles.rtlText, { color: '#FFFFFF' }]}>{t('common.goBack')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -637,19 +660,19 @@ export default function StudentExamScreen() {
 
   if (isMissed) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.errorContainer}>
-          <Text style={[styles.errorText, isRTL && styles.rtlText]}>{t('exams.expired')}</Text>
-          <Text style={[styles.subtitle, isRTL && styles.rtlText]}>
+          <Text style={[styles.errorText, isRTL && styles.rtlText, { color: colors.accentTertiary }]}>{t('exams.expired')}</Text>
+          <Text style={[styles.subtitle, isRTL && styles.rtlText, { color: colors.textSecondary }]}>
             {t('exams.dueDatePassed')}
           </Text>
           {exam?.due_date && (
-            <Text style={[styles.subtitle, isRTL && styles.rtlText]}>
+            <Text style={[styles.subtitle, isRTL && styles.rtlText, { color: colors.textSecondary }]}>
               {t('exams.dueDateWas')}: {new Date(exam.due_date).toLocaleString()}
             </Text>
           )}
-          <TouchableOpacity style={styles.button} onPress={() => router.push('/exams')}>
-            <Text style={[styles.buttonText, isRTL && styles.rtlText]}>{t('exams.backToExams')}</Text>
+          <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]} onPress={() => router.push('/exams')}>
+            <Text style={[styles.buttonText, isRTL && styles.rtlText, { color: '#FFFFFF' }]}>{t('exams.backToExams')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -658,14 +681,14 @@ export default function StudentExamScreen() {
 
   if (hasTaken) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.errorContainer}>
-          <Text style={[styles.errorText, isRTL && styles.rtlText]}>{t('exams.alreadyTaken')}</Text>
-          <Text style={[styles.subtitle, isRTL && styles.rtlText]}>
+          <Text style={[styles.errorText, isRTL && styles.rtlText, { color: colors.accentTertiary }]}>{t('exams.alreadyTaken')}</Text>
+          <Text style={[styles.subtitle, isRTL && styles.rtlText, { color: colors.textSecondary }]}>
             {t('exams.alreadyCompleted')}
           </Text>
-          <TouchableOpacity style={styles.button} onPress={() => router.push('/exams')}>
-            <Text style={[styles.buttonText, isRTL && styles.rtlText]}>{t('exams.backToExams')}</Text>
+          <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]} onPress={() => router.push('/exams')}>
+            <Text style={[styles.buttonText, isRTL && styles.rtlText, { color: '#FFFFFF' }]}>{t('exams.backToExams')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -674,17 +697,17 @@ export default function StudentExamScreen() {
 
   if (isUpcoming) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.errorContainer}>
-          <Text style={[styles.errorText, isRTL && styles.rtlText]}>{t('exams.notAvailableYet')}</Text>
-          <Text style={[styles.subtitle, isRTL && styles.rtlText]}>
+          <Text style={[styles.errorText, isRTL && styles.rtlText, { color: colors.accentTertiary }]}>{t('exams.notAvailableYet')}</Text>
+          <Text style={[styles.subtitle, isRTL && styles.rtlText, { color: colors.textSecondary }]}>
             {t('exams.scheduledFuture')}
           </Text>
-          <Text style={[styles.subtitle, isRTL && styles.rtlText]}>
+          <Text style={[styles.subtitle, isRTL && styles.rtlText, { color: colors.textSecondary }]}>
             {t('exams.availableOn')}: {new Date(exam.due_date!).toLocaleDateString()}
           </Text>
-          <TouchableOpacity style={styles.button} onPress={() => router.push('/exams')}>
-            <Text style={[styles.buttonText, isRTL && styles.rtlText]}>{t('exams.backToExams')}</Text>
+          <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]} onPress={() => router.push('/exams')}>
+            <Text style={[styles.buttonText, isRTL && styles.rtlText, { color: '#FFFFFF' }]}>{t('exams.backToExams')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -721,68 +744,105 @@ export default function StudentExamScreen() {
     }, 0) : 0;
 
   return (
-    <SafeAreaView style={[styles.container, isRTL && styles.rtlContainer]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <TextAnswerModal />
 
       {showWarning && (
-        <View style={styles.warningBanner}>
+        <View style={[styles.warningBanner, { backgroundColor: isDark ? '#332900' : '#FFF9E6' }]}>
           <View style={[styles.warningContent, isRTL && styles.rtlRow]}>
-            <Text style={[styles.warningText, isRTL && styles.rtlText]}>
-              <Ionicons name="warning-outline" size={16} color="#FFA500" />
+            <Text style={[styles.warningText, isRTL && styles.rtlText, {display: 'flex', flexDirection: isRTL ? 'row-reverse' : 'row', color: isDark ? '#FFD700' : '#AA7700' }]}>
+              <Ionicons name="warning-outline" style={{marginRight: 4, marginLeft: 4}} size={16} color={isDark ? '#FFD700' : '#AA7700'} />
               {t('exams.autoSubmitWarning')}
             </Text>
             <TouchableOpacity onPress={() => setShowWarning(false)} style={styles.warningCloseButton}>
-              <Text style={styles.warningCloseText}>×</Text>
+              <Text style={[styles.warningCloseText, { color: colors.textTertiary }]}>×</Text>
             </TouchableOpacity>
           </View>
         </View>
       )}
 
       {/* Header */}
-      <View style={[styles.header, isRTL && styles.rtlRow]}>
+      <View style={[styles.header, isRTL && styles.rtlRow, {
+        backgroundColor: colors.backgroundElevated,
+        borderBottomColor: colors.border
+      }]}>
+
+        {/* Go back */}
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Text style={[styles.backButtonText, isRTL && styles.rtlText]}>
+          <Text style={[styles.backButtonText, isRTL && styles.rtlText, { color: colors.primary }]}>
             {isRTL ? "العودة ←" : "← Back"}
           </Text>
         </TouchableOpacity>
 
+        {/* Language Toggle */}
+        <TouchableOpacity
+          onPress={toggleLanguage}
+          style={[styles.themeToggle, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm }]}
+        >
+          <Ionicons
+            name={language === 'en' ? 'language' : 'globe'}
+            size={20}
+            color={colors.textPrimary}
+          />
+        </TouchableOpacity>
+
+        {/* Dark Mode Toggle */}
+        <TouchableOpacity
+          onPress={toggleTheme}
+          style={[styles.themeToggle, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm }]}
+        >
+          <Ionicons
+            name={isDark ? "sunny" : "moon"}
+            size={24}
+            color={colors.textPrimary}
+          />
+        </TouchableOpacity>
+
         {timeLeft !== null && (
-          <View style={[styles.timer, timeLeft < 300 && styles.timerWarning]}>
-            <Text style={[styles.timerText, isRTL && styles.rtlText]}>{formatTime(timeLeft)}</Text>
+          <View style={[styles.timer, timeLeft < 300 && styles.timerWarning, {
+            backgroundColor: timeLeft < 300 ? colors.accentTertiary : colors.accentSecondary
+          }]}>
+            <Text style={[styles.timerText, isRTL && styles.rtlText, { color: '#FFFFFF' }]}>{formatTime(timeLeft)}</Text>
           </View>
         )}
       </View>
 
       {/* Exam Info */}
-      <View style={styles.examInfo}>
-        <Text style={[styles.examTitle, isRTL && styles.rtlText]}>{exam.title}</Text>
-        <Text style={[styles.examSubject, isRTL && styles.rtlText]}>{exam.subject} • {exam.class}</Text>
+      <View style={[styles.examInfo, {
+        backgroundColor: colors.backgroundElevated,
+        borderBottomColor: colors.border
+      }]}>
+        <Text style={[styles.examTitle, isRTL && styles.rtlText, { color: colors.textPrimary }]}>{exam.title}</Text>
+        <Text style={[styles.examSubject, isRTL && styles.rtlText, { color: colors.textSecondary }]}>{exam.subject} • {exam.class}</Text>
         {exam.teacher && (
-          <Text style={[styles.teacherName, isRTL && styles.rtlText]}>
+          <Text style={[styles.teacherName, isRTL && styles.rtlText, { color: colors.textTertiary }]}>
             {t('common.teacher')}: {exam.teacher.profile.name}
           </Text>
         )}
 
         {exam.settings?.timed && (
           <View style={styles.examSettings}>
-            <Text style={[styles.settingsText, isRTL && styles.rtlText]}>
+            <Text style={[styles.settingsText, isRTL && styles.rtlText, { color: colors.textSecondary }]}>
               ⏱️ {t('exams.timed')}: {exam.settings.duration} {t('exams.minutes')}
             </Text>
           </View>
         )}
 
         {exam.due_date && (
-          <View style={styles.dueDateContainer}>
-            <Text style={[styles.dueDateText, isRTL && styles.rtlText]}>
+          <View style={[styles.dueDateContainer, {
+            backgroundColor: isDark ? '#332900' : '#FFF9E6',
+            borderLeftColor: colors.accent
+          }]}>
+            <Text style={[styles.dueDateText, isRTL && styles.rtlText, { color: colors.textPrimary }]}>
               {t('exams.due')}: {new Date(exam.due_date).toLocaleDateString()} {t('exams.at')} {new Date(exam.due_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </Text>
           </View>
         )}
 
         {exam.allow_image_submissions && (
-          <View style={styles.imageSubmissionNote}>
-            <Ionicons name="camera" size={16} color="#007AFF" />
-            <Text style={[styles.imageSubmissionText, isRTL && styles.rtlText]}>
+          <View style={[styles.imageSubmissionNote, { backgroundColor: isDark ? '#00293D' : '#E3F2FD' }]}>
+            <Ionicons name="camera" size={16} color={colors.primary} />
+            <Text style={[styles.imageSubmissionText, isRTL && styles.rtlText, { color: colors.primary }]}>
               {t('exams.imageAttachmentsAllowed')}
             </Text>
           </View>
@@ -790,25 +850,31 @@ export default function StudentExamScreen() {
       </View>
 
       {/* Questions */}
-      <Animated.ScrollView entering={FadeIn.duration(600)} style={styles.questionsContainer}>
+      <Animated.ScrollView entering={FadeIn.duration(600)} style={[styles.questionsContainer, { backgroundColor: colors.background }]}>
         {exam.questions && renderNestedQuestions(exam.questions)}
       </Animated.ScrollView>
 
       {/* Submit Button */}
-      <View style={[styles.footer, isRTL && styles.rtlFooter]}>
-        <Text style={[styles.progressText, isRTL && styles.rtlText]}>
+      <View style={[styles.footer, {
+        backgroundColor: colors.backgroundElevated,
+        borderTopColor: colors.border
+      }]}>
+        <Text style={[styles.progressText, isRTL && styles.rtlText, { color: colors.textSecondary }]}>
           {t('exams.answered')}: {answeredQuestions}/{totalQuestions}
           {questionAttachments.length > 0 && ` • ${t('exams.attachments')}: ${questionAttachments.length}`}
         </Text>
         <TouchableOpacity
-          style={[styles.submitButton, (submitting || timeLeft === 0) && styles.submitButtonDisabled]}
+          style={[styles.submitButton,
+          (submitting || timeLeft === 0) && styles.submitButtonDisabled,
+          { backgroundColor: (submitting || timeLeft === 0) ? colors.textTertiary : colors.primary }
+          ]}
           onPress={handleSubmit}
           disabled={submitting || timeLeft === 0}
         >
           {submitting ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={[styles.submitButtonText, isRTL && styles.rtlText]}>
+            <Text style={[styles.submitButtonText, isRTL && styles.rtlText, { color: '#FFFFFF' }]}>
               {timeLeft === 0 ? t('exams.timeExpired') : t('exams.submitExam')}
             </Text>
           )}
@@ -821,10 +887,6 @@ export default function StudentExamScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5'
-  },
-  rtlContainer: {
-    writingDirection: 'rtl'
   },
   loadingContainer: {
     flex: 1,
@@ -834,12 +896,9 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666'
   },
   warningBanner: {
-    backgroundColor: '#FFF9E6',
     borderBottomWidth: 1,
-    borderBottomColor: '#FFD700',
     padding: 12
   },
   warningContent: {
@@ -853,7 +912,6 @@ const styles = StyleSheet.create({
   warningText: {
     flex: 1,
     fontSize: 14,
-    color: '#AA7700',
     fontWeight: '500',
     lineHeight: 20
   },
@@ -863,7 +921,6 @@ const styles = StyleSheet.create({
   },
   warningCloseText: {
     fontSize: 18,
-    color: '#666',
     fontWeight: 'bold'
   },
   errorContainer: {
@@ -875,12 +932,10 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FF3B30',
     marginBottom: 8
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
     marginBottom: 20
   },
@@ -889,52 +944,53 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5'
   },
   backButton: {
-    padding: 8
+    padding: 8,
+    flex: 1,
+    justifyContent: 'flex-start'
   },
   backButtonText: {
     fontSize: 16,
-    color: '#007AFF',
     fontWeight: '500'
   },
+  themeToggle: {
+    padding: designTokens.spacing.sm,
+    borderRadius: designTokens.borderRadius.full,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: designTokens.spacing.xxs,
+    ...designTokens.shadows.sm,
+  },
   timer: {
-    backgroundColor: '#34C759',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16
   },
   timerWarning: {
-    backgroundColor: '#FF3B30'
   },
   timerText: {
-    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 14
   },
   examInfo: {
-    backgroundColor: '#FFFFFF',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5'
   },
   examTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1C1C1E',
     marginBottom: 4
   },
   examSubject: {
     fontSize: 16,
-    color: '#666',
     marginBottom: 4
   },
   teacherName: {
     fontSize: 14,
-    color: '#888',
     marginBottom: 8
   },
   examSettings: {
@@ -942,19 +998,15 @@ const styles = StyleSheet.create({
   },
   settingsText: {
     fontSize: 14,
-    color: '#666'
   },
   dueDateContainer: {
     marginTop: 8,
     padding: 8,
-    backgroundColor: '#FFF9E6',
     borderRadius: 8,
     borderLeftWidth: 4,
-    borderLeftColor: '#FF9500'
   },
   dueDateText: {
     fontSize: 14,
-    color: '#333',
     fontWeight: '500'
   },
   imageSubmissionNote: {
@@ -962,20 +1014,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
     padding: 8,
-    backgroundColor: '#E3F2FD',
     borderRadius: 8
   },
   imageSubmissionText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#007AFF'
   },
   questionsContainer: {
     flex: 1,
     padding: 16
   },
   sectionCard: {
-    backgroundColor: '#F8F9FA',
     padding: 16,
     borderRadius: 8,
     marginBottom: 16,
@@ -985,11 +1034,9 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1C1C1E',
     marginBottom: 8
   },
   questionCard: {
-    backgroundColor: '#FFFFFF',
     padding: 20,
     borderRadius: 12,
     marginBottom: 16,
@@ -1002,34 +1049,28 @@ const styles = StyleSheet.create({
   questionNumber: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#007AFF',
     marginBottom: 8
   },
   questionText: {
     fontSize: 16,
-    color: '#1C1C1E',
     marginBottom: 16,
     lineHeight: 22
   },
   questionAttachment: {
     marginBottom: 16,
     padding: 12,
-    backgroundColor: '#F8F8F8',
     borderRadius: 8
   },
   attachmentLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
     marginBottom: 8
   },
   studentAttachment: {
     marginBottom: 12,
     padding: 12,
-    backgroundColor: '#E3F2FD',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#BBDEFB'
   },
   attachmentHeader: {
     flexDirection: 'row',
@@ -1040,7 +1081,6 @@ const styles = StyleSheet.create({
   attachmentName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#007AFF'
   },
   attachmentImage: {
     width: '100%',
@@ -1052,15 +1092,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 12,
-    backgroundColor: '#F8F8F8',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
     marginBottom: 16
   },
   uploadButtonText: {
     marginLeft: 8,
-    color: '#007AFF',
     fontWeight: '600'
   },
   optionsContainer: {
@@ -1074,21 +1111,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     marginBottom: 8,
-    backgroundColor: '#F8F8F8',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E5E5E5'
   },
   optionSelected: {
-    backgroundColor: '#E3F2FD',
-    borderColor: '#007AFF'
   },
   optionRadio: {
     width: 20,
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#CCCCCC',
     marginRight: 12,
     justifyContent: 'center',
     alignItems: 'center'
@@ -1101,36 +1133,30 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#007AFF'
   },
   optionText: {
     flex: 1,
     fontSize: 16,
-    color: '#1C1C1E'
   },
   textAnswerContainer: {
     marginTop: 8
   },
   textAnswerHint: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 8
   },
   textInputButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F8F8F8',
     padding: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
     minHeight: 60
   },
   answerPreview: {
     flex: 1,
     fontSize: 16,
-    color: '#1C1C1E',
     fontStyle: 'italic'
   },
   nestedQuestions: {
@@ -1140,50 +1166,38 @@ const styles = StyleSheet.create({
     borderLeftColor: '#E5E5E5'
   },
   footer: {
-    backgroundColor: '#FFFFFF',
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: '#E5E5E5'
-  },
-  rtlFooter: {
-    alignItems: 'flex-end'
   },
   progressText: {
     textAlign: 'center',
     fontSize: 14,
-    color: '#666',
     marginBottom: 12
   },
   submitButton: {
-    backgroundColor: '#007AFF',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center'
   },
   submitButtonDisabled: {
-    backgroundColor: '#CCCCCC'
   },
   submitButtonText: {
-    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600'
   },
   button: {
-    backgroundColor: '#007AFF',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 16
   },
   buttonText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600'
   },
   // Modal Styles
   modalContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF'
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1191,12 +1205,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5'
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1C1C1E'
   },
   modalContent: {
     flex: 1,
@@ -1204,13 +1216,11 @@ const styles = StyleSheet.create({
   },
   modalQuestion: {
     fontSize: 16,
-    color: '#1C1C1E',
     marginBottom: 20,
     lineHeight: 22
   },
   textInput: {
     borderWidth: 1,
-    borderColor: '#E5E5E5',
     borderRadius: 8,
     padding: 16,
     fontSize: 16,
@@ -1229,12 +1239,10 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     borderRadius: 8,
-    backgroundColor: '#F8F8F8',
     alignItems: 'center',
     marginRight: 8
   },
   cancelButtonText: {
-    color: '#666',
     fontSize: 16,
     fontWeight: '600'
   },
@@ -1242,12 +1250,10 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     borderRadius: 8,
-    backgroundColor: '#007AFF',
     alignItems: 'center',
     marginLeft: 8
   },
   saveButtonText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600'
   },

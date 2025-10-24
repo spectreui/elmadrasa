@@ -42,8 +42,8 @@ const getGradeColor = (grade: number, maxPoints: number) => {
 };
 
 export default function StudentHomeworkScreen() {
-  const { t, isRTL } = useTranslation();
-  const { fontFamily, colors, isDark } = useThemeContext();
+  const { t, isRTL, toggleLanguage, language } = useTranslation();
+  const { fontFamily, colors, isDark, toggleTheme} = useThemeContext();
   const { isOnline } = useAuth();
   const [homework, setHomework] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -262,10 +262,10 @@ export default function StudentHomeworkScreen() {
                 <Text style={[styles.actionText, { fontFamily, color: colors.primary }]}>
                   {item.submitted ? t('homework.view') : t('homework.start')}
                 </Text>
-                <Ionicons 
-                  name={isRTL ? "chevron-back" : "chevron-forward"} 
-                  size={16} 
-                  color={colors.primary} 
+                <Ionicons
+                  name={isRTL ? "chevron-back" : "chevron-forward"}
+                  size={16}
+                  color={colors.primary}
                 />
               </>
             )}
@@ -311,13 +311,39 @@ export default function StudentHomeworkScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={[styles.headerTitle, { fontFamily, color: colors.textPrimary }]}>
-          {t('homework.title')}
-        </Text>
-        <Text style={[styles.headerSubtitle, { fontFamily, color: colors.textSecondary }]}>
-          {homework.length} {t('homework.assignments')}
-        </Text>
+      <View style={[styles.header, { display: 'flex', flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+        <View style={{flex: 1}}>
+          <Text style={[styles.headerTitle, { fontFamily, color: colors.textPrimary }]}>
+            {t('homework.title')}
+          </Text>
+          <Text style={[styles.headerSubtitle, { fontFamily, color: colors.textSecondary }]}>
+            {isRTL ? `${t('homework.assignments')} ${homework.length}` : `${homework.length} ${t('homework.assignments')}`}
+          </Text>
+        </View>
+
+
+        <TouchableOpacity
+          onPress={toggleLanguage}
+          style={[styles.themeToggle, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm }]}
+        >
+          <Ionicons
+            name={language === 'en' ? 'language' : 'globe'}
+            size={20}
+            color={colors.textPrimary}
+          />
+        </TouchableOpacity>
+
+        {/* Dark Mode Toggle */}
+        <TouchableOpacity
+          onPress={toggleTheme}
+          style={[styles.themeToggle, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm }]}
+        >
+          <Ionicons
+            name={isDark ? "sunny" : "moon"}
+            size={24}
+            color={colors.textPrimary}
+          />
+        </TouchableOpacity>
       </View>
 
       <Animated.ScrollView
@@ -330,7 +356,7 @@ export default function StudentHomeworkScreen() {
             onRefresh={onRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}
-          enabled={isOnline}
+            enabled={isOnline}
           />
         }
       >
@@ -353,7 +379,7 @@ export default function StudentHomeworkScreen() {
                 {t('homework.emptyState.title')}
               </Text>
               <Text style={[styles.emptyText, { fontFamily, color: colors.textSecondary }]}>
-                {t('homework.emptyState.subtitle')}
+                {t('dashboard.allCaughtUp')}
               </Text>
             </View>
           ) : (
@@ -399,6 +425,16 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: designTokens.typography.body.fontSize,
     opacity: 0.7,
+  },
+  themeToggle: {
+    padding: designTokens.spacing.sm,
+    borderRadius: designTokens.borderRadius.full,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: designTokens.spacing.xxs,
+    ...designTokens.shadows.sm,
   },
   content: {
     paddingHorizontal: designTokens.spacing.xl,

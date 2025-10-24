@@ -20,21 +20,21 @@ class ApiService {
   }[] = [];
 
   private readonly CACHE_KEYS = {
-  // Student cache keys
-  DASHBOARD: 'student_dashboard',
-  EXAMS: 'student_exams',
-  HOMEWORK: 'student_homework',
-  PROFILE: 'user_profile',
-  STATS: 'student_stats',
-  
-  // Teacher cache keys
-  TEACHER_DASHBOARD: 'teacher_dashboard',
-  TEACHER_CLASSES: 'teacher_classes',
-  TEACHER_ACTIVITY: 'teacher_activity',
-  TEACHER_STATS: 'teacher_stats',
-  TEACHER_HOMEWORK: 'teacher_homework',
-  TEACHER_PROFILE: 'teacher_profile',
-  TEACHER_CLASS_STATS: 'teacher_class_stats', // for statistics page
+    // Student cache keys
+    DASHBOARD: 'student_dashboard',
+    EXAMS: 'student_exams',
+    HOMEWORK: 'student_homework',
+    PROFILE: 'user_profile',
+    STATS: 'student_stats',
+
+    // Teacher cache keys
+    TEACHER_DASHBOARD: 'teacher_dashboard',
+    TEACHER_CLASSES: 'teacher_classes',
+    TEACHER_ACTIVITY: 'teacher_activity',
+    TEACHER_STATS: 'teacher_stats',
+    TEACHER_HOMEWORK: 'teacher_homework',
+    TEACHER_PROFILE: 'teacher_profile',
+    TEACHER_CLASS_STATS: 'teacher_class_stats', // for statistics page
   };
 
   constructor() {
@@ -273,7 +273,7 @@ class ApiService {
     }
   }
 
-    // Add this new method to decode JWT tokens
+  // Add this new method to decode JWT tokens
   decodeToken(token: string): any {
     try {
       const base64Url = token.split('.')[1];
@@ -688,10 +688,11 @@ class ApiService {
   }
 
 
-  async submitExamAnswers(examId: string, answers: any): Promise<AxiosResponse<ApiResponse<any>>> {
+  async submitExamAnswers(examId: string, answers: any, imageUrls: any): Promise<AxiosResponse<ApiResponse<any>>> {
     return this.api.post('/submissions/submit', { // ✅ Changed endpoint
       examId: examId,
-      answers: answers
+      answers: answers,
+      imageUrls: imageUrls
     });
   }
 

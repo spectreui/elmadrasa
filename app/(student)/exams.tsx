@@ -1,5 +1,5 @@
 // app/(student)/exams.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -13,9 +13,9 @@ import Alert from '@/components/Alert';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export default function ExamsScreen() {
-  const { t, isRTL } = useTranslation();
+  const { t, isRTL, toggleLanguage, language } = useTranslation();
   const { user, isOnline } = useAuth();
-  const { fontFamily, colors } = useThemeContext();
+  const { fontFamily, colors, toggleTheme, isDark } = useThemeContext();
   const [exams, setExams] = useState<Exam[]>([]);
   const [takenExams, setTakenExams] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -26,10 +26,13 @@ export default function ExamsScreen() {
     upcoming: 0,
     missed: 0
   });
+  // Ref to track if alert has been shown
+  const alertShownRef = useRef(false);
 
   const loadExams = useCallback(async () => {
     try {
       setLoading(true);
+      alertShownRef.current = false; // Reset alert flag
 
       // Load exams data
       const examsResponse = await apiService.getExams();
@@ -90,24 +93,31 @@ export default function ExamsScreen() {
           missed
         });
       } else {
-        Alert.alert(t('common.error'), t('exams.loadFailed'));
+        if (!alertShownRef.current) {
+          Alert.alert(t('common.error'), t('exams.loadFailed'));
+          alertShownRef.current = true;
+        }
       }
 
     } catch (error) {
-      Alert.alert(t('common.error'), t('exams.loadFailed'));
-      // Show offline message if offline
-      if (!isOnline) {
-        Alert.alert(
-          t("common.offline"),
-          t("dashboard.offlineMessage"),
-          [{ text: t("common.ok") }]
-        );
+      if (!alertShownRef.current) {
+        Alert.alert(t('common.error'), t('exams.loadFailed'));
+        alertShownRef.current = true;
+        
+        // Show offline message if offline
+        if (!isOnline) {
+          Alert.alert(
+            t("common.offline"),
+            t("dashboard.offlineMessage"),
+            [{ text: t("common.ok") }]
+          );
+        }
       }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [t]);
+  }, [t, isOnline]);
 
   useEffect(() => {
     loadExams();
@@ -121,7 +131,7 @@ export default function ExamsScreen() {
   // Update the getExamStatus function to handle the new status field
   const getExamStatus = (exam: Exam): 'available' | 'taken' | 'upcoming' | 'missed' => {
     // Use the status from backend if available, otherwise calculate it
-    if (exam.status) { 
+    if (exam.status) {
       return exam.status as 'available' | 'taken' | 'upcoming' | 'missed';
     }
 
@@ -260,16 +270,43 @@ export default function ExamsScreen() {
       }
     >
       <View style={styles.content}>
-        <Text style={[styles.title, { fontFamily, color: colors.textPrimary }]}>
-          {t('exams.title2')}
-        </Text>
-        <Text style={[styles.subtitle, { fontFamily, color: colors.textSecondary }]}>
-          {t('exams.takeTrack')}
-        </Text>
+        <View style={{ display: 'flex', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+          <View style={[{ flex: 1, alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
+            <Text style={[styles.title, { fontFamily, color: colors.textPrimary }]}>
+              {t('exams.title2')}
+            </Text>
+            <Text style={[styles.subtitle, { fontFamily, color: colors.textSecondary }]}>
+              {t('exams.takeTrack')}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            onPress={toggleLanguage}
+            style={[styles.themeToggle, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm }]}
+          >
+            <Ionicons
+              name={language === 'en' ? 'language' : 'globe'}
+              size={20}
+              color={colors.textPrimary}
+            />
+          </TouchableOpacity>
+
+          {/* Dark Mode Toggle */}
+          <TouchableOpacity
+            onPress={toggleTheme}
+            style={[styles.themeToggle, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm }]}
+          >
+            <Ionicons
+              name={isDark ? "sunny" : "moon"}
+              size={24}
+              color={colors.textPrimary}
+            />
+          </TouchableOpacity>
+        </View>
 
         {/* Stats Cards */}
         <View style={[styles.statsContainer, isRTL && styles.rtlRow]}>
-          <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.md }]}>
+          <View style={[styles.statCard, {alignItems: isRTL? 'flex-end' : 'flex-start', backgroundColor: colors.backgroundElevated, ...designTokens.shadows.md }]}>
             <View style={[styles.statIcon, { backgroundColor: '#3B82F615' }]}>
               <Ionicons name="checkmark-circle" size={20} color="#3B82F6" />
             </View>
@@ -281,7 +318,7 @@ export default function ExamsScreen() {
             </Text>
           </View>
 
-          <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.md }]}>
+          <View style={[styles.statCard, {alignItems: isRTL? 'flex-end' : 'flex-start', backgroundColor: colors.backgroundElevated, ...designTokens.shadows.md }]}>
             <View style={[styles.statIcon, { backgroundColor: '#10B98115' }]}>
               <Ionicons name="document-text" size={20} color="#10B981" />
             </View>
@@ -293,7 +330,7 @@ export default function ExamsScreen() {
             </Text>
           </View>
 
-          <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.md }]}>
+          <View style={[styles.statCard, {alignItems: isRTL? 'flex-end' : 'flex-start', backgroundColor: colors.backgroundElevated, ...designTokens.shadows.md }]}>
             <View style={[styles.statIcon, { backgroundColor: '#F59E0B15' }]}>
               <Ionicons name="time" size={20} color="#F59E0B" />
             </View>
@@ -305,7 +342,7 @@ export default function ExamsScreen() {
             </Text>
           </View>
 
-          <View style={[styles.statCard, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.md }]}>
+          <View style={[styles.statCard, {alignItems: isRTL? 'flex-end' : 'flex-start', backgroundColor: colors.backgroundElevated, ...designTokens.shadows.md }]}>
             <View style={[styles.statIcon, { backgroundColor: '#EF444415' }]}>
               <Ionicons name="alert-circle" size={20} color="#EF4444" />
             </View>
@@ -454,6 +491,16 @@ const styles = StyleSheet.create({
     padding: designTokens.spacing.xl,
     paddingBottom: 70,
   },
+  themeToggle: {
+    padding: designTokens.spacing.sm,
+    borderRadius: designTokens.borderRadius.full,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: designTokens.spacing.xxs,
+    ...designTokens.shadows.sm,
+  },
   title: {
     fontSize: designTokens.typography.title1.fontSize,
     fontWeight: designTokens.typography.title1.fontWeight,
@@ -473,6 +520,8 @@ const styles = StyleSheet.create({
     padding: designTokens.spacing.lg,
     flex: 1,
     marginHorizontal: designTokens.spacing.xs,
+    textAlign: 'right',
+    direction: 'rtl'
   },
   statIcon: {
     width: 44,
@@ -486,9 +535,13 @@ const styles = StyleSheet.create({
     fontSize: designTokens.typography.title2.fontSize,
     fontWeight: designTokens.typography.title2.fontWeight,
     marginBottom: 2,
+    marginRight: 12,
+    marginLeft: 10,
   },
   statLabel: {
     fontSize: designTokens.typography.footnote.fontSize,
+    marginRight: 12,
+    marginLeft: 10,
   },
   emptyContainer: {
     borderRadius: designTokens.borderRadius.xl,

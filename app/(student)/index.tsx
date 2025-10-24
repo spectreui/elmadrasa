@@ -19,7 +19,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import Alert from "@/components/Alert";
 
 export default function StudentDashboard() {
-  const { t, isRTL } = useTranslation();
+  const { t, isRTL, language, toggleLanguage } = useTranslation();
   const { user, isOnline } = useAuth();
   const { isDark, colors, fontFamily, toggleTheme } = useThemeContext();
   const [stats, setStats] = useState<any>(null);
@@ -221,7 +221,7 @@ export default function StudentDashboard() {
       <View style={styles.header}>
         <View style={[styles.headerRow, isRTL && styles.rtlRow]}>
           <View style={[styles.userInfo, isRTL && styles.rtlRow]}>
-            <View style={[styles.userAvatar, { backgroundColor: '#007AFF15' }]}>
+            <View style={[styles.userAvatar, {marginRight: isRTL ? designTokens.spacing.md : 0, marginLeft: isRTL ? 0 : designTokens.spacing.md, backgroundColor: '#007AFF15' }]}>
               <Text style={[styles.avatarText, { fontFamily, color: '#007AFF' }]}>
                 {user?.profile?.name?.charAt(0) || 'S'}
               </Text>
@@ -263,6 +263,16 @@ export default function StudentDashboard() {
               )}
             </View>
           </View>
+          <TouchableOpacity
+            onPress={toggleLanguage}
+            style={[styles.themeToggle, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm }]}
+          >
+            <Ionicons
+              name={language === 'en' ? 'language' : 'globe'}
+              size={20}
+              color={colors.textPrimary}
+            />
+          </TouchableOpacity>
 
           {/* Dark Mode Toggle */}
           <TouchableOpacity
@@ -440,14 +450,14 @@ const styles = StyleSheet.create({
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1
   },
   userAvatar: {
     width: 60,
     height: 60,
     borderRadius: designTokens.borderRadius.full,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: designTokens.spacing.md,
+    justifyContent: 'center'
   },
   avatarText: {
     fontSize: 24,
@@ -468,6 +478,12 @@ const styles = StyleSheet.create({
   themeToggle: {
     padding: designTokens.spacing.sm,
     borderRadius: designTokens.borderRadius.full,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: designTokens.spacing.xxs,
+    ...designTokens.shadows.sm,
   },
   statsRow: {
     flexDirection: 'row',

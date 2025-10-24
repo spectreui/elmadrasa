@@ -40,17 +40,11 @@ export default function TeacherDashboard() {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const { t, language, setLanguage, isRTL } = useTranslation();
+  const { t, language, setLanguage, isRTL, toggleLanguage } = useTranslation();
 
   useEffect(() => {
     loadDashboardData();
   }, []);
-
-
-  const toggleLanguage = () => {
-    const newLanguage = language === 'en' ? 'ar' : 'en';
-    setLanguage(newLanguage);
-  };
 
   const loadDashboardData = async () => {
     try {
@@ -222,7 +216,7 @@ export default function TeacherDashboard() {
           </View>
           <TouchableOpacity
             onPress={toggleLanguage}
-            style={[styles.profileButton, { backgroundColor: `${colors.primary}15` }]}
+            style={[{ backgroundColor: `${colors.primary}15`, width: 44, height: 44, borderRadius: designTokens.borderRadius.full, alignItems: 'center', justifyContent: 'center', margin: designTokens.spacing.xxs, ...designTokens.shadows.sm}]}
           >
             <Ionicons
               name={language === 'en' ? 'language' : 'globe'}

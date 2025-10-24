@@ -14,6 +14,7 @@ interface LanguageContextType {
   t: (key: string) => string;
   isRTL: boolean;
   isLoading: boolean;
+  toggleLanguage: () => void;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -116,6 +117,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const toggleLanguage = () => {
+    const newLanguage = language === 'en' ? 'ar' : 'en';
+    setLanguage(newLanguage);
+  };
+
   const t = (key: string): string => {
     return translations[language][key] || translations.en[key] || key;
   };
@@ -124,6 +130,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     <LanguageContext.Provider value={{
       language,
       setLanguage,
+      toggleLanguage,
       t,
       isRTL,
       isLoading

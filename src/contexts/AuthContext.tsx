@@ -213,7 +213,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
               console.log('📱 Created offline user from token, Role:', role);
               setAuthState({
-                user: { id, email, role, name, profile, is_approved, created_at, },
+                user: { id, email, role, name, profile, is_approved, created_at, updated_at },
                 token,
                 isAuthenticated: true,
                 loading: false,
