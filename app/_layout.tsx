@@ -78,6 +78,48 @@ function registerServiceWorker() {
 function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
+  const [userEngaged, setUserEngaged] = useState(false);
+  const [engagementTime, setEngagementTime] = useState(0);
+
+  // Track user engagement
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let engagementTimer: NodeJS.Timeout;
+    const startTime = Date.now();
+    
+    // Update engagement time every second
+    engagementTimer = setInterval(() => {
+      const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+      setEngagementTime(timeSpent);
+      
+      // Auto-show prompt after 30 seconds of engagement
+      if (timeSpent >= 30 && deferredPrompt && !isInstallable) {
+        console.log('⏰ 30+ seconds engaged - showing install prompt');
+        setIsInstallable(true);
+      }
+    }, 1000);
+
+    // Track user interactions
+    const engagementEvents = ['click', 'scroll', 'keydown', 'touchstart', 'mousemove'];
+    const handleEngagement = () => {
+      if (!userEngaged) {
+        console.log('🎯 User engaged with the app');
+        setUserEngaged(true);
+      }
+    };
+
+    engagementEvents.forEach(event => {
+      document.addEventListener(event, handleEngagement, { passive: true });
+    });
+
+    return () => {
+      clearInterval(engagementTimer);
+      engagementEvents.forEach(event => {
+        document.removeEventListener(event, handleEngagement);
+      });
+    };
+  }, [deferredPrompt, isInstallable, userEngaged]);
 
   // Expose these globally for manual testing
   useEffect(() => {
@@ -88,18 +130,20 @@ function usePWAInstall() {
         deferredPrompt: !!deferredPrompt,
         isInstallable,
         hasSW: !!navigator.serviceWorker?.controller,
-        hasManifest: !!document.querySelector('link[rel="manifest"]')
+        hasManifest: !!document.querySelector('link[rel="manifest"]'),
+        engagementTime,
+        userEngaged
       });
     }
     
     return () => {
       if (typeof window !== 'undefined') {
-        delete window.setDeferredPrompt;
-        delete window.setIsInstallable;
-        delete window.getPWAState;
+        window.setDeferredPrompt = undefined as any;
+        window.setIsInstallable = undefined as any;
+        window.getPWAState = undefined as any;
       }
     };
-  }, [deferredPrompt, isInstallable]);
+  }, [deferredPrompt, isInstallable, engagementTime, userEngaged]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -108,7 +152,15 @@ function usePWAInstall() {
       console.log('📱 beforeinstallprompt event fired!', e);
       e.preventDefault();
       setDeferredPrompt(e);
-      setIsInstallable(true);
+      
+      // Auto-show if user is already engaged, otherwise wait
+      if (userEngaged && engagementTime >= 10) {
+        console.log('🚀 User engaged - showing prompt immediately');
+        setIsInstallable(true);
+      } else {
+        console.log('⏳ Waiting for user engagement...');
+        // Will be shown by engagement timer
+      }
     };
 
     window.addEventListener("beforeinstallprompt", handler);
@@ -121,7 +173,7 @@ function usePWAInstall() {
     return () => {
       window.removeEventListener("beforeinstallprompt", handler);
     };
-  }, []);
+  }, [userEngaged, engagementTime]);
 
   const installPWA = async () => {
     if (!deferredPrompt) {
@@ -131,20 +183,12 @@ function usePWAInstall() {
     
     console.log('📲 Triggering install prompt...', deferredPrompt);
     
-    // Check if prompt method exists
     if (typeof deferredPrompt.prompt === 'function') {
       deferredPrompt.prompt();
-      
       const { outcome } = await deferredPrompt.userChoice;
       console.log(`User response: ${outcome}`);
     } else {
       console.warn('❌ deferredPrompt.prompt is not a function:', deferredPrompt);
-      // Fallback: try to open install dialog manually
-      if (window.matchMedia('(display-mode: standalone)').matches) {
-        console.log('📱 App is already installed');
-      } else {
-        console.log('💡 Try manually: Browser menu → "Install App"');
-      }
     }
     
     setDeferredPrompt(null);
@@ -157,9 +201,9 @@ function usePWAInstall() {
 // Add TypeScript declarations
 declare global {
   interface Window {
-    setDeferredPrompt: (prompt: any) => void;
-    setIsInstallable: (installable: boolean) => void;
-    getPWAState: () => any;
+    setDeferredPrompt?: (prompt: any) => void;
+    setIsInstallable?: (installable: boolean) => void;
+    getPWAState?: () => any;
   }
 }
 
@@ -217,24 +261,22 @@ function PWADebug() {
     if (Platform.OS !== 'web') return;
     
     const checkAll = async () => {
+      const state = window.getPWAState?.() || {};
       const checks = {
         hasSW: 'serviceWorker' in navigator,
         isHTTPS: location.protocol === 'https:',
-        isLocalhost: false,
         manifestExists: false,
-        swExists: false,
         swRegistered: false,
-        themeColor: document.querySelector('meta[name="theme-color"]')?.getAttribute('content') || 'not set'
+        themeColor: document.querySelector('meta[name="theme-color"]')?.getAttribute('content') || 'not set',
+        engagementTime: state.engagementTime || 0,
+        userEngaged: state.userEngaged || false,
+        deferredPrompt: state.deferredPrompt || false,
+        isInstallable: state.isInstallable || false
       };
       
       try {
         const manifestResp = await fetch('/manifest.json');
         checks.manifestExists = manifestResp.ok;
-      } catch (e) {}
-      
-      try {
-        const swResp = await fetch('/service-worker.js');
-        checks.swExists = swResp.ok;
       } catch (e) {}
       
       const reg = await navigator.serviceWorker.getRegistration();
@@ -243,8 +285,12 @@ function PWADebug() {
       setDebugInfo(checks);
     };
     
+    // Update more frequently to show engagement progress
+    const interval = setInterval(checkAll, 2000);
     checkAll();
-  }, [colors.background]); // Update when theme changes
+    
+    return () => clearInterval(interval);
+  }, [colors.background]);
   
   if (Platform.OS !== 'web') return null;
   
@@ -258,16 +304,17 @@ function PWADebug() {
       padding: 10, 
       fontSize: 12, 
       zIndex: 9999,
-      maxWidth: 300,
+      maxWidth: 320,
       borderRadius: 8,
       border: '1px solid #333'
     }}>
       <div style={{ fontWeight: 'bold', marginBottom: 5 }}>PWA Status:</div>
-      <div>Theme: <span style={{ color: '#4ade80' }}>{debugInfo.themeColor}</span></div>
-      <div>SW Support: <span style={{ color: debugInfo.hasSW ? '#4ade80' : '#f87171' }}>{debugInfo.hasSW ? '✅' : '❌'}</span></div>
-      <div>HTTPS: <span style={{ color: debugInfo.isHTTPS ? '#4ade80' : '#f87171' }}>{debugInfo.isHTTPS ? '✅' : '❌'}</span></div>
+      <div>Engagement: <span style={{ color: debugInfo.engagementTime >= 30 ? '#4ade80' : '#fbbf24' }}>{debugInfo.engagementTime}s</span></div>
+      <div>User Engaged: <span style={{ color: debugInfo.userEngaged ? '#4ade80' : '#f87171' }}>{debugInfo.userEngaged ? '✅' : '❌'}</span></div>
+      <div>Prompt Ready: <span style={{ color: debugInfo.deferredPrompt ? '#4ade80' : '#f87171' }}>{debugInfo.deferredPrompt ? '✅' : '❌'}</span></div>
+      <div>Showing: <span style={{ color: debugInfo.isInstallable ? '#4ade80' : '#f87171' }}>{debugInfo.isInstallable ? '✅' : '❌'}</span></div>
+      <div>SW: <span style={{ color: debugInfo.hasSW ? '#4ade80' : '#f87171' }}>{debugInfo.hasSW ? '✅' : '❌'}</span></div>
       <div>Manifest: <span style={{ color: debugInfo.manifestExists ? '#4ade80' : '#f87171' }}>{debugInfo.manifestExists ? '✅' : '❌'}</span></div>
-      <div>SW Registered: <span style={{ color: debugInfo.swRegistered ? '#4ade80' : '#f87171' }}>{debugInfo.swRegistered ? '✅' : '❌'}</span></div>
     </div>
   );
 }
@@ -279,28 +326,28 @@ function PWAInstallPrompt() {
 
   // Better manual trigger
   const triggerManualPrompt = () => {
-    console.log('🔧 Manual PWA test...');
-    
-    // Create a realistic fake prompt event
-    const fakePrompt = {
-      prompt: () => {
-        console.log('📲 Fake prompt shown - in real scenario, browser would show install dialog');
-        alert('In a real PWA scenario, the browser would show the install dialog here. Your PWA is working! 🎉');
-        return Promise.resolve({ outcome: 'dismissed' });
-      },
-      userChoice: Promise.resolve({ outcome: 'dismissed' }),
-      preventDefault: () => {}
-    };
-    
-    // Use the global setter from our hook
-    if (window.setDeferredPrompt) {
-      window.setDeferredPrompt(fakePrompt);
-      window.setIsInstallable(true);
-      console.log('✅ Manual prompt activated - install button should appear');
-    } else {
-      console.log('❌ Global helpers not available yet');
-    }
+  console.log('🔧 Manual PWA test...');
+  
+  // Create a realistic fake prompt event
+  const fakePrompt = {
+    prompt: () => {
+      console.log('📲 Fake prompt shown - in real scenario, browser would show install dialog');
+      alert('In a real PWA scenario, the browser would show the install dialog here. Your PWA is working! 🎉');
+      return Promise.resolve({ outcome: 'dismissed' });
+    },
+    userChoice: Promise.resolve({ outcome: 'dismissed' }),
+    preventDefault: () => {}
   };
+  
+  // Use the global setter from our hook with proper null check
+  if (window.setDeferredPrompt) {
+    window.setDeferredPrompt(fakePrompt); // ✅ TypeScript knows it's defined here
+    window.setIsInstallable?.(true);
+    console.log('✅ Manual prompt activated - install button should appear');
+  } else {
+    console.log('❌ Global helpers not available yet');
+  }
+};
 
   // Check current PWA state
   const checkPWAState = () => {
@@ -362,7 +409,7 @@ function PWAInstallPrompt() {
       )}
       
       {/* Debug buttons - remove in production */}
-      {process.env.NODE_ENV !== 'production' && (
+      {/* {process.env.NODE_ENV !== 'production' && ( */}
         <div style={{
           position: 'fixed',
           bottom: 20,
@@ -401,7 +448,7 @@ function PWAInstallPrompt() {
             Check PWA State
           </button>
         </div>
-      )}
+      {/* )} */}
     </>
   );
 }
