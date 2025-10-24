@@ -129,6 +129,12 @@ const en = {
   'Christianity': 'Christianity',
   'Science': 'Science',
   'Integrated Science': 'Integrated Science',
+  "History": "History",
+  "Geography": "Geography",
+  "Computer Science": "Computer Science",
+  "Physical Education": "P.E.",
+  "Art": "Art",
+  "Music": "Music",
 
   // Statistics
   'statistics.thisWeek': 'This Week',
@@ -654,10 +660,12 @@ const en = {
   'exams.questionsExtracted': 'questions extracted',
   'exams.noQuestionsFound': 'No questions found',
   'exams.noQuestionsAdded': 'No questions added yet',
+  'exams.addSectionOrQuestion':'Add Section or Question',
   'exams.section':'Section',
   'exams.sectionTitle':'Section Title',
   'exams.isSection':'Is Section?',
   'exams.options':'Options',
+  'exams.fileUploaded':'File Uploaded',
 
   'exams.alternativesAvailable': 'Alternatives available',
   'exams.noNewQuestionsFound': 'No new questions found',

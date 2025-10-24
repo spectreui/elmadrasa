@@ -1,699 +1,954 @@
 const ar = {
-  // General use
-  'home': 'الصفحة الرئيسية',
-  'goodMorning': 'صباح الخير',
-  'goodAfternoon': 'مساء الخير',
-  'goodEvening': 'مساء الخير',
+  // 🌍 General
+  "home": "الرئيسية",
+  "goodMorning": "صباح الفل",
+  "goodAfternoon": "مساء النور",
+  "goodEvening": "مساء الخير",
 
-  // Common
-  'common.active': 'نشط',
-  'common.add': 'إضافة',
-  'common.back': 'رجوع',
-  'common.cancel': 'إلغاء',
-  'common.confirm': 'تأكيد',
-  'common.create': 'إنشاء',
-  'common.delete': 'حذف',
-  'common.edit': 'تعديل',
-  'common.error': 'خطأ',
-  'common.filter': 'تصفية',
-  'common.goBack': 'الرجوع',
-  'common.loading': 'جاري التحميل...',
-  'common.loadFailed': 'فشل التحميل...',
-  'common.next': 'التالي',
-  'common.noItems': 'لا توجد عناصر',
-  'common.ok': 'حسناً',
-  'common.pending': 'في الانتظار',
-  'common.points': 'النقاط',
-  'common.previous': 'السابق',
-  'common.save': 'حفظ',
-  'common.search': 'بحث',
-  'common.send': 'إرسال',
-  'common.sort': 'ترتيب',
-  'common.submit': 'إرسال',
-  'common.success': 'تم بنجاح',
-  'common.unknown': 'غير معروف',
-  'common.update': 'تحديث',
-  'common.view': 'عرض',
-  'common.viewAll': 'عرض الكل',
-  'common.share': 'مشاركة',
-  'common.student': 'طالب',
-  'common.teacher': 'معلم',
-  'common.new': 'جديد',
-  'common.info': 'معلومة',
-  "common.offlineMode": "الوضع غير متصل",
-  "common.offline": "غير متصل",
+  // 🧭 Common
+  "common.active": "مفعل",
+  "common.add": "إضافة",
+  "common.back": "رجوع",
+  "common.cancel": "إلغاء",
+  "common.confirm": "تأكيد",
+  "common.create": "إنشاء",
+  "common.delete": "حذف",
+  "common.edit": "تعديل",
+  "common.error": "فيه مشكلة حصلت",
+  "common.loading": "جاري التحميل...",
+  "common.noData": "مافيش بيانات",
+  "common.save": "حفظ",
+  "common.search": "بحث",
+  "common.submit": "إرسال",
+  "common.success": "تم بنجاح",
+  "common.update": "تحديث",
+  "common.view": "عرض",
+  "common.retry": "حاول تاني",
+  "common.close": "إغلاق",
+  "common.continue": "استمرار",
+  "common.next": "التالي",
+  "common.previous": "السابق",
+  "common.ok": "تمام",
+  "common.yes": "أيوه",
+  "common.no": "لأ",
+  "common.upload": "رفع",
+  "common.download": "تحميل",
+  "common.refresh": "تحديث الصفحة",
+  "common.settings": "الإعدادات",
+  "common.language": "اللغة",
+  "common.logout": "تسجيل خروج",
+  "common.login": "تسجيل دخول",
+  "common.register": "تسجيل جديد",
+  "common.home": "الرئيسية",
+  "common.profile": "الملف الشخصي",
+  "common.notifications": "الإشعارات",
+  "common.help": "المساعدة",
+  "common.okay": "تمام",
+  "common.filter": "تصفية",
+  "common.goBack": "رجوع",
+  "common.loadFailed": "فشل التحميل...",
+  "common.pending": "معلق",
+  "common.points": "نقاط",
+  "common.sort": "ترتيب",
+  "common.viewAll": "عرض الكل",
+  "common.share": "مشاركة",
+  "common.student": "طالب",
+  "common.teacher": "مدرس",
+  "common.new": "جديد",
+  "common.info": "معلومات",
+  "common.offlineMode": "الوضع بدون إنترنت",
+  "common.offline": "بدون إنترنت",
 
-  // Months
-  'months.january': 'يناير',
-  'months.february': 'فبراير',
-  'months.march': 'مارس',
-  'months.april': 'أبريل',
-  'months.may': 'مايو',
-  'months.june': 'يونيو',
-  'months.july': 'يوليو',
-  'months.august': 'أغسطس',
-  'months.september': 'سبتمبر',
-  'months.october': 'أكتوبر',
-  'months.november': 'نوفمبر',
-  'months.december': 'ديسمبر',
-  'months.Feb': 'فبراير',
-  'months.Mar': 'مارس',
-  'months.Apr': 'أبريل',
-  'months.May': 'مايو',
-  'months.Jun': 'يونيو',
-  'months.Jul': 'يوليو',
-  'months.Aug': 'أغسطس',
-  'months.Sep': 'سبتمبر',
-  'months.Oct': 'أكتوبر',
-  'months.Nov': 'نوفمبر',
-  'months.Dec': 'ديسمبر',
+  // 📊 Dashboard
+  "dashboard.loading": "جاري تحميل لوحة التحكم...",
+  "dashboard.welcome": "أهلاً بيك يا {{name}} 👋",
+  "dashboard.overview": "نظرة عامة",
+  "dashboard.stats": "الإحصائيات",
+  "dashboard.recentActivity": "آخر النشاطات",
+  "dashboard.noRecentActivity": "مافيش نشاطات لسه",
+  "dashboard.totalStudents": "إجمالي الطلاب",
+  "dashboard.totalTeachers": "إجمالي المدرسين",
+  "dashboard.totalClasses": "عدد الفصول",
+  "dashboard.totalSubjects": "عدد المواد",
+  "dashboard.attendanceToday": "الحضور النهارده",
+  "dashboard.assignmentsDue": "الواجبات المطلوبة قريب",
+  "dashboard.examsUpcoming": "الامتحانات الجاية",
+  "dashboard.performance": "الأداء العام",
+  "dashboard.averageScore": "المتوسط العام للدرجات",
+  "dashboard.viewAll": "عرض الكل",
+  "dashboard.activeExams": "الامتحانات النشطة",
+  "dashboard.currentlyRunning": "اللي شغالة دلوقتي",
+  "dashboard.students": "الطلاب",
+  "dashboard.totalEnrolled": "إجمالي المسجلين",
+  "dashboard.avgScore": "متوسط الدرجات",
+  "dashboard.classAverage": "متوسط الفصل",
+  "dashboard.engagement": "المشاركة",
+  "dashboard.studentActivity": "نشاط الطلاب",
+  "dashboard.quickActions": "إجراءات سريعة",
+  "dashboard.createExam": "إنشاء امتحان",
+  "dashboard.designAssessment": "تصميم تقييم جديد",
+  "dashboard.assignWork": "تعيين عمل",
+  "dashboard.createHomework": "إنشاء واجب",
+  "dashboard.myClasses": "فصولي",
+  "dashboard.manageStudents": "إدارة الطلاب",
+  "dashboard.analytics": "التحليلات",
+  "dashboard.viewInsights": "عرض الرؤى",
+  "dashboard.noActivityMessage": "نشاطاتك الأخيرة هتظهر هنا",
+  "dashboard.performanceInsights": "رؤى الأداء",
+  "dashboard.classes": "الفصول",
+  "dashboard.subjects": "المواد",
+  "dashboard.avgResponse": "متوسط الردود",
+  "dashboard.createdFor": "تم إنشاؤه لـ",
+  "dashboard.noActivity": "مافيش نشاطات حديثة",
+  "dashboard.noActivityDesc": "نشاطاتك هتظهر هنا",
+  "dashboard.score": "الدرجة",
+  "dashboard.assignedTo": "مخصص لـ",
+  "dashboard.welcomeBack": "مرحباً بيك تاني",
+  "dashboard.examsTaken": "الامتحانات اللي اتعملت",
+  "dashboard.pendingHomework": "الواجبات المعلقة",
+  "dashboard.takeExam": "عمل امتحان",
+  "dashboard.homework": "الواجبات",
+  "dashboard.results": "النتائج",
+  "dashboard.noUpcomingExams": "مافيش امتحانات قادمة",
+  "dashboard.upcomingExams": "الامتحانات القادمة",
+  "dashboard.allCaughtUp": "خلاص خلصت كل حاجة لسه",
+  "dashboard.due": "محدد",
+  "dashboard.offlineMessage": "بيعرض البيانات المخزنة. بعض الميزات ممكن تكون محدودة بدون إنترنت.",
+  "dashboard.refreshOfflineMessage": "ما ينفعش التحديث بدون إنترنت. بيعرض البيانات المخزنة.",
+  "dashboard.restrictedOfflineMessage": "الميزة دي محتاجة اتصال بالإنترنت.",
+  "dashboard.examAccessOfflineMessage": "تفاصيل الامتحان محتاجة اتصال بالإنترنت.",
 
-  // Dashboard
-  'dashboard.loading': 'جاري تحميل لوحة التحكم...',
-  'dashboard.overview': 'نظرة عامة',
-  'dashboard.activeExams': 'الاختبارات النشطة',
-  'dashboard.currentlyRunning': 'جارية حالياً',
-  'dashboard.students': 'الطلاب',
-  'dashboard.totalEnrolled': 'إجمالي المسجلين',
-  'dashboard.avgScore': 'متوسط الدرجة',
-  'dashboard.classAverage': 'متوسط الفصل',
-  'dashboard.engagement': 'المشاركة',
-  'dashboard.studentActivity': 'نشاط الطالب',
-  'dashboard.quickActions': 'إجراءات سريعة',
-  'dashboard.createExam': 'إنشاء اختبار',
-  'dashboard.designAssessment': 'تصميم تقييم جديد',
-  'dashboard.assignWork': 'تعيين عمل',
-  'dashboard.createHomework': 'إنشاء واجب',
-  'dashboard.myClasses': 'فصولي',
-  'dashboard.manageStudents': 'إدارة الطلاب',
-  'dashboard.analytics': 'النتائج',
-  'dashboard.viewInsights': 'عرض الرؤى',
-  'dashboard.recentActivity': 'النشاط الأخير',
-  'dashboard.noRecentActivity': 'لا يوجد نشاط حديث',
-  'dashboard.noActivityMessage': 'ستظهر أنشطتك الحديثة هنا',
-  'dashboard.performanceInsights': 'مؤشرات الأداء',
-  'dashboard.classes': 'الفصول',
-  'dashboard.subjects': 'المواد',
-  'dashboard.avgResponse': 'متوسط الاستجابة',
-  'dashboard.createdFor': 'تم انشائه ل',
-  'dashboard.noActivity': 'لا يوجد نشاط حديث',
-  'dashboard.noActivityDesc': 'ستظهر أنشطتك هنا',
-  'dashboard.score': 'النتيجة',
-  'dashboard.assignedTo': 'تم تعيينه ل',
-  'dashboard.welcomeBack': 'مرحباً بك',
-  'dashboard.examsTaken': 'الاختبارات المنجزة',
-  'dashboard.pendingHomework': 'الواجبات المعلقة',
-  'dashboard.takeExam': 'إجراء اختبار',
-  'dashboard.homework': 'الواجب',
-  'dashboard.results': 'النتائج',
-  'dashboard.noUpcomingExams': 'لا توجد اختبارات قادمة',
-  'dashboard.upcomingExams': 'الاختبارات القادمة',
-  'dashboard.allCaughtUp': 'لقد انتهيت من كل شيء الآن',
-  'dashboard.due': 'مستحق في',
-  "dashboard.offlineMessage": "عرض البيانات المخزنة. قد تكون بعض الميزات محدودة أثناء عدم الاتصال.",
-  "dashboard.refreshOfflineMessage": "لا يمكن التحديث أثناء عدم الاتصال. عرض البيانات المخزنة.",
-  "dashboard.restrictedOfflineMessage": "هذه الميزة تتطلب اتصال بالإنترنت.",
-  "dashboard.examAccessOfflineMessage": "تفاصيل الامتحان تتطلب اتصال بالإنترنت.",
+  // 👩‍🎓 Students
+  "students.title": "الطلاب",
+  "students.addStudent": "إضافة طالب جديد",
+  "students.editStudent": "تعديل بيانات الطالب",
+  "students.deleteStudent": "حذف الطالب",
+  "students.confirmDelete": "متأكد إنك عايز تحذف الطالب ده؟",
+  "students.noStudents": "مافيش طلاب مسجلين",
+  "students.name": "اسم الطالب",
+  "students.age": "السن",
+  "students.gender": "النوع",
+  "students.class": "الفصل",
+  "students.parent": "ولي الأمر",
+  "students.phone": "رقم التليفون",
+  "students.email": "الإيميل",
+  "students.address": "العنوان",
+  "students.addedSuccess": "الطالب اتضاف بنجاح",
+  "students.updatedSuccess": "تم تحديث بيانات الطالب",
+  "students.deletedSuccess": "الطالب اتمسح بنجاح",
 
-  // Subjects
-  'Physics': 'فيزياء',
-  'Mathematics': 'رياضيات',
-  'Chemistry': 'كيمياء',
-  'Biology': 'أحياء',
-  'Arabic': 'عربي',
-  'English': 'اللغة الإنجليزية',
-  'Deutch': 'اللغة الألمانية',
-  'French': 'اللغة الفرنسية',
-  'Programming': 'برمجة',
-  'Islam': 'الدين الإسلامي',
-  'Christianity': 'الدين المسيحي',
-  'Science': 'علوم',
-  'Integrated Science': 'علوم متكاملة',
+  // 🏫 Classes
+  "classes.title": "الفصول",
+  "classes.addClass": "إضافة فصل",
+  "classes.editClass": "تعديل الفصل",
+  "classes.deleteClass": "حذف الفصل",
+  "classes.confirmDelete": "متأكد إنك عايز تحذف الفصل ده؟",
+  "classes.noClasses": "مافيش فصول حالياً",
+  "classes.name": "اسم الفصل",
+  "classes.teacher": "المدرس المسؤول",
+  "classes.studentsCount": "عدد الطلاب",
+  "classes.addedSuccess": "تم إضافة الفصل بنجاح",
+  "classes.updatedSuccess": "تم تعديل بيانات الفصل",
+  "classes.deletedSuccess": "تم حذف الفصل بنجاح",
+  "classes.myClasses": "فصولي",
+  "classes.subtitle": "الفصول والمواد اللي بتدرسها",
+  "classes.none": "مافيش فصول مخصصة ليك",
+  "classes.noneMessage": "تواصل مع المسؤول علشان يخصصلك فصول ومواد.",
+  "classes.joinCode": "رمز الانضمام",
+  "classes.tapToCopy": "اضغط علشان تنسخ وتشترك الطلاب",
+  "classes.noCode": "مافيش رمز انضمام متاح",
+  "classes.codeCopied": "الرمز اتنسخ!",
+  "classes.failed": "فشل النسخ!",
+  "classes.classId": "معرف الفصل",
+  "classes.subjectId": "معرف المادة",
+  "classes.noCodeAvailable": "مافيش رمز متاح",
+  "classes.class": "الفصل",
+  "classes.prep1": "إعدادي أول",
+  "classes.prep2": "إعدادي ثاني",
+  "classes.prep3": "إعدادي ثالث",
+  "classes.sec1": "ثانوي أول",
+  "classes.sec2": "ثانوي ثاني",
+  "classes.sec3": "ثانوي ثالث",
+  "classes.joinSubject": "الانضمام لمادة",
+  "classes.enterJoinCode": "دخل رمز الانضمام من المدرس",
+  "classes.howToJoin": "إزاي تنضم لمادة:",
+  "classes.joinInstructions": "1. احصل على رمز الانضمام من المدرس\n2. ادخله تحت\n3. هتتسجل تلقائي في المادة دي",
+  "classes.joinCodePlaceholder": "SEC-2B-PHY-7KQWZ",
+  "classes.joinCodeRequired": "دخل رمز الانضمام من فضلك",
+  "classes.joinSuccess": "اتصلت بالمادة بنجاح!",
+  "classes.joinFailed": "فشل الاتصال بالمادة",
 
-  // Statistics
-  'statistics.thisWeek': 'هذا الأسبوع',
-  'statistics.thisMonth': 'هذا الشهر',
-  'statistics.thisYear': 'هذه السنة',
-  'statistics.noClassData': 'لا توجد بيانات للفصول',
-  'statistics.noClassDataDesc': 'ستظهر بيانات الأداء هنا',
-  'statistics.noTrendData': 'لا توجد بيانات اتجاه',
-  'statistics.noTrendDataDesc': 'ستظهر اتجاهات الأداء هنا',
-  'statistics.performanceTrend': 'اتجاه الأداء',
-  'statistics.totalExams': 'إجمالي الاختبارات',
-  'statistics.avgCompletion': 'متوسط الإكمال',
-  'statistics.activeStudents': 'الطلاب النشطين',
-  'statistics.pendingGrading': 'في انتظار التصحيح',
+  // 🧾 Exams
+  "exams.addExam": "إضافة امتحان",
+  "exams.editExam": "تعديل الامتحان",
+  "exams.deleteExam": "حذف الامتحان",
+  "exams.confirmDelete": "متأكد إنك عايز تحذف الامتحان ده؟",
+  "exams.noExams": "مافيش امتحانات حالياً",
+  "exams.subject": "المادة",
+  "exams.date": "التاريخ",
+  "exams.class": "الفصل",
+  "exams.teacher": "المدرس",
+  "exams.totalMarks": "إجمالي الدرجات",
+  "exams.addedSuccess": "الامتحان اتضاف بنجاح",
+  "exams.updatedSuccess": "تم تحديث الامتحان بنجاح",
+  "exams.deletedSuccess": "الامتحان اتمسح بنجاح",
+  "exams.results": "النتايج",
+  "exams.viewResults": "عرض النتايج",
+  "exams.noResults": "مافيش نتايج متاحة دلوقتي",
+  "exams.publishResults": "نشر النتايج",
+  "exams.resultsPublished": "النتايج اتنشرت بنجاح",
+  "exams": "الامتحانات",
+  "exams.create": "إنشاء امتحان جديد",
+  "exams.edit": "تعديل الامتحان",
+  "exams.details": "تفاصيل الامتحان",
+  "exams.title": "عنوان الامتحان",
+  "exams.settings": "إعدادات الامتحان",
+  "exams.timed": "امتحان محدد بالوقت",
+  "exams.timedDesc": "حدد وقت الامتحان",
+  "exams.duration": "المدة (بالدقائق)",
+  "exams.allowRetake": "السماح بإعادة الامتحان",
+  "exams.allowRetakeDesc": "الطلاب يقدروا يعيدوا الامتحان",
+  "exams.randomOrder": "ترتيب عشوائي",
+  "exams.randomOrderDesc": "خلط ترتيب الأسئلة",
+  "exams.advancedOptions": "خيارات متقدمة",
+  "exams.allowImageSubmissions": "السماح برفع الصور",
+  "exams.allowImageSubmissionsDesc": "الطلاب يقدروا يرفعوا صور إجاباتهم",
+  "exams.attachment": "مرفق الامتحان (اختياري)",
+  "exams.addAttachment": "إضافة مرفق PDF/صورة",
+  "exams.uploading": "جاري الرفع...",
+  "exams.availableFrom": "متاح من",
+  "exams.selectAvailableDate": "اختر التاريخ/الوقت المتاح",
+  "exams.dueDate": "تاريخ الانتهاء",
+  "exams.selectDueDate": "اختر تاريخ الانتهاء",
+  "exams.completeAllQuestions": "اكمل كل الأسئلة من فضلك",
+  "exams.dateRangeError": "تاريخ التوفر لازم يكون قبل تاريخ الانتهاء",
+  "exams.questions": "الأسئلة",
+  "exams.question": "السؤال",
+  "exams.enterQuestion": "دخل السؤال",
+  "exams.loadFailed": "فشل تحميل الامتحان",
+  "exams.loadClassesFailed": "فشل تحميل الفصول",
+  "exams.loadSubjectsFailed": "فشل تحميل المواد",
+  "exams.fillRequired": "املأ كل الحقول المطلوبة من فضلك",
+  "exams.completeQuestions": "اكمل كل الأسئلة من فضلك",
+  "exams.dateValidation": "تاريخ التوفر لازم يكون قبل تاريخ الانتهاء",
+  "exams.created": "الامتحان اتعمل بنجاح",
+  "exams.updated": "الامتحان اتحديث بنجاح",
+  "exams.createFailed": "فشل إنشاء الامتحان",
+  "exams.updateFailed": "فشل تحديث الامتحان",
+  "exams.loadingExam": "جاري تحميل بيانات الامتحان...",
+  "exams.loadingClasses": "جاري تحميل الفصول...",
+  "exams.loadingSubjects": "جاري تحميل المواد...",
+  "exams.select": "اختر",
+  "exams.at": "في",
+  "exams.selectedDate": "التاريخ المختار",
+  "exams.selectTime": "اختر الوقت",
+  "exams.hours": "ساعات",
+  "exams.minutes": "دقائق",
+  "exams.option": "خيار",
+  "exams.enterExpectedAnswer": "دخل الإجابة المتوقعة",
+  "exams.file": "ملف",
+  "exams.attachmentDesc": "مرفق اختياري للمرجع",
+  "exams.imageUploaded": "الصورة اترفعت بنجاح",
+  "exams.imageUploadFailed": "فشل رفع الصورة",
+  "exams.documentPickFailed": "فشل اختيار المستند",
+  "exams.pdfUploadInfo": "ميزة رفع PDF قادمة قريب",
+  "exams.info": "معلومات",
+  "exams.newExamTitle": "امتحان جديد متاح",
+  "exams.newExamBody": "اتعين امتحان جديد",
+  "exams.forClass": "للفصل",
+  "exams.correctAnswer": "الإجابة الصحيحة",
+  "exams.activatedTitle": "الامتحان مفعل",
+  "exams.activatedBody": "الامتحان \"{title}\" متاح دلوقتي علشان تبدأ فيه",
+  "exams.myExams": "امتحاناتي",
+  "exams.totalExams": "إجمالي الامتحانات",
+  "exams.noActiveExams": "مافيش امتحانات نشطة",
+  "exams.noDraftExams": "مافيش امتحانات مسودة",
+  "exams.noArchivedExams": "مافيش امتحانات مؤرشفة",
+  "exams.allInDraftOrArchived": "كل الامتحانات في المسودة أو مؤرشفة",
+  "exams.createFirstExam": "اعمل امتحانك الأول علشان تبدأ",
+  "exams.untimed": "بدون توقيت",
+  "exams.showing": "بيعرض",
+  "exams.exam": "امتحان",
+  "exams.deleteConfirm": "حذف الامتحان",
+  "exams.deleteSuccess": "الامتحان اتمسح بنجاح",
+  "exams.deleteFailed": "فشل حذف الامتحان",
+  "exams.activatedSuccess": "الامتحان اتفعل بنجاح",
+  "exams.deactivatedSuccess": "الامتحان اتطفأ بنجاح",
+  "exams.drafts": "مسودات",
+  "exams.archived": "مؤرشف",
+  "exams.active": "نشط",
+  "exams.inactive": "غير نشط",
+  "exams.loadingResults": "جاري تحميل نتائج الامتحان...",
+  "exams.noResultsFound": "مافيش نتائج",
+  "exams.resultsLoadFailed": "مش قادر يحمل نتائج الامتحان. ممكن الامتحان مش موجود أو ما عندكش صلاحية تشوفه.",
+  "exams.examAnalytics": "تحليلات الامتحان",
+  "exams.createdBy": "تم إنشاؤه بواسطة",
+  "exams.of": "من",
+  "exams.students": "طلاب",
+  "exams.totalSubmissions": "إجمالي التسليمات",
+  "exams.highest": "أعلى",
+  "exams.topScore": "أعلى درجة",
+  "exams.lowest": "أقل",
+  "exams.lowestScore": "أقل درجة",
+  "exams.scoreDistribution": "توزيع الدرجات",
+  "exams.topPerformers": "أفضل الأداء",
+  "exams.showingTop": "بيعرض الأفضل",
+  "exams.performanceAnalysis": "تحليل الأداء",
+  "exams.performanceRange": "مدى الأداء",
+  "exams.standardDeviation": "الانحراف المعياري",
+  "exams.questionAnalysis": "تحليل الأسئلة",
+  "exams.detailedAnalysisComing": "تحليل سؤال بسؤال قادم قريب...",
+  "exams.generateReport": "إنشاء تقرير مفصل",
+  "exams.recommendedActions": "إجراءات مقترحة",
+  "exams.noRecommendations": "مافيش توصيات دلوقتي.",
+  "exams.noSubmissionsYet": "مافيش تسليمات لسه",
+  "exams.studentsNotSubmitted": "الطلاب ما سلموش الامتحان ده لسه",
+  "exams.submissionDetails": "تفاصيل التسليم",
+  "exams.points": "نقاط",
+  "exams.time": "الوقت",
+  "exams.overallFeedback": "تقييم عام",
+  "exams.addOverallFeedback": "أضف تقييم عام للتسليم ده...",
+  "exams.manuallyGraded": "مُقيَّم يدويًا",
+  "exams.needsGrading": "محتاج تقييم",
+  "exams.autoGraded": "مُقيَّم تلقائيًا",
+  "exams.studentAnswer": "إجابة الطالب",
+  "exams.pointsAwarded": "النقاط الممنوحة",
+  "exams.addFeedback": "أضف تقييم...",
+  "exams.downloadPDF": "تحميل PDF",
+  "exams.submitGrading": "إرسال التقييم",
+  "exams.sendFeedback": "إرسال التقييم",
+  "exams.sendFeedbackTo": "إرسال تقييم شخصي لـ",
+  "exams.writeFeedback": "اكتب تقييمك هنا...",
+  "exams.allSubmissionsGraded": "كل التسليمات اتقّيّمت",
+  "exams.assignPoints": "تعيين النقاط",
+  "exams.creating": "جاري إنشاء الامتحان...",
+  "exams.enterCorrectAnswer": "دخل الإجابة الصحيحة",
+  "exams.enterExplanation": "دخل توضيح",
+  "exams.explanation": "توضيح",
+  "exams.feedback": "تقييم",
+  "exams.feedbackPlaceholder": "اكتب تقييمك هنا...",
+  "exams.gradeSubmission": "تقييم التسليم",
+  "exams.gradingFailed": "فشل التقييم. حاول تاني.",
+  "exams.gradingSubmitted": "التقييم اتبعت بنجاح!",
+  "exams.loading": "جاري تحميل الامتحانات...",
+  "exams.manualGrading": "تقييم يدوي",
+  "exams.multipleChoice": "اختيار من متعدد",
+  "exams.noAnswer": "مافيش إجابة",
+  "exams.noSubmissionsNeedGrading": "مافيش تسليمات محتاجة تقييم",
+  "exams.selectClass": "اختر الفصل",
+  "exams.selectSubject": "اختر المادة",
+  "exams.submissionNotFound": "التسليم مش موجود",
+  "exams.submissionsNeedGrading": "التسليمات محتاجة تقييم",
+  "exams.textAnswer": "إجابة نصية",
+  "exams.textAnswerNote": "ملاحظة: راجع الإجابات النصية بعناية قبل التقييم.",
+  "exams.updateExam": "تحديث الامتحان",
+  "exams.updating": "جاري تحديث الامتحان...",
+  "exams.title2": "الامتحانات",
+  "exams.takeTrack": "اعمل امتحاناتك وتتبع تقدمك",
+  "exams.completed": "اتم",
+  "exams.available": "متاح",
+  "exams.upcoming": "قادم",
+  "exams.missed": "فات",
+  "exams.taken": "اتعمل",
+  "exams.noExamsForClass": "مافيش امتحانات للفصل",
+  "exams.checkBack": "راجع تاني لاحقًا.",
+  "exams.checkClassAssignment": "تأكد من تعيين فصلك.",
+  "exams.availableOn": "الامتحان ده هيبقى متاح في",
+  "exams.expired": "الامتحان انتهى",
+  "exams.dueDatePassed": "تاريخ الانتهاء فات.",
+  "exams.noTimeRestrictions": "مافيش قيود على الوقت",
+  "exams.notAvailable": "مش متاح",
+  "exams.startExam": "ابدأ الامتحان",
+  "exams.notFound": "الامتحان مش موجود",
+  "exams.dueDateWas": "تاريخ الانتهاء كان",
+  "exams.backToExams": "رجوع للامتحانات",
+  "exams.alreadyTaken": "الامتحان اتعمل قبل كده",
+  "exams.alreadyCompleted": "انت خلصت الامتحان ده قبل كده.",
+  "exams.notAvailableYet": "الامتحان مش متاح لسه",
+  "exams.scheduledFuture": "الامتحان مجدول لتاريخ قادم.",
+  "exams.warning": "تحذير",
+  "exams.noAnswersWarning": "ما إجبتش أي أسئلة. متأكد إنك عايز تسلم؟",
+  "exams.submit": "تسليم",
+  "exams.unansweredQuestions": "أسئلة مش مجاوبة",
+  "exams.youHave": "عندك",
+  "exams.unansweredQuestionsText": "سؤال/أسئلة مش مجاوبة. متأكد إنك عايز تسلم؟",
+  "exams.continueEditing": "استمر في التعديل",
+  "exams.submitAnyway": "سلم على أي حال",
+  "exams.autoSubmitted": "اتسلم تلقائي للتقييم",
+  "exams.autoSubmittedGrading": "امتحانك اتسلم تلقائي وبينتظر التقييم اليدوي.",
+  "exams.submittedGrading": "امتحانك اتسلم وبينتظر التقييم من المدرس.",
+  "exams.submissionFailed": "فشل التسليم",
+  "exams.unknownError": "حصل خطأ مش معروف",
+  "exams.submitFailed": "فشل تسليم الامتحان. حاول تاني.",
+  "exams.permissionRequired": "محتاج صلاحية",
+  "exams.cameraRollPermission": "أسف، محتاج صلاحية الوصول للصور علشان ترفع صور.",
+  "exams.attachmentUploaded": "المرفق اترفع بنجاح!",
+  "exams.uploadFailed": "فشل الرفع",
+  "exams.uploadAttachmentFailed": "فشل رفع المرفق",
+  "exams.sectionAttachment": "مرفق القسم",
+  "exams.questionAttachment": "مرفق السؤال",
+  "exams.yourAttachment": "مرفقك",
+  "exams.typeAnswer": "اكتب إجابتك تحت:",
+  "exams.tapToAddAnswer": "اضغط علشان تضيف إجابتك...",
+  "exams.yourAnswer": "إجابتك",
+  "exams.typeDetailedAnswer": "اكتب إجابتك المفصلة هنا...",
+  "exams.saveAnswer": "حفظ الإجابة",
+  "exams.noLongerAvailable": "الامتحان ده مش متاح كمان.",
+  "exams.cannotAccess": "ما ينفعش تدخل على الامتحان ده دلوقتي.",
+  "exams.loadDetailsFailed": "فشل تحميل تفاصيل الامتحان",
+  "exams.autoSubmitWarning": "الامتحان هيسلم تلقائي لو خرجت من الصفحة أو خفيت التطبيق",
+  "exams.due": "محدد",
+  "exams.imageAttachmentsAllowed": "مسموح رفع صور للأسئلة",
+  "exams.answered": "مجاب عليه",
+  "exams.attachments": "مرفقات",
+  "exams.timeExpired": "الوقت انتهى",
+  "exams.submitExam": "تسليم الامتحان",
+  "exams.aiExtraction": "استخراج بالذكاء الاصطناعي",
+  "exams.aiExtractionDesc": "خلّي الذكاء الاصطناعي يستخرج الأسئلة من الملف المرفق",
+  "exams.extractQuestions": "استخراج الأسئلة",
+  "exams.extractFromPDF": "استخراج من PDF",
+  "exams.extracting": "جاري الاستخراج...",
+  "exams.aiExtractionNote": "الاستخراج ممكن يستغرق شوية. تحقق من النتائج وعدل لو لازم.",
+  "exams.pdfExtractionComingSoon": "استخراج PDF قادم قريب.",
+  "exams.textExtractionHelp": "مساعدة استخراج النص",
+  "exams.textExtractionFailed": "فشل استخراج النص",
+  "exams.questionsExtracted": "أسئلة مستخرجة",
+  "exams.noQuestionsFound": "مافيش أسئلة",
+  "exams.noQuestionsAdded": "مافيش أسئلة مضافة لسه",
+  "exams.addSectionOrQuestion": "إضافة قسم أو سؤال",
+  "exams.section": "قسم",
+  "exams.sectionTitle": "عنوان القسم",
+  "exams.isSection": "قسم؟",
+  "exams.options": "خيارات",
+  "exams.fileUploaded": "الملف اترفع",
+  "exams.alternativesAvailable": "بدائل متاحة",
+  "exams.noNewQuestionsFound": "مافيش أسئلة جديدة",
+  "exams.extractFromText": "استخراج من النص",
+  "exams.enterValidText": "دخل نص صحيح علشان تستخرج",
 
-  // Profile
-  'profile.title': 'الملف الشخصي',
-  'profile.settings': 'الإعدادات',
-  'profile.teacherInformation': 'معلومات المعلم',
-  'profile.teacherId': 'رقم المعلم',
-  'profile.email': 'البريد الإلكتروني',
-  'profile.accountCreated': 'تم إنشاء الحساب',
-  'profile.teachingOverview': 'نظرة عامة على التدريس',
-  'profile.examsCreated': 'الاختبارات المنشأة',
-  'profile.toGrade': 'في انتظار التصحيح',
-  'profile.classPerformance': 'أداء الفصل',
-  'profile.averageClassScore': 'متوسط درجة الفصل',
-  'profile.studentEngagement': 'مشاركة الطلاب',
-  'profile.notSet': 'غير محدد',
-  'profile.averageScore': 'متوسط الدرجة',
-  'profile.language': 'اللغة',
-  'profile.na': 'غير متوفر',
-  'profile.logoutError': 'حدث خطأ أثناء تسجيل الخروج',
-  'profile.teacher': 'المعلم',
-  'profile.studentId': 'رقم الطالب',
-  'profile.performance': 'الأداء',
-  'profile.completed': 'مكتمل',
-  'profile.rank': 'الترتيب',
-  'profile.preferences': 'التفضيلات',
+  // 📚 Homework
+  "homework.title": "الواجبات",
+  "homework.addHomework": "إضافة واجب",
+  "homework.editHomework": "تعديل الواجب",
+  "homework.deleteHomework": "حذف الواجب",
+  "homework.confirmDelete": "متأكد إنك عايز تحذف الواجب ده؟",
+  "homework.noHomework": "مافيش واجبات دلوقتي",
+  "homework.subject": "المادة",
+  "homework.description": "التفاصيل",
+  "homework.dueDate": "ميعاد التسليم",
+  "homework.class": "الفصل",
+  "homework.addedSuccess": "الواجب اتضاف بنجاح",
+  "homework.updatedSuccess": "الواجب اتعدل بنجاح",
+  "homework.deletedSuccess": "الواجب اتمسح بنجاح",
+  "homework.submitted": "تم التسليم",
+  "homework.pending": "لسه ما اتسلمش",
+  "homework.markAsDone": "تحديد كـ تم التسليم",
+  "homework.markAsPending": "تحديد كـ لسه",
+  "homework.new": "واجب جديد",
+  "homework.createAssignment": "إنشاء واجب بأسئلة",
+  "homework.assignmentDetails": "تفاصيل الواجب",
+  "homework.titleRequired": "العنوان *",
+  "homework.titlePlaceholder": "دخل عنوان الواجب",
+  "homework.descriptionPlaceholder": "دخل وصف الواجب والإرشادات...",
+  "homework.classRequired": "الفصل *",
+  "homework.selectClass": "اختر الفصل",
+  "homework.subjectRequired": "المادة *",
+  "homework.selectSubject": "اختر المادة",
+  "homework.selectClassFirst": "اختر الفصل أولًا",
+  "homework.schedule": "جدولة",
+  "homework.startDateRequired": "تاريخ البدء *",
+  "homework.dueDateRequired": "تاريخ الانتهاء *",
+  "homework.selectDate": "اختر التاريخ",
+  "homework.totalPoints": "إجمالي النقاط",
+  "homework.includeQuestions": "إدراج الأسئلة",
+  "homework.includeQuestionsDesc": "أضف أسئلة علشان يجاوب عليها الطلاب",
+  "homework.allowAttachments": "السماح بالمرفقات",
+  "homework.allowAttachmentsDesc": "الطلاب يقدروا يرفعوا ملفات مع التسليم",
+  "homework.questions": "الأسئلة",
+  "homework.questionText": "نص السؤال",
+  "homework.questionPlaceholder": "دخل سؤالك...",
+  "homework.questionType": "نوع السؤال",
+  "homework.textAnswer": "إجابة نصية",
+  "homework.multipleChoice": "اختيار من متعدد",
+  "homework.options": "الخيارات",
+  "homework.addOption": "إضافة خيار",
+  "homework.points": "النقاط",
+  "homework.assign": "تعيين الواجب",
+  "homework.missingInfo": "معلومات ناقصة",
+  "homework.fillRequiredFields": "املأ كل الحقول المطلوبة من فضلك",
+  "homework.invalidDate": "تاريخ مش صحيح",
+  "homework.enterValidDates": "دخل تواريخ بداية ونهاية صحيحة من فضلك",
+  "homework.invalidDateRange": "مدى التاريخ مش صحيح",
+  "homework.startBeforeDue": "تاريخ البدء لازم يكون قبل تاريخ الانتهاء",
+  "homework.invalidPoints": "نقاط مش صحيحة",
+  "homework.pointsRange": "النقاط لازم تكون بين 1 و100",
+  "homework.invalidQuestion": "سؤال مش صحيح",
+  "homework.questionsNeedText": "كل الأسئلة لازم يكون ليها نص",
+  "homework.mcqMinOptions": "أسئلة الاختيار من متعدد لازم يكون ليها على الأقل خيارين",
+  "homework.optionsNeedText": "كل الخيارات لازم يكون ليها نص",
+  "homework.noAnswerProvided": "مافيش إجابة",
+  "homework.questionNumber": "السؤال {n}",
+  "homework.selectStartDate": "اختر تاريخ البدء",
+  "homework.selectDueDate": "اختر تاريخ الانتهاء",
+  "homework.selectedStartDate": "تاريخ البدء المختار",
+  "homework.selectedDueDate": "تاريخ الانتهاء المختار",
+  "homework.settings": "الإعدادات",
+  "homework.option": "خيار",
+  "homework.loadDataFailed": "فشل تحميل فصولك وموادك",
+  "homework.loadingClasses": "جاري تحميل فصولك...",
+  "homework.assignedSuccess": "الواجب اتعين بنجاح!",
+  "homework.createFailed": "فشل تعيين الواجب",
+  "homework.selectClassModal": "اختر الفصل",
+  "homework.selectSubjectModal": "اختر المادة",
+  "homework.levelNotSpecified": "المستوى مش محدد",
+  "homework.subjects": "مواد",
+  "homework.noClassesFound": "مافيش فصول. اعمل فصول أولًا من فضلك.",
+  "homework.noSubjectsFound": "مافيش مواد للفصل ده.",
+  "homework.code": "رمز",
+  "homework.errors.loadFailed": "فشل تحميل واجباتك",
+  "homework.stats.total": "إجمالي",
+  "homework.emptyState.title": "مافيش واجبات لسه",
+  "homework.emptyState.subtitle": "اعمل أول واجب علشان تبدأ",
+  "homework.createButton": "إنشاء واجب",
+  "homework.overdue": "متأخر",
+  "homework.gradingProgress": "تقدم التقييم",
+  "homework.graded": "مُقيَّم",
+  "homework.due": "محدد",
+  "homework.average": "متوسط",
+  "homework.view": "عرض",
+  "homework.assignments": "واجبات",
+  "homework.dueIn": "محدد في",
+  "homework.hours": "ساعة",
+  "homework.days": "يوم",
+  "homework.daysLeft": "يوم باقي",
+  "homework.file": "ملف",
+  "homework.teacherFeedback": "تقييم المدرس",
+  "homework.loading": "جاري تحميل الواجب...",
+  "homework.start": "ابدأ",
+  "homework.loadDetailsFailed": "فشل تحميل تفاصيل الواجب",
+  "homework.noAttachmentsAllowed": "الواجب ده مش بيسمح بالمرفقات",
+  "homework.fileAttached": "الملف اترفق بنجاح",
+  "homework.attachFileFailed": "فشل إرفاق الملف",
+  "homework.enterSubmission": "دخل محتوى التسليم من فضلك",
+  "homework.pastDue": "الواجب ده فات ميعاده ومش ممكن تسلمه كمان",
+  "homework.pleaseAnswer": "جاوب على السؤال من فضلك",
+  "homework.submittedSuccessfully": "الواجب اتسلم بنجاح!",
+  "homework.demoMode": "الوضع التجريبي",
+  "homework.submittedDemo": "الواجب اتسلم بنجاح! (وضع تجريبي)",
+  "homework.cannotGenerateLink": "مش قادر يعمل رابط: الواجب مش محمل",
+  "homework.linkCopied": "الرابط اتنسخ!",
+  "homework.copyLinkFailed": "فشل نسخ الرابط",
+  "homework.notFound": "الواجب مش موجود",
+  "homework.notExist": "الواجب اللي بتبحث عنه مش موجود أو ما عندكش صلاحية تشوفه.",
+  "homework.backToHomework": "رجوع للواجبات",
+  "homework.by": "بواسطة",
+  "homework.assignmentDescription": "وصف الواجب",
+  "homework.grade": "الدرجة",
+  "homework.feedback": "التقييم",
+  "homework.yourSubmission": "تسليمك",
+  "homework.submittedContent": "المحتوى المسلَّم",
+  "homework.submittedOn": "اتسلم في",
+  "homework.textSubmission": "تسليم نصي",
+  "homework.questionPoints": "نقاط السؤال",
+  "homework.answerContent": "الإجابة / محتوى التسليم",
+  "homework.typeSubmission": "اكتب إجابتك أو تسليمك هنا...",
+  "homework.addAttachment": "إضافة مرفق",
+  "homework.assignmentOverdue": "الواجب ده فات ميعاده ومش ممكن تسلمه كمان.",
+  "homework.submissionClosed": "التسليم مغلق",
+  "homework.submitHomework": "تسليم الواجب",
+  "homework.homework": "واجب",
+  "homework.assignment": "واجب",
+  "homeworks": "واجبات",
 
-  // Notifications
-  'notifications.settings': 'إعدادات الإشعارات',
-  'notifications.general': 'الإشعارات العامة',
-  'notifications.generalDesc': 'إشعارات وتحديثات التطبيق',
-  'notifications.examAlerts': 'تنبيهات الاختبارات',
-  'notifications.examAlertsDesc': 'إشعارات إكمال الاختبار',
-  'notifications.gradingReminders': 'تذكير التصحيح',
-  'notifications.gradingRemindersDesc': 'تنبيهات التصحيح المعلقة',
+  // 📅 Attendance
+  "attendance.title": "الحضور",
+  "attendance.markAttendance": "تسجيل الحضور",
+  "attendance.date": "التاريخ",
+  "attendance.class": "الفصل",
+  "attendance.student": "الطالب",
+  "attendance.status": "الحالة",
+  "attendance.present": "حاضر",
+  "attendance.absent": "غايب",
+  "attendance.excused": "غياب بعذر",
+  "attendance.saveSuccess": "تم حفظ الحضور بنجاح",
+  "attendance.updateSuccess": "تم تحديث الحضور بنجاح",
+  "attendance.noRecords": "مافيش سجلات حضور لليوم ده",
+  "attendance.selectDate": "اختار تاريخ",
+  "attendance.selectClass": "اختار فصل",
 
-  // System
-  'system.preferences': 'تفضيلات النظام',
-  'system.darkMode': 'الوضع الداكن',
-  'system.darkModeDesc': 'تفعيل السمة الداكنة',
+  // 👨‍🏫 Teachers
+  "teachers.title": "المدرسين",
+  "teachers.addTeacher": "إضافة مدرس",
+  "teachers.editTeacher": "تعديل بيانات المدرس",
+  "teachers.deleteTeacher": "حذف المدرس",
+  "teachers.confirmDelete": "متأكد إنك عايز تحذف المدرس ده؟",
+  "teachers.noTeachers": "مافيش مدرسين حالياً",
+  "teachers.name": "اسم المدرس",
+  "teachers.email": "الإيميل",
+  "teachers.phone": "رقم التليفون",
+  "teachers.subject": "المادة",
+  "teachers.addedSuccess": "المدرس اتضاف بنجاح",
+  "teachers.updatedSuccess": "تم تعديل بيانات المدرس",
+  "teachers.deletedSuccess": "المدرس اتمسح بنجاح",
 
-  // Tools
-  'tools.title': 'أدوات المعلم',
-  'tools.exportData': 'تصدير بيانات الطلاب',
-  'tools.classAnalytics': 'نتائج الفصل',
-  'tools.teachingResources': 'موارد التدريس',
+  // 📘 Subjects
+  "subjects.title": "المواد الدراسية",
+  "subjects.addSubject": "إضافة مادة",
+  "subjects.editSubject": "تعديل المادة",
+  "subjects.deleteSubject": "حذف المادة",
+  "subjects.confirmDelete": "متأكد إنك عايز تحذف المادة دي؟",
+  "subjects.noSubjects": "مافيش مواد لسه",
+  "subjects.name": "اسم المادة",
+  "subjects.code": "الكود",
+  "subjects.teacher": "المدرس المسؤول",
+  "subjects.addedSuccess": "المادة اتضافت بنجاح",
+  "subjects.updatedSuccess": "تم تعديل بيانات المادة",
+  "subjects.deletedSuccess": "المادة اتمسحت بنجاح",
 
-  // Auth
-  'auth.logOut': 'تسجيل الخروج',
-  'auth.logOutConfirm': 'هل أنت متأكد أنك تريد تسجيل الخروج؟',
-  'auth.tagline': 'تعلم. تطور. تنجح.',
-  'auth.emailOrStudentId': 'البريد الإلكتروني أو رقم الطالب',
-  'auth.enterEmailOrStudentId': 'أدخل بريدك الإلكتروني أو رقم الطالب',
-  'auth.enterPassword': 'أدخل كلمة المرور',
-  'auth.signingIn': 'جاري تسجيل الدخول...',
-  'auth.signIn': 'تسجيل الدخول',
-  'auth.noAccount': 'ليس لديك حساب؟',
-  'auth.signUp': 'إنشاء حساب',
-  'auth.demoAccounts': 'حسابات تجريبية - انقر لملء تلقائي',
-  'auth.tapToFill': 'انقر للملء',
-  'auth.secureLogin': 'تسجيل دخول آمن بتشفير حديث',
-  'auth.fillAllFields': 'يرجى ملء جميع الحقول',
-  'auth.loginFailed': 'فشل تسجيل الدخول. يرجى التحقق من بيانات الاعتماد الخاصة بك.',
-  'auth.loginFailedTitle': 'فشل تسجيل الدخول',
-  'auth.createAccount': 'إنشاء حساب',
-  'auth.joinCommunity': 'انضم إلى مجتمع مدرستك',
-  'auth.fullName': 'الاسم الكامل',
-  'auth.enterFullName': 'أدخل اسمك الكامل',
-  'auth.emailAddress': 'البريد الإلكتروني',
-  'auth.enterEmail': 'أدخل بريدك الإلكتروني',
-  'auth.iam': 'أنا',
-  'auth.studentId': 'رقم الطالب',
-  'auth.enterStudentId': 'أدخل رقم الطالب',
-  'auth.level': 'المستوى',
-  'auth.selectLevel': 'اختر المستوى',
-  'auth.grade': 'الصف',
-  'auth.selectGrade': 'اختر الصف',
-  'auth.class': 'الفصل',
-  'auth.selectClass': 'اختر الفصل',
-  'auth.confirmPassword': 'تأكيد كلمة المرور',
-  'auth.confirmYourPassword': 'أكد كلمة المرور',
-  'auth.creatingAccount': 'جاري إنشاء الحساب...',
-  'auth.haveAccount': 'لديك حساب بالفعل؟',
-  'auth.fillRequiredFields': 'يرجى ملء جميع الحقول المطلوبة',
-  'auth.passwordsDoNotMatch': 'كلمات المرور غير متطابقة',
-  'auth.passwordLength': 'يجب أن تكون كلمة المرور 6 أحرف على الأقل',
-  'auth.studentIdRequired': 'رقم الطالب مطلوب',
-  'auth.selectLevelGradeClass': 'يرجى اختيار المستوى والصف والفصل',
-  'auth.loadLevelsFailed': 'فشل تحميل المستويات الدراسية',
-  'auth.loadGradesFailed': 'فشل تحميل الصفوف',
-  'auth.loadClassesFailed': 'فشل تحميل الفصول',
-  'auth.selectLevelFirst': 'يرجى اختيار المستوى أولاً',
-  'auth.selectGradeFirst': 'يرجى اختيار الصف أولاً',
-  'auth.registrationFailed': 'فشل التسجيل',
-  'auth.welcome': 'مرحباً، {name}!',
-  'auth.pendingApproval.teacher': 'حسابك قيد انتظار موافقة المسؤول. ستتلقى بريدًا إلكترونيًا بمجرد الموافقة.',
-  'auth.pendingApproval.student': 'تم إنشاء حسابك بنجاح. يرجى الانتظار للموافقة عليه من قبل المسؤول قبل تسجيل الدخول.',
-  'auth.goToLogin': 'الذهاب لتسجيل الدخول',
+  "Physics": "فيزياء",
+  "Mathematics": "رياضيات",
+  "Chemistry": "كيمياء",
+  "Biology": "أحياء",
+  "Arabic": "عربي",
+  "English": "إنجليزي",
+  "Deutch": "ألماني",
+  "French": "فرنسي",
+  "Programming": "برمجة",
+  "Islam": "إسلامية",
+  "Christianity": "مسيحية",
+  "Science": "علوم",
+  "Integrated Science": "علوم متكاملة",
+  "History": "تاريخ",
+  "Geography": "جغرافيا",
+  "Computer Science": "كومبيتر",
+  "Physical Education": "تربية رياضية",
+  "Art": "فن",
+  "Music": "موسيقى",
 
-  // Homework
-  'homework.title': 'واجب',
-  'homework.new': 'واجب جديد',
-  'homework.createAssignment': 'إنشاء مهمة مع أسئلة',
-  'homework.assignmentDetails': 'تفاصيل المهمة',
-  'homework.titleRequired': 'العنوان *',
-  'homework.titlePlaceholder': 'أدخل عنوان الواجب',
-  'homework.description': 'الوصف',
-  'homework.descriptionPlaceholder': 'أدخل وصف الواجب والتعليمات...',
-  'homework.classRequired': 'الفصل *',
-  'homework.selectClass': 'اختر الفصل',
-  'homework.subjectRequired': 'المادة *',
-  'homework.selectSubject': 'اختر المادة',
-  'homework.selectClassFirst': 'اختر الفصل أولاً',
-  'homework.schedule': 'الجدول الزمني',
-  'homework.startDateRequired': 'تاريخ البدء *',
-  'homework.dueDateRequired': 'تاريخ الاستحقاق *',
-  'homework.selectDate': 'اختر التاريخ',
-  'homework.totalPoints': 'إجمالي النقاط',
-  'homework.includeQuestions': 'تضمين الأسئلة',
-  'homework.includeQuestionsDesc': 'أضف أسئلة للإجابة عليها من قبل الطلاب',
-  'homework.allowAttachments': 'السماح بالمرفقات',
-  'homework.allowAttachmentsDesc': 'يمكن للطلاب رفع الملفات مع تسليمهم',
-  'homework.questions': 'الأسئلة',
-  'homework.questionText': 'نص السؤال',
-  'homework.questionPlaceholder': 'أدخل سؤالك...',
-  'homework.questionType': 'نوع السؤال',
-  'homework.textAnswer': 'إجابة نصية',
-  'homework.multipleChoice': 'اختيار من متعدد',
-  'homework.options': 'خيارات',
-  'homework.addOption': 'إضافة خيار',
-  'homework.points': 'النقاط',
-  'homework.assign': 'تعيين الواجب',
-  'homework.missingInfo': 'معلومات ناقصة',
-  'homework.fillRequiredFields': 'يرجى ملء جميع الحقول المطلوبة',
-  'homework.invalidDate': 'تاريخ غير صالح',
-  'homework.enterValidDates': 'يرجى إدخال تواريخ بدء واستحقاق صالحة',
-  'homework.invalidDateRange': 'نطاق تاريخ غير صالح',
-  'homework.startBeforeDue': 'يجب أن يكون تاريخ البدء قبل تاريخ الاستحقاق',
-  'homework.invalidPoints': 'نقاط غير صالحة',
-  'homework.pointsRange': 'يجب أن تكون النقاط بين 1 و 100',
-  'homework.invalidQuestion': 'سؤال غير صالح',
-  'homework.questionsNeedText': 'جميع الأسئلة يجب أن تحتوي على نص',
-  'homework.mcqMinOptions': 'أسئلة الاختيار من متعدد يجب أن تحتوي على خيارين على الأقل',
-  'homework.optionsNeedText': 'جميع الخيارات يجب أن تحتوي على نص',
-  'homework.noAnswerProvided': 'لم يتم تقديم إجابة',
-  'homework.questionNumber': 'سؤال {n}',
-  'homework.selectStartDate': 'اختر تاريخ البدء',
-  'homework.selectDueDate': 'اختر تاريخ الاستحقاق',
-  'homework.selectedStartDate': 'تاريخ البدء المحدد',
-  'homework.selectedDueDate': 'تاريخ الاستحقاق المحدد',
-  'homework.settings': 'الإعدادات',
-  'homework.option': 'خيار',
-  'homework.loadDataFailed': 'فشل تحميل فصولك وموادك',
-  'homework.loadingClasses': 'جاري تحميل فصولك...',
-  'homework.assignedSuccess': 'تم تعيين الواجب بنجاح!',
-  'homework.createFailed': 'فشل تعيين الواجب',
-  'homework.selectClassModal': 'اختر الفصل',
-  'homework.selectSubjectModal': 'اختر المادة',
-  'homework.levelNotSpecified': 'المستوى غير محدد',
-  'homework.subjects': 'مواد',
-  'homework.subject': 'مادة',
-  'homework.noClassesFound': 'لم يتم العثور على فصول. يرجى إنشاء فصول أولاً.',
-  'homework.noSubjectsFound': 'لم يتم العثور على مواد لهذا الفصل.',
-  'homework.code': 'الكود',
-  'homework.errors.loadFailed': 'فشل تحميل الواجبات',
-  'homework.stats.total': 'الإجمالي',
-  'homework.emptyState.title': 'لا توجد واجبات بعد',
-  'homework.emptyState.subtitle': 'أنشئ واجبك الأول للبدء',
-  'homework.createButton': 'إنشاء واجب',
-  'homework.overdue': 'متأخر',
-  'homework.gradingProgress': 'تقدم التصحيح',
-  'homework.graded': 'تم التصحيح',
-  'homework.due': 'مستحق',
-  'homework.average': 'المعدل',
-  'homework.view': 'عرض',
-  'homework.assignments': 'الواجبات',
-  'homework.submitted': 'مُقدم',
-  'homework.dueIn': 'مستحق في',
-  'homework.hours': 'ساعة',
-  'homework.days': 'يوم',
-  'homework.daysLeft': 'يوم متبقي',
-  'homework.file': 'ملف',
-  'homework.teacherFeedback': 'ملاحظات المعلم',
-  'homework.loading': 'جاري تحميل الواجبات...',
-  'homework.start': 'بدء',
-  'homework.loadDetailsFailed': 'فشل في تحميل تفاصيل الواجب',
-  'homework.noAttachmentsAllowed': 'هذا الواجب لا يسمح بالمرفقات',
-  'homework.fileAttached': 'تم إرفاق الملف بنجاح',
-  'homework.attachFileFailed': 'فشل في إرفاق الملف',
-  'homework.enterSubmission': 'يرجى إدخال محتوى التقديم الخاص بك',
-  'homework.pastDue': 'هذا الواجب متأخر ولا يمكن تقديمه',
-  'homework.pleaseAnswer': 'يرجى الإجابة على السؤال',
-  'homework.submittedSuccessfully': 'تم تقديم الواجب بنجاح!',
-  'homework.demoMode': 'وضع التجربة',
-  'homework.submittedDemo': 'تم تقديم الواجب بنجاح! (وضع التجربة)',
-  'homework.cannotGenerateLink': 'لا يمكن إنشاء الرابط: الواجب غير محمل',
-  'homework.linkCopied': 'تم نسخ الرابط إلى الحافظة!',
-  'homework.copyLinkFailed': 'لا يمكن نسخ الرابط إلى الحافظة',
-  'homework.notFound': 'الواجب غير موجود',
-  'homework.notExist': 'الواجب الذي تبحث عنه غير موجود أو ليس لديك حق الوصول إليه.',
-  'homework.backToHomework': 'العودة إلى الواجبات',
-  'homework.by': 'بواسطة',
-  'homework.dueDate': 'تاريخ الاستحقاق',
-  'homework.assignmentDescription': 'وصف الواجب',
-  'homework.grade': 'الدرجة',
-  'homework.feedback': 'التغذية الراجعة',
-  'homework.yourSubmission': ' تقديملك',
-  'homework.submittedContent': 'المحتوى المقدم',
-  'homework.submittedOn': 'تم التقديم في',
-  'homework.textSubmission': 'تقديم النص',
-  'homework.questionPoints': 'نقاط الأسئلة',
-  'homework.answerContent': 'الإجابة / محتوى التقديم',
-  'homework.typeSubmission': 'اكتب إجابتك أو تقديرك هنا...',
-  'homework.addAttachment': 'إضافة مرفق',
-  'homework.assignmentOverdue': 'هذا الواجب متأخر ولا يمكن تقديمه بعد الآن.',
-  'homework.submissionClosed': 'التقديم مغلق',
-  'homework.submitHomework': 'تقديم الواجب',
-  'homework.homework': 'الواجب',
-  'homework.assignment': 'الواجب',
-  'homeworks': 'الواجيات',
+  // 🔔 Notifications
+  "notifications.title": "الإشعارات",
+  "notifications.noNotifications": "مافيش إشعارات جديدة",
+  "notifications.markAllRead": "تحديد الكل كمقروء",
+  "notifications.clearAll": "مسح الكل",
+  "notifications.new": "إشعار جديد",
+  "notifications.sentSuccess": "الإشعار اتبعت بنجاح",
+  "notifications.deletedSuccess": "الإشعار اتمسح بنجاح",
+  "notifications.settings": "إعدادات الإشعارات",
+  "notifications.general": "الإشعارات العامة",
+  "notifications.generalDesc": "إشعارات التطبيق والتحديثات",
+  "notifications.examAlerts": "تنبيهات الامتحانات",
+  "notifications.examAlertsDesc": "إشعارات اكتمال الامتحانات",
+  "notifications.gradingReminders": "تذكيرات التقييم",
+  "notifications.gradingRemindersDesc": "تنبيهات التقييم المعلق",
 
-  // Calendar
-  'calendar.sun': 'ح',
-  'calendar.mon': 'ن',
-  'calendar.tue': 'ث',
-  'calendar.wed': 'ر',
-  'calendar.thu': 'خ',
-  'calendar.fri': 'ج',
-  'calendar.sat': 'س',
+  // ⚙️ Settings
+  "settings.title": "الإعدادات",
+  "settings.language": "اللغة",
+  "settings.theme": "المظهر",
+  "settings.notifications": "الإشعارات",
+  "settings.account": "الحساب",
+  "settings.privacy": "الخصوصية",
+  "settings.help": "المساعدة",
+  "settings.about": "عن التطبيق",
+  "settings.logout": "تسجيل خروج",
+  "settings.saved": "تم حفظ الإعدادات",
+  "settings.darkMode": "الوضع الليلي",
+  "settings.lightMode": "الوضع الفاتح",
+  "system.preferences": "تفضيلات النظام",
+  "system.darkMode": "الوضع الليلي",
+  "system.darkModeDesc": "تفعيل المظهر الداكن",
 
-  // Submissions
-  'submissions.title': 'التسليمات',
-  'submissions.submitted': 'تم التسليم',
-  'submissions.graded': 'تم التصحيح',
-  'submissions.avgGrade': 'متوسط الدرجة',
-  'submissions.none': 'لا توجد تسليمات بعد',
-  'submissions.noneMessage': 'الطلاب لم يسلموا هذا الواجب بعد',
-  'submissions.grade': 'تصحيح التسليم',
-  'submissions.editGrade': 'تعديل التصحيح',
-  'submissions.studentContent': 'محتوى تسليم الطالب',
-  'submissions.noContent': 'لا يوجد محتوى مقدم',
-  'submissions.questionsAnswers': 'الأسئلة والإجابات',
-  'submissions.studentAnswer': 'إجابة الطالب',
-  'submissions.noAnswer': 'لم يتم تقديم إجابة',
-  'submissions.attachments': 'المرفقات',
-  'submissions.overallGrade': 'الدرجة الإجمالية',
-  'submissions.textSubmission': 'التسليم النصي',
-  'submissions.questionPoints': 'نقاط الأسئلة',
-  'submissions.overallFeedback': 'ملاحظات عامة',
-  'submissions.gradedOn': 'تم التصحيح في',
-  'submissions.submittedOn': 'تم التسليم في',
-  'submissions.pending': 'قيد الانتظار',
-  'submissions.autoGraded': 'تم التصحيح تلقائياً',
-  'submissions.gradingSuccess': 'تم تصحيح التسليم بنجاح!',
-  'submissions.gradingFailed': 'فشل في تصحيح التسليم. يرجى المحاولة مرة أخرى.',
-  'submissions.addFeedback': 'إضافة ملاحظات',
-  'submissions.addOverallFeedback': 'إضافة ملاحظات عامة',
-  'submissions.answer': 'الإجابة',
-  'submissions.feedback': 'ملاحظات',
-  'submissions.questionGrades': 'درجات الأسئلة',
-  'submissions.textSubmissionGrade': 'درجة الإجابة النصية',
+  // 👤 Profile
+  "profile.title": "الملف الشخصي",
+  "profile.editProfile": "تعديل الملف الشخصي",
+  "profile.name": "الاسم",
+  "profile.email": "الإيميل",
+  "profile.phone": "رقم التليفون",
+  "profile.password": "كلمة السر",
+  "profile.changePassword": "تغيير كلمة السر",
+  "profile.saveChanges": "حفظ التغييرات",
+  "profile.updatedSuccess": "تم تحديث الملف الشخصي بنجاح",
+  "profile.viewProfile": "عرض الملف الشخصي",
+  "profile.settings": "الإعدادات",
+  "profile.teacherInformation": "معلومات المدرس",
+  "profile.teacherId": "معرف المدرس",
+  "profile.accountCreated": "تم إنشاء الحساب",
+  "profile.teachingOverview": "نظرة عامة على التدريس",
+  "profile.examsCreated": "الامتحانات المُنشأة",
+  "profile.toGrade": "للتصحيح",
+  "profile.classPerformance": "أداء الفصل",
+  "profile.averageClassScore": "متوسط درجات الفصل",
+  "profile.studentEngagement": "مشاركة الطلاب",
+  "profile.averageScore": "متوسط الدرجات",
+  "profile.notSet": "مش محدد",
+  "profile.language": "اللغة",
+  "profile.na": "مش متاح",
+  "profile.logoutError": "فيه مشكلة في تسجيل الخروج",
+  "profile.teacher": "مدرس",
+  "profile.studentId": "معرف الطالب",
+  "profile.performance": "الأداء",
+  "profile.completed": "اتم",
+  "profile.rank": "الترتيب",
+  "profile.preferences": "التفضيلات",
 
-  // Classes
-  'classes.myClasses': 'فصولي',
-  'classes.subtitle': 'الفصول والمواد التي تدرسها',
-  'classes.none': 'لا توجد فصول مخصصة',
-  'classes.noneMessage': 'اتصل بمسؤولك للحصول على فصول ومواد دراسية.',
-  'classes.joinCode': 'رمز الانضمام',
-  'classes.tapToCopy': 'انقر للنسخ ومشاركته مع الطلاب',
-  'classes.noCode': 'لا يوجد رمز انضمام متاح',
-  'classes.codeCopied': 'تم النسخ!',
-  'classes.failed': 'فشل النسخ!',
-  'classes.classId': 'معرف الفصل',
-  'classes.subjectId': 'معرف المادة',
-  'classes.noCodeAvailable': 'لا يوجد رمز متاح',
-  'classes.class': 'الفصل',
-  'classes.prep1': 'الصف الأول الإعدادي',
-  'classes.prep2': 'الصف الثاني الإعدادي',
-  'classes.prep3': 'الصف الثالث الإعدادي',
-  'classes.sec1': 'الصف الأول الثانوي',
-  'classes.sec2': 'الصف الثاني الثانوي',
-  'classes.sec3': 'الصف الثالث الثانوي',
-  'classes.joinSubject': 'الانضمام إلى مادة',
-  'classes.enterJoinCode': 'أدخل رمز الانضمام من معلمك',
-  'classes.howToJoin': 'كيفية الانضمام إلى مادة:',
-  'classes.joinInstructions': '1. احصل على رمز الانضمام من معلمك\n2. أدخله أدناه\n3. سيتم تسجيلك تلقائيًا في تلك المادة',
-  'classes.joinCodePlaceholder': 'رمز الانضمام',
-  'classes.joinCodeRequired': 'يرجى إدخال رمز الانضمام',
-  'classes.joinSuccess': 'تم الانضمام إلى المادة بنجاح!',
-  'classes.joinFailed': 'فشل في الانضمام إلى المادة',
+  // 🔐 Authentication
+  "auth.login": "تسجيل الدخول",
+  "auth.register": "تسجيل حساب جديد",
+  "auth.forgotPassword": "نسيت كلمة السر؟",
+  "auth.resetPassword": "إعادة تعيين كلمة السر",
+  "auth.email": "الإيميل",
+  "auth.password": "كلمة السر",
+  "auth.confirmPassword": "تأكيد كلمة السر",
+  "auth.name": "الاسم",
+  "auth.submit": "إرسال",
+  "auth.loggingIn": "جاري تسجيل الدخول...",
+  "auth.registering": "جاري إنشاء الحساب...",
+  "auth.invalidCredentials": "الإيميل أو كلمة السر غلط",
+  "auth.accountCreated": "الحساب اتعمل بنجاح",
+  "auth.passwordResetSent": "اتبع التعليمات اللي بعتناها على الإيميل",
+  "auth.loggedOut": "تم تسجيل الخروج بنجاح",
+  "auth.logOut": "تسجيل خروج",
+  "auth.logOutConfirm": "متأكد إنك عايز تسجل خروج؟",
+  "auth.tagline": "تعلّم. انمو. نجحوا.",
+  "auth.emailOrStudentId": "الإيميل أو معرف الطالب",
+  "auth.enterEmailOrStudentId": "دخل إيميلك أو معرف الطالب",
+  "auth.enterPassword": "دخل كلمة السر",
+  "auth.signingIn": "جاري تسجيل الدخول...",
+  "auth.signIn": "تسجيل دخول",
+  "auth.noAccount": "ماعندكش حساب؟",
+  "auth.signUp": "تسجيل جديد",
+  "auth.demoAccounts": "حسابات تجريبية - اضغط علشان تملأ تلقائيًا",
+  "auth.tapToFill": "اضغط علشان تملأ",
+  "auth.secureLogin": "تسجيل دخول آمن بتشفير حديث",
+  "auth.fillAllFields": "املأ كل الحقول من فضلك",
+  "auth.loginFailed": "فشل تسجيل الدخول. تحقق من بياناتك.",
+  "auth.loginFailedTitle": "فشل تسجيل الدخول",
+  "auth.createAccount": "إنشاء حساب",
+  "auth.joinCommunity": "انضم لمجتمع مدرستك",
+  "auth.fullName": "الاسم الكامل",
+  "auth.enterFullName": "دخل اسمك الكامل",
+  "auth.emailAddress": "عنوان الإيميل",
+  "auth.enterEmail": "دخل إيميلك",
+  "auth.iam": "أنا",
+  "auth.studentId": "معرف الطالب",
+  "auth.enterStudentId": "دخل معرف الطالب",
+  "auth.level": "المستوى",
+  "auth.selectLevel": "اختر المستوى",
+  "auth.grade": "الصف",
+  "auth.selectGrade": "اختر الصف",
+  "auth.class": "الفصل",
+  "auth.selectClass": "اختر الفصل",
+  "auth.confirmYourPassword": "أكد كلمة السر",
+  "auth.creatingAccount": "جاري إنشاء الحساب...",
+  "auth.haveAccount": "عندك حساب؟",
+  "auth.fillRequiredFields": "املأ كل الحقول المطلوبة من فضلك",
+  "auth.passwordsDoNotMatch": "كلمات السر مش متطابقة",
+  "auth.passwordLength": "كلمة السر لازم تكون على الأقل 6 حروف",
+  "auth.studentIdRequired": "معرف الطالب مطلوب",
+  "auth.selectLevelGradeClass": "اختر مستواك وصفك وفصلك من فضلك",
+  "auth.loadLevelsFailed": "فشل تحميل مستويات المدرسة",
+  "auth.loadGradesFailed": "فشل تحميل الصفوف",
+  "auth.loadClassesFailed": "فشل تحميل الفصول",
+  "auth.selectLevelFirst": "اختر مستوى أولًا من فضلك",
+  "auth.selectGradeFirst": "اختر صف أولًا من فضلك",
+  "auth.registrationFailed": "فشل التسجيل",
+  "auth.welcome": "مرحباً، {name}!",
+  "auth.pendingApproval.teacher": "حسابك بيترى على الموافقة. هتستلم إيميل لما يوافق.",
+  "auth.pendingApproval.student": "حسابك اتعمل بنجاح. انتظر الموافقة قبل تسجيل الدخول.",
+  "auth.goToLogin": "اذهب لتسجيل الدخول",
 
-  // Exams
-  'exams': 'الاختبارات',
-  'exams.create': 'إنشاء اختبار جديد',
-  'exams.edit': 'تعديل الاختبار',
-  'exams.details': 'تفاصيل الاختبار',
-  'exams.title': 'عنوان الاختبار',
-  'exams.settings': 'إعدادات الاختبار',
-  'exams.timed': 'اختبار مؤقت',
-  'exams.timedDesc': 'تعيين حد زمني للاختبار',
-  'exams.duration': 'المدة (دقائق)',
-  'exams.allowRetake': 'السماح بإعادة الاختبار',
-  'exams.allowRetakeDesc': 'يمكن للطلاب إعادة الاختبار',
-  'exams.randomOrder': 'ترتيب عشوائي',
-  'exams.randomOrderDesc': 'خلط ترتيب الأسئلة',
-  'exams.advancedOptions': 'خيارات متقدمة',
-  'exams.allowImageSubmissions': 'السماح برفع الصور',
-  'exams.allowImageSubmissionsDesc': 'يمكن للطلاب رفع صور للإجابات الورقية',
-  'exams.attachment': 'مرفق الاختبار (اختياري)',
-  'exams.addAttachment': 'إضافة مرفق PDF/صورة',
-  'exams.uploading': 'جاري الرفع...',
-  'exams.availableFrom': 'متاح من',
-  'exams.selectAvailableDate': 'اختر تاريخ/وقت التوفر',
-  'exams.dueDate': 'تاريخ الاستحقاق',
-  'exams.selectDueDate': 'اختر تاريخ الاستحقاق',
-  'exams.completeAllQuestions': 'يرجى إكمال جميع الأسئلة',
-  'exams.dateRangeError': 'يجب أن يكون تاريخ التوفر قبل تاريخ الاستحقاق',
-  'exams.questions': 'الأسئلة',
-  'exams.question': 'سؤال',
-  'exams.enterQuestion': 'أدخل السؤال',
-  'exams.loadFailed': 'فشل تحميل الاختبار',
-  'exams.loadClassesFailed': 'فشل تحميل الفصول',
-  'exams.loadSubjectsFailed': 'فشل تحميل المواد',
-  'exams.fillRequired': 'يرجى ملء جميع الحقول المطلوبة',
-  'exams.completeQuestions': 'يرجى إكمال جميع الأسئلة',
-  'exams.dateValidation': 'يجب أن يكون تاريخ التوفر قبل تاريخ الاستحقاق',
-  'exams.created': 'تم إنشاء الاختبار بنجاح',
-  'exams.updated': 'تم تحديث الاختبار بنجاح',
-  'exams.createFailed': 'فشل إنشاء الاختبار',
-  'exams.updateFailed': 'فشل تحديث الاختبار',
-  'exams.loadingExam': 'جاري تحميل بيانات الاختبار...',
-  'exams.loadingClasses': 'جاري تحميل الفصول...',
-  'exams.loadingSubjects': 'جاري تحميل المواد...',
-  'exams.select': 'اختر',
-  'exams.at': 'في',
-  'exams.selectedDate': 'التاريخ المحدد',
-  'exams.selectTime': 'اختر الوقت',
-  'exams.hours': 'ساعات',
-  'exams.minutes': 'دقائق',
-  'exams.option': 'خيار',
-  'exams.enterExpectedAnswer': 'أدخل الإجابة المتوقعة',
-  'exams.file': 'ملف',
-  'exams.attachmentDesc': 'مرفق اختياري للرجوع إليه',
-  'exams.imageUploaded': 'تم رفع الصورة بنجاح',
-  'exams.imageUploadFailed': 'فشل رفع الصورة',
-  'exams.documentPickFailed': 'فشل اختيار المستند',
-  'exams.pdfUploadInfo': 'ميزة رفع PDF قريباً',
-  'exams.info': 'معلومات',
-  'exams.newExamTitle': 'اختبار جديد متاح',
-  'exams.newExamBody': 'تم تعيين اختبار جديد',
-  'exams.forClass': 'لفصل',
-  'exams.forSubject': 'لمادة',
-  'exams.correctAnswer': 'الإجابة الصحيحة',
-  'exams.activatedTitle': 'تم تفعيل الاختبار',
-  'exams.activatedBody': 'الاختبار "{title}" متاح الآن لتقديمه',
-  'exams.myExams': 'اختباراتي',
-  'exams.totalExams': 'إجمالي الاختبارات',
-  'exams.noActiveExams': 'لا توجد اختبارات نشطة',
-  'exams.noDraftExams': 'لا توجد مسودات',
-  'exams.noArchivedExams': 'لا توجد اختبارات مؤرشفة',
-  'exams.allInDraftOrArchived': 'جميع الاختبارات في حالة مسودة أو مؤرشفة',
-  'exams.createFirstExam': 'أنشئ اختبارك الأول للبدء',
-  'exams.untimed': 'غير محدد بالوقت',
-  'exams.showing': 'عرض',
-  'exams.exam': 'اختبار',
-  'exams.deleteConfirm': 'حذف الاختبار',
-  'exams.deleteSuccess': 'تم حذف الاختبار بنجاح',
-  'exams.deleteFailed': 'فشل حذف الاختبار',
-  'exams.activatedSuccess': 'تم تفعيل الاختبار بنجاح',
-  'exams.deactivatedSuccess': 'تم إلغاء تفعيل الاختبار بنجاح',
-  'exams.drafts': 'المسودات',
-  'exams.archived': 'مؤرشف',
-  'exams.active': 'نشط',
-  'exams.inactive': 'غير نشط',
-  'exams.loadingResults': 'جاري تحميل نتائج الاختبار...',
-  'exams.noResultsFound': 'لا توجد نتائج',
-  'exams.resultsLoadFailed': 'غير قادر على تحميل نتائج الاختبار. قد لا يوجد الاختبار أو ليس لديك صلاحية لعرضه.',
-  'exams.examAnalytics': 'تحليلات الاختبار',
-  'exams.createdBy': 'تم إنشاؤه بواسطة',
-  'exams.of': 'من',
-  'exams.students': 'طلاب',
-  'exams.totalSubmissions': 'إجمالي التسليمات',
-  'exams.highest': 'الأعلى',
-  'exams.topScore': 'أعلى درجة',
-  'exams.lowest': 'الأدنى',
-  'exams.lowestScore': 'أدنى درجة',
-  'exams.scoreDistribution': 'توزيع الدرجات',
-  'exams.topPerformers': 'أفضل الأداء',
-  'exams.showingTop': 'عرض الأفضل',
-  'exams.performanceAnalysis': 'تحليل الأداء',
-  'exams.performanceRange': 'نطاق الأداء',
-  'exams.standardDeviation': 'الانحراف المعياري',
-  'exams.questionAnalysis': 'تحليل الأسئلة',
-  'exams.detailedAnalysisComing': 'تحليل مفصل للأسئلة قريباً...',
-  'exams.generateReport': 'إنشاء تقرير مفصل',
-  'exams.recommendedActions': 'الإجراءات الموصى بها',
-  'exams.noRecommendations': 'لا توجد توصيات محددة في هذا الوقت.',
-  'exams.noSubmissionsYet': 'لا توجد تسليمات بعد',
-  'exams.studentsNotSubmitted': 'الطلاب لم يسلموا هذا الاختبار بعد',
-  'exams.submissionDetails': 'تفاصيل التسليم',
-  'exams.points': 'نقاط',
-  'exams.time': 'الوقت',
-  'exams.overallFeedback': 'ملاحظات عامة',
-  'exams.addOverallFeedback': 'أضف ملاحظات عامة لهذا التسليم...',
-  'exams.manuallyGraded': 'تم التصحيح يدوياً',
-  'exams.needsGrading': 'يحتاج للتصحيح',
-  'exams.autoGraded': 'تم التصحيح تلقائياً',
-  'exams.studentAnswer': 'إجابة الطالب',
-  'exams.pointsAwarded': 'النقاط الممنوحة',
-  'exams.addFeedback': 'أضف ملاحظات...',
-  'exams.downloadPDF': 'تحميل PDF',
-  'exams.submitGrading': 'إرسال التصحيح',
-  'exams.sendFeedback': 'إرسال الملاحظات',
-  'exams.sendFeedbackTo': 'إرسال ملاحظات شخصية إلى',
-  'exams.writeFeedback': 'اكتب ملاحظاتك هنا...',
-  'exams.allSubmissionsGraded': 'تم تصحيح جميع الإجابات',
-  'exams.assignPoints': 'تعيين النقاط',
-  'exams.creating': 'جارٍ إنشاء الاختبار...',
-  'exams.enterCorrectAnswer': 'أدخل الإجابة الصحيحة',
-  'exams.enterExplanation': 'أدخل التوضيح',
-  'exams.explanation': 'توضيح',
-  'exams.feedback': 'ملاحظات',
-  'exams.feedbackPlaceholder': 'اكتب الملاحظات هنا...',
-  'exams.gradeSubmission': 'تصحيح الإجابة',
-  'exams.gradingFailed': 'فشل التصحيح. حاول مرة أخرى.',
-  'exams.gradingSubmitted': 'تم إرسال التصحيح بنجاح!',
-  'exams.loading': 'جارٍ تحميل الاختبارات...',
-  'exams.manualGrading': 'تصحيح يدوي',
-  'exams.multipleChoice': 'اختيار من متعدد',
-  'exams.noAnswer': 'لم يتم تقديم إجابة',
-  'exams.noSubmissionsNeedGrading': 'لا توجد إجابات بحاجة إلى تصحيح',
-  'exams.selectClass': 'اختر الصف',
-  'exams.selectSubject': 'اختر المادة',
-  'exams.submissionNotFound': 'الإجابة غير موجودة',
-  'exams.submissionsNeedGrading': 'إجابات بحاجة إلى تصحيح',
-  'exams.textAnswer': 'إجابة نصية',
-  'exams.textAnswerNote': 'ملاحظة: راجع الإجابات النصية بعناية قبل التصحيح.',
-  'exams.updateExam': 'تحديث الاختبار',
-  'exams.updating': 'جارٍ تحديث الاختبار...',
-  'exams.title2': 'الاختبارات',
-  'exams.takeTrack': 'قم بإجراء الاختبارات وتتبع تقدمك',
-  'exams.completed': 'منجز',
-  'exams.available': 'متاح',
-  'exams.upcoming': 'قادم',
-  'exams.missed': 'مفقود',
-  'exams.taken': 'منجز',
-  'exams.noExams': 'لا توجد اختبارات متاحة',
-  'exams.noExamsForClass': 'لم يتم العثور على اختبارات للفصل',
-  'exams.checkBack': 'تحقق لاحقاً.',
-  'exams.checkClassAssignment': 'يرجى التحقق من تعيين فصلك.',
-  'exams.availableOn': 'سيكون هذا الاختبار متاحاً في',
-  'exams.expired': 'انتهى الاختبار',
-  'exams.dueDatePassed': 'لقد مر تاريخ استحقاق هذا الاختبار.',
-  'exams.noTimeRestrictions': 'لا توجد قيود زمنية',
-  'exams.viewResults': 'عرض النتائج',
-  'exams.notAvailable': 'غير متاح',
-  'exams.startExam': 'بدء الاختبار',
-  'exams.notFound': 'الامتحان غير موجود',
-  'exams.dueDateWas': 'كان تاريخ الاستحقاق',
-  'exams.backToExams': 'العودة إلى الامتحانات',
-  'exams.alreadyTaken': 'الامتحان مأخوذ بالفعل',
-  'exams.alreadyCompleted': 'لقد أكملت هذا الامتحان بالفعل.',
-  'exams.notAvailableYet': 'الامتحان غير متوفر بعد',
-  'exams.scheduledFuture': 'هذا الامتحان مجدول لتاريخ مستقبلي.',
-  'exams.warning': 'تحذير',
-  'exams.noAnswersWarning': 'لم تجب على أي أسئلة. هل أنت متأكد أنك تريد التقديم؟',
-  'exams.submit': 'تقديم',
-  'exams.unansweredQuestions': 'أسئلة لم تتم الإجابة عليها',
-  'exams.youHave': 'لديك',
-  'exams.unansweredQuestionsText': 'سؤال(أسئلة) لم تتم الإجابة عليها. هل أنت متأكد أنك تريد التقديم؟',
-  'exams.continueEditing': 'متابعة التحرير',
-  'exams.submitAnyway': 'تقديم على أي حال',
-  'exams.autoSubmitted': 'تم التقديم تلقائيًا للتصحيح',
-  'exams.autoSubmittedGrading': 'تم تقديم امتحانك تلقائيًا وينتظر التصحيح اليدوي.',
-  'exams.submittedGrading': 'تم تقديم امتحانك وينتظر التصحيح اليدوي من معلمك.',
-  'exams.submissionFailed': 'فشل التقديم',
-  'exams.unknownError': 'حدث خطأ غير معروف',
-  'exams.submitFailed': 'فشل في تقديم الامتحان. يرجى المحاولة مرة أخرى.',
-  'exams.permissionRequired': 'الإذن مطلوب',
-  'exams.cameraRollPermission': 'عذرًا، نحتاج إلى أذونات مكتبة الكاميرا لتحميل الصور.',
-  'exams.attachmentUploaded': 'تم تحميل المرفق بنجاح!',
-  'exams.uploadFailed': 'فشل التحميل',
-  'exams.uploadAttachmentFailed': 'فشل في تحميل المرفق',
-  'exams.sectionAttachment': 'مرفق القسم',
-  'exams.questionAttachment': 'مرفق السؤال',
-  'exams.yourAttachment': 'مرفقك',
-  'exams.typeAnswer': 'اكتب إجابتك أدناه:',
-  'exams.tapToAddAnswer': 'انقر لإضافة إجابتك...',
-  'exams.yourAnswer': 'إجابتك',
-  'exams.typeDetailedAnswer': 'اكتب إجابتك المفصلة هنا...',
-  'exams.saveAnswer': 'حفظ الإجابة',
-  'exams.noLongerAvailable': 'هذا الامتحان لم يعد متوفرًا.',
-  'exams.cannotAccess': 'لا يمكنك الوصول إلى هذا الامتحان في هذا الوقت.',
-  'exams.loadDetailsFailed': 'فشل في تحميل تفاصيل الامتحان',
-  'exams.autoSubmitWarning': 'سيتم تقديم الامتحان تلقائيًا إذا غادرت هذه الصفحة أو وضعت التطبيق في الخلفية',
-  'exams.due': 'مستحق',
-  'exams.imageAttachmentsAllowed': 'يُسمح بمرفقات الصور للأسئلة',
-  'exams.answered': 'تمت الإجابة',
-  'exams.attachments': 'مرفقات',
-  'exams.timeExpired': 'انتهى الوقت',
-  'exams.submitExam': 'تقديم الامتحان',
-  'exams.aiExtraction': 'استخراج بواسطة الذكاء الاصطناعي',
-  'exams.aiExtractionDesc': 'دع الذكاء الاصطناعي يستخرج الأسئلة من الملف المرفق',
-  'exams.extractQuestions': 'استخراج الأسئلة',
-  'exams.extractFromPDF': 'استخراج من PDF',
-  'exams.extracting': 'جارٍ الاستخراج...',
-  'exams.aiExtractionNote': 'قد يستغرق الاستخراج بضع ثوانٍ. راجع النتائج وقم بالتعديل إذا لزم.',
-  'exams.pdfExtractionComingSoon': 'استخراج PDF متاح قريباً.',
-  'exams.textExtractionHelp': 'مساعدة استخراج النص',
-  'exams.textExtractionFailed': 'فشل استخراج النص',
-  'exams.options': 'الاختيارات',
-  'exams.questionsExtracted': 'تم استخراج الأسئلة',
-  'exams.noQuestionsFound': 'لم يتم العثور على أسئلة',
-  'exams.noQuestionsAdded': 'لم تتم إضافة أسئلة بعد',
-  'exams.alternativesAvailable': 'بدائل متاحة',
-  'exams.noNewQuestionsFound': 'لا توجد أسئلة جديدة',
-  'exams.extractFromText': 'استخراج من نص',
-  'exams.enterValidText': 'الرجاء إدخال نص صالح للاستخراج',
+  // 🧮 Grades
+  "grades.title": "الدرجات",
+  "grades.addGrade": "إضافة درجة",
+  "grades.editGrade": "تعديل الدرجة",
+  "grades.deleteGrade": "حذف الدرجة",
+  "grades.confirmDelete": "متأكد إنك عايز تحذف الدرجة دي؟",
+  "grades.noGrades": "مافيش درجات لسه",
+  "grades.student": "الطالب",
+  "grades.subject": "المادة",
+  "grades.exam": "الامتحان",
+  "grades.score": "النتيجة",
+  "grades.total": "الإجمالي",
+  "grades.percentage": "النسبة المئوية",
+  "grades.addedSuccess": "الدرجة اتضافت بنجاح",
+  "grades.updatedSuccess": "تم تعديل الدرجة",
+  "grades.deletedSuccess": "الدرجة اتمسحت بنجاح",
+  "grades.average": "المتوسط",
+  "grades.highest": "أعلى درجة",
+  "grades.lowest": "أقل درجة",
 
-  // Results
-  'results.title': 'نتائج الامتحانات',
-  'results.overview': 'نظرة عامة على الأداء ونتائج مفصلة',
-  'results.performanceOverview': 'نظرة عامة على الأداء',
-  'results.allResults': 'جميع النتائج',
-  'results.recent': 'الأخيرة',
-  'results.topScores': 'أفضل النتائج',
-  'results.recentResults': 'النتائج الأخيرة',
-  'results.topPerformances': 'أفضل الأداء',
-  'results.noResults': 'لا توجد نتائج',
-  'results.noTopScores': 'لا توجد نتائج متميزة بعد',
-  'results.completeExams': 'أكمل بعض الامتحانات لرؤية نتائجك هنا',
-  'results.score': 'الدرجة',
-  'results.correct': 'الصحيح',
-  'results.time': 'الوقت',
-  'results.exams': 'امتحانات',
-  'results.summary': 'ملخص',
-  'results.totalExams': 'إجمالي الامتحانات',
-  'results.averageScore': 'متوسط الدرجة',
-  'results.bestSubject': 'أفضل مادة',
-  'results.totalTime': 'إجمالي الوقت',
-  'results.minutes': 'دقيقة',
-  'results.loading': 'جاري تحميل النتائج...',
-  'results.loadFailed': 'فشل في تحميل النتائج',
-  'results.na': 'غير متوفر',
+  // 💬 Messages
+  "messages.title": "الرسائل",
+  "messages.inbox": "الوارد",
+  "messages.sent": "المرسلة",
+  "messages.compose": "إنشاء رسالة",
+  "messages.to": "إلى",
+  "messages.subject": "الموضوع",
+  "messages.message": "الرسالة",
+  "messages.send": "إرسال",
+  "messages.reply": "رد",
+  "messages.delete": "حذف الرسالة",
+  "messages.confirmDelete": "متأكد إنك عايز تحذف الرسالة دي؟",
+  "messages.noMessages": "مافيش رسائل دلوقتي",
+  "messages.sentSuccess": "الرسالة اتبعتت بنجاح",
+  "messages.deletedSuccess": "الرسالة اتمسحت بنجاح",
 
-  // Status
-  'completed': 'اكتمل',
-  'pending': 'في انتظار المراجعة',
-  'grading': 'في انتظار التصحيح',
+  // 📑 Reports
+  "reports.title": "التقارير",
+  "reports.generate": "إنشاء تقرير",
+  "reports.view": "عرض التقرير",
+  "reports.download": "تحميل التقرير",
+  "reports.type": "نوع التقرير",
+  "reports.studentPerformance": "أداء الطالب",
+  "reports.classPerformance": "أداء الفصل",
+  "reports.attendanceReport": "تقرير الحضور",
+  "reports.examReport": "تقرير الامتحانات",
+  "reports.noReports": "مافيش تقارير متاحة",
+  "reports.generatedSuccess": "التقرير اتعمل بنجاح",
+  "reports.downloadSuccess": "تم تحميل التقرير بنجاح",
 
-  // Clipboard
-  'expo-clipboard': 'تم النسخ إلى الحافظة'
+  // 🧾 PDF Export
+  "pdf.export": "تصدير كملف PDF",
+  "pdf.generating": "جاري إنشاء ملف PDF...",
+  "pdf.generated": "تم إنشاء الملف بنجاح",
+  "pdf.error": "حصلت مشكلة أثناء إنشاء الملف",
+  "pdf.download": "تحميل PDF",
+
+  // ⚠️ System & Errors
+  "error.network": "في مشكلة في الاتصال، حاول تاني بعد شوية",
+  "error.server": "السيرفر مش بيرد دلوقتي",
+  "error.unknown": "حصل خطأ غير متوقع",
+  "error.requiredField": "الحقول المطلوبة لازم تتملي",
+  "error.invalidEmail": "الإيميل مش صحيح",
+  "error.passwordMismatch": "كلمات السر مش متطابقة",
+  "error.permissionDenied": "ما عندكش صلاحية تعمل كده",
+  "error.tryAgain": "حاول تاني",
+  "system.loading": "جاري التحميل...",
+  "system.saving": "جاري الحفظ...",
+  "system.updating": "جاري التحديث...",
+  "system.deleting": "جاري الحذف...",
+  "system.fetching": "جاري جلب البيانات...",
+  "system.completed": "تمت العملية بنجاح",
+
+  // 📊 Statistics
+  "statistics.thisWeek": "الأسبوع ده",
+  "statistics.thisMonth": "الشهر ده",
+  "statistics.thisYear": "السنة دي",
+  "statistics.noClassData": "مافيش بيانات الفصل",
+  "statistics.noClassDataDesc": "بيانات الأداء هتظهر هنا",
+  "statistics.noTrendData": "مافيش بيانات الاتجاه",
+  "statistics.noTrendDataDesc": "اتجاهات الأداء هتظهر هنا",
+  "statistics.performanceTrend": "اتجاه الأداء",
+  "statistics.totalExams": "إجمالي الامتحانات",
+  "statistics.avgCompletion": "متوسط الإكمال",
+  "statistics.activeStudents": "الطلاب النشطين",
+  "statistics.pendingGrading": "معلق على التصحيح",
+
+  // 📅 Calendar
+  "calendar.sun": "ح",
+  "calendar.mon": "ن",
+  "calendar.tue": "ث",
+  "calendar.wed": "ر",
+  "calendar.thu": "خ",
+  "calendar.fri": "ج",
+  "calendar.sat": "س",
+
+  // 📤 Submissions
+  "submissions.title": "التسليمات",
+  "submissions.submitted": "اتسلم",
+  "submissions.graded": "مُقيَّم",
+  "submissions.avgGrade": "متوسط الدرجات",
+  "submissions.none": "مافيش تسليمات لسه",
+  "submissions.noneMessage": "الطلاب ما سلموش الواجب ده لسه",
+  "submissions.grade": "تقييم التسليم",
+  "submissions.editGrade": "تعديل التقييم",
+  "submissions.studentContent": "محتوى تسليم الطالب",
+  "submissions.noContent": "مافيش محتوى",
+  "submissions.questionsAnswers": "الأسئلة وإجابات الطلاب",
+  "submissions.studentAnswer": "إجابة الطالب",
+  "submissions.noAnswer": "مافيش إجابة",
+  "submissions.attachments": "المرفقات",
+  "submissions.overallGrade": "الدرجة الإجمالية",
+  "submissions.textSubmission": "تسليم نصي",
+  "submissions.questionPoints": "نقاط السؤال",
+  "submissions.overallFeedback": "تقييم عام",
+  "submissions.gradedOn": "اتقيّم في",
+  "submissions.submittedOn": "اتسلم في",
+  "submissions.pending": "معلق",
+  "submissions.autoGraded": "مُقيَّم تلقائيًا",
+  "submissions.gradingSuccess": "التسليم اتقّيّم بنجاح!",
+  "submissions.gradingFailed": "فشل تقييم التسليم. حاول تاني.",
+  "submissions.addFeedback": "إضافة تقييم",
+  "submissions.addOverallFeedback": "إضافة تقييم عام",
+  "submissions.answer": "الإجابة",
+  "submissions.feedback": "التقييم",
+  "submissions.questionGrades": "درجات الأسئلة",
+  "submissions.textSubmissionGrade": "درجة التسليم النصي",
+
+  // 📊 Results
+  "results.title": "نتائج الامتحان",
+  "results.overview": "نظرة عامة على أدائك ونتائجك التفصيلية",
+  "results.performanceOverview": "نظرة عامة على الأداء",
+  "results.allResults": "كل النتائج",
+  "results.recent": "حديث",
+  "results.topScores": "أعلى الدرجات",
+  "results.recentResults": "النتائج الحديثة",
+  "results.topPerformances": "أفضل الأداء",
+  "results.noResults": "مافيش نتائج",
+  "results.noTopScores": "مافيش درجات عالية لسه",
+  "results.completeExams": "اعمل امتحانات علشان تشوف نتائجك هنا",
+  "results.score": "الدرجة",
+  "results.correct": "صحيح",
+  "results.time": "الوقت",
+  "results.exams": "امتحانات",
+  "results.summary": "ملخص",
+  "results.totalExams": "إجمالي الامتحانات",
+  "results.averageScore": "متوسط الدرجات",
+  "results.bestSubject": "أفضل مادة",
+  "results.totalTime": "إجمالي الوقت",
+  "results.minutes": "دقيقة",
+  "results.loading": "جاري تحميل نتائجك...",
+  "results.loadFailed": "فشل تحميل النتائج",
+  "results.na": "مش متاح",
+
+  // 🛠️ Tools
+  "tools.title": "أدوات المدرسين",
+  "tools.exportData": "تصدير بيانات الطلاب",
+  "tools.classAnalytics": "تحليلات الفصل",
+  "tools.teachingResources": "موارد التدريس",
+
+  // 📊 Status
+  "completed": "اتم",
+  "pending": "معلق على المراجعة",
+  "grading": "معلق على التصحيح",
+
+  // 📋 Clipboard
+  "expo-clipboard": "اتنسخ في الحافظة",
+
+  // 📅 Months
+  "months.january": "يناير",
+  "months.february": "فبراير",
+  "months.march": "مارس",
+  "months.april": "أبريل",
+  "months.may": "مايو",
+  "months.june": "يونيو",
+  "months.july": "يوليو",
+  "months.august": "أغسطس",
+  "months.september": "سبتمبر",
+  "months.october": "أكتوبر",
+  "months.november": "نوفمبر",
+  "months.december": "ديسمبر",
+  "months.Feb": "فبراير",
+  "months.Mar": "مارس",
+  "months.Apr": "أبريل",
+  "months.May": "مايو",
+  "months.Jun": "يونيو",
+  "months.Jul": "يوليو",
+  "months.Aug": "أغسطس",
+  "months.Sep": "سبتمبر",
+  "months.Oct": "أكتوبر",
+  "months.Nov": "نوفمبر",
+  "months.Dec": "ديسمبر"
 }
 
 export default ar;
