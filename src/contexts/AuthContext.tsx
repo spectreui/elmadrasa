@@ -4,6 +4,7 @@ import { apiService } from '../services/api';
 import { AuthState } from '../types/index.js';
 import { View, ActivityIndicator } from 'react-native';
 import { router, usePathname } from 'expo-router';
+import NetInfo from '@react-native-community/netinfo';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -11,7 +12,8 @@ interface AuthContextType extends AuthState {
   isLoading: boolean;
   error: string | null;
   clearError: () => void;
-  isOnline: boolean; // Add this
+  isOnline: boolean;
+  checkNetworkStatus: () => Promise<boolean>; // Add this
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,12 +27,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isOnline, setIsOnline] = useState(true); // Add this state
+  const [isOnline, setIsOnline] = useState(true);
   
   // Refs to prevent loops
   const authCheckInProgress = useRef(false);
   const initialAuthCheckDone = useRef(false);
   const currentPathname = usePathname();
+  const networkListener = useRef<any>(null);
 
   // Safe redirect function
   const safeRedirect = useCallback((path: string) => {
@@ -40,36 +43,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [currentPathname]);
 
-  // Check network connectivity
-  useEffect(() => {
-    const checkNetworkStatus = async () => {
-      try {
-        // Simple network check
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-        
-        const response = await fetch('https://www.google.com', { 
-          method: 'HEAD', 
-          mode: 'no-cors',
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        setIsOnline(true);
-      } catch (error) {
-        console.log('🌐 Network offline detected');
-        setIsOnline(false);
-      }
-    };
+  // Check network connectivity using NetInfo
+  const checkNetworkStatus = useCallback(async (): Promise<boolean> => {
+    try {
+      const state = await NetInfo.fetch();
+      const online = state.isConnected === true && state.isInternetReachable === true;
+      setIsOnline(online);
+      return online;
+    } catch (error) {
+      console.log('🌐 Network check failed:', error);
+      setIsOnline(false);
+      return false;
+    }
+  }, []);
 
-    // Check immediately
+  // Setup network listener
+  useEffect(() => {
+    // Initial check
     checkNetworkStatus();
 
-    // Check every 30 seconds
-    const interval = setInterval(checkNetworkStatus, 30000);
+    // Setup listener
+    networkListener.current = NetInfo.addEventListener(state => {
+      const online = state.isConnected === true && state.isInternetReachable === true;
+      console.log('🌐 Network status changed:', online ? 'Online' : 'Offline');
+      setIsOnline(online);
+    });
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      if (networkListener.current) {
+        networkListener.current();
+      }
+    };
+  }, [checkNetworkStatus]);
 
   // Single initial auth check - runs only once
   useEffect(() => {
@@ -128,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else {
             throw new Error('Failed to get user data');
           }
-        } catch (error) {
+        } catch (error: any) {
           // If offline, allow access with existing token
           if (!isOnline) {
             console.log('📱 Allowing offline access with existing token');
@@ -162,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initializeAuth();
-  }, [isOnline]); // Add isOnline as dependency
+  }, [isOnline]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -300,7 +305,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     error,
     clearError,
-    isOnline, // Add this
+    isOnline,
+    checkNetworkStatus, // Add this
   };
 
   return (
