@@ -712,7 +712,7 @@ export default function ExamDetailScreen() {
       {/* Statistics Cards */}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
         <View style={{ width: '48%', backgroundColor: '#fff', padding: 15, borderRadius: 8 }}>
-          <Text style={{ fontSize: 14, color: '#666' }}>{t('submissions.totalSubmissions')}</Text>
+          <Text style={{ fontSize: 14, color: '#666' }}>{t('exams.totalSubmissions')}</Text>
           <Text style={{ fontSize: 24, fontWeight: 'bold' }}>{statistics.totalSubmissions}</Text>
         </View>
         <View style={{ width: '48%', backgroundColor: '#fff', padding: 15, borderRadius: 8 }}>
