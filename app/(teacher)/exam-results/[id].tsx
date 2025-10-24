@@ -82,7 +82,7 @@ interface ExamResults {
 }
 
 export default function TeacherExamResultsScreen() {
-  const { t } = useTranslation();
+  const { t, isRTL } = useTranslation();
   const { id } = useLocalSearchParams();
   const [results, setResults] = useState<ExamResults | null>(null);
   const [loading, setLoading] = useState(true);
@@ -600,7 +600,7 @@ export default function TeacherExamResultsScreen() {
                           }]
                         } />
                     </View>
-                    <Text style={[styles.distributionCount as any, { fontFamily, color: colors.textSecondary }]}>
+                    <Text style={[styles.distributionCount as any, { fontFamily, color: colors.textSecondary, textAlign: isRTL? 'right' : 'left' }]}>
                       {item.count}
                     </Text>
                   </View>
@@ -1279,8 +1279,7 @@ const originalStyles = {
   distributionCount: {
     fontSize: designTokens.typography.caption1.fontSize,
     fontWeight: '500',
-    width: 30,
-    textAlign: 'right'
+    width: 30
   },
   topPerformersCard: {
     borderRadius: designTokens.borderRadius.xl,

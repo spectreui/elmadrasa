@@ -748,7 +748,7 @@ export default function ExamDetailScreen() {
                   }}
                 />
               </View>
-              <Text style={{ width: 30, textAlign: 'right', marginLeft: 10, fontSize: 14, fontWeight: '500' }}>
+              <Text style={{ width: 30, textAlign: isRTL? 'right' : 'left', marginLeft: 10, fontSize: 14, fontWeight: '500' }}>
                 {range.count}
               </Text>
             </View>

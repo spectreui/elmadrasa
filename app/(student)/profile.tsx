@@ -261,7 +261,7 @@ export default function ProfileScreen() {
       fontSize: designTokens.typography.body.fontSize,
       fontWeight: '500',
       flex: 1,
-      textAlign: 'right'
+      textAlign: isRTL? 'right' : 'left'
     },
     statsContainer: {
       padding: designTokens.spacing.lg
