@@ -13,5 +13,10 @@ module.exports = function (api) {
       }],
       'react-native-worklets/plugin',
     ],
+    env: {
+      production: {
+        plugins: ["transform-remove-console"],     //removing consoles.log from app during release (production) versions
+      },
+    }
   };
 };
