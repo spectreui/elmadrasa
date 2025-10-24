@@ -4,6 +4,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Elmadrasa",
   slug: "school-app",
+  version: "1.0.0",
   scheme: "elmadrasa",
   userInterfaceStyle: "automatic",
   jsEngine: "hermes",
