@@ -1,4 +1,4 @@
-// src/services/api.ts - Fixed 403 handling
+// src/services/api.ts - Fixed network detection
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { LoginRequest, AuthResponse, ApiResponse, User, Exam } from "../types";
 import { storage } from "../utils/storage";
@@ -8,17 +8,6 @@ import NetInfo from '@react-native-community/netinfo';
 
 // const API_BASE_URL = "http://192.168.1.124:5001/api";
 const API_BASE_URL = "https://elmadrasa-server.vercel.app/api";
-
-// --- Shared routing config (used by both api.ts and _layout.tsx) ---
-export const SHARED_BASE_ROUTES = ["/exams", "/homework", "/profile"];
-export const SAFE_ROUTES = [
-  "/unauthorized",
-  "/network-error",
-  "/not-found",
-  "/(auth)/login",
-  "/(auth)/register",
-  "/(auth)/forgot-password",
-];
 
 class ApiService {
   private api: AxiosInstance;
@@ -55,11 +44,11 @@ class ApiService {
     this.setupInterceptors();
   }
 
-  // Check network connectivity
+  // Check network connectivity using NetInfo (more reliable)
   private async isOnline(): Promise<boolean> {
     try {
-      const response = await fetch('https://www.google.com', { method: 'HEAD', mode: 'no-cors' });
-      return true;
+      const state = await NetInfo.fetch();
+      return state.isConnected === true && state.isInternetReachable === true;
     } catch {
       return false;
     }
@@ -106,7 +95,7 @@ class ApiService {
       }
     );
 
-    // Enhanced response interceptor with proper error handling
+    // Enhanced response interceptor with proper offline handling
     this.api.interceptors.response.use(
       (response) => {
         console.log('✅ API Response:', {
@@ -130,6 +119,14 @@ class ApiService {
         // Avoid running twice
         if (this.isRefreshing && status !== 403) {
           return Promise.reject(error);
+        }
+
+        // --- Network Error (Offline) ---
+        if (!error.response) {
+          console.log('🌐 Network error - likely offline');
+          // Don't automatically redirect to network error page
+          // Let the calling function handle offline scenarios
+          return Promise.reject(new Error('NETWORK_ERROR'));
         }
 
         // --- 401 Unauthorized ---
@@ -191,18 +188,6 @@ class ApiService {
             }
           }, 300);
           return Promise.reject(error);
-        }
-
-        // --- Network / other errors ---
-        if (!error.response) {
-          console.log('🌐 Network error');
-          setTimeout(() => {
-            try {
-              // router.replace('/network-error');
-            } catch (err) {
-              console.error('❌ Failed to route to network-error:', err);
-            }
-          }, 300);
         }
 
         return Promise.reject(error);
@@ -364,7 +349,7 @@ class ApiService {
           console.log('📱 Using cached dashboard data');
           return { data: cached, status: 200 };
         }
-        throw new Error('No internet connection and no cached data');
+        throw new Error('OFFLINE_NO_CACHE');
       }
 
       // Online - fetch fresh data
@@ -374,13 +359,19 @@ class ApiService {
       await saveToCache(CACHE_KEYS.DASHBOARD, response.data);
 
       return response;
-    } catch (error) {
+    } catch (error: any) {
       // If online request fails, try cache as fallback
       const cached = await getFromCache(CACHE_KEYS.DASHBOARD);
       if (cached) {
         console.log('📱 Using cached dashboard data as fallback');
         return { data: cached, status: 200 };
       }
+      
+      // Re-throw network errors for proper handling
+      if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
+        throw error;
+      }
+      
       throw error;
     }
   }
@@ -396,7 +387,7 @@ class ApiService {
           console.log('📱 Using cached exams data');
           return { data: cached, status: 200 };
         }
-        throw new Error('No internet connection and no cached data');
+        throw new Error('OFFLINE_NO_CACHE');
       }
 
       // Online - fetch fresh data
@@ -406,13 +397,19 @@ class ApiService {
       await saveToCache(CACHE_KEYS.EXAMS, response.data);
 
       return response;
-    } catch (error) {
+    } catch (error: any) {
       // If online request fails, try cache as fallback
       const cached = await getFromCache(CACHE_KEYS.EXAMS);
       if (cached) {
         console.log('📱 Using cached exams data as fallback');
         return { data: cached, status: 200 };
       }
+      
+      // Re-throw network errors for proper handling
+      if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
+        throw error;
+      }
+      
       throw error;
     }
   }
@@ -446,7 +443,7 @@ class ApiService {
   public async getExamById(id: string): Promise<any> {
     const online = await this.isOnline();
     if (!online) {
-      throw new Error('Cannot access exam details offline');
+      throw new Error('OFFLINE_NO_DETAILS');
     }
     return this.api.get(`/exams/${id}`);
   }
@@ -463,7 +460,7 @@ class ApiService {
           console.log('📱 Using cached teacher stats data');
           return { data: cached, status: 200 };
         }
-        throw new Error('No internet connection and no cached data');
+        throw new Error('OFFLINE_NO_CACHE');
       }
 
       // Online - fetch fresh data
@@ -473,13 +470,19 @@ class ApiService {
       await saveToCache(CACHE_KEYS.TEACHER_STATS, response.data);
 
       return response;
-    } catch (error) {
+    } catch (error: any) {
       // If online request fails, try cache as fallback
       const cached = await getFromCache(CACHE_KEYS.TEACHER_STATS);
       if (cached) {
         console.log('📱 Using cached teacher stats data as fallback');
         return { data: cached, status: 200 };
       }
+      
+      // Re-throw network errors for proper handling
+      if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
+        throw error;
+      }
+      
       throw error;
     }
   }
@@ -523,7 +526,7 @@ class ApiService {
           console.log('📱 Using cached teacher dashboard data');
           return { data: cached, status: 200 };
         }
-        throw new Error('No internet connection and no cached data');
+        throw new Error('OFFLINE_NO_CACHE');
       }
 
       // Online - fetch fresh data
@@ -533,13 +536,19 @@ class ApiService {
       await saveToCache(CACHE_KEYS.TEACHER_DASHBOARD, response.data);
 
       return response;
-    } catch (error) {
+    } catch (error: any) {
       // If online request fails, try cache as fallback
       const cached = await getFromCache(CACHE_KEYS.TEACHER_DASHBOARD);
       if (cached) {
         console.log('📱 Using cached teacher dashboard data as fallback');
         return { data: cached, status: 200 };
       }
+      
+      // Re-throw network errors for proper handling
+      if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
+        throw error;
+      }
+      
       throw error;
     }
   }
@@ -555,7 +564,7 @@ class ApiService {
           console.log('📱 Using cached teacher classes data');
           return { data: cached, status: 200 };
         }
-        throw new Error('No internet connection and no cached data');
+        throw new Error('OFFLINE_NO_CACHE');
       }
 
       // Online - fetch fresh data
@@ -565,13 +574,19 @@ class ApiService {
       await saveToCache(CACHE_KEYS.TEACHER_CLASSES, response.data);
 
       return response;
-    } catch (error) {
+    } catch (error: any) {
       // If online request fails, try cache as fallback
       const cached = await getFromCache(CACHE_KEYS.TEACHER_CLASSES);
       if (cached) {
         console.log('📱 Using cached teacher classes data as fallback');
         return { data: cached, status: 200 };
       }
+      
+      // Re-throw network errors for proper handling
+      if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
+        throw error;
+      }
+      
       throw error;
     }
   }
@@ -600,7 +615,7 @@ class ApiService {
           console.log('📱 Using cached teacher activity data');
           return { data: cached, status: 200 };
         }
-        throw new Error('No internet connection and no cached data');
+        throw new Error('OFFLINE_NO_CACHE');
       }
 
       // Online - fetch fresh data
@@ -610,13 +625,19 @@ class ApiService {
       await saveToCache(CACHE_KEYS.TEACHER_ACTIVITY, response.data);
 
       return response;
-    } catch (error) {
+    } catch (error: any) {
       // If online request fails, try cache as fallback
       const cached = await getFromCache(CACHE_KEYS.TEACHER_ACTIVITY);
       if (cached) {
         console.log('📱 Using cached teacher activity data as fallback');
         return { data: cached, status: 200 };
       }
+      
+      // Re-throw network errors for proper handling
+      if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
+        throw error;
+      }
+      
       throw error;
     }
   }
@@ -846,7 +867,7 @@ class ApiService {
           console.log('📱 Using cached teacher class stats data');
           return { data: cached, status: 200 };
         }
-        throw new Error('No internet connection and no cached data');
+        throw new Error('OFFLINE_NO_CACHE');
       }
 
       // Online - fetch fresh data
@@ -856,13 +877,19 @@ class ApiService {
       await saveToCache(CACHE_KEYS.TEACHER_CLASS_STATS, response.data);
 
       return response;
-    } catch (error) {
+    } catch (error: any) {
       // If online request fails, try cache as fallback
       const cached = await getFromCache(CACHE_KEYS.TEACHER_CLASS_STATS);
       if (cached) {
         console.log('📱 Using cached teacher class stats data as fallback');
         return { data: cached, status: 200 };
       }
+      
+      // Re-throw network errors for proper handling
+      if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
+        throw error;
+      }
+      
       throw error;
     }
   }
@@ -878,7 +905,7 @@ class ApiService {
           console.log('📱 Using cached homework data');
           return { data: cached, status: 200 };
         }
-        throw new Error('No internet connection and no cached data');
+        throw new Error('OFFLINE_NO_CACHE');
       }
 
       // Online - fetch fresh data
@@ -888,13 +915,19 @@ class ApiService {
       await saveToCache(CACHE_KEYS.HOMEWORK, response.data);
 
       return response;
-    } catch (error) {
+    } catch (error: any) {
       // If online request fails, try cache as fallback
       const cached = await getFromCache(CACHE_KEYS.HOMEWORK);
       if (cached) {
         console.log('📱 Using cached homework data as fallback');
         return { data: cached, status: 200 };
       }
+      
+      // Re-throw network errors for proper handling
+      if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
+        throw error;
+      }
+      
       throw error;
     }
   }
@@ -902,7 +935,7 @@ class ApiService {
   async getHomeworkById(id: string): Promise<any> {
     const online = await this.isOnline();
     if (!online) {
-      throw new Error('Cannot access homework details offline');
+      throw new Error('OFFLINE_NO_DETAILS');
     }
     return this.api.get(`/homework/${id}`);
   }
@@ -944,7 +977,7 @@ class ApiService {
           console.log('📱 Using cached teacher homework data');
           return { data: cached, status: 200 };
         }
-        throw new Error('No internet connection and no cached data');
+        throw new Error('OFFLINE_NO_CACHE');
       }
 
       // Online - fetch fresh data
@@ -954,13 +987,19 @@ class ApiService {
       await saveToCache(CACHE_KEYS.TEACHER_HOMEWORK, response.data);
 
       return response;
-    } catch (error) {
+    } catch (error: any) {
       // If online request fails, try cache as fallback
       const cached = await getFromCache(CACHE_KEYS.TEACHER_HOMEWORK);
       if (cached) {
         console.log('📱 Using cached teacher homework data as fallback');
         return { data: cached, status: 200 };
       }
+      
+      // Re-throw network errors for proper handling
+      if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
+        throw error;
+      }
+      
       throw error;
     }
   }
@@ -994,7 +1033,7 @@ class ApiService {
           console.log('📱 Using cached profile data');
           return { data: cached, status: 200 };
         }
-        throw new Error('No internet connection and no cached data');
+        throw new Error('OFFLINE_NO_CACHE');
       }
 
       // Online - fetch fresh data
@@ -1004,13 +1043,19 @@ class ApiService {
       await saveToCache(CACHE_KEYS.PROFILE, response.data);
 
       return response;
-    } catch (error) {
+    } catch (error: any) {
       // If online request fails, try cache as fallback
       const cached = await getFromCache(CACHE_KEYS.PROFILE);
       if (cached) {
         console.log('📱 Using cached profile data as fallback');
         return { data: cached, status: 200 };
       }
+      
+      // Re-throw network errors for proper handling
+      if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
+        throw error;
+      }
+      
       throw error;
     }
   }
