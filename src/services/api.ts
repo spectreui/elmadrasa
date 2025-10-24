@@ -20,14 +20,21 @@ class ApiService {
   }[] = [];
 
   private readonly CACHE_KEYS = {
-    DASHBOARD: 'student_dashboard',
-    EXAMS: 'student_exams',
-    HOMEWORK: 'student_homework',
-    PROFILE: 'user_profile',
-    STATS: 'student_stats',
-    RESULTS: 'student_results',
-    SUBJECTS: 'student_subjects',
-    PROGRESS: 'student_progress'
+  // Student cache keys
+  DASHBOARD: 'student_dashboard',
+  EXAMS: 'student_exams',
+  HOMEWORK: 'student_homework',
+  PROFILE: 'user_profile',
+  STATS: 'student_stats',
+  
+  // Teacher cache keys
+  TEACHER_DASHBOARD: 'teacher_dashboard',
+  TEACHER_CLASSES: 'teacher_classes',
+  TEACHER_ACTIVITY: 'teacher_activity',
+  TEACHER_STATS: 'teacher_stats',
+  TEACHER_HOMEWORK: 'teacher_homework',
+  TEACHER_PROFILE: 'teacher_profile',
+  TEACHER_CLASS_STATS: 'teacher_class_stats', // for statistics page
   };
 
   constructor() {
@@ -366,12 +373,12 @@ class ApiService {
         console.log('📱 Using cached dashboard data as fallback');
         return { data: cached, status: 200 };
       }
-      
+
       // Re-throw network errors for proper handling
       if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
         throw error;
       }
-      
+
       throw error;
     }
   }
@@ -404,12 +411,12 @@ class ApiService {
         console.log('📱 Using cached exams data as fallback');
         return { data: cached, status: 200 };
       }
-      
+
       // Re-throw network errors for proper handling
       if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
         throw error;
       }
-      
+
       throw error;
     }
   }
@@ -477,12 +484,12 @@ class ApiService {
         console.log('📱 Using cached teacher stats data as fallback');
         return { data: cached, status: 200 };
       }
-      
+
       // Re-throw network errors for proper handling
       if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
         throw error;
       }
-      
+
       throw error;
     }
   }
@@ -543,12 +550,12 @@ class ApiService {
         console.log('📱 Using cached teacher dashboard data as fallback');
         return { data: cached, status: 200 };
       }
-      
+
       // Re-throw network errors for proper handling
       if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
         throw error;
       }
-      
+
       throw error;
     }
   }
@@ -581,12 +588,12 @@ class ApiService {
         console.log('📱 Using cached teacher classes data as fallback');
         return { data: cached, status: 200 };
       }
-      
+
       // Re-throw network errors for proper handling
       if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
         throw error;
       }
-      
+
       throw error;
     }
   }
@@ -632,12 +639,12 @@ class ApiService {
         console.log('📱 Using cached teacher activity data as fallback');
         return { data: cached, status: 200 };
       }
-      
+
       // Re-throw network errors for proper handling
       if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
         throw error;
       }
-      
+
       throw error;
     }
   }
@@ -884,12 +891,12 @@ class ApiService {
         console.log('📱 Using cached teacher class stats data as fallback');
         return { data: cached, status: 200 };
       }
-      
+
       // Re-throw network errors for proper handling
       if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
         throw error;
       }
-      
+
       throw error;
     }
   }
@@ -922,12 +929,12 @@ class ApiService {
         console.log('📱 Using cached homework data as fallback');
         return { data: cached, status: 200 };
       }
-      
+
       // Re-throw network errors for proper handling
       if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
         throw error;
       }
-      
+
       throw error;
     }
   }
@@ -994,12 +1001,12 @@ class ApiService {
         console.log('📱 Using cached teacher homework data as fallback');
         return { data: cached, status: 200 };
       }
-      
+
       // Re-throw network errors for proper handling
       if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
         throw error;
       }
-      
+
       throw error;
     }
   }
@@ -1022,6 +1029,7 @@ class ApiService {
     return this.api.put(`/users/${userId}/profile`, data);
   }
 
+  // In your api.ts - Update getUserProfile method
   async getUserProfile() {
     try {
       const online = await this.isOnline();
@@ -1050,15 +1058,16 @@ class ApiService {
         console.log('📱 Using cached profile data as fallback');
         return { data: cached, status: 200 };
       }
-      
+
       // Re-throw network errors for proper handling
       if (error.message === 'NETWORK_ERROR' || error.message === 'OFFLINE_NO_CACHE') {
         throw error;
       }
-      
+
       throw error;
     }
   }
+
 
   async updateUser(profileData: {
     language?: 'en' | 'ar';

@@ -1,10 +1,11 @@
-// src/contexts/AuthContext.tsx - Fixed for Expo Router flat paths
+// src/contexts/AuthContext.tsx - Fixed role-based routing for root dashboard
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { apiService } from '../services/api';
 import { AuthState } from '../types/index.js';
 import { View, ActivityIndicator } from 'react-native';
-import { router, usePathname, Redirect } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import NetInfo from '@react-native-community/netinfo';
+import { getFromCache, saveToCache } from '../utils/cache';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -17,92 +18,6 @@ interface AuthContextType extends AuthState {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Define route protection rules based on actual resolved paths
-const ROUTE_RULES = {
-  // Teacher-only routes (these are the actual resolved paths)
-  teacher: [
-    '/',     // Resolves from (teacher)/
-    '/exams',         // Resolves from (teacher)/exams
-    '/homework',      // Resolves from (teacher)/homework
-    '/students',      // Resolves from (teacher)/students
-    '/classes',       // Resolves from (teacher)/classes
-    '/profile',       // Teacher profile
-    '/settings'       // Teacher settings
-  ],
-  // Student-only routes
-  student: [
-    '/',     // Resolves from (student)/
-    '/exams',         // Resolves from (student)/exams
-    '/homework',      // Resolves from (student)/homework
-    '/profile',       // Student profile
-    '/progress',      // Student progress
-    '/results'        // Student results
-  ],
-  // Admin-only routes
-  admin: [
-    '/',     // Resolves from (admin)/
-    '/users',         // Resolves from (admin)/users
-    '/classes',       // Resolves from (admin)/classes
-    '/subjects',      // Resolves from (admin)/subjects
-    '/reports'        // Resolves from (admin)/reports
-  ],
-  // Authenticated routes (any role)
-  authenticated: [
-    '/profile',
-    '/settings',
-    '/notifications'
-  ],
-  // Public routes (no auth required)
-  public: [
-    '/',
-    '/login',
-    '/register',
-    '/forgot-password',
-    '/unauthorized',
-    '/network-error',
-    '/not-found'
-  ]
-};
-
-// Check if a route requires specific role
-const getRequiredRole = (pathname: string, userRole: string | undefined): string | null => {
-  // Check if this is a shared path that needs role-based access
-  const isSharedPath = ['/', '/exams', '/homework', '/profile'].includes(pathname);
-  
-  if (isSharedPath && userRole) {
-    // For shared paths, the current user's role determines access
-    return userRole;
-  }
-  
-  // Check teacher routes
-  if (ROUTE_RULES.teacher.some(route => pathname === route)) {
-    return 'teacher';
-  }
-  
-  // Check student routes
-  if (ROUTE_RULES.student.some(route => pathname === route)) {
-    return 'student';
-  }
-  
-  // Check admin routes
-  if (ROUTE_RULES.admin.some(route => pathname === route)) {
-    return 'admin';
-  }
-  
-  // Check authenticated routes
-  if (ROUTE_RULES.authenticated.some(route => pathname === route)) {
-    return 'any'; // Any authenticated user
-  }
-  
-  // Check public routes
-  if (ROUTE_RULES.public.includes(pathname)) {
-    return null; // No auth required
-  }
-  
-  // Default to authenticated for unknown routes
-  return 'any';
-};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>({
@@ -119,7 +34,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const initialAuthCheckDone = useRef(false);
   const currentPathname = usePathname();
   const networkListener = useRef<any>(null);
-  const lastPathname = useRef<string | null>(null);
 
   const safeRedirect = useCallback((path: string) => {
     if (currentPathname !== path) {
@@ -157,69 +71,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [checkNetworkStatus]);
 
-  // Route protection effect
+  // Fixed automatic role-based routing for root dashboard
   useEffect(() => {
-    // Don't run during initial auth check or if pathname hasn't changed
-    if (authState.loading || lastPathname.current === currentPathname) return;
+    if (authState.loading) return;
     
-    lastPathname.current = currentPathname;
-    const requiredRole = getRequiredRole(currentPathname, authState.user?.role);
+    // Only handle authenticated users
+    if (!authState.isAuthenticated || !authState.user?.role) return;
     
-    console.log('🛡️ Route protection check:', {
-      pathname: currentPathname,
-      requiredRole,
-      isAuthenticated: authState.isAuthenticated,
-      userRole: authState.user?.role
-    });
-
-    // Handle unauthenticated access to protected routes
-    if (requiredRole && !authState.isAuthenticated) {
-      console.log('🚫 Unauthenticated access to protected route');
-      safeRedirect('/login');
+    // Don't redirect public pages
+    const publicPages = ['/', '/login', '/register', '/forgot-password', '/unauthorized', '/network-error', '/not-found'];
+    if (publicPages.includes(currentPathname)) return;
+    
+    // Get user role
+    const userRole = authState.user.role;
+    
+    // Special case: root path redirects to user's role group root
+    if (currentPathname === '/') {
+      const roleGroupPath = `/(${userRole})`;
+      console.log(`🏠 Redirecting root to ${userRole} role group: ${roleGroupPath}`);
+      safeRedirect(roleGroupPath);
       return;
     }
-
-    // Handle authenticated access to role-specific routes
-    if (requiredRole && requiredRole !== 'any' && authState.isAuthenticated) {
-      // For shared paths, check if user's role matches what they should be accessing
-      const isSharedPath = ['/', '/exams', '/homework', '/profile'].includes(currentPathname);
-      
-      if (isSharedPath) {
-        // Get the expected dashboard path for this user
-        const expectedDashboard = getDashboardForRole(authState.user?.role);
-        if (currentPathname === '/' && expectedDashboard !== currentPathname) {
-          // They're on the wrong dashboard
-          console.log(`🚫 User on wrong dashboard, redirecting to ${expectedDashboard}`);
-          safeRedirect(expectedDashboard);
-          return;
-        }
-        // For other shared paths, they're allowed if authenticated
-      } else if (authState.user?.role !== requiredRole) {
-        // For non-shared paths, strict role checking
-        console.log(`🚫 User role ${authState.user?.role} not allowed for ${requiredRole} route`);
-        safeRedirect('/unauthorized');
-        return;
+    
+    // Check if current path is already in correct role format
+    const roleGroupRegex = new RegExp(`^/\\(${userRole}\\)/*`);
+    if (roleGroupRegex.test(currentPathname)) {
+      // Already in correct role path, no redirect needed
+      return;
+    }
+    
+    // Check if current path is in a different role format
+    const anyRoleGroupRegex = /^\/\([^)]+\)\//;
+    if (anyRoleGroupRegex.test(currentPathname)) {
+      // Replace with correct role
+      const newPath = currentPathname.replace(anyRoleGroupRegex, `/(${userRole})/`);
+      console.log(`🔄 Mapping role group ${currentPathname} to ${newPath} for ${userRole}`);
+      safeRedirect(newPath);
+      return;
+    }
+    
+    // Handle flat paths (without role) - convert to role-specific path
+    if (currentPathname.startsWith('/') && !currentPathname.startsWith('/_')) {
+      // Skip if already in correct format
+      if (!currentPathname.startsWith(`/(${userRole})`)) {
+        // For root path, go to role group root
+        // For other paths, add role group prefix
+        const newPath = currentPathname === '/' 
+          ? `/(${userRole})` 
+          : `/(${userRole})${currentPathname}`;
+        console.log(`🔄 Mapping flat path ${currentPathname} to ${newPath} for ${userRole}`);
+        safeRedirect(newPath);
       }
     }
-
-    // Handle authenticated users accessing auth pages
-    if (currentPathname === '/login' && authState.isAuthenticated) {
-      // Redirect to appropriate dashboard
-      const dashboard = getDashboardForRole(authState.user?.role);
-      console.log('🏠 Authenticated user accessing login - redirecting to dashboard');
-      safeRedirect(dashboard);
-    }
   }, [authState, currentPathname, safeRedirect]);
-
-  // Get appropriate dashboard for user role
-  const getDashboardForRole = (role: string | undefined): string => {
-    switch (role) {
-      case 'teacher': return '/';
-      case 'student': return '/';
-      case 'admin': return '/';
-      default: return '/'; // fallback
-    }
-  };
 
   useEffect(() => {
     if (initialAuthCheckDone.current) return;
@@ -264,7 +168,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (response.data.success && response.data.data) {
             const user = response.data.data;
-            console.log('✅ User authenticated:', user.email);
+            console.log('✅ User authenticated:', user.email, 'Role:', user.role);
+
+            // Cache user profile
+            await saveToCache('user_profile', response.data);
 
             setAuthState({
               user,
@@ -278,30 +185,87 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (error: any) {
           console.log('❌ User fetch failed:', error.message);
           
+          // Try to get user from cache when offline
           if (!isOnline) {
-            console.log('📱 Allowing offline access with existing token');
-            setAuthState({
-              user: null,
-              token,
-              isAuthenticated: true,
-              loading: false,
-            });
-          } else {
-            if (error.response?.status === 401) {
-              console.log('❌ Token expired or invalid - clearing token');
-              await apiService.clearToken();
+            console.log('📱 Trying to get user from cache...');
+            const cachedProfile = await getFromCache('user_profile');
+            if (cachedProfile?.data) {
+              console.log('📱 Using cached user data, Role:', cachedProfile.data.role);
+              setAuthState({
+                user: cachedProfile.data,
+                token,
+                isAuthenticated: true,
+                loading: false,
+              });
+              return;
+            } else {
+              // If no cached data, but we have a valid token, create minimal user object
+              console.log('📱 No cached user data, creating minimal user object');
+              const minimalUser = {
+                id: 'offline-user',
+                email: 'offline@user.com',
+                role: 'student', // Default to student when offline
+                name: 'Offline User'
+              };
+              setAuthState({
+                user: minimalUser,
+                token,
+                isAuthenticated: true,
+                loading: false,
+              });
+              return;
             }
-            
-            setAuthState({
-              user: null,
-              token: null,
-              isAuthenticated: false,
-              loading: false,
-            });
           }
+          
+          if (isOnline && error.response?.status === 401) {
+            console.log('❌ Token expired or invalid - clearing token');
+            await apiService.clearToken();
+          }
+          
+          setAuthState({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            loading: false,
+          });
         }
       } catch (error: any) {
         console.error('❌ Initial auth check failed:', error);
+        
+        // Try to get user from cache when offline
+        if (!isOnline) {
+          console.log('📱 Trying to get user from cache (offline auth check)...');
+          const cachedProfile = await getFromCache('user_profile');
+          if (cachedProfile?.data) {
+            console.log('📱 Using cached user data for offline auth, Role:', cachedProfile.data.role);
+            setAuthState({
+              user: cachedProfile.data,
+              token: apiService.getToken(),
+              isAuthenticated: true,
+              loading: false,
+            });
+            return;
+          } else {
+            // If no cached data, but we have a valid token, create minimal user object
+            console.log('📱 No cached user data, creating minimal user object for offline');
+            const token = apiService.getToken();
+            if (token) {
+              const minimalUser = {
+                id: 'offline-user',
+                email: 'offline@user.com',
+                role: 'student', // Default to student when offline
+                name: 'Offline User'
+              };
+              setAuthState({
+                user: minimalUser,
+                token,
+                isAuthenticated: true,
+                loading: false,
+              });
+              return;
+            }
+          }
+        }
         
         if (isOnline && error.response?.status === 401) {
           await apiService.clearToken();
@@ -341,7 +305,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (authData.user && authData.token) {
           const { user, token } = authData;
-          console.log('✅ Login successful for:', user.email);
+          console.log('✅ Login successful for:', user.email, 'Role:', user.role);
+
+          // Cache user profile
+          await saveToCache('user_profile', response.data);
 
           setAuthState({
             user,
@@ -350,9 +317,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             loading: false,
           });
 
-          // Redirect to appropriate dashboard after login
-          const dashboard = getDashboardForRole(user.role);
-          setTimeout(() => safeRedirect(dashboard), 100);
+          // Redirect to user's dashboard (role group root)
+          const dashboardPath = `/(${user.role})`;
+          setTimeout(() => safeRedirect(dashboardPath), 100);
 
           console.log('✅ Auth state updated successfully');
         } else {
