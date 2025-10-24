@@ -1,6 +1,5 @@
-import { Tabs, Redirect } from "expo-router";
+import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "../../src/contexts/AuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import LiquidGlassTabBar from "@/components/TabBar";
 

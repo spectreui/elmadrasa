@@ -35,12 +35,12 @@ function registerServiceWorker() {
     //   )
     // );
     const isLocalhost = false;
-    
+
     if (!isLocalhost) {
       console.log('🛠️ Starting service worker registration...');
-      
+
       navigator.serviceWorker
-        .register('/service-worker.js', { 
+        .register('/service-worker.js', {
           scope: '/',
           updateViaCache: 'none'
         })
@@ -73,10 +73,10 @@ function PWASetup() {
   useEffect(() => {
     if (Platform.OS === 'web' && !hasRegistered.current) {
       console.log('🌐 Setting up PWA with theme...');
-      
+
       // Remove existing manifests
       document.querySelectorAll('link[rel="manifest"]').forEach(el => el.remove());
-      
+
       // Create new manifest
       const manifestLink = document.createElement('link');
       manifestLink.rel = 'manifest';
@@ -114,7 +114,7 @@ function PWASetup() {
 
 function ThemeWrapper({ children }: { children: React.ReactNode }) {
   const { isDark } = useThemeContext();
-  
+
   return (
     <>
       <StatusBar style={isDark ? "light" : "dark"} />
@@ -173,6 +173,7 @@ export default function RootLayout() {
   useEffect(() => {
     const checkIntro = async () => {
       try {
+        await AsyncStorage.setItem("introShown", "true");
         const seen = await AsyncStorage.getItem("introShown");
         setShowIntro(seen !== "true");
       } catch (e) {

@@ -1,24 +1,11 @@
-import { Tabs, Redirect, useRouter } from "expo-router";
+import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "../../src/contexts/AuthContext";
 import { View } from "react-native";
 import { useTranslation } from "@/hooks/useTranslation";
 import LiquidGlassTabBar from "@/components/TabBar";
 
 export default function TeacherLayout() {
   const { t } = useTranslation();
-  const { isAuthenticated, loading, user } = useAuth();
-  const router = useRouter();
-
-  // Force arabic
-  // setLanguage('ar');
-
-  console.log('🔐 Auth State:', {
-    isAuthenticated,
-    loading,
-    userRole: user?.role
-  });
-
 
   return (
     <Tabs
