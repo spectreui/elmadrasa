@@ -172,15 +172,22 @@ export default function HomeworkSubmissionsScreen() {
             sub
         ));
 
-        // ✅ Send push notification through your backend
+        // ✅ Send push notification with percentage instead of points
         try {
+          // Calculate total earned points
+          const totalQuestionGrade = questionGradesArray.reduce((sum, q) => sum + q.grade, 0);
+          const totalEarnedPoints = textGradeValue + totalQuestionGrade;
+          const totalPossiblePoints = homework?.points || 1;
+          const percentage = Math.round((totalEarnedPoints / totalPossiblePoints) * 100);
+
           await apiService.sendLocalizedNotification(
             gradingSubmission.student_id,
             'submissions.graded',
             'submissions.gradedBody',
             {
               title: homework?.title || 'homework',
-              grade: textGradeValue
+              grade: percentage, // Send percentage instead of points
+              gradeType: 'percentage' // Optional: to distinguish in localization
             },
             {
               screen: 'homework',
@@ -256,10 +263,11 @@ export default function HomeworkSubmissionsScreen() {
     if (!submission) return null;
 
     return (
-      <View style= {{paddingBottom: 40}}>
+      <View style={{ paddingBottom: 40 }}>
         {/* Main Submission Content */}
         <View style={{ marginBottom: designTokens.spacing.md }}>
-          <Text style={{ fontFamily, 
+          <Text style={{
+            fontFamily,
             fontSize: designTokens.typography.footnote.fontSize,
             fontWeight: '600',
             color: colors.textPrimary,
@@ -273,7 +281,8 @@ export default function HomeworkSubmissionsScreen() {
             borderRadius: designTokens.borderRadius.lg,
             backgroundColor: isDark ? '#1F2937' : '#F9FAFB'
           }}>
-            <Text style={{ fontFamily, 
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.body.fontSize,
               color: colors.textPrimary,
               textAlign: isRTL ? 'right' : 'left'
@@ -286,7 +295,8 @@ export default function HomeworkSubmissionsScreen() {
         {/* Questions and Answers Section with Grades */}
         {homework?.allow_questions && homework.questions && homework.questions.length > 0 &&
           <View style={{ marginBottom: designTokens.spacing.md }}>
-            <Text style={{ fontFamily, 
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: colors.textPrimary,
@@ -311,7 +321,8 @@ export default function HomeworkSubmissionsScreen() {
                     marginBottom: designTokens.spacing.sm
                   }}>
 
-                  <Text style={{ fontFamily, 
+                  <Text style={{
+                    fontFamily,
                     fontSize: designTokens.typography.body.fontSize,
                     fontWeight: '600',
                     color: colors.textPrimary,
@@ -340,7 +351,8 @@ export default function HomeworkSubmissionsScreen() {
                     </View>
                   }
 
-                  <Text style={{ fontFamily, 
+                  <Text style={{
+                    fontFamily,
                     fontSize: designTokens.typography.body.fontSize,
                     color: colors.textSecondary,
                     marginBottom: designTokens.spacing.xs,
@@ -357,7 +369,8 @@ export default function HomeworkSubmissionsScreen() {
                       backgroundColor: isDark ? '#374151' : '#E5E7EB'
                     }}>
                       {questionGrade.grade !== null && questionGrade.grade !== undefined &&
-                        <Text style={{ fontFamily, 
+                        <Text style={{
+                          fontFamily,
                           fontSize: designTokens.typography.caption1.fontSize,
                           color: questionGrade.grade === question.points ? '#10B981' : '#F59E0B',
                           fontWeight: '600',
@@ -367,7 +380,8 @@ export default function HomeworkSubmissionsScreen() {
                         </Text>
                       }
                       {questionGrade.feedback &&
-                        <Text style={{ fontFamily, 
+                        <Text style={{
+                          fontFamily,
                           fontSize: designTokens.typography.caption1.fontSize,
                           color: colors.textSecondary,
                           marginTop: designTokens.spacing.xs,
@@ -387,7 +401,8 @@ export default function HomeworkSubmissionsScreen() {
         {/* Attachments */}
         {submission.attachments && submission.attachments.length > 0 &&
           <View style={{ marginBottom: designTokens.spacing.md }}>
-            <Text style={{ fontFamily, 
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.footnote.fontSize,
               fontWeight: '600',
               color: colors.textPrimary,
@@ -437,7 +452,8 @@ export default function HomeworkSubmissionsScreen() {
             borderColor: '#10B98140',
             marginBottom: designTokens.spacing.md
           }}>
-            <Text style={{ fontFamily, 
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.body.fontSize,
               fontWeight: '600',
               color: '#059669',
@@ -449,7 +465,8 @@ export default function HomeworkSubmissionsScreen() {
 
             {/* Component grades */}
             {submission.text_grade !== undefined && submission.text_grade !== null &&
-              <Text style={{ fontFamily, 
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.caption1.fontSize,
                 color: '#059669',
                 marginTop: designTokens.spacing.xs,
@@ -460,7 +477,8 @@ export default function HomeworkSubmissionsScreen() {
             }
 
             {submission.question_grades && submission.question_grades.length > 0 &&
-              <Text style={{ fontFamily, 
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.caption1.fontSize,
                 color: '#059669',
                 marginTop: designTokens.spacing.xs,
@@ -471,7 +489,8 @@ export default function HomeworkSubmissionsScreen() {
             }
 
             {submission.feedback &&
-              <Text style={{ fontFamily, 
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.body.fontSize,
                 color: '#059669',
                 marginTop: designTokens.spacing.sm,
@@ -481,7 +500,8 @@ export default function HomeworkSubmissionsScreen() {
               </Text>
             }
 
-            <Text style={{ fontFamily, 
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.caption1.fontSize,
               color: '#059669',
               marginTop: designTokens.spacing.xs,
@@ -490,7 +510,8 @@ export default function HomeworkSubmissionsScreen() {
               {t("submissions.submittedOn")}: {formatDate(submission.submitted_at)}
             </Text>
             {submission.graded_at &&
-              <Text style={{ fontFamily, 
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.caption1.fontSize,
                 color: '#059669',
                 marginTop: designTokens.spacing.xs,
@@ -514,7 +535,8 @@ export default function HomeworkSubmissionsScreen() {
           borderRadius: designTokens.borderRadius.full,
           backgroundColor: '#10B98115'
         }}>
-          <Text style={{ fontFamily, 
+          <Text style={{
+            fontFamily,
             fontSize: designTokens.typography.caption1.fontSize,
             fontWeight: '600',
             color: '#10B981',
@@ -532,7 +554,8 @@ export default function HomeworkSubmissionsScreen() {
           borderRadius: designTokens.borderRadius.full,
           backgroundColor: '#F59E0B15'
         }}>
-          <Text style={{ fontFamily, 
+          <Text style={{
+            fontFamily,
             fontSize: designTokens.typography.caption1.fontSize,
             fontWeight: '600',
             color: '#F59E0B',
@@ -554,7 +577,8 @@ export default function HomeworkSubmissionsScreen() {
         alignItems: 'center'
       }}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{ fontFamily, 
+        <Text style={{
+          fontFamily,
           marginTop: designTokens.spacing.md,
           fontSize: designTokens.typography.body.fontSize,
           color: colors.textSecondary,
@@ -590,7 +614,8 @@ export default function HomeworkSubmissionsScreen() {
             }}>
 
             <Ionicons name={isRTL ? "arrow-forward" : "arrow-back"} size={20} color={colors.textSecondary} />
-            <Text style={{ fontFamily, 
+            <Text style={{
+              fontFamily,
               marginHorizontal: designTokens.spacing.sm,
               fontSize: designTokens.typography.footnote.fontSize,
               color: colors.textSecondary,
@@ -601,7 +626,8 @@ export default function HomeworkSubmissionsScreen() {
           </TouchableOpacity>
         </View>
 
-        <Text style={{ fontFamily, 
+        <Text style={{
+          fontFamily,
           fontSize: designTokens.typography.title1.fontSize,
           fontWeight: designTokens.typography.title1.fontWeight,
           color: colors.textPrimary,
@@ -611,7 +637,8 @@ export default function HomeworkSubmissionsScreen() {
           {homework?.title}
         </Text>
 
-        <Text style={{ fontFamily, 
+        <Text style={{
+          fontFamily,
           fontSize: designTokens.typography.body.fontSize,
           color: colors.textSecondary,
           marginBottom: designTokens.spacing.md,
@@ -635,7 +662,8 @@ export default function HomeworkSubmissionsScreen() {
             borderWidth: 1,
             borderColor: '#3B82F640'
           }}>
-            <Text style={{ fontFamily, 
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: '#3B82F6',
@@ -643,7 +671,8 @@ export default function HomeworkSubmissionsScreen() {
             } as any}>
               {submissions.length}
             </Text>
-            <Text style={{ fontFamily, 
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.caption1.fontSize,
               color: '#3B82F6',
               textAlign: 'center'
@@ -659,7 +688,8 @@ export default function HomeworkSubmissionsScreen() {
             borderWidth: 1,
             borderColor: '#10B98140'
           }}>
-            <Text style={{ fontFamily, 
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: '#10B981',
@@ -667,7 +697,8 @@ export default function HomeworkSubmissionsScreen() {
             } as any}>
               {submissions.filter((s) => s.grade !== undefined && s.grade !== null).length}
             </Text>
-            <Text style={{ fontFamily, 
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.caption1.fontSize,
               color: '#10B981',
               textAlign: 'center'
@@ -683,7 +714,8 @@ export default function HomeworkSubmissionsScreen() {
             borderWidth: 1,
             borderColor: '#F59E0B40'
           }}>
-            <Text style={{ fontFamily, 
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: '#F59E0B',
@@ -691,7 +723,8 @@ export default function HomeworkSubmissionsScreen() {
             } as any}>
               {submissions.filter((s) => s.grade === undefined || s.grade === null).length}
             </Text>
-            <Text style={{ fontFamily, 
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.caption1.fontSize,
               color: '#F59E0B',
               textAlign: 'center'
@@ -707,7 +740,8 @@ export default function HomeworkSubmissionsScreen() {
             borderWidth: 1,
             borderColor: '#8B5CF640'
           }}>
-            <Text style={{ fontFamily, 
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.title3.fontSize,
               fontWeight: designTokens.typography.title3.fontWeight,
               color: '#8B5CF6',
@@ -715,7 +749,8 @@ export default function HomeworkSubmissionsScreen() {
             } as any}>
               {calculateAverageGrade()}%
             </Text>
-            <Text style={{ fontFamily, 
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.caption1.fontSize,
               color: '#8B5CF6',
               textAlign: 'center'
@@ -752,7 +787,8 @@ export default function HomeworkSubmissionsScreen() {
               backgroundColor: colors.backgroundElevated
             }}>
               <Ionicons name="document-text-outline" size={64} color={colors.textTertiary} style={{ marginBottom: designTokens.spacing.lg }} />
-              <Text style={{ fontFamily, 
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.title2.fontSize,
                 fontWeight: designTokens.typography.title2.fontWeight,
                 color: colors.textPrimary,
@@ -761,7 +797,8 @@ export default function HomeworkSubmissionsScreen() {
               } as any}>{t("submissions.none")}
 
               </Text>
-              <Text style={{ fontFamily, 
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.body.fontSize,
                 color: colors.textSecondary,
                 textAlign: 'center'
@@ -790,7 +827,8 @@ export default function HomeworkSubmissionsScreen() {
                   marginBottom: designTokens.spacing.md
                 }}>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontFamily, 
+                    <Text style={{
+                      fontFamily,
                       fontSize: designTokens.typography.headline.fontSize,
                       fontWeight: designTokens.typography.headline.fontWeight,
                       color: colors.textPrimary,
@@ -799,7 +837,8 @@ export default function HomeworkSubmissionsScreen() {
                     } as any}>
                       {submission.student?.profile?.name || 'Student'}
                     </Text>
-                    <Text style={{ fontFamily, 
+                    <Text style={{
+                      fontFamily,
                       fontSize: designTokens.typography.caption1.fontSize,
                       color: colors.textSecondary,
                       textAlign: isRTL ? 'right' : 'left'
@@ -825,7 +864,8 @@ export default function HomeworkSubmissionsScreen() {
                     marginBottom: designTokens.spacing.md
                   }}>
                     <View>
-                      <Text style={{ fontFamily, 
+                      <Text style={{
+                        fontFamily,
                         fontSize: designTokens.typography.body.fontSize,
                         fontWeight: '600',
                         color: '#10B981',
@@ -834,7 +874,8 @@ export default function HomeworkSubmissionsScreen() {
                         {t("submissions.overallGrade")}: {submission.grade}/{homework?.points}
                       </Text>
                       {submission.question_grades && submission.question_grades.some((qg) => qg.grade !== null) &&
-                        <Text style={{ fontFamily, 
+                        <Text style={{
+                          fontFamily,
                           fontSize: designTokens.typography.caption1.fontSize,
                           color: '#10B981',
                           marginTop: designTokens.spacing.xs,
@@ -865,7 +906,8 @@ export default function HomeworkSubmissionsScreen() {
                     alignItems: 'center'
                   }}>
 
-                  <Text style={{ fontFamily, 
+                  <Text style={{
+                    fontFamily,
                     fontSize: designTokens.typography.body.fontSize,
                     fontWeight: '600',
                     color: getGradeStatus(submission) === 'graded' ?
@@ -904,7 +946,8 @@ export default function HomeworkSubmissionsScreen() {
               justifyContent: 'space-between',
               marginBottom: designTokens.spacing.lg
             }}>
-              <Text style={{ fontFamily, 
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.title2.fontSize,
                 fontWeight: designTokens.typography.title2.fontWeight,
                 color: colors.textPrimary,
@@ -926,7 +969,8 @@ export default function HomeworkSubmissionsScreen() {
                 <Ionicons name="close" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
-            <Text style={{ fontFamily, 
+            <Text style={{
+              fontFamily,
               fontSize: designTokens.typography.headline.fontSize,
               color: colors.textSecondary,
               textAlign: isRTL ? 'right' : 'left'
@@ -934,7 +978,8 @@ export default function HomeworkSubmissionsScreen() {
               {gradingSubmission?.student?.profile?.name}
             </Text>
             {gradingSubmission &&
-              <Text style={{ fontFamily, 
+              <Text style={{
+                fontFamily,
                 fontSize: designTokens.typography.body.fontSize,
                 color: colors.textSecondary,
                 marginTop: designTokens.spacing.xs,
@@ -953,7 +998,8 @@ export default function HomeworkSubmissionsScreen() {
               {/* Submission Content Preview */}
               {gradingSubmission?.content &&
                 <View style={{ marginBottom: designTokens.spacing.xl }}>
-                  <Text style={{ fontFamily, 
+                  <Text style={{
+                    fontFamily,
                     fontSize: designTokens.typography.title3.fontSize,
                     fontWeight: designTokens.typography.title3.fontWeight,
                     color: colors.textPrimary,
@@ -969,7 +1015,8 @@ export default function HomeworkSubmissionsScreen() {
                     borderColor: colors.border,
                     backgroundColor: colors.backgroundElevated
                   }}>
-                    <Text style={{ fontFamily, 
+                    <Text style={{
+                      fontFamily,
                       fontSize: designTokens.typography.body.fontSize,
                       color: colors.textPrimary,
                       textAlign: isRTL ? 'right' : 'left'
@@ -983,7 +1030,8 @@ export default function HomeworkSubmissionsScreen() {
               {/* Questions and Answers Preview with Grading */}
               {homework?.allow_questions && homework.questions && homework.questions.length > 0 &&
                 <View style={{ marginBottom: designTokens.spacing.xl }}>
-                  <Text style={{ fontFamily, 
+                  <Text style={{
+                    fontFamily,
                     fontSize: designTokens.typography.title3.fontSize,
                     fontWeight: designTokens.typography.title3.fontWeight,
                     color: colors.textPrimary,
@@ -1009,7 +1057,8 @@ export default function HomeworkSubmissionsScreen() {
                           marginBottom: designTokens.spacing.md
                         }}>
 
-                        <Text style={{ fontFamily, 
+                        <Text style={{
+                          fontFamily,
                           fontSize: designTokens.typography.body.fontSize,
                           fontWeight: '600',
                           color: colors.textPrimary,
@@ -1038,7 +1087,8 @@ export default function HomeworkSubmissionsScreen() {
                           </View>
                         }
 
-                        <Text style={{ fontFamily, 
+                        <Text style={{
+                          fontFamily,
                           fontSize: designTokens.typography.body.fontSize,
                           color: colors.textSecondary,
                           marginBottom: designTokens.spacing.md,
@@ -1053,7 +1103,8 @@ export default function HomeworkSubmissionsScreen() {
                           alignItems: 'center',
                           marginBottom: designTokens.spacing.sm
                         }}>
-                          <Text style={{ fontFamily, 
+                          <Text style={{
+                            fontFamily,
                             fontSize: designTokens.typography.body.fontSize,
                             color: colors.textPrimary,
                             marginHorizontal: designTokens.spacing.sm,
@@ -1090,7 +1141,8 @@ export default function HomeworkSubmissionsScreen() {
                               }
                             }} />
 
-                          <Text style={{ fontFamily, 
+                          <Text style={{
+                            fontFamily,
                             fontSize: designTokens.typography.body.fontSize,
                             color: colors.textPrimary,
                             marginHorizontal: designTokens.spacing.xs,
@@ -1102,7 +1154,8 @@ export default function HomeworkSubmissionsScreen() {
 
                         {/* Question Feedback Input */}
                         <View>
-                          <Text style={{ fontFamily, 
+                          <Text style={{
+                            fontFamily,
                             fontSize: designTokens.typography.body.fontSize,
                             color: colors.textPrimary,
                             marginBottom: designTokens.spacing.xs,
@@ -1145,7 +1198,8 @@ export default function HomeworkSubmissionsScreen() {
 
               {/* Text Submission Grade */}
               <View style={{ marginBottom: designTokens.spacing.xl }}>
-                <Text style={{ fontFamily, 
+                <Text style={{
+                  fontFamily,
                   fontSize: designTokens.typography.title3.fontSize,
                   fontWeight: designTokens.typography.title3.fontWeight,
                   color: colors.textPrimary,
@@ -1159,7 +1213,8 @@ export default function HomeworkSubmissionsScreen() {
                   flexDirection: isRTL ? 'row-reverse' : 'row',
                   alignItems: 'center'
                 }}>
-                  <Text style={{ fontFamily, 
+                  <Text style={{
+                    fontFamily,
                     fontSize: designTokens.typography.body.fontSize,
                     color: colors.textPrimary,
                     marginHorizontal: designTokens.spacing.sm,
@@ -1193,7 +1248,8 @@ export default function HomeworkSubmissionsScreen() {
                       }
                     }} />
 
-                  <Text style={{ fontFamily, 
+                  <Text style={{
+                    fontFamily,
                     fontSize: designTokens.typography.body.fontSize,
                     color: colors.textPrimary,
                     marginHorizontal: designTokens.spacing.xs,
@@ -1206,7 +1262,8 @@ export default function HomeworkSubmissionsScreen() {
 
               {/* Overall Feedback Input */}
               <View style={{ marginBottom: designTokens.spacing.xl }}>
-                <Text style={{ fontFamily, 
+                <Text style={{
+                  fontFamily,
                   fontSize: designTokens.typography.title3.fontSize,
                   fontWeight: designTokens.typography.title3.fontWeight,
                   color: colors.textPrimary,
@@ -1252,7 +1309,8 @@ export default function HomeworkSubmissionsScreen() {
                     alignItems: 'center'
                   }}>
 
-                  <Text style={{ fontFamily, 
+                  <Text style={{
+                    fontFamily,
                     fontSize: designTokens.typography.body.fontSize,
                     fontWeight: '600',
                     color: colors.textPrimary
@@ -1274,7 +1332,8 @@ export default function HomeworkSubmissionsScreen() {
                   {grading ?
                     <ActivityIndicator color="white" size="small" /> :
 
-                    <Text style={{ fontFamily, 
+                    <Text style={{
+                      fontFamily,
                       fontSize: designTokens.typography.body.fontSize,
                       fontWeight: '600',
                       color: 'white'
