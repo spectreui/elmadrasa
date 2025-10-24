@@ -6,13 +6,6 @@ import LiquidGlassTabBar from "@/components/TabBar";
 
 export default function TabLayout() {
   const { t } = useTranslation();
-  const { isAuthenticated, user } = useAuth();
-
-  if (!isAuthenticated) {
-    return <Redirect href="/(auth)/login" />;
-  } else if (user?.role !== "student" && isAuthenticated) {
-    return <Redirect href="/unauthorized" />;
-  }
 
   return (
     <Tabs

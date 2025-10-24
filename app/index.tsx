@@ -19,10 +19,6 @@ export default function Index() {
     return <Redirect href={`(${user.role})/`} />;
   }
 
-  if (pathname === "/" && !isAuthenticated) {
-    return <Redirect href="/(auth)/login" />;
-  }
-
   // Otherwise, render nothing (or fallback)
   return null;
 }

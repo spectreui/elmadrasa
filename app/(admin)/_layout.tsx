@@ -8,13 +8,7 @@ export default function TabLayout() {
   const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
   const { colors } = useThemeContext();
-
-  if (!isAuthenticated) {
-    return <Redirect href="/(auth)/login" />;
-  } else if (user?.role !== "admin" && isAuthenticated) {
-    return <Redirect href="/unauthorized" />;
-  }
-
+  
   return (
     <Tabs
       screenOptions={{

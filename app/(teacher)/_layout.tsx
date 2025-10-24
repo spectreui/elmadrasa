@@ -19,14 +19,6 @@ export default function TeacherLayout() {
     userRole: user?.role
   });
 
-  // Handle navigation based on auth state changes
-
-  if (!isAuthenticated) {
-    console.log('➡️ Redirecting to login');
-    router.replace('/(auth)/login');
-  } else if (user?.role !== "teacher" && isAuthenticated) {
-    return <Redirect href="/unauthorized" />;
-  }
 
   return (
     <Tabs
