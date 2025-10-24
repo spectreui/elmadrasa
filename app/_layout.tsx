@@ -22,52 +22,55 @@ import { FancyTabBarProvider } from "@/contexts/TabBarContext";
 // ✅ Make sure the splash screen stays until fonts + intro are ready
 SplashScreen.preventAutoHideAsync().catch(() => { });
 
-function ThemeWrapper({ children }: { children: React.ReactNode }) {
-  const { isDark } = useThemeContext();
-  return (
-    <>
-      <StatusBar style={isDark ? "light" : "dark"} />
-      {children}
-    </>
-  );
+// ✅ PWA Theme Hook - Uses theme context
+function usePWATheme() {
+  const { colors, isDark } = useThemeContext();
+  const [themeColor, setThemeColor] = useState('#007AFF');
+
+  useEffect(() => {
+    // Update theme color based on current theme
+    if (Platform.OS === 'web') {
+      const newThemeColor = colors.background || (isDark ? '#0F172A' : '#ffffff');
+      setThemeColor(newThemeColor);
+      
+      // Update meta tag
+      let themeMeta = document.querySelector('meta[name="theme-color"]');
+      if (!themeMeta) {
+        themeMeta = document.createElement('meta');
+        themeMeta.setAttribute('name', 'theme-color');
+        document.head.appendChild(themeMeta);
+      }
+      themeMeta.setAttribute('content', newThemeColor);
+      
+      console.log('🎨 Updated PWA theme color:', newThemeColor);
+    }
+  }, [colors.background, isDark]);
+
+  return themeColor;
 }
 
-// ✅ Only register SW in web environment
+// ✅ Service Worker Registration - Only in Production
 function registerServiceWorker() {
   if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-    console.log('🛠️ Starting service worker registration...');
-
-    // Don't wait for load event - register immediately
-    navigator.serviceWorker
-      .register('/service-worker.js', {
-        scope: '/',
-        updateViaCache: 'none'
-      })
-      .then((registration) => {
-        console.log('✅ Service Worker registered successfully!');
-        console.log('Scope:', registration.scope);
-        console.log('State:', registration.active?.state);
-
-        // Check if it becomes active
-        if (registration.installing) {
-          registration.installing.addEventListener('statechange', (event) => {
-            console.log('SW state changed:', event.target.state);
-          });
-        }
-
-        // Force activation
-        registration.update();
-      })
-      .catch((error) => {
-        console.error('❌ Service Worker registration FAILED:', error);
-        console.log('Full error details:', {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
+    const isLocalhost = false;
+    
+    if (!isLocalhost) {
+      console.log('🛠️ Starting service worker registration...');
+      
+      navigator.serviceWorker
+        .register('/service-worker.js', { 
+          scope: '/',
+          updateViaCache: 'none'
+        })
+        .then((registration) => {
+          console.log('✅ Service Worker registered successfully!');
+        })
+        .catch((error) => {
+          console.error('❌ Service Worker registration failed:', error);
         });
-      });
-  } else {
-    console.log('❌ Service Worker not supported in this browser');
+    } else {
+      console.log('🚫 Service Worker disabled in development mode');
+    }
   }
 }
 
@@ -75,30 +78,254 @@ function registerServiceWorker() {
 function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
+  const [userEngaged, setUserEngaged] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    // Track user engagement
+    const engagementEvents = ['click', 'scroll', 'keydown', 'touchstart'];
+    const handleEngagement = () => {
+      if (!userEngaged) {
+        console.log('🎯 User engaged with the app');
+        setUserEngaged(true);
+        // Remove listeners after first engagement
+        engagementEvents.forEach(event => {
+          document.removeEventListener(event, handleEngagement);
+        });
+      }
+    };
+
+    engagementEvents.forEach(event => {
+      document.addEventListener(event, handleEngagement, { once: true });
+    });
+
     const handler = (e: any) => {
+      console.log('📱 beforeinstallprompt event fired!');
       e.preventDefault();
       setDeferredPrompt(e);
-      setIsInstallable(true);
+      
+      // Only show immediately if user is engaged
+      if (userEngaged) {
+        setIsInstallable(true);
+      } else {
+        // Wait for engagement, then show after delay
+        const checkEngagement = setInterval(() => {
+          if (userEngaged) {
+            setIsInstallable(true);
+            clearInterval(checkEngagement);
+          }
+        }, 1000);
+      }
     };
 
     window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
+    
+    window.addEventListener('appinstalled', (evt) => {
+      console.log('🎉 App was installed');
+      setIsInstallable(false);
+    });
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      engagementEvents.forEach(event => {
+        document.removeEventListener(event, handleEngagement);
+      });
+    };
+  }, [userEngaged]);
 
   const installPWA = async () => {
     if (!deferredPrompt) return;
+    
+    console.log('📲 Triggering install prompt...');
     deferredPrompt.prompt();
+    
     const { outcome } = await deferredPrompt.userChoice;
-    console.log("PWA install outcome:", outcome);
+    console.log(`User response: ${outcome}`);
+    
     setDeferredPrompt(null);
     setIsInstallable(false);
   };
 
   return { isInstallable, installPWA };
+}
+
+// ✅ PWA Setup Component - Uses theme context
+function PWASetup() {
+  const { colors, isDark } = useThemeContext();
+  
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      console.log('🌐 Setting up PWA with theme...');
+      
+      // Remove any existing manifests
+      document.querySelectorAll('link[rel="manifest"]').forEach(el => el.remove());
+      
+      // Create new manifest with current theme
+      const manifestLink = document.createElement('link');
+      manifestLink.rel = 'manifest';
+      manifestLink.href = '/manifest.json';
+      document.head.appendChild(manifestLink);
+
+      // Update theme color meta tag
+      const themeColor = colors.background || (isDark ? '#0F172A' : '#ffffff');
+      let themeMeta = document.querySelector('meta[name="theme-color"]');
+      if (!themeMeta) {
+        themeMeta = document.createElement('meta');
+        themeMeta.setAttribute('name', 'theme-color');
+        document.head.appendChild(themeMeta);
+      }
+      themeMeta.setAttribute('content', themeColor);
+
+      // Add mobile viewport if not exists
+      if (!document.querySelector('meta[name="viewport"]')) {
+        const viewport = document.createElement('meta');
+        viewport.name = 'viewport';
+        viewport.content = 'width=device-width, initial-scale=1, minimum-scale=1, user-scalable=no';
+        document.head.appendChild(viewport);
+      }
+
+      // Register service worker (will auto-skip in development)
+      registerServiceWorker();
+
+      console.log('✅ PWA setup complete with theme:', themeColor);
+    }
+  }, [colors.background, isDark]); // Re-run when theme changes
+
+  return null; // This component doesn't render anything
+}
+
+// ✅ PWA Debug Component
+function PWADebug() {
+  const { colors } = useThemeContext();
+  const [debugInfo, setDebugInfo] = useState<any>({});
+  
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    
+    const checkAll = async () => {
+      const checks = {
+        hasSW: 'serviceWorker' in navigator,
+        isHTTPS: location.protocol === 'https:',
+        isLocalhost: false,
+        manifestExists: false,
+        swExists: false,
+        swRegistered: false,
+        themeColor: document.querySelector('meta[name="theme-color"]')?.getAttribute('content') || 'not set'
+      };
+      
+      try {
+        const manifestResp = await fetch('/manifest.json');
+        checks.manifestExists = manifestResp.ok;
+      } catch (e) {}
+      
+      try {
+        const swResp = await fetch('/service-worker.js');
+        checks.swExists = swResp.ok;
+      } catch (e) {}
+      
+      const reg = await navigator.serviceWorker.getRegistration();
+      checks.swRegistered = !!reg;
+      
+      setDebugInfo(checks);
+    };
+    
+    checkAll();
+  }, [colors.background]); // Update when theme changes
+  
+  if (Platform.OS !== 'web') return null;
+  
+  return (
+    <div style={{
+      position: 'fixed', 
+      top: 10, 
+      right: 10, 
+      background: 'rgba(0,0,0,0.9)', 
+      color: 'white', 
+      padding: 10, 
+      fontSize: 12, 
+      zIndex: 9999,
+      maxWidth: 300,
+      borderRadius: 8,
+      border: '1px solid #333'
+    }}>
+      <div style={{ fontWeight: 'bold', marginBottom: 5 }}>PWA Status:</div>
+      <div>Theme: <span style={{ color: '#4ade80' }}>{debugInfo.themeColor}</span></div>
+      <div>SW Support: <span style={{ color: debugInfo.hasSW ? '#4ade80' : '#f87171' }}>{debugInfo.hasSW ? '✅' : '❌'}</span></div>
+      <div>HTTPS: <span style={{ color: debugInfo.isHTTPS ? '#4ade80' : '#f87171' }}>{debugInfo.isHTTPS ? '✅' : '❌'}</span></div>
+      <div>Manifest: <span style={{ color: debugInfo.manifestExists ? '#4ade80' : '#f87171' }}>{debugInfo.manifestExists ? '✅' : '❌'}</span></div>
+      <div>SW Registered: <span style={{ color: debugInfo.swRegistered ? '#4ade80' : '#f87171' }}>{debugInfo.swRegistered ? '✅' : '❌'}</span></div>
+    </div>
+  );
+}
+
+// ✅ Install Prompt Component - Uses theme context
+function PWAInstallPrompt() {
+  const { colors } = useThemeContext();
+  const { isInstallable, installPWA } = usePWAInstall();
+
+  if (!isInstallable || Platform.OS !== "web") return null;
+
+  return (
+    <View
+      style={{
+        backgroundColor: colors.primary || '#007AFF',
+        padding: 12,
+        alignItems: "center",
+        justifyContent: "space-between",
+        flexDirection: "row",
+        marginHorizontal: 16,
+        marginTop: 8,
+        borderRadius: 8,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+      }}
+    >
+      <Text
+        style={{
+          color: "white",
+          flex: 1,
+          fontSize: 14,
+          fontWeight: "500",
+          marginRight: 12,
+        }}
+      >
+        Install El Madrasa app for a better experience
+      </Text>
+      <button
+        onClick={installPWA}
+        style={{
+          background: "white",
+          color: colors.primary || '#007AFF',
+          border: "none",
+          padding: "8px 16px",
+          borderRadius: 6,
+          cursor: "pointer",
+          fontSize: 14,
+          fontWeight: "600",
+          whiteSpace: "nowrap",
+        }}
+      >
+        Install
+      </button>
+    </View>
+  );
+}
+
+function ThemeWrapper({ children }: { children: React.ReactNode }) {
+  const { isDark } = useThemeContext();
+  
+  return (
+    <>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      {/* PWA Setup - uses theme context */}
+      <PWASetup />
+      {children}
+    </>
+  );
 }
 
 function IntroFallback() {
@@ -133,50 +360,6 @@ export default function RootLayout() {
   const [storageError, setStorageError] = useState(false);
   const [animationError, setAnimationError] = useState(false);
   const pathname = usePathname();
-  const { isInstallable, installPWA } = usePWAInstall();
-
-  // ✅ Register service worker on web only
-  useEffect(() => {
-    if (Platform.OS === 'web') {
-      console.log('🌐 Web platform detected, registering service worker...');
-      registerServiceWorker(); // ← THIS IS MISSING!
-
-      console.log('🛠️ Injecting PWA meta tags...');
-
-      // Remove any existing manifests
-      document.querySelectorAll('link[rel="manifest"]').forEach(el => el.remove());
-
-      // Inject manifest with cache busting
-      const manifestLink = document.createElement('link');
-      manifestLink.rel = 'manifest';
-      manifestLink.href = '/manifest.json?' + Date.now(); // Cache bust
-      document.head.appendChild(manifestLink);
-
-      // Test if manifest is accessible
-      fetch('/manifest.json')
-        .then(response => {
-          console.log('📄 Manifest file status:', response.status);
-          if (response.ok) {
-            console.log('✅ Manifest is accessible');
-          }
-        })
-        .catch(err => {
-          console.error('❌ Manifest not accessible:', err);
-        });
-
-      // Add theme color
-      const themeColor = document.createElement('meta');
-      themeColor.name = 'theme-color';
-      themeColor.content = '#007AFF';
-      document.head.appendChild(themeColor);
-
-      // Add mobile viewport
-      const viewport = document.createElement('meta');
-      viewport.name = 'viewport';
-      viewport.content = 'width=device-width, initial-scale=1, minimum-scale=1, user-scalable=no';
-      document.head.appendChild(viewport);
-    }
-  }, []);
 
   // ✅ Hide splash once app ready
   useEffect(() => {
@@ -253,43 +436,12 @@ export default function RootLayout() {
                   />
                   <SafeAreaView>
                     <FancyTabBarProvider>
-                      {/* ✅ Show install prompt for PWA */}
-                      {isInstallable && Platform.OS === "web" && (
-                        <View
-                          style={{
-                            backgroundColor: "#007AFF",
-                            padding: 10,
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            flexDirection: "row",
-                          }}
-                        >
-                          <Text
-                            style={{
-                              color: "white",
-                              flex: 1,
-                              fontSize: 14,
-                            }}
-                          >
-                            Install El Madrasa app for a better experience
-                          </Text>
-                          <button
-                            onClick={installPWA}
-                            style={{
-                              backgroundColor: "white",
-                              color: "#007AFF",
-                              border: "none",
-                              padding: "8px 12px",
-                              borderRadius: 4,
-                              cursor: "pointer",
-                              fontSize: 14,
-                              fontWeight: "600",
-                            }}
-                          >
-                            Install
-                          </button>
-                        </View>
-                      )}
+                      {/* ✅ PWA Debug Component - Remove in production */}
+                      <PWADebug />
+                      
+                      {/* ✅ PWA Install Prompt - Uses theme colors */}
+                      <PWAInstallPrompt />
+                      
                       <Slot />
                     </FancyTabBarProvider>
                   </SafeAreaView>

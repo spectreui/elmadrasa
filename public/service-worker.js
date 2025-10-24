@@ -5,7 +5,6 @@ const urlsToCache = [
   "/",
   "/index.html",
   "/manifest.json",
-  "/favicon.ico",
   // Add any additional static files you want cached:
   // "/assets/icons/icon-192.png",
   // "/assets/icons/icon-512.png",
