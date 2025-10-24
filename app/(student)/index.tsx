@@ -221,7 +221,7 @@ export default function StudentDashboard() {
       <View style={styles.header}>
         <View style={[styles.headerRow, isRTL && styles.rtlRow]}>
           <View style={[styles.userInfo, isRTL && styles.rtlRow]}>
-            <View style={[styles.userAvatar, {marginRight: isRTL ? designTokens.spacing.md : 0, marginLeft: isRTL ? 0 : designTokens.spacing.md, backgroundColor: '#007AFF15' }]}>
+            <View style={[styles.userAvatar, { marginRight: isRTL ? designTokens.spacing.md : 0, marginLeft: isRTL ? 0 : designTokens.spacing.md, backgroundColor: '#007AFF15' }]}>
               <Text style={[styles.avatarText, { fontFamily, color: '#007AFF' }]}>
                 {user?.profile?.name?.charAt(0) || 'S'}
               </Text>
@@ -265,7 +265,7 @@ export default function StudentDashboard() {
           </View>
           <TouchableOpacity
             onPress={toggleLanguage}
-            style={[styles.themeToggle, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm }]}
+            style={[styles.themeToggle, { backgroundColor: colors.backgroundElevated }]}
           >
             <Ionicons
               name={language === 'en' ? 'language' : 'globe'}
@@ -277,7 +277,7 @@ export default function StudentDashboard() {
           {/* Dark Mode Toggle */}
           <TouchableOpacity
             onPress={toggleTheme}
-            style={[styles.themeToggle, { backgroundColor: colors.backgroundElevated, ...designTokens.shadows.sm }]}
+            style={[styles.themeToggle, { backgroundColor: colors.backgroundElevated}]}
           >
             <Ionicons
               name={isDark ? "sunny" : "moon"}
@@ -476,13 +476,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   themeToggle: {
-    padding: designTokens.spacing.sm,
+    width: 40,
+    height: 40,
     borderRadius: designTokens.borderRadius.full,
-    width: 44,
-    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    margin: designTokens.spacing.xxs,
     ...designTokens.shadows.sm,
   },
   statsRow: {

@@ -623,7 +623,7 @@ export default function ExamDetailScreen() {
       styles.statCard,
       {
         backgroundColor: color.bg,
-        ...designTokens.shadows.sm,
+        // ...designTokens.shadows.sm,
       }
     ]}>
       <View style={styles.statIconContainer}>
