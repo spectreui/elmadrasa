@@ -42,6 +42,8 @@ const en = {
   'common.info': 'Information',
   "common.offlineMode": "Offline Mode",
   "common.offline": "Offline",
+  "common.yes": "Yes",
+  "common.no": "No",
 
   // Months
   'months.january': 'January',

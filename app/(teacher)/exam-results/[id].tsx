@@ -17,6 +17,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '@/contexts/ThemeContext';
 import { designTokens } from '../../../src/utils/designTokens';
 import { useTranslation } from "@/hooks/useTranslation";
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
+import * as XLSX from 'xlsx';
 
 interface Student {
   id: string;
@@ -333,13 +337,412 @@ export default function TeacherExamResultsScreen() {
     }
   };
 
-  const exportResults = () => {
+  const exportResults = async (format: 'pdf' | 'excel' | 'csv') => {
+    if (!results) return;
+
+    try {
+      if (format === 'pdf') {
+        await exportToPDF();
+      } else {
+        await exportToExcel(format);
+      }
+    } catch (error) {
+      console.error('Export failed:', error);
+      Alert.alert('Error', 'Failed to export results. Please try again.');
+    }
+  };
+
+  const exportToPDF = async () => {
+    if (!results) return;
+
+    const htmlContent = generatePDFContent();
+
+    try {
+      const { uri } = await Print.printToFileAsync({ html: htmlContent });
+      await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Share Exam Results' });
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      Alert.alert('Error', 'Failed to generate PDF. Please try again.');
+    }
+  };
+
+  const exportToExcel = async (format: 'excel' | 'csv') => {
+    if (!results) return;
+
+    try {
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      wb.Props = {
+        Title: `${results.exam.title} Results`,
+        Subject: "Exam Results",
+        Author: "EduApp",
+        CreatedDate: new Date()
+      };
+
+      // Create summary sheet
+      const summaryData = [
+        ["Exam Title", results.exam.title],
+        ["Subject", results.exam.subject],
+        ["Class", results.exam.class],
+        ["Created", new Date(results.exam.created_at).toLocaleDateString()],
+        [],
+        ["Statistics"],
+        ["Total Submissions", results.statistics.totalSubmissions],
+        ["Average Score (%)", results.statistics.averageScore],
+        ["Highest Score (%)", results.statistics.highestScore],
+        ["Lowest Score (%)", results.statistics.lowestScore],
+        [],
+        ["Score Distribution"],
+        ...results.scoreDistribution.map(item => [item.range, item.count])
+      ];
+      const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(wb, summarySheet, "Summary");
+
+      // Create submissions sheet
+      const submissionsData = [
+        ["Student Name", "Student ID", "Class", "Score", "Percentage", "Submitted At", "Time Spent", "Status"]
+      ];
+
+      results.submissions.forEach(sub => {
+        submissionsData.push([
+          sub.student.name,
+          sub.student.studentId,
+          sub.student.class,
+          sub.score,
+          `${sub.percentage}%`,
+          new Date(sub.submitted_at).toLocaleDateString(),
+          sub.time_spent || "N/A",
+          sub.needs_manual_grading ? "Pending Grading" :
+            sub.is_manually_graded ? "Manually Graded" : "Auto Graded"
+        ]);
+      });
+
+      const submissionsSheet = XLSX.utils.aoa_to_sheet(submissionsData);
+      XLSX.utils.book_append_sheet(wb, submissionsSheet, "Submissions");
+
+      // Generate file
+      const fileType = format === 'excel' ? 'xlsx' : 'csv';
+      const fileName = `${results.exam.title.replace(/\s+/g, '_')}_results.${fileType}`;
+      const uri = `${FileSystem.Directory}${fileName}`;
+
+      const wbout = XLSX.write(wb, { type: 'base64', bookType: fileType });
+      await FileSystem.writeAsStringAsync(uri, wbout, { encoding: 'base64' });
+
+      // Share file
+      await Sharing.shareAsync(uri, {
+        mimeType: format === 'excel' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv',
+        dialogTitle: 'Share Exam Results'
+      });
+    } catch (error) {
+      console.error('Excel export failed:', error);
+      Alert.alert('Error', `Failed to generate ${format.toUpperCase()}. Please try again.`);
+    }
+  };
+
+  const generatePDFContent = () => {
+    if (!results) return '';
+
+    const { exam, statistics, scoreDistribution, submissions } = results;
+
+    // Helper function to get grade color
+    const getGradeColor = (percentage: number) => {
+      if (percentage >= 90) return '#10B981'; // green-500
+      if (percentage >= 80) return '#3B82F6'; // blue-500
+      if (percentage >= 70) return '#F59E0B'; // amber-500
+      if (percentage >= 60) return '#EF4444'; // red-500
+      return '#EF4444'; // red-500
+    };
+
+    // Helper function to get status badge
+    const getStatusBadge = (submission: Submission) => {
+      if (submission.needs_manual_grading) {
+        return '<span style="background-color: #FEF3C7; color: #92400E; padding: 4px 8px; border-radius: 9999px; font-size: 12px;">Pending Grading</span>';
+      } else if (submission.is_manually_graded) {
+        return '<span style="background-color: #D1FAE5; color: #065F46; padding: 4px 8px; border-radius: 9999px; font-size: 12px;">Manually Graded</span>';
+      } else {
+        return '<span style="background-color: #DBEAFE; color: #1E40AF; padding: 4px 8px; border-radius: 9999px; font-size: 12px;">Auto Graded</span>';
+      }
+    };
+
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>${exam.title} Results</title>
+          <style>
+            body {
+              font-family: 'Helvetica Neue', 'Helvetica', Arial, sans-serif;
+              padding: 20px;
+              color: #374151;
+              line-height: 1.6;
+            }
+            .header {
+              text-align: center;
+              border-bottom: 2px solid #E5E7EB;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .title {
+              font-size: 28px;
+              font-weight: 700;
+              color: #1F2937;
+              margin: 0;
+            }
+            .subtitle {
+              font-size: 16px;
+              color: #6B7280;
+              margin: 8px 0 0;
+            }
+            .section {
+              margin-bottom: 30px;
+            }
+            .section-title {
+              font-size: 20px;
+              font-weight: 600;
+              color: #1F2937;
+              margin-bottom: 15px;
+              padding-bottom: 10px;
+              border-bottom: 1px solid #E5E7EB;
+            }
+            .stats-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+              gap: 20px;
+              margin-bottom: 30px;
+            }
+            .stat-card {
+              background: #F9FAFB;
+              border: 1px solid #E5E7EB;
+              border-radius: 12px;
+              padding: 20px;
+              text-align: center;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            }
+            .stat-value {
+              font-size: 32px;
+              font-weight: 700;
+              margin: 10px 0;
+            }
+            .stat-label {
+              font-size: 14px;
+              color: #6B7280;
+            }
+            .distribution-item {
+              display: flex;
+              align-items: center;
+              margin-bottom: 15px;
+            }
+            .distribution-range {
+              width: 80px;
+              font-weight: 500;
+            }
+            .distribution-bar {
+              flex: 1;
+              height: 12px;
+              background: #E5E7EB;
+              border-radius: 6px;
+              margin: 0 15px;
+              overflow: hidden;
+            }
+            .distribution-fill {
+              height: 100%;
+              border-radius: 6px;
+            }
+            .distribution-count {
+              width: 40px;
+              text-align: right;
+              font-weight: 500;
+            }
+            .performers-list {
+              margin-top: 20px;
+            }
+            .performer-item {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 12px 0;
+              border-bottom: 1px solid #E5E7EB;
+            }
+            .performer-info {
+              display: flex;
+              align-items: center;
+            }
+            .rank-badge {
+              width: 32px;
+              height: 32px;
+              border-radius: 50%;
+              background: #EFF6FF;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin-right: 12px;
+              font-weight: 600;
+              color: #3B82F6;
+            }
+            .performer-details {
+              flex: 1;
+            }
+            .performer-name {
+              font-weight: 600;
+              margin-bottom: 4px;
+            }
+            .performer-id {
+              font-size: 14px;
+              color: #6B7280;
+            }
+            .performer-score {
+              font-size: 20px;
+              font-weight: 700;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 15px;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            }
+            th {
+              background: #F9FAFB;
+              padding: 12px 15px;
+              text-align: left;
+              font-weight: 600;
+              color: #374151;
+              border-bottom: 2px solid #E5E7EB;
+            }
+            td {
+              padding: 12px 15px;
+              border-bottom: 1px solid #E5E7EB;
+            }
+            tr:nth-child(even) {
+              background: #F9FAFB;
+            }
+            tr:hover {
+              background: #F3F4F6;
+            }
+            .footer {
+              margin-top: 40px;
+              text-align: center;
+              font-size: 14px;
+              color: #9CA3AF;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1 class="title">${exam.title} Results</h1>
+            <p class="subtitle">${exam.subject} • ${exam.class} • ${new Date(exam.created_at).toLocaleDateString()}</p>
+          </div>
+
+          <div class="section">
+            <h2 class="section-title">Performance Overview</h2>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">Total Submissions</div>
+                <div class="stat-value">${statistics.totalSubmissions}</div>
+                <div class="stat-label">of ${statistics.totalStudents || statistics.totalSubmissions} students</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Average Score</div>
+                <div class="stat-value" style="color: ${getGradeColor(statistics.averageScore)}">${statistics.averageScore}%</div>
+                <div class="stat-label">Class Average</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Highest Score</div>
+                <div class="stat-value" style="color: ${getGradeColor(statistics.highestScore)}">${statistics.highestScore}%</div>
+                <div class="stat-label">Top Performance</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Lowest Score</div>
+                <div class="stat-value" style="color: ${getGradeColor(statistics.lowestScore)}">${statistics.lowestScore}%</div>
+                <div class="stat-label">Needs Improvement</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h2 class="section-title">Score Distribution</h2>
+            <div>
+              ${scoreDistribution.map(item => `
+                <div class="distribution-item">
+                  <div class="distribution-range">${item.range}</div>
+                  <div class="distribution-bar">
+                    <div class="distribution-fill" style="width: ${(item.count / Math.max(...scoreDistribution.map(s => s.count), 1)) * 100}%; background-color: ${getGradeColor(parseInt(item.range.split('-')[0]))}"></div>
+                  </div>
+                  <div class="distribution-count">${item.count}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="section">
+            <h2 class="section-title">Top Performers</h2>
+            <div class="performers-list">
+              ${submissions
+        .sort((a, b) => b.percentage - a.percentage)
+        .slice(0, 5)
+        .map((submission, index) => `
+                  <div class="performer-item">
+                    <div class="performer-info">
+                      <div class="rank-badge">${index + 1}</div>
+                      <div class="performer-details">
+                        <div class="performer-name">${submission.student.name}</div>
+                        <div class="performer-id">${submission.student.studentId} • ${submission.student.class}</div>
+                      </div>
+                    </div>
+                    <div class="performer-score" style="color: ${getGradeColor(submission.percentage)}">${submission.percentage}%</div>
+                  </div>
+                `).join('')}
+            </div>
+          </div>
+
+          <div class="section">
+            <h2 class="section-title">All Submissions</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Student ID</th>
+                  <th>Class</th>
+                  <th>Score</th>
+                  <th>Percentage</th>
+                  <th>Submitted</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${submissions
+        .sort((a, b) => b.percentage - a.percentage)
+        .map(submission => `
+                    <tr>
+                      <td>${submission.student.name}</td>
+                      <td>${submission.student.studentId}</td>
+                      <td>${submission.student.class}</td>
+                      <td>${submission.score}/${submission.total_points}</td>
+                      <td style="font-weight: 600; color: ${getGradeColor(submission.percentage)}">${submission.percentage}%</td>
+                      <td>${new Date(submission.submitted_at).toLocaleDateString()}</td>
+                      <td>${getStatusBadge(submission)}</td>
+                    </tr>
+                  `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="footer">
+            <p>Generated by EduApp on ${new Date().toLocaleDateString()}</p>
+          </div>
+        </body>
+      </html>
+    `;
+  };
+
+
+  const showExportOptions = () => {
     Alert.alert('Export Results', 'Choose export format:', [
-      { text: 'PDF Report', onPress: () => console.log('Exporting PDF...') },
-      { text: 'Excel Sheet', onPress: () => console.log('Exporting Excel...') },
-      { text: 'CSV Data', onPress: () => console.log('Exporting CSV...') },
-      { text: 'Cancel', style: 'cancel' }]
-    );
+      { text: 'PDF Report', onPress: () => exportResults('pdf') },
+      { text: 'Excel Sheet', onPress: () => exportResults('excel') },
+      { text: 'CSV Data', onPress: () => exportResults('csv') },
+      { text: 'Cancel', style: 'cancel' }
+    ]);
   };
 
   const shareResults = () => {
@@ -429,7 +832,7 @@ export default function TeacherExamResultsScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.headerButton as any, { backgroundColor: colors.background }]}
-              onPress={exportResults}>
+              onPress={showExportOptions}>
               <Ionicons name="download" size={18} color={colors.primary} />
             </TouchableOpacity>
           </View>
@@ -600,7 +1003,7 @@ export default function TeacherExamResultsScreen() {
                           }]
                         } />
                     </View>
-                    <Text style={[styles.distributionCount as any, { fontFamily, color: colors.textSecondary, textAlign: isRTL? 'right' : 'left' }]}>
+                    <Text style={[styles.distributionCount as any, { fontFamily, color: colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
                       {item.count}
                     </Text>
                   </View>
@@ -992,7 +1395,7 @@ export default function TeacherExamResultsScreen() {
               <View style={styles.modalActions as any}>
                 <TouchableOpacity
                   style={[styles.modalActionButton as any, { backgroundColor: colors.background }]}
-                  onPress={exportResults}>
+                  onPress={showExportOptions}>
                   <Text style={[styles.modalActionText as any, { fontFamily, color: colors.textPrimary }]}>
                     {t("exams.downloadPDF")}
                   </Text>
