@@ -35,16 +35,39 @@ function ThemeWrapper({ children }: { children: React.ReactNode }) {
 // ✅ Only register SW in web environment
 function registerServiceWorker() {
   if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker
-        .register("/service-worker.js")
-        .then((registration) => {
-          console.log("✅ Service Worker registered:", registration);
-        })
-        .catch((error) => {
-          console.warn("❌ Service Worker registration failed:", error);
+    console.log('🛠️ Starting service worker registration...');
+
+    // Don't wait for load event - register immediately
+    navigator.serviceWorker
+      .register('/service-worker.js', {
+        scope: '/',
+        updateViaCache: 'none'
+      })
+      .then((registration) => {
+        console.log('✅ Service Worker registered successfully!');
+        console.log('Scope:', registration.scope);
+        console.log('State:', registration.active?.state);
+
+        // Check if it becomes active
+        if (registration.installing) {
+          registration.installing.addEventListener('statechange', (event) => {
+            console.log('SW state changed:', event.target.state);
+          });
+        }
+
+        // Force activation
+        registration.update();
+      })
+      .catch((error) => {
+        console.error('❌ Service Worker registration FAILED:', error);
+        console.log('Full error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
         });
-    });
+      });
+  } else {
+    console.log('❌ Service Worker not supported in this browser');
   }
 }
 
@@ -114,8 +137,44 @@ export default function RootLayout() {
 
   // ✅ Register service worker on web only
   useEffect(() => {
-    if (Platform.OS === "web") {
-      registerServiceWorker();
+    if (Platform.OS === 'web') {
+      console.log('🌐 Web platform detected, registering service worker...');
+      registerServiceWorker(); // ← THIS IS MISSING!
+
+      console.log('🛠️ Injecting PWA meta tags...');
+
+      // Remove any existing manifests
+      document.querySelectorAll('link[rel="manifest"]').forEach(el => el.remove());
+
+      // Inject manifest with cache busting
+      const manifestLink = document.createElement('link');
+      manifestLink.rel = 'manifest';
+      manifestLink.href = '/manifest.json?' + Date.now(); // Cache bust
+      document.head.appendChild(manifestLink);
+
+      // Test if manifest is accessible
+      fetch('/manifest.json')
+        .then(response => {
+          console.log('📄 Manifest file status:', response.status);
+          if (response.ok) {
+            console.log('✅ Manifest is accessible');
+          }
+        })
+        .catch(err => {
+          console.error('❌ Manifest not accessible:', err);
+        });
+
+      // Add theme color
+      const themeColor = document.createElement('meta');
+      themeColor.name = 'theme-color';
+      themeColor.content = '#007AFF';
+      document.head.appendChild(themeColor);
+
+      // Add mobile viewport
+      const viewport = document.createElement('meta');
+      viewport.name = 'viewport';
+      viewport.content = 'width=device-width, initial-scale=1, minimum-scale=1, user-scalable=no';
+      document.head.appendChild(viewport);
     }
   }, []);
 
