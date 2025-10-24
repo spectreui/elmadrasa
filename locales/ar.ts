@@ -117,8 +117,6 @@ const ar = {
   "dashboard.refreshOfflineMessage": "ما ينفعش التحديث بدون إنترنت. بيعرض البيانات المخزنة.",
   "dashboard.restrictedOfflineMessage": "الميزة دي محتاجة اتصال بالإنترنت.",
   "dashboard.examAccessOfflineMessage": "تفاصيل الامتحان محتاجة اتصال بالإنترنت.",
-  "dashboard.highestScore": "أعلى درجة",
-  "dashboard.lowestScore": "أقل درجة",
 
   // 👩‍🎓 Students
   "students.title": "الطلاب",

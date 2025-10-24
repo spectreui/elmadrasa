@@ -720,11 +720,11 @@ export default function ExamDetailScreen() {
           <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#3B82F6' }}>{statistics.averageScore}%</Text>
         </View>
         <View style={{ width: '48%', backgroundColor: '#fff', padding: 15, borderRadius: 8 }}>
-          <Text style={{ fontSize: 14, color: '#666' }}>{t('dashboard.highestScore')}</Text>
+          <Text style={{ fontSize: 14, color: '#666' }}>{t('exams.topScore')}</Text>
           <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#10B981' }}>{statistics.highestScore}%</Text>
         </View>
         <View style={{ width: '48%', backgroundColor: '#fff', padding: 15, borderRadius: 8 }}>
-          <Text style={{ fontSize: 14, color: '#666' }}>{t('dashboard.lowestScore')}</Text>
+          <Text style={{ fontSize: 14, color: '#666' }}>{t('exams.lowestScore')}</Text>
           <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#EF4444' }}>{statistics.lowestScore}%</Text>
         </View>
       </View>
