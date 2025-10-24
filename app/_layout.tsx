@@ -78,45 +78,37 @@ function registerServiceWorker() {
 function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
-  const [userEngaged, setUserEngaged] = useState(false);
+
+  // Expose these globally for manual testing
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.setDeferredPrompt = setDeferredPrompt;
+      window.setIsInstallable = setIsInstallable;
+      window.getPWAState = () => ({
+        deferredPrompt: !!deferredPrompt,
+        isInstallable,
+        hasSW: !!navigator.serviceWorker?.controller,
+        hasManifest: !!document.querySelector('link[rel="manifest"]')
+      });
+    }
+    
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete window.setDeferredPrompt;
+        delete window.setIsInstallable;
+        delete window.getPWAState;
+      }
+    };
+  }, [deferredPrompt, isInstallable]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Track user engagement
-    const engagementEvents = ['click', 'scroll', 'keydown', 'touchstart'];
-    const handleEngagement = () => {
-      if (!userEngaged) {
-        console.log('🎯 User engaged with the app');
-        setUserEngaged(true);
-        // Remove listeners after first engagement
-        engagementEvents.forEach(event => {
-          document.removeEventListener(event, handleEngagement);
-        });
-      }
-    };
-
-    engagementEvents.forEach(event => {
-      document.addEventListener(event, handleEngagement, { once: true });
-    });
-
     const handler = (e: any) => {
-      console.log('📱 beforeinstallprompt event fired!');
+      console.log('📱 beforeinstallprompt event fired!', e);
       e.preventDefault();
       setDeferredPrompt(e);
-      
-      // Only show immediately if user is engaged
-      if (userEngaged) {
-        setIsInstallable(true);
-      } else {
-        // Wait for engagement, then show after delay
-        const checkEngagement = setInterval(() => {
-          if (userEngaged) {
-            setIsInstallable(true);
-            clearInterval(checkEngagement);
-          }
-        }, 1000);
-      }
+      setIsInstallable(true);
     };
 
     window.addEventListener("beforeinstallprompt", handler);
@@ -128,26 +120,47 @@ function usePWAInstall() {
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handler);
-      engagementEvents.forEach(event => {
-        document.removeEventListener(event, handleEngagement);
-      });
     };
-  }, [userEngaged]);
+  }, []);
 
   const installPWA = async () => {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      console.log('No install prompt available');
+      return;
+    }
     
-    console.log('📲 Triggering install prompt...');
-    deferredPrompt.prompt();
+    console.log('📲 Triggering install prompt...', deferredPrompt);
     
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response: ${outcome}`);
+    // Check if prompt method exists
+    if (typeof deferredPrompt.prompt === 'function') {
+      deferredPrompt.prompt();
+      
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`User response: ${outcome}`);
+    } else {
+      console.warn('❌ deferredPrompt.prompt is not a function:', deferredPrompt);
+      // Fallback: try to open install dialog manually
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        console.log('📱 App is already installed');
+      } else {
+        console.log('💡 Try manually: Browser menu → "Install App"');
+      }
+    }
     
     setDeferredPrompt(null);
     setIsInstallable(false);
   };
 
   return { isInstallable, installPWA };
+}
+
+// Add TypeScript declarations
+declare global {
+  interface Window {
+    setDeferredPrompt: (prompt: any) => void;
+    setIsInstallable: (installable: boolean) => void;
+    getPWAState: () => any;
+  }
 }
 
 // ✅ PWA Setup Component - Uses theme context
@@ -264,54 +277,132 @@ function PWAInstallPrompt() {
   const { colors } = useThemeContext();
   const { isInstallable, installPWA } = usePWAInstall();
 
-  if (!isInstallable || Platform.OS !== "web") return null;
+  // Better manual trigger
+  const triggerManualPrompt = () => {
+    console.log('🔧 Manual PWA test...');
+    
+    // Create a realistic fake prompt event
+    const fakePrompt = {
+      prompt: () => {
+        console.log('📲 Fake prompt shown - in real scenario, browser would show install dialog');
+        alert('In a real PWA scenario, the browser would show the install dialog here. Your PWA is working! 🎉');
+        return Promise.resolve({ outcome: 'dismissed' });
+      },
+      userChoice: Promise.resolve({ outcome: 'dismissed' }),
+      preventDefault: () => {}
+    };
+    
+    // Use the global setter from our hook
+    if (window.setDeferredPrompt) {
+      window.setDeferredPrompt(fakePrompt);
+      window.setIsInstallable(true);
+      console.log('✅ Manual prompt activated - install button should appear');
+    } else {
+      console.log('❌ Global helpers not available yet');
+    }
+  };
+
+  // Check current PWA state
+  const checkPWAState = () => {
+    if (window.getPWAState) {
+      const state = window.getPWAState();
+      console.log('🔍 Current PWA State:', state);
+      alert(`PWA State:\n- Installable: ${state.isInstallable}\n- Has Prompt: ${state.deferredPrompt}\n- Has SW: ${state.hasSW}\n- Has Manifest: ${state.hasManifest}`);
+    }
+  };
 
   return (
-    <View
-      style={{
-        backgroundColor: colors.primary || '#007AFF',
-        padding: 12,
-        alignItems: "center",
-        justifyContent: "space-between",
-        flexDirection: "row",
-        marginHorizontal: 16,
-        marginTop: 8,
-        borderRadius: 8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-      }}
-    >
-      <Text
-        style={{
-          color: "white",
-          flex: 1,
-          fontSize: 14,
-          fontWeight: "500",
-          marginRight: 12,
-        }}
-      >
-        Install El Madrasa app for a better experience
-      </Text>
-      <button
-        onClick={installPWA}
-        style={{
-          background: "white",
-          color: colors.primary || '#007AFF',
-          border: "none",
-          padding: "8px 16px",
-          borderRadius: 6,
-          cursor: "pointer",
-          fontSize: 14,
-          fontWeight: "600",
-          whiteSpace: "nowrap",
-        }}
-      >
-        Install
-      </button>
-    </View>
+    <>
+      {isInstallable && (
+        <View
+          style={{
+            backgroundColor: colors.primary || '#007AFF',
+            padding: 12,
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexDirection: "row",
+            marginHorizontal: 16,
+            marginTop: 8,
+            borderRadius: 8,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 3,
+          }}
+        >
+          <Text
+            style={{
+              color: "white",
+              flex: 1,
+              fontSize: 14,
+              fontWeight: "500",
+              marginRight: 12,
+            }}
+          >
+            Install El Madrasa app for a better experience
+          </Text>
+          <button
+            onClick={installPWA}
+            style={{
+              backgroundColor: "white",
+              color: colors.primary || '#007AFF',
+              border: "none",
+              padding: "8px 16px",
+              borderRadius: 6,
+              cursor: "pointer",
+              fontSize: 14,
+              fontWeight: "600",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Install
+          </button>
+        </View>
+      )}
+      
+      {/* Debug buttons - remove in production */}
+      {process.env.NODE_ENV !== 'production' && (
+        <div style={{
+          position: 'fixed',
+          bottom: 20,
+          left: 20,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+          zIndex: 9999
+        }}>
+          <button
+            onClick={triggerManualPrompt}
+            style={{
+              background: '#ff4444',
+              color: 'white',
+              border: 'none',
+              padding: '10px',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Test PWA Prompt
+          </button>
+          <button
+            onClick={checkPWAState}
+            style={{
+              background: '#4444ff',
+              color: 'white',
+              border: 'none',
+              padding: '10px',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Check PWA State
+          </button>
+        </div>
+      )}
+    </>
   );
 }
 

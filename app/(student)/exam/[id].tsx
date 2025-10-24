@@ -824,7 +824,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5'
   },
   rtlContainer: {
-    direction: 'rtl'
+    writingDirection: 'rtl'
   },
   loadingContainer: {
     flex: 1,
