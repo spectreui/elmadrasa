@@ -655,6 +655,7 @@ const ar = {
   'exams.options': 'الاختيارات',
   'exams.questionsExtracted': 'تم استخراج الأسئلة',
   'exams.noQuestionsFound': 'لم يتم العثور على أسئلة',
+  'exams.noQuestionsAdded': 'لم تتم إضافة أسئلة بعد',
   'exams.alternativesAvailable': 'بدائل متاحة',
   'exams.noNewQuestionsFound': 'لا توجد أسئلة جديدة',
   'exams.extractFromText': 'استخراج من نص',

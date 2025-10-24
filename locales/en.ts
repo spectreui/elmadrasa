@@ -653,6 +653,12 @@ const en = {
   'exams.textExtractionFailed': 'Text extraction failed',
   'exams.questionsExtracted': 'questions extracted',
   'exams.noQuestionsFound': 'No questions found',
+  'exams.noQuestionsAdded': 'No questions added yet',
+  'exams.section':'Section',
+  'exams.sectionTitle':'Section Title',
+  'exams.isSection':'Is Section?',
+  'exams.options':'Options',
+
   'exams.alternativesAvailable': 'Alternatives available',
   'exams.noNewQuestionsFound': 'No new questions found',
   'exams.extractFromText': 'Extract from text',

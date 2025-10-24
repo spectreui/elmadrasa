@@ -5,11 +5,11 @@ import { BlurView } from 'expo-blur';
 import { BottomTabBar } from '@react-navigation/bottom-tabs';
 import { useThemeContext } from '@/contexts/ThemeContext';
 
-const LiquidGlassTabBar = (props : any) => {
+const LiquidGlassTabBar = (props: any) => {
     const { isDark } = useThemeContext();
     // Web-compatible glass effect styles
     const blurIntensity = Platform.select({
-        ios: isDark ? 80 : 70,
+        ios: isDark ? 85 : 70,
         android: isDark ? 60 : 30,
     });
     const webGlassStyle = Platform.select({
@@ -36,7 +36,7 @@ const LiquidGlassTabBar = (props : any) => {
             left: 15,
             right: 15,
             borderWidth: 1,
-            borderColor: isDark ? 'rgba(255, 255, 255, 0.19)' : 'rgba(100, 98, 98, 0.19)' ,
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.19)' : 'rgba(100, 98, 98, 0.19)',
             overflow: 'hidden',
             borderRadius: 50,
         },
@@ -54,7 +54,7 @@ const LiquidGlassTabBar = (props : any) => {
                 <BlurView
                     intensity={blurIntensity}
                     tint={isDark ? "dark" : "light"}
-                    style={[StyleSheet.absoluteFill, {backgroundColor: 'transparent'}]}
+                    style={[StyleSheet.absoluteFill, { backgroundColor: 'transparent' }]}
                     experimentalBlurMethod='dimezisBlurView'
                 />
             )}
