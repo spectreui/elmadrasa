@@ -378,7 +378,7 @@ export default function TeacherProfileScreen() {
           {activeTab === 'profile' ? (
             <>
               {/* Profile Header */}
-              <ProfileSection title={t('profile.teacherInfo')} showDivider={false}>
+              <ProfileSection title={t('profile.teacherInformation')} showDivider={false}>
                 <View style={[styles.profileHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                   <View style={[
                     styles.avatarContainer,

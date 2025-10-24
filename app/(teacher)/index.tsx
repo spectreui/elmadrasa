@@ -40,7 +40,7 @@ export default function TeacherDashboard() {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const { t, language, setLanguage, isRTL, toggleLanguage } = useTranslation();
+  const { t, language, isRTL, toggleLanguage } = useTranslation();
 
   useEffect(() => {
     loadDashboardData();
@@ -216,7 +216,7 @@ export default function TeacherDashboard() {
           </View>
           <TouchableOpacity
             onPress={toggleLanguage}
-            style={[{ backgroundColor: `${colors.primary}15`, width: 44, height: 44, borderRadius: designTokens.borderRadius.full, alignItems: 'center', justifyContent: 'center', margin: designTokens.spacing.xxs, ...designTokens.shadows.sm}]}
+            style={[styles.profileButton, { backgroundColor: colors.backgroundElevated }]}
           >
             <Ionicons
               name={language === 'en' ? 'language' : 'globe'}
@@ -460,12 +460,11 @@ const styles = {
     fontWeight: '500',
   } as any,
   profileButton: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
     borderRadius: designTokens.borderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    margin: designTokens.spacing.xxs,
     ...designTokens.shadows.sm,
   } as any,
   avatar: {
