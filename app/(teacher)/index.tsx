@@ -641,6 +641,5 @@ const styles = {
   } as any,
   bottomSpacing: {
     height: designTokens.spacing.xxxl,
-    paddingBottom: 100
   } as any,
 };

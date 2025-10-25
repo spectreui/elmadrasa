@@ -1,5 +1,5 @@
 // components/Alert.tsx
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,8 +8,10 @@ import {
   Modal,
   StyleSheet,
   Platform,
+  BackHandler,
 } from 'react-native';
 import { useThemeContext } from '@/contexts/ThemeContext';
+import { BlurView } from 'expo-blur';
 
 type AlertType = 'default' | 'plain-text' | 'secure-text' | 'login-password';
 type AlertButtonStyle = 'default' | 'cancel' | 'destructive';
@@ -32,6 +34,8 @@ interface AlertState {
   secureTextEntry?: boolean;
   onSubmit?: (value: string) => void;
   onCancel?: () => void;
+  cancelable?: boolean;
+  onDismiss?: () => void;
 }
 
 interface AlertContextType {
@@ -61,6 +65,7 @@ export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
     visible: false,
     title: '',
     type: 'alert',
+    cancelable: true,
   });
   const [inputValue, setInputValue] = useState('');
   const { fontFamily, colors, isDark } = useThemeContext();
@@ -72,6 +77,33 @@ export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
       showPrompt,
     };
   }, []);
+
+  // Handle back button on Android
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (alertState.visible && alertState.cancelable !== false) {
+        handleCancel();
+        return true; // Prevent default behavior
+      }
+      return false;
+    });
+
+    return () => backHandler.remove();
+  }, [alertState.visible, alertState.cancelable]);
+
+  // Handle ESC key on web
+  useEffect(() => {
+    if (Platform.OS === 'web' && alertState.visible) {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape' && alertState.cancelable !== false) {
+          handleCancel();
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [alertState.visible, alertState.cancelable]);
 
   const showAlert = useCallback((
     title: string,
@@ -85,6 +117,8 @@ export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
       message,
       buttons: buttons || [{ text: 'OK' }],
       type: 'alert',
+      cancelable: options?.cancelable ?? true,
+      onDismiss: options?.onDismiss,
     });
     setInputValue('');
   }, []);
@@ -93,7 +127,7 @@ export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
     title: string,
     message?: string,
     callbackOrButtons?: ((text: string) => void) | AlertButton[],
-    type: AlertType = 'plain-text',
+    type?: AlertType,
     defaultValue?: string,
     placeholder?: string
   ) => {
@@ -128,6 +162,7 @@ export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
       secureTextEntry: type === 'secure-text',
       onSubmit,
       onCancel,
+      cancelable: true,
     });
     setInputValue(defaultValue || '');
   }, []);
@@ -142,34 +177,68 @@ export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const handleCancel = () => {
+    if (alertState.cancelable === false) {
+      return; // Don't dismiss if not cancelable
+    }
+
     if (alertState.type === 'prompt') {
       alertState.onCancel?.();
       // Find cancel button and trigger its onPress
       const cancelButton = alertState.buttons?.find(btn => btn.style === 'cancel');
       cancelButton?.onPress?.(inputValue);
     }
+    
+    // Call onDismiss callback if provided
+    alertState.onDismiss?.();
+    
     setAlertState(prev => ({ ...prev, visible: false }));
+  };
+
+  const handleBackdropPress = () => {
+    if (alertState.cancelable !== false) {
+      handleCancel();
+    }
+  };
+
+  const handleModalContentPress = (e: any) => {
+    // Prevent backdrop press when clicking on modal content
+    e.stopPropagation();
   };
 
   const getButtonStyle = (style?: AlertButtonStyle) => {
     switch (style) {
       case 'cancel':
-        return [styles.button, { backgroundColor: 'transparent' }];
+        return [styles.button, { 
+          backgroundColor: 'transparent',
+        }];
       case 'destructive':
-        return [styles.button, { backgroundColor: colors.destructive || '#dc2626' }];
+        return [styles.button, { 
+          backgroundColor: 'transparent',
+        }];
       default:
-        return [styles.button, { backgroundColor: colors.primary }];
+        return [styles.button, { 
+          backgroundColor: 'transparent',
+        }];
     }
   };
 
   const getButtonTextStyle = (style?: AlertButtonStyle) => {
     switch (style) {
       case 'cancel':
-        return [styles.buttonText, { color: colors.textSecondary }];
+        return [styles.buttonText, { 
+          color: colors.primary,
+          fontWeight: '600'
+        }];
       case 'destructive':
-        return [styles.buttonText, { color: '#ffffff' }];
+        return [styles.buttonText, { 
+          color: colors.destructive || '#ff3b30',
+          fontWeight: '600'
+        }];
       default:
-        return [styles.buttonText, { color: '#ffffff' }];
+        return [styles.buttonText, { 
+          color: colors.primary,
+          fontWeight: '600'
+        }];
     }
   };
 
@@ -177,22 +246,58 @@ export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
     if (!alertState.buttons?.length) return null;
 
     return (
-      <View style={styles.buttonContainer}>
+      <View style={[
+        styles.buttonContainer,
+        { 
+          borderTopColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+          flexDirection: 'row'
+        }
+      ]}>
         {alertState.buttons.map((button, index) => (
-          <TouchableOpacity
+          <View 
             key={index}
             style={[
-              getButtonStyle(button.style),
-              alertState.buttons!.length > 2 && styles.verticalButton,
+              styles.buttonWrapper,
+              index > 0 && { 
+                borderLeftWidth: 1, 
+                borderLeftColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' 
+              },
             ]}
-            onPress={() => handleButtonPress(button)}
           >
-            <Text style={getButtonTextStyle(button.style)}>
-              {button.text}
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                getButtonStyle(button.style),
+                styles.horizontalButton,
+              ]}
+              onPress={() => handleButtonPress(button)}
+            >
+              <Text style={getButtonTextStyle(button.style) as any}>
+                {button.text}
+              </Text>
+            </TouchableOpacity>
+          </View>
         ))}
       </View>
+    );
+  };
+
+  const BlurBackground = ({ children }: { children: React.ReactNode }) => {
+    if (Platform.OS === 'web') {
+      return (
+        <View style={[styles.webBlurBackground, styles.overlay]}>
+          {children}
+        </View>
+      );
+    }
+    
+    return (
+      <BlurView
+        intensity={80}
+        tint={isDark ? 'dark' : 'light'}
+        style={StyleSheet.absoluteFill}
+      >
+        {children}
+      </BlurView>
     );
   };
 
@@ -206,46 +311,78 @@ export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
         animationType="fade"
         onRequestClose={handleCancel}
       >
-        <View style={styles.overlay}>
-          <View style={[styles.container, { fontFamily, 
-            backgroundColor: colors.backgroundElevated,
-            shadowColor: isDark ? '#000' : '#gray',
-          }]}>
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={[styles.title, { color: colors.textPrimary }]}>
-                {alertState.title}
-              </Text>
-              {alertState.message ? (
-                <Text style={[styles.message, { color: colors.textSecondary }]}>
-                  {alertState.message}
-                </Text>
-              ) : null}
+        <TouchableOpacity 
+          style={styles.overlay}
+          activeOpacity={1}
+          onPress={handleBackdropPress}
+        >
+          <BlurBackground>
+            <View style={styles.overlayContent}>
+              <TouchableOpacity 
+                style={styles.modalContentContainer}
+                activeOpacity={1}
+                onPress={handleModalContentPress}
+              >
+                <View style={[styles.container, { 
+                  backgroundColor: isDark ? 'rgba(44,44,46,0.8)' : 'rgba(250,250,250,0.8)',
+                  shadowColor: isDark ? '#000' : '#gray',
+                }]}>
+                  {/* Header */}
+                  <View style={styles.header}>
+                    <Text style={[styles.title, { 
+                      color: isDark ? '#ffffff' : '#000000',
+                      fontFamily 
+                    }]}>
+                      {alertState.title}
+                    </Text>
+                    {alertState.message ? (
+                      <Text style={[styles.message, { 
+                        color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
+                        fontFamily 
+                      }]}>
+                        {alertState.message}
+                      </Text>
+                    ) : null}
+                  </View>
+
+                  {/* Input for prompt */}
+                  {alertState.type === 'prompt' && (
+                    <View style={styles.inputContainer}>
+                      <TextInput
+                        style={[styles.input, {
+                          borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
+                          color: isDark ? '#ffffff' : '#000000',
+                          backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                          fontFamily
+                        }]}
+                        value={inputValue}
+                        onChangeText={setInputValue}
+                        secureTextEntry={alertState.secureTextEntry}
+                        placeholder={alertState.placeholder}
+                        placeholderTextColor={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'}
+                        autoFocus
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        onSubmitEditing={() => {
+                          // Find the default/OK button and press it when Enter is pressed
+                          const defaultButton = alertState.buttons?.find(btn => 
+                            btn.style !== 'cancel' && btn.style !== 'destructive'
+                          );
+                          if (defaultButton) {
+                            handleButtonPress(defaultButton);
+                          }
+                        }}
+                      />
+                    </View>
+                  )}
+
+                  {/* Buttons */}
+                  {renderButtons()}
+                </View>
+              </TouchableOpacity>
             </View>
-
-            {/* Input for prompt */}
-            {alertState.type === 'prompt' && (
-              <TextInput
-                style={[styles.input, {
-                  borderColor: colors.border,
-                  color: colors.textPrimary,
-                  backgroundColor: colors.background,
-                }]}
-                value={inputValue}
-                onChangeText={setInputValue}
-                secureTextEntry={alertState.secureTextEntry}
-                placeholder={alertState.placeholder}
-                placeholderTextColor={colors.textTertiary}
-                autoFocus
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            )}
-
-            {/* Buttons */}
-            {renderButtons()}
-          </View>
-        </View>
+          </BlurBackground>
+        </TouchableOpacity>
       </Modal>
     </AlertContext.Provider>
   );
@@ -254,62 +391,80 @@ export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+  },
+  overlayContent: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
+  modalContentContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  webBlurBackground: {
+    backdropFilter: 'blur(20px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+  },
   container: {
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 350,
     borderRadius: 14,
-    padding: 0,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
     overflow: 'hidden',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10,
+    borderWidth: Platform.OS === 'web' ? 1 : 0,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   header: {
-    padding: 24,
-    paddingBottom: 20,
+    padding: 20,
+    paddingBottom: 16,
+    alignItems: 'center',
   },
   title: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: 4,
     textAlign: 'center',
   },
   message: {
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 20,
+    marginTop: 4,
+  },
+  inputContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   input: {
-    margin: 24,
-    marginTop: 0,
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 12,
     fontSize: 16,
+    paddingHorizontal: 16,
   },
   buttonContainer: {
-    flexDirection: 'row',
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    minHeight: 44,
+  },
+  buttonWrapper: {
+    flex: 1,
   },
   button: {
     flex: 1,
-    paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  verticalButton: {
-    flexDirection: 'column',
+  horizontalButton: {
+    minHeight: 44,
   },
   buttonText: {
     fontSize: 17,
-    fontWeight: '600',
+    fontWeight: '400',
   },
 });
 

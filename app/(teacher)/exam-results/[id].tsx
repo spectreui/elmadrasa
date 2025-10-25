@@ -8,7 +8,8 @@ import {
   ActivityIndicator,
   RefreshControl,
   Modal,
-  TextInput
+  TextInput,
+  Platform
 } from 'react-native';
 import Alert from '@/components/Alert';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -19,8 +20,8 @@ import { designTokens } from '../../../src/utils/designTokens';
 import { useTranslation } from "@/hooks/useTranslation";
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
 import * as XLSX from 'xlsx';
+import { File, Paths } from 'expo-file-system';
 
 interface Student {
   id: string;
@@ -352,34 +353,20 @@ export default function TeacherExamResultsScreen() {
     }
   };
 
-  const exportToPDF = async () => {
-    if (!results) return;
-
-    const htmlContent = generatePDFContent();
-
-    try {
-      const { uri } = await Print.printToFileAsync({ html: htmlContent });
-      await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Share Exam Results' });
-    } catch (error) {
-      console.error('PDF export failed:', error);
-      Alert.alert('Error', 'Failed to generate PDF. Please try again.');
-    }
-  };
-
   const exportToExcel = async (format: 'excel' | 'csv') => {
     if (!results) return;
 
     try {
-      // Create workbook
+      // Create workbook (this part remains the same)
       const wb = XLSX.utils.book_new();
       wb.Props = {
         Title: `${results.exam.title} Results`,
         Subject: "Exam Results",
-        Author: "EduApp",
+        Author: "Elmadrasa App",
         CreatedDate: new Date()
       };
 
-      // Create summary sheet
+      // Create summary sheet (this part remains the same)
       const summaryData = [
         ["Exam Title", results.exam.title],
         ["Subject", results.exam.subject],
@@ -398,7 +385,7 @@ export default function TeacherExamResultsScreen() {
       const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
       XLSX.utils.book_append_sheet(wb, summarySheet, "Summary");
 
-      // Create submissions sheet
+      // Create submissions sheet (this part remains the same)
       const submissionsData = [
         ["Student Name", "Student ID", "Class", "Score", "Percentage", "Submitted At", "Time Spent", "Status"]
       ];
@@ -420,22 +407,72 @@ export default function TeacherExamResultsScreen() {
       const submissionsSheet = XLSX.utils.aoa_to_sheet(submissionsData);
       XLSX.utils.book_append_sheet(wb, submissionsSheet, "Submissions");
 
-      // Generate file
+      // Generate file - UPDATED PART
       const fileType = format === 'excel' ? 'xlsx' : 'csv';
       const fileName = `${results.exam.title.replace(/\s+/g, '_')}_results.${fileType}`;
-      const uri = `${FileSystem.Directory}${fileName}`;
 
+      // Create file using new File API
+      const file = new File(Paths.cache, fileName);
+
+      // Generate workbook output
       const wbout = XLSX.write(wb, { type: 'base64', bookType: fileType });
-      await FileSystem.writeAsStringAsync(uri, wbout, { encoding: 'base64' });
 
-      // Share file
-      await Sharing.shareAsync(uri, {
+      // Convert base64 to Uint8Array and write to file
+      const binaryString = atob(wbout);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      // Write file using new API
+      file.write(bytes);
+
+      // Share file - using the file's URI property
+      await Sharing.shareAsync(file.uri, {
         mimeType: format === 'excel' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv',
         dialogTitle: 'Share Exam Results'
       });
+
     } catch (error) {
       console.error('Excel export failed:', error);
       Alert.alert('Error', `Failed to generate ${format.toUpperCase()}. Please try again.`);
+    }
+  };
+
+  const exportToPDF = async () => {
+    if (!results) return;
+
+    try {
+      const htmlContent = generatePDFContent();
+
+      if (Platform.OS === 'web') {
+        // For web, create a new window with the HTML content
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(htmlContent);
+          printWindow.document.close();
+
+          // Wait for content to load before printing
+          printWindow.onload = () => {
+            printWindow.print();
+            // Optional: close window after print dialog closes
+            // printWindow.onafterprint = () => printWindow.close();
+          };
+        }
+      } else {
+        // For mobile, use expo-print as before
+        const { uri } = await Print.printToFileAsync({ html: htmlContent });
+
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(uri, {
+            mimeType: 'application/pdf',
+            dialogTitle: 'Share Exam Results PDF'
+          });
+        }
+      }
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      Alert.alert('Error', 'Failed to generate PDF. Please try again.');
     }
   };
 
@@ -446,302 +483,711 @@ export default function TeacherExamResultsScreen() {
 
     // Helper function to get grade color
     const getGradeColor = (percentage: number) => {
-      if (percentage >= 90) return '#10B981'; // green-500
-      if (percentage >= 80) return '#3B82F6'; // blue-500
-      if (percentage >= 70) return '#F59E0B'; // amber-500
-      if (percentage >= 60) return '#EF4444'; // red-500
-      return '#EF4444'; // red-500
+      if (percentage >= 90) return '#10B981';
+      if (percentage >= 80) return '#3B82F6';
+      if (percentage >= 70) return '#F59E0B';
+      if (percentage >= 60) return '#EF4444';
+      return '#DC2626';
     };
 
-    // Helper function to get status badge
-    const getStatusBadge = (submission: Submission) => {
-      if (submission.needs_manual_grading) {
-        return '<span style="background-color: #FEF3C7; color: #92400E; padding: 4px 8px; border-radius: 9999px; font-size: 12px;">Pending Grading</span>';
-      } else if (submission.is_manually_graded) {
-        return '<span style="background-color: #D1FAE5; color: #065F46; padding: 4px 8px; border-radius: 9999px; font-size: 12px;">Manually Graded</span>';
-      } else {
-        return '<span style="background-color: #DBEAFE; color: #1E40AF; padding: 4px 8px; border-radius: 9999px; font-size: 12px;">Auto Graded</span>';
-      }
+    // Helper function to get letter grade
+    const getLetterGrade = (percentage: number) => {
+      if (percentage >= 97) return 'A+';
+      if (percentage >= 93) return 'A';
+      if (percentage >= 90) return 'A-';
+      if (percentage >= 87) return 'B+';
+      if (percentage >= 83) return 'B';
+      if (percentage >= 80) return 'B-';
+      if (percentage >= 77) return 'C+';
+      if (percentage >= 73) return 'C';
+      if (percentage >= 70) return 'C-';
+      if (percentage >= 67) return 'D+';
+      if (percentage >= 65) return 'D';
+      return 'F';
     };
+
+    // Calculate additional statistics
+    const passingRate = Math.round((submissions.filter(s => s.percentage >= 60).length / submissions.length) * 100) || 0;
+    const medianScore = submissions.length > 0 ?
+      submissions.sort((a, b) => a.percentage - b.percentage)[Math.floor(submissions.length / 2)].percentage : 0;
+
+    // Find most common score range
+    const mostCommonRange = scoreDistribution.reduce((prev, current) =>
+      (prev.count > current.count) ? prev : current
+    );
 
     return `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>${exam.title} Results</title>
-          <style>
-            body {
-              font-family: 'Helvetica Neue', 'Helvetica', Arial, sans-serif;
-              padding: 20px;
-              color: #374151;
-              line-height: 1.6;
-            }
-            .header {
-              text-align: center;
-              border-bottom: 2px solid #E5E7EB;
-              padding-bottom: 20px;
-              margin-bottom: 30px;
-            }
-            .title {
-              font-size: 28px;
-              font-weight: 700;
-              color: #1F2937;
-              margin: 0;
-            }
-            .subtitle {
-              font-size: 16px;
-              color: #6B7280;
-              margin: 8px 0 0;
-            }
-            .section {
-              margin-bottom: 30px;
-            }
-            .section-title {
-              font-size: 20px;
-              font-weight: 600;
-              color: #1F2937;
-              margin-bottom: 15px;
-              padding-bottom: 10px;
-              border-bottom: 1px solid #E5E7EB;
-            }
-            .stats-grid {
-              display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-              gap: 20px;
-              margin-bottom: 30px;
-            }
-            .stat-card {
-              background: #F9FAFB;
-              border: 1px solid #E5E7EB;
-              border-radius: 12px;
-              padding: 20px;
-              text-align: center;
-              box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            }
-            .stat-value {
-              font-size: 32px;
-              font-weight: 700;
-              margin: 10px 0;
-            }
-            .stat-label {
-              font-size: 14px;
-              color: #6B7280;
-            }
-            .distribution-item {
-              display: flex;
-              align-items: center;
-              margin-bottom: 15px;
-            }
-            .distribution-range {
-              width: 80px;
-              font-weight: 500;
-            }
-            .distribution-bar {
-              flex: 1;
-              height: 12px;
-              background: #E5E7EB;
-              border-radius: 6px;
-              margin: 0 15px;
-              overflow: hidden;
-            }
-            .distribution-fill {
-              height: 100%;
-              border-radius: 6px;
-            }
-            .distribution-count {
-              width: 40px;
-              text-align: right;
-              font-weight: 500;
-            }
-            .performers-list {
-              margin-top: 20px;
-            }
-            .performer-item {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              padding: 12px 0;
-              border-bottom: 1px solid #E5E7EB;
-            }
-            .performer-info {
-              display: flex;
-              align-items: center;
-            }
-            .rank-badge {
-              width: 32px;
-              height: 32px;
-              border-radius: 50%;
-              background: #EFF6FF;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              margin-right: 12px;
-              font-weight: 600;
-              color: #3B82F6;
-            }
-            .performer-details {
-              flex: 1;
-            }
-            .performer-name {
-              font-weight: 600;
-              margin-bottom: 4px;
-            }
-            .performer-id {
-              font-size: 14px;
-              color: #6B7280;
-            }
-            .performer-score {
-              font-size: 20px;
-              font-weight: 700;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 15px;
-              box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            }
-            th {
-              background: #F9FAFB;
-              padding: 12px 15px;
-              text-align: left;
-              font-weight: 600;
-              color: #374151;
-              border-bottom: 2px solid #E5E7EB;
-            }
-            td {
-              padding: 12px 15px;
-              border-bottom: 1px solid #E5E7EB;
-            }
-            tr:nth-child(even) {
-              background: #F9FAFB;
-            }
-            tr:hover {
-              background: #F3F4F6;
-            }
-            .footer {
-              margin-top: 40px;
-              text-align: center;
-              font-size: 14px;
-              color: #9CA3AF;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1 class="title">${exam.title} Results</h1>
-            <p class="subtitle">${exam.subject} • ${exam.class} • ${new Date(exam.created_at).toLocaleDateString()}</p>
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${exam.title} - ${t('pdf.report')}</title>
+        <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    padding: 24px;
+    color: #000000;
+    line-height: 1.5;
+    background-color: #FFFFFF;
+    font-size: 14px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .header {
+    text-align: center;
+    padding-bottom: 24px;
+    margin-bottom: 32px;
+    border-bottom: 2px solid #F2F2F7;
+  }
+  
+  .title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #000000;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.5px;
+  }
+  
+  .subtitle {
+    font-size: 17px;
+    color: #8E8E93;
+    margin: 0 0 12px 0;
+    font-weight: 500;
+  }
+  
+  .exam-meta {
+    font-size: 15px;
+    color: #8E8E93;
+    margin: 8px 0;
+  }
+  
+  .teacher-info {
+    font-size: 15px;
+    color: #8E8E93;
+    margin: 4px 0;
+  }
+  
+  .section {
+    margin-bottom: 32px;
+    page-break-inside: avoid;
+  }
+  
+  .section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #000000;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #F2F2F7;
+    position: relative;
+  }
+  
+  .section-title:after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background-color: #007AFF;
+  }
+  
+  .section-subtitle {
+    font-size: 16px;
+    color: #8E8E93;
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  
+  .stat-card {
+    background: #FFFFFF;
+    border: 1px solid #E5E5EA;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 12px 0;
+    color: #000000;
+  }
+  
+  .stat-label {
+    font-size: 15px;
+    color: #8E8E93;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  
+  .stat-description {
+    font-size: 13px;
+    color: #8E8E93;
+    margin-top: 4px;
+  }
+  
+  .insight-box {
+    background: #F2F2F7;
+    border: 1px solid #E5E5EA;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+  }
+  
+  .insight-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #000000;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .insight-title:before {
+    content: "💡";
+    margin-right: 12px;
+    font-size: 18px;
+  }
+  
+  .insight-content {
+    font-size: 15px;
+    color: #000000;
+    line-height: 1.5;
+  }
+  
+  .distribution-container {
+    margin: 20px 0;
+  }
+  
+  .distribution-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    background: #FFFFFF;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid #E5E5EA;
+  }
+  
+  .distribution-range {
+    width: 70px;
+    font-weight: 600;
+    color: #000000;
+    font-size: 15px;
+  }
+  
+  .distribution-bar-container {
+    flex: 1;
+    margin: 0 16px;
+  }
+  
+  .distribution-bar {
+    height: 16px;
+    background: #F2F2F7;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .distribution-fill {
+    height: 100%;
+    border-radius: 8px;
+    background: #8E8E93 !important;
+    position: relative;
+  }
+  
+  .distribution-fill:after {
+    content: attr(data-percentage);
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #FFFFFF;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  
+  .distribution-count {
+    width: 50px;
+    text-align: right;
+    font-weight: 600;
+    color: #000000;
+    font-size: 15px;
+  }
+  
+  .performers-list {
+    margin-top: 20px;
+  }
+  
+  .performer-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid #F2F2F7;
+  }
+  
+  .performer-item:last-child {
+    border-bottom: none;
+  }
+  
+  .performer-info {
+    display: flex;
+    align-items: center;
+  }
+  
+  .rank-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 18px;
+    background: #F2F2F7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    font-weight: 600;
+    color: #000000;
+    font-size: 15px;
+    border: 1px solid #E5E5EA;
+  }
+  
+  .rank-1 { 
+    background: #FFFFFF; 
+    border: 2px solid #000000;
+    font-weight: 700;
+  }
+  .rank-2 { 
+    background: #F8F8F8; 
+    border: 1.5px solid #666666;
+  }
+  .rank-3 { 
+    background: #F2F2F7; 
+    border: 1px solid #8E8E93;
+  }
+  
+  .performer-details {
+    flex: 1;
+  }
+  
+  .performer-name {
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #000000;
+    font-size: 16px;
+  }
+  
+  .performer-meta {
+    font-size: 14px;
+    color: #8E8E93;
+  }
+  
+  .performer-score {
+    text-align: right;
+  }
+  
+  .score-value {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #000000;
+  }
+  
+  .score-grade {
+    font-size: 14px;
+    font-weight: 500;
+    color: #8E8E93;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    background-color: #FFFFFF;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #E5E5EA;
+  }
+  
+  th {
+    background: #F2F2F7;
+    padding: 16px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #000000;
+    font-size: 14px;
+    border-bottom: 1px solid #E5E5EA;
+  }
+  
+  td {
+    padding: 14px 12px;
+    border-bottom: 1px solid #F2F2F7;
+    color: #000000;
+    font-size: 14px;
+  }
+  
+  tr:last-child td {
+    border-bottom: none;
+  }
+  
+  tr:nth-child(even) {
+    background: #FAFAFA;
+  }
+  
+  .grade-badge {
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    display: inline-block;
+    background: #F2F2F7;
+    color: #000000;
+    border: 1px solid #E5E5EA;
+  }
+  
+  .status-badge {
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    display: inline-block;
+    background: #F2F2F7;
+    color: #000000;
+    border: 1px solid #E5E5EA;
+  }
+  
+  .footer {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 13px;
+    color: #8E8E93;
+    border-top: 1px solid #F2F2F7;
+    padding-top: 20px;
+  }
+  
+  .page-break {
+    page-break-before: always;
+  }
+  
+  .print-only {
+    display: none;
+  }
+  
+  @media print {
+    body {
+      padding: 16px;
+      font-size: 12px;
+    }
+    
+    .section {
+      page-break-inside: avoid;
+      margin-bottom: 24px;
+    }
+    
+    .section-title {
+      font-size: 18px;
+    }
+    
+    .stat-value {
+      font-size: 24px;
+    }
+    
+    .stat-card {
+      box-shadow: none;
+      border: 1px solid #D1D1D6;
+    }
+    
+    .insight-box {
+      background: #F8F8F8;
+      border: 1px solid #D1D1D6;
+    }
+    
+    table {
+      border: 1px solid #D1D1D6;
+    }
+    
+    th {
+      background: #F8F8F8;
+    }
+    
+    .distribution-fill {
+      background: #666666 !important;
+    }
+    
+    .print-only {
+      display: block;
+    }
+    
+    .no-print {
+      display: none;
+    }
+  }
+  
+  /* iOS-like subtle animations for digital viewing */
+  @media screen {
+    .stat-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .performer-item {
+      transition: background-color 0.2s ease;
+    }
+    
+    .performer-item:hover {
+      background-color: #F8F8F8;
+    }
+  }
+</style>
+      </head>
+      <body>
+        <!-- Header Section -->
+        <div class="header">
+          <h1 class="title">${exam.title}</h1>
+          <p class="subtitle">${t('pdf.examResultsReport')}</p>
+          <div class="exam-meta">
+            ${exam.subject} • ${exam.class} • ${new Date(exam.created_at).toLocaleDateString()}
           </div>
+          ${exam.teacher ? `
+            <div class="teacher-info">
+              ${t('pdf.preparedBy')}: ${exam.teacher.profile.name}
+            </div>
+          ` : ''}
+        </div>
 
-          <div class="section">
-            <h2 class="section-title">Performance Overview</h2>
-            <div class="stats-grid">
-              <div class="stat-card">
-                <div class="stat-label">Total Submissions</div>
-                <div class="stat-value">${statistics.totalSubmissions}</div>
-                <div class="stat-label">of ${statistics.totalStudents || statistics.totalSubmissions} students</div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-label">Average Score</div>
-                <div class="stat-value" style="color: ${getGradeColor(statistics.averageScore)}">${statistics.averageScore}%</div>
-                <div class="stat-label">Class Average</div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-label">Highest Score</div>
-                <div class="stat-value" style="color: ${getGradeColor(statistics.highestScore)}">${statistics.highestScore}%</div>
-                <div class="stat-label">Top Performance</div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-label">Lowest Score</div>
-                <div class="stat-value" style="color: ${getGradeColor(statistics.lowestScore)}">${statistics.lowestScore}%</div>
-                <div class="stat-label">Needs Improvement</div>
-              </div>
+        <!-- Executive Summary -->
+        <div class="section">
+          <h2 class="section-title">${t('pdf.executiveSummary')}</h2>
+          <div class="insight-box">
+            <div class="insight-title">${t('pdf.quickOverview')}</div>
+            <div class="insight-content">
+              ${t('pdf.classPerformanceSummary')
+        .replace('{{average}}', statistics.averageScore.toString())
+        .replace('{{submissions}}', statistics.totalSubmissions.toString())
+        .replace('{{total}}', (statistics.totalStudents || statistics.totalSubmissions).toString())
+        .replace('{{passing}}', passingRate.toString())}
             </div>
           </div>
 
-          <div class="section">
-            <h2 class="section-title">Score Distribution</h2>
-            <div>
-              ${scoreDistribution.map(item => `
-                <div class="distribution-item">
-                  <div class="distribution-range">${item.range}</div>
-                  <div class="distribution-bar">
-                    <div class="distribution-fill" style="width: ${(item.count / Math.max(...scoreDistribution.map(s => s.count), 1)) * 100}%; background-color: ${getGradeColor(parseInt(item.range.split('-')[0]))}"></div>
+          <!-- Key Statistics -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">${t('pdf.totalSubmissions')}</div>
+              <div class="stat-value">${statistics.totalSubmissions}</div>
+              <div class="stat-description">${t('pdf.ofTotalStudents').replace('{{total}}', (statistics.totalStudents || statistics.totalSubmissions).toString())}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">${t('dashboard.avgScore')}</div>
+              <div class="stat-value" style="color: ${getGradeColor(statistics.averageScore)}">${statistics.averageScore}%</div>
+              <div class="stat-description">${t('pdf.classAverage')}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">${t('pdf.passingRate')}</div>
+              <div class="stat-value" style="color: ${passingRate >= 70 ? '#10B981' : passingRate >= 50 ? '#F59E0B' : '#EF4444'}">${passingRate}%</div>
+              <div class="stat-description">${t('pdf.studentsPassing')}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">${t('pdf.performanceGap')}</div>
+              <div class="stat-value" style="color: ${(statistics.highestScore - statistics.lowestScore) < 30 ? '#10B981' : '#EF4444'}">${statistics.highestScore - statistics.lowestScore}%</div>
+              <div class="stat-description">${t('pdf.highLowDifference')}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Insights -->
+        <div class="section">
+          <h2 class="section-title">${t('pdf.performanceInsights')}</h2>
+          
+          <!-- Score Distribution -->
+          <h3 class="section-subtitle">${t('exams.scoreDistribution')}</h3>
+          <div class="distribution-container">
+            ${scoreDistribution.map(item => {
+          const percentage = (item.count / Math.max(...scoreDistribution.map(s => s.count), 1)) * 100;
+          const rangeStart = parseInt(item.range.split('-')[0]);
+          return `
+                <div class="distribution-item" style="border-left-color: ${getGradeColor(rangeStart)}">
+                  <div class="distribution-range">${item.range}%</div>
+                  <div class="distribution-bar-container">
+                    <div class="distribution-bar">
+                      <div 
+                        class="distribution-fill" 
+                        style="width: ${percentage}%; background-color: ${getGradeColor(rangeStart)}"
+                        data-percentage="${Math.round(percentage)}%"
+                      ></div>
+                    </div>
                   </div>
-                  <div class="distribution-count">${item.count}</div>
+                  <div class="distribution-count">
+                    ${item.count} ${t('pdf.students')}
+                  </div>
                 </div>
-              `).join('')}
-            </div>
+              `;
+        }).join('')}
           </div>
 
-          <div class="section">
-            <h2 class="section-title">Top Performers</h2>
-            <div class="performers-list">
-              ${submissions
+          <!-- Distribution Insights -->
+          <div class="insight-box">
+            <div class="insight-title">${t('pdf.distributionAnalysis')}</div>
+            <div class="insight-content">
+              ${mostCommonRange.count === submissions.length ?
+        t('pdf.allSameScore') :
+        mostCommonRange.range === '90-100' ?
+          t('pdf.mostStudentsExcellent') :
+          mostCommonRange.range === '0-59' ?
+            t('pdf.manyStudentsStruggling').replace('{{count}}', mostCommonRange.count.toString()) :
+            t('pdf.mostStudentsInRange')
+              .replace('{{range}}', mostCommonRange.range)
+              .replace('{{count}}', mostCommonRange.count.toString())
+      }
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Performers -->
+        <div class="section">
+          <h2 class="section-title">${t('exams.topPerformers')}</h2>
+          <p class="section-subtitle">${t('pdf.recognizingExcellence')}</p>
+          
+          <div class="performers-list">
+            ${submissions
         .sort((a, b) => b.percentage - a.percentage)
         .slice(0, 5)
         .map((submission, index) => `
-                  <div class="performer-item">
-                    <div class="performer-info">
-                      <div class="rank-badge">${index + 1}</div>
-                      <div class="performer-details">
-                        <div class="performer-name">${submission.student.name}</div>
-                        <div class="performer-id">${submission.student.studentId} • ${submission.student.class}</div>
+                <div class="performer-item">
+                  <div class="performer-info">
+                    <div class="rank-badge ${index < 3 ? `rank-${index + 1}` : ''}">${index + 1}</div>
+                    <div class="performer-details">
+                      <div class="performer-name">${submission.student.name}</div>
+                      <div class="performer-meta">
+                        ${submission.student.studentId} • ${submission.student.class} • 
+                        ${getLetterGrade(submission.percentage)}
                       </div>
                     </div>
-                    <div class="performer-score" style="color: ${getGradeColor(submission.percentage)}">${submission.percentage}%</div>
                   </div>
-                `).join('')}
-            </div>
+                  <div class="performer-score">
+                    <div class="score-value" style="color: ${getGradeColor(submission.percentage)}">
+                      ${submission.percentage}%
+                    </div>
+                    <div class="score-grade">
+                      ${submission.score}/${submission.total_points} ${t('exams.points')}
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
           </div>
+        </div>
 
-          <div class="section">
-            <h2 class="section-title">All Submissions</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Student</th>
-                  <th>Student ID</th>
-                  <th>Class</th>
-                  <th>Score</th>
-                  <th>Percentage</th>
-                  <th>Submitted</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${submissions
+        <!-- Detailed Results -->
+        <div class="section page-break">
+          <h2 class="section-title">${t('pdf.detailedResults')}</h2>
+          <p class="section-subtitle">${t('pdf.completeSubmissionList')}</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>${t('pdf.studentName')}</th>
+                <th>${t('pdf.studentId')}</th>
+                <th>${t('pdf.class')}</th>
+                <th>${t('pdf.score')}</th>
+                <th>${t('pdf.percentage')}</th>
+                <th>${t('pdf.grade')}</th>
+                <th>${t('pdf.status')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${submissions
         .sort((a, b) => b.percentage - a.percentage)
         .map(submission => `
-                    <tr>
-                      <td>${submission.student.name}</td>
-                      <td>${submission.student.studentId}</td>
-                      <td>${submission.student.class}</td>
-                      <td>${submission.score}/${submission.total_points}</td>
-                      <td style="font-weight: 600; color: ${getGradeColor(submission.percentage)}">${submission.percentage}%</td>
-                      <td>${new Date(submission.submitted_at).toLocaleDateString()}</td>
-                      <td>${getStatusBadge(submission)}</td>
-                    </tr>
-                  `).join('')}
-              </tbody>
-            </table>
-          </div>
+                  <tr>
+                    <td style="font-weight: 500;">${submission.student.name}</td>
+                    <td>${submission.student.studentId}</td>
+                    <td>${submission.student.class}</td>
+                    <td><strong>${submission.score}/${submission.total_points}</strong></td>
+                    <td style="font-weight: 700; color: ${getGradeColor(submission.percentage)}">${submission.percentage}%</td>
+                    <td>
+                      <div class="grade-badge" style="background-color: ${getGradeColor(submission.percentage)}20; color: ${getGradeColor(submission.percentage)}">
+                        ${getLetterGrade(submission.percentage)}
+                      </div>
+                    </td>
+                    <td>
+                      ${submission.needs_manual_grading ?
+            `<span style="background-color: #FEF3C7; color: #92400E; padding: 4px 8px; border-radius: 9999px; font-size: 11px;">${t('submissions.pending')}</span>` :
+            submission.is_manually_graded ?
+              `<span style="background-color: #D1FAE5; color: #065F46; padding: 4px 8px; border-radius: 9999px; font-size: 11px;">${t('submissions.graded')}</span>` :
+              `<span style="background-color: #DBEAFE; color: #1E40AF; padding: 4px 8px; border-radius: 9999px; font-size: 11px;">${t('submissions.autoGraded')}</span>`
+          }
+                    </td>
+                  </tr>
+                `).join('')}
+            </tbody>
+          </table>
+        </div>
 
-          <div class="footer">
-            <p>Generated by EduApp on ${new Date().toLocaleDateString()}</p>
+        <!-- Teacher Recommendations -->
+        <div class="section">
+          <h2 class="section-title">${t('pdf.recommendations')}</h2>
+          
+          <div class="insight-box">
+            <div class="insight-title">${t('pdf.nextSteps')}</div>
+            <div class="insight-content">
+              <ul style="margin-left: 20px; margin-top: 10px;">
+                ${statistics.averageScore < 70 ?
+        `<li>${t('pdf.considerReviewSession')}</li>` :
+        `<li>${t('pdf.studentsPerformingWell')}</li>`
+      }
+                ${passingRate < 80 ?
+        `<li>${t('pdf.implementationSupport')}</li>` :
+        `<li>${t('pdf.continueCurrentMethods')}</li>`
+      }
+                ${mostCommonRange.range === '0-59' ?
+        `<li>${t('pdf.reteachingNeeded')}</li>` : ''
+      }
+                <li>${t('pdf.shareResultsWithStudents')}</li>
+                <li>${t('pdf.scheduleFollowUp')}</li>
+              </ul>
+            </div>
           </div>
-        </body>
-      </html>
-    `;
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+          <p>${t('pdf.generatedBy').replace('{{date}}', new Date().toLocaleDateString()).replace('{{time}}', new Date().toLocaleTimeString())}</p>
+          <p style="margin-top: 8px; font-size: 11px; color: #D1D5DB;">
+            ${t('pdf.confidentialReport')}
+          </p>
+        </div>
+      </body>
+    </html>
+  `;
   };
 
-
-  const showExportOptions = () => {
-    Alert.alert('Export Results', 'Choose export format:', [
-      { text: 'PDF Report', onPress: () => exportResults('pdf') },
-      { text: 'Excel Sheet', onPress: () => exportResults('excel') },
-      { text: 'CSV Data', onPress: () => exportResults('csv') },
-      { text: 'Cancel', style: 'cancel' }
+  // Fixed export function - no alert inside export process
+  const handleExport = () => {
+    Alert.alert(t('pdf.exportResults'), t('pdf.chooseFormat'), [
+      { text: t('pdf.pdfReport'), onPress: () => setTimeout(() => exportResults('pdf'), 500) },
+      { text: t('pdf.excelSheet'), onPress: () => setTimeout(() => exportResults('excel'), 500) },
+      // { text: t('pdf.csvData'), onPress: () => setTimeout(() => exportResults('csv'), 500) },
+      { text: t('common.cancel'), style: 'cancel' },
     ]);
   };
 
@@ -832,7 +1278,7 @@ export default function TeacherExamResultsScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.headerButton as any, { backgroundColor: colors.background }]}
-              onPress={showExportOptions}>
+              onPress={handleExport}>
               <Ionicons name="download" size={18} color={colors.primary} />
             </TouchableOpacity>
           </View>
@@ -1395,7 +1841,7 @@ export default function TeacherExamResultsScreen() {
               <View style={styles.modalActions as any}>
                 <TouchableOpacity
                   style={[styles.modalActionButton as any, { backgroundColor: colors.background }]}
-                  onPress={showExportOptions}>
+                  onPress={handleExport}>
                   <Text style={[styles.modalActionText as any, { fontFamily, color: colors.textPrimary }]}>
                     {t("exams.downloadPDF")}
                   </Text>
@@ -1487,7 +1933,7 @@ export default function TeacherExamResultsScreen() {
 const originalStyles = {
   container: {
     flex: 1,
-    paddingBottom: 40
+    paddingBottom: 80
   },
   loadingText: {
     marginTop: designTokens.spacing.md,
